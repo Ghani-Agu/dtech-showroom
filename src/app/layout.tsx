@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { displayFont, bodyFont, monoFont } from '@/lib/fonts'
+import { ScrollProvider } from '@/components/layout/ScrollProvider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({
       <body
         className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} antialiased bg-surface-base text-text-primary font-body`}
       >
-        {children}
+        <ScrollProvider>{children}</ScrollProvider>
       </body>
     </html>
   )
