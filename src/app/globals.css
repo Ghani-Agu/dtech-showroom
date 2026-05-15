@@ -31,11 +31,6 @@
   --color-semantic-error: oklch(0.66 0.18 25);
   --color-semantic-info: oklch(0.74 0.12 230);
 
-  /* Font family tokens */
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-mono: var(--font-mono);
-
   /* Type scale (1.250 minor third) */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
