@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx --env-file=.env.local src/db/seed.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -25,6 +29,7 @@
     "react-dom": "19.2.4",
     "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
@@ -39,6 +44,7 @@
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.0",
     "typescript": "^5"
   }
 }
