@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Surface tokens */
+  --color-surface-void: oklch(0.06 0.005 240);
+  --color-surface-base: oklch(0.10 0.008 240);
+  --color-surface-base-plus: oklch(0.13 0.010 240);
+  --color-surface-elevated: oklch(0.16 0.012 240);
+  --color-surface-overlay: oklch(0.20 0.014 240);
+  --color-surface-overlay-plus: oklch(0.24 0.016 240);
+
+  /* Text tokens */
+  --color-text-primary: oklch(0.97 0.005 90);
+  --color-text-secondary: oklch(0.78 0.008 90);
+  --color-text-muted: oklch(0.58 0.010 90);
+  --color-text-disabled: oklch(0.38 0.008 90);
+
+  /* Product material tones (for 3D shading) */
+  --color-product-shadow: oklch(0.14 0.004 250);
+  --color-product-base: oklch(0.22 0.005 250);
+  --color-product-base-light: oklch(0.62 0.004 250);
+  --color-product-keyline: oklch(0.32 0.006 250);
+  --color-product-highlight: oklch(0.78 0.008 250);
+
+  /* Accent (single, restrained) */
+  --color-accent: oklch(0.74 0.14 215);
+
+  /* Semantic (functional only) */
+  --color-semantic-success: oklch(0.72 0.13 155);
+  --color-semantic-warning: oklch(0.80 0.14 80);
+  --color-semantic-error: oklch(0.66 0.18 25);
+  --color-semantic-info: oklch(0.74 0.12 230);
+
+  /* Font family tokens */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* Type scale (1.250 minor third) */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.563rem;
+  --text-3xl: 1.953rem;
+  --text-4xl: 2.441rem;
+  --text-5xl: 3.052rem;
+  --text-6xl: 3.815rem;
+  --text-7xl: 4.768rem;
+  --text-8xl: 5.960rem;
+  --text-9xl: 7.451rem;
+
+  /* Line height tokens */
+  --leading-tight: 1.05;
+  --leading-snug: 1.20;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.65;
+
+  /* Letter spacing tokens */
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Root styling */
+html {
+  background-color: var(--color-surface-base);
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* JetBrains Mono ligatures disabled per v2 spec §4.1 */
+.font-mono,
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono), ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
+  font-feature-settings: "calt" 0, "liga" 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Display font helper */
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+/* Tabular figures for body when explicitly needed (e.g., spec callouts) */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus visible — accent ring per v2 §9.2 */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: inherit;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-surface-void);
 }

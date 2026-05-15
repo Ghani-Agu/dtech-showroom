@@ -1,0 +1,62 @@
+export const brand = {
+  color: {
+    surface: {
+      void: 'oklch(0.06 0.005 240)',
+      base: 'oklch(0.10 0.008 240)',
+      basePlus: 'oklch(0.13 0.010 240)',
+      elevated: 'oklch(0.16 0.012 240)',
+      overlay: 'oklch(0.20 0.014 240)',
+      overlayPlus: 'oklch(0.24 0.016 240)',
+    },
+    text: {
+      primary: 'oklch(0.97 0.005 90)',
+      secondary: 'oklch(0.78 0.008 90)',
+      muted: 'oklch(0.58 0.010 90)',
+      disabled: 'oklch(0.38 0.008 90)',
+    },
+    product: {
+      shadow: 'oklch(0.14 0.004 250)',
+      base: 'oklch(0.22 0.005 250)',
+      baseLight: 'oklch(0.62 0.004 250)',
+      keyline: 'oklch(0.32 0.006 250)',
+      highlight: 'oklch(0.78 0.008 250)',
+    },
+    accent: 'oklch(0.74 0.14 215)',
+    semantic: {
+      success: 'oklch(0.72 0.13 155)',
+      warning: 'oklch(0.80 0.14 80)',
+      error: 'oklch(0.66 0.18 25)',
+      info: 'oklch(0.74 0.12 230)',
+    },
+  },
+  type: {
+    scale: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.563rem',
+      '3xl': '1.953rem',
+      '4xl': '2.441rem',
+      '5xl': '3.052rem',
+      '6xl': '3.815rem',
+      '7xl': '4.768rem',
+      '8xl': '5.960rem',
+      '9xl': '7.451rem',
+    },
+    leading: {
+      tight: '1.05',
+      snug: '1.20',
+      normal: '1.45',
+      relaxed: '1.65',
+    },
+    tracking: {
+      tight: '-0.02em',
+      snug: '-0.01em',
+      normal: '0',
+      wide: '0.04em',
+      wider: '0.08em',
+    },
+  },
+} as const
