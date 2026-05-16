@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { count, desc, eq } from 'drizzle-orm'
 import {
-  CircleCheckBig,
   CircleDashed,
   FolderOpen,
   MailQuestion,
   Package,
   Tag,
 } from 'lucide-react'
+import { InquiryListRow } from '@/components/admin/inquiries/InquiryListRow'
 import {
   Card,
   CardContent,
@@ -144,36 +144,7 @@ export default async function AdminDashboardPage() {
           ) : (
             <ul className="divide-y divide-surface-overlay">
               {data.recentInquiries.map((inquiry) => (
-                <li
-                  key={inquiry.id}
-                  className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-surface-overlay/30"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-3">
-                      <p className="truncate font-body text-base text-text-primary">
-                        {inquiry.fullName}
-                      </p>
-                      {inquiry.status === 'new' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 font-mono text-xs uppercase tracking-wider text-accent">
-                          <CircleCheckBig size={10} />
-                          New
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 truncate font-body text-sm text-text-secondary">
-                      About {inquiry.productName}
-                    </p>
-                  </div>
-                  <time className="ml-4 whitespace-nowrap font-mono text-xs text-text-muted">
-                    {new Date(inquiry.submittedAt).toLocaleDateString(
-                      'en-US',
-                      {
-                        month: 'short',
-                        day: 'numeric',
-                      }
-                    )}
-                  </time>
-                </li>
+                <InquiryListRow key={inquiry.id} inquiry={inquiry} />
               ))}
             </ul>
           )}

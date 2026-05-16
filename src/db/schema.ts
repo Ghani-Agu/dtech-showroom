@@ -115,11 +115,34 @@ export const inquiries = pgTable(
     notes: text('notes'),
 
     submittedAt: timestamp('submitted_at').notNull().defaultNow(),
+    contactedAt: timestamp('contacted_at'),
   },
   (table) => [
     index('inquiries_status_idx').on(table.status),
     index('inquiries_submitted_at_idx').on(table.submittedAt.desc()),
     index('inquiries_product_id_idx').on(table.productId),
+  ]
+)
+
+export const inquiryStatusHistory = pgTable(
+  'inquiry_status_history',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    inquiryId: uuid('inquiry_id')
+      .notNull()
+      .references(() => inquiries.id, { onDelete: 'cascade' }),
+    fromStatus: inquiryStatusEnum('from_status'),
+    toStatus: inquiryStatusEnum('to_status').notNull(),
+    changedByUserId: text('changed_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    changedByEmail: text('changed_by_email'),
+    note: text('note'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('isq_inquiry_id_idx').on(table.inquiryId),
+    index('isq_created_at_idx').on(table.createdAt.desc()),
   ]
 )
 
@@ -236,3 +259,8 @@ export type NewUser = InferInsertModel<typeof users>
 export type Session = InferSelectModel<typeof sessions>
 export type Account = InferSelectModel<typeof accounts>
 export type UserRole = (typeof userRoleEnum.enumValues)[number]
+
+export type InquiryStatusHistory = InferSelectModel<typeof inquiryStatusHistory>
+export type InsertInquiryStatusHistory = InferInsertModel<
+  typeof inquiryStatusHistory
+>
