@@ -7,8 +7,10 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     remotePatterns: [
-      // Real CDN entries (Cloudflare R2 etc.) belong here when migrated.
-      // Empty list for Phase 1 — all assets are local.
+      {
+        protocol: 'https',
+        hostname: 'pub-*.r2.dev',
+      },
     ],
     // SmartImage falls back to local SVG placeholders under
     // /public/images/placeholders. next/image refuses SVGs by default;
@@ -47,6 +49,12 @@ const nextConfig: NextConfig = {
         ],
       },
     ]
+  },
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '25mb',
+    },
   },
 
   compress: true,

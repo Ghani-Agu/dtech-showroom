@@ -13,6 +13,8 @@ import {
 import { Input } from '@/components/admin/ui/Input'
 import { Textarea } from '@/components/admin/ui/Textarea'
 import { BilingualField } from './BilingualField'
+import { ImageManager } from './ImageManager'
+import { ImageUpload } from './ImageUpload'
 import { SpecsEditor } from './SpecsEditor'
 import {
   archiveProduct,
@@ -359,26 +361,40 @@ export function ProductForm({
         <CardHeader>
           <CardTitle>Images</CardTitle>
           <CardDescription>
-            Image paths. Real drag-drop upload to Cloudflare R2 comes in
-            Phase 7d. For now, enter paths manually (e.g.,
-            /images/products/[slug]/card.webp).
+            {!values.slug
+              ? 'Save the product first to enable image uploads.'
+              : 'Drag and drop images, or click to browse. AVIF + WebP variants are generated automatically.'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            label="Card image path"
-            description="800×600, used in product grid cards."
+        <CardContent className="space-y-6">
+          <ImageUpload
+            label="Card image"
+            description="Shown in product grids. Recommended: 4:3 aspect, high contrast."
+            variant="card"
+            productSlug={values.slug}
             value={values.cardImagePath}
-            onChange={(e) => update('cardImagePath', e.target.value)}
-            placeholder="/images/products/your-slug/card.webp"
+            onChange={(url) => update('cardImagePath', url)}
           />
-          <Input
-            label="Hero image path"
-            description="2400×1350, used in product detail stage."
+
+          <ImageUpload
+            label="Hero image"
+            description="Shown on the product detail page header. 16:9 aspect, dramatic composition."
+            variant="hero"
+            productSlug={values.slug}
             value={values.heroImagePath}
-            onChange={(e) => update('heroImagePath', e.target.value)}
-            placeholder="/images/products/your-slug/hero.webp"
+            onChange={(url) => update('heroImagePath', url)}
           />
+
+          {values.tier === 'longtail' && (
+            <ImageManager
+              label="Carousel images"
+              description="Additional product views for the long-tail tier. Drag to reorder. Max 8 images."
+              productSlug={values.slug}
+              value={values.photoCarouselPaths}
+              onChange={(urls) => update('photoCarouselPaths', urls)}
+              maxImages={8}
+            />
+          )}
         </CardContent>
       </Card>
 
