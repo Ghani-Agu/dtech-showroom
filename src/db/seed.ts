@@ -141,15 +141,23 @@ function paths(slug: string, tier: 'hero' | 'featured' | 'longtail') {
     glbModelPath: null,
     photoCarouselPaths: [],
   }
+  // glbModelPath stays referenced in the data for the future R3F phase,
+  // even though Path Z does not consume it. The field is dormant, not
+  // broken — no component reads it in Phase 5a.
   if (tier === 'hero' || tier === 'featured') {
     out.glbModelPath = `/models/${slug}.glb`
   }
+  if (tier === 'featured') {
+    out.photoCarouselPaths = [
+      `${base}/hero.webp`,
+      `${base}/angle-2.webp`,
+      `${base}/angle-3.webp`,
+    ]
+  }
   if (tier === 'longtail') {
     out.photoCarouselPaths = [
-      `${base}/photo-1.webp`,
-      `${base}/photo-2.webp`,
-      `${base}/photo-3.webp`,
-      `${base}/photo-4.webp`,
+      `${base}/hero.webp`,
+      `${base}/angle-2.webp`,
     ]
   }
   return out

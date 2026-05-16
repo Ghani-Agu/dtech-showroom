@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
       // Real CDN entries (Cloudflare R2 etc.) belong here when migrated.
       // Empty list for Phase 1 — all assets are local.
     ],
+    // SmartImage falls back to local SVG placeholders under
+    // /public/images/placeholders. next/image refuses SVGs by default;
+    // these are trusted (we wrote them) and the CSP keeps scripts out.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy:
+      "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   async headers() {

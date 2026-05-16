@@ -53,7 +53,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
               <SmartImage
                 src={brand.heroImagePath}
                 alt={brand.name}
-                placeholderKind="brand-hero"
+                fallbackVariant="brand"
                 fill
                 sizes="(min-width: 1024px) 80vw, 100vw"
                 className="object-cover"

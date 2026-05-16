@@ -2,47 +2,40 @@
 
 import Image, { type ImageProps } from 'next/image'
 import { useState } from 'react'
-import { Placeholder } from './Placeholder'
-import { cn } from '@/lib/utils'
 
-type PlaceholderKind =
-  | 'product-card'
-  | 'product-hero'
-  | 'brand-hero'
-  | 'category-hero'
+export type FallbackVariant = 'product' | 'brand' | 'category'
 
-type SmartImageProps = Omit<ImageProps, 'src' | 'alt'> & {
+interface SmartImageProps extends Omit<ImageProps, 'src' | 'alt'> {
   src: string | null | undefined
   alt: string
-  placeholderKind: PlaceholderKind
-  wrapperClassName?: string
+  fallbackVariant?: FallbackVariant
 }
 
-export function SmartImage({
+const FALLBACK_SVG: Record<FallbackVariant, string> = {
+  product: '/images/placeholders/product-placeholder.svg',
+  brand: '/images/placeholders/brand-placeholder.svg',
+  category: '/images/placeholders/category-placeholder.svg',
+}
+
+function SmartImage({
   src,
   alt,
-  placeholderKind,
-  wrapperClassName,
-  className,
+  fallbackVariant = 'product',
   ...rest
 }: SmartImageProps) {
-  const [failed, setFailed] = useState(false)
+  const [errored, setErrored] = useState(false)
 
-  if (!src || failed) {
-    return (
-      <div className={cn('relative h-full w-full', wrapperClassName)}>
-        <Placeholder kind={placeholderKind} />
-      </div>
-    )
-  }
+  const finalSrc = !src || errored ? FALLBACK_SVG[fallbackVariant] : src
 
   return (
     <Image
-      src={src}
-      alt={alt}
-      onError={() => setFailed(true)}
-      className={className}
       {...rest}
+      src={finalSrc}
+      alt={alt}
+      onError={() => setErrored(true)}
     />
   )
 }
+
+export { SmartImage }
+export default SmartImage

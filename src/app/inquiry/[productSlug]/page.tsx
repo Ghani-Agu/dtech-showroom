@@ -66,7 +66,7 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
               <SmartImage
                 src={product.cardImagePath}
                 alt={product.name}
-                placeholderKind="product-card"
+                fallbackVariant="product"
                 fill
                 sizes="144px"
                 className="object-cover"

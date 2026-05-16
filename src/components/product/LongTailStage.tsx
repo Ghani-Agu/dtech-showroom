@@ -1,52 +1,67 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { SmartImage } from '@/components/ui/SmartImage'
-import { cn } from '@/lib/utils'
-import type { ProductWithRelations } from '@/db/schema'
+import { useState } from 'react'
+import SmartImage from '@/components/ui/SmartImage'
+import type { Product } from '@/db/schema'
 
 interface LongTailStageProps {
-  product: ProductWithRelations
+  product: Product
 }
 
-// TODO: Phase 5+ — add 3-second cross-fade autoplay per v2 §5.8
 export function LongTailStage({ product }: LongTailStageProps) {
-  const images = useMemo(() => {
-    const carousel = product.photoCarouselPaths ?? []
-    if (carousel.length > 0) return carousel
-    if (product.heroImagePath) return [product.heroImagePath]
-    return [product.cardImagePath]
-  }, [product])
+  const photos =
+    product.photoCarouselPaths.length > 0
+      ? product.photoCarouselPaths
+      : [product.heroImagePath ?? product.cardImagePath]
 
-  const [active, setActive] = useState(0)
-  const current = images[active] ?? images[0]
+  const [activeIndex, setActiveIndex] = useState(0)
+  const safeIndex = Math.min(activeIndex, photos.length - 1)
+  const activePhoto = photos[safeIndex] ?? photos[0]
 
   return (
     <div className="space-y-4">
+      {/* Main stage */}
       <div className="relative w-full overflow-hidden rounded-md bg-surface-void aspect-[4/3] md:aspect-video">
         <SmartImage
-          src={current}
-          alt={product.name}
-          placeholderKind="product-hero"
+          src={activePhoto}
+          alt={`${product.name} — view ${safeIndex + 1}`}
+          fallbackVariant="product"
           fill
-          sizes="(min-width: 1024px) 80vw, 100vw"
-          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 60vw"
           priority
+          className="object-cover"
         />
       </div>
-      {images.length > 1 ? (
-        <div className="flex items-center justify-center gap-2">
-          {images.map((path, idx) => (
+
+      {/* Thumbnail strip — only if more than 1 photo */}
+      {photos.length > 1 ? (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {photos.map((photoPath, index) => (
             <button
-              key={path + idx}
+              key={`${photoPath}-${index}`}
               type="button"
-              onClick={() => setActive(idx)}
-              aria-label={`Show image ${idx + 1} of ${images.length}`}
-              className={cn(
-                'h-2 w-2 rounded-full transition-colors',
-                idx === active ? 'bg-accent' : 'bg-text-disabled hover:bg-text-muted'
-              )}
-            />
+              onClick={() => setActiveIndex(index)}
+              className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded bg-surface-void transition-opacity hover:opacity-100"
+              style={{
+                opacity: index === safeIndex ? 1 : 0.5,
+                outline:
+                  index === safeIndex
+                    ? '1px solid var(--color-accent)'
+                    : 'none',
+                outlineOffset: '2px',
+              }}
+              aria-label={`Show view ${index + 1} of ${photos.length}`}
+              aria-current={index === safeIndex ? 'true' : undefined}
+            >
+              <SmartImage
+                src={photoPath}
+                alt=""
+                fallbackVariant="product"
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            </button>
           ))}
         </div>
       ) : null}

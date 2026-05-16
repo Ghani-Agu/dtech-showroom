@@ -53,7 +53,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               <SmartImage
                 src={category.heroImagePath}
                 alt={category.name}
-                placeholderKind="category-hero"
+                fallbackVariant="category"
                 fill
                 sizes="(min-width: 1024px) 80vw, 100vw"
                 className="object-cover"

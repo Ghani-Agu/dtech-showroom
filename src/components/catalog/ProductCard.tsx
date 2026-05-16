@@ -23,7 +23,7 @@ export function ProductCard({ product, priority, className }: ProductCardProps) 
           <SmartImage
             src={product.cardImagePath}
             alt={product.name}
-            placeholderKind="product-card"
+            fallbackVariant="product"
             fill
             sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 22vw, (min-width: 768px) 30vw, 45vw"
             className="object-cover"

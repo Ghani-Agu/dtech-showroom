@@ -21,7 +21,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
         <SmartImage
           src={category.heroImagePath}
           alt={category.name}
-          placeholderKind="category-hero"
+          fallbackVariant="category"
           fill
           sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
           className="object-cover"

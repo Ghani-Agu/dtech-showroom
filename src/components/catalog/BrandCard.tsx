@@ -16,7 +16,7 @@ export function BrandCard({ brand }: BrandCardProps) {
         <SmartImage
           src={brand.heroImagePath}
           alt={brand.name}
-          placeholderKind="brand-hero"
+          fallbackVariant="brand"
           fill
           sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
           className="object-cover"
