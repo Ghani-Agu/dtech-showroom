@@ -6,6 +6,8 @@ import { ProductGrid } from '@/components/catalog/ProductGrid'
 import { BrandCard } from '@/components/catalog/BrandCard'
 import { CategoryCard } from '@/components/catalog/CategoryCard'
 import { ShaderHeroDynamic } from '@/components/three/ShaderHero/ShaderHeroDynamic'
+import { HeroRevealOrchestrator } from '@/components/sections/HeroRevealOrchestrator'
+import { HomepageChoreography } from '@/components/sections/HomepageChoreography'
 import {
   getFeaturedProducts,
   getAllBrands,
@@ -23,6 +25,10 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Scroll + page-load choreography (pure orchestrators, no DOM). */}
+      <HeroRevealOrchestrator />
+      <HomepageChoreography />
+
       {/* Hero */}
       <section className="relative flex min-h-screen items-center overflow-hidden py-24 md:py-32 lg:py-40">
         {/* Shader background — fills the section, sits behind content */}
@@ -32,16 +38,23 @@ export default async function HomePage() {
         <div className="relative z-10 w-full">
           <Container>
             <div className="max-w-4xl space-y-6">
-              <EyebrowLabel>DTECH ALGÉRIE · EST. 2006</EyebrowLabel>
-              <Heading as="h1" size="hero" accentChar=".">
-                Hardware, presented properly
-              </Heading>
-              <p className="max-w-2xl font-body text-lg text-text-secondary md:text-xl">
+              <div data-hero-reveal>
+                <EyebrowLabel>DTECH ALGÉRIE · EST. 2006</EyebrowLabel>
+              </div>
+              <div data-hero-reveal>
+                <Heading as="h1" size="hero" accentChar=".">
+                  Hardware, presented properly
+                </Heading>
+              </div>
+              <p
+                data-hero-reveal
+                className="max-w-2xl font-body text-lg text-text-secondary md:text-xl"
+              >
                 A curated catalog of laptops, networking, mobile, and accessories
                 from HP, Dell, ASUS, TP-Link, and the in-house D-Tech line. Browse
                 the showroom. Inquire when you find the machine.
               </p>
-              <div className="pt-2">
+              <div data-hero-reveal className="pt-2">
                 <InquiryButton href="/categories">Browse the catalog</InquiryButton>
               </div>
             </div>
@@ -59,7 +72,11 @@ export default async function HomePage() {
                 The current selection
               </Heading>
             </div>
-            <ProductGrid products={featured} priorityCount={3} />
+            <ProductGrid
+              products={featured}
+              priorityCount={3}
+              scrollMarker="featured"
+            />
           </div>
         </Container>
       </section>
@@ -76,7 +93,7 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {brandList.map((brand) => (
-                <BrandCard key={brand.id} brand={brand} />
+                <BrandCard key={brand.id} brand={brand} data-scroll-brand />
               ))}
             </div>
           </div>
@@ -95,7 +112,11 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {categoryList.map((category) => (
-                <CategoryCard key={category.id} category={category} />
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  data-scroll-category
+                />
               ))}
             </div>
           </div>

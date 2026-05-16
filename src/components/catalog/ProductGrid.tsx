@@ -8,6 +8,9 @@ interface ProductGridProps {
   emptyMessage?: string
   priorityCount?: number
   className?: string
+  // When set, propagates a data-scroll-* attribute onto each child card
+  // so a parent choreography hook can target them.
+  scrollMarker?: 'featured'
 }
 
 export function ProductGrid({
@@ -15,6 +18,7 @@ export function ProductGrid({
   emptyMessage = 'Nothing in this slice of the catalog yet.',
   priorityCount = 0,
   className,
+  scrollMarker,
 }: ProductGridProps) {
   if (products.length === 0) {
     return <EmptyState message={emptyMessage} />
@@ -32,6 +36,9 @@ export function ProductGrid({
           key={product.id}
           product={product}
           priority={idx < priorityCount}
+          {...(scrollMarker === 'featured'
+            ? { 'data-scroll-featured': true }
+            : {})}
         />
       ))}
     </div>

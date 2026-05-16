@@ -7,12 +7,19 @@ interface ProductCardProps {
   product: ProductWithRelations
   priority?: boolean
   className?: string
+  'data-scroll-featured'?: boolean
 }
 
-export function ProductCard({ product, priority, className }: ProductCardProps) {
+export function ProductCard({
+  product,
+  priority,
+  className,
+  ...rest
+}: ProductCardProps) {
   return (
     <Link
       href={`/products/${product.slug}`}
+      data-scroll-featured={rest['data-scroll-featured']}
       className={cn(
         'group block rounded-md border border-transparent bg-surface-elevated transition-all duration-300 hover:-translate-y-1 hover:border-text-muted/20',
         className

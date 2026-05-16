@@ -4,6 +4,7 @@ import type { Category } from '@/db/schema'
 
 interface CategoryCardProps {
   category: Category
+  'data-scroll-category'?: boolean
 }
 
 function firstSentence(text: string): string {
@@ -11,11 +12,12 @@ function firstSentence(text: string): string {
   return match ? match[0] : text
 }
 
-export function CategoryCard({ category }: CategoryCardProps) {
+export function CategoryCard({ category, ...rest }: CategoryCardProps) {
   return (
     <Link
       href={`/categories/${category.slug}`}
-      className="group block rounded-md border border-transparent bg-surface-elevated transition-all duration-300 hover:-translate-y-1 hover:border-text-muted/20"
+      data-scroll-category={rest['data-scroll-category']}
+      className="group relative block overflow-hidden rounded-md border border-transparent bg-surface-elevated transition-all duration-300 hover:-translate-y-1 hover:border-text-muted/20"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden rounded-t-md bg-surface-base">
         <SmartImage
@@ -33,6 +35,12 @@ export function CategoryCard({ category }: CategoryCardProps) {
           {firstSentence(category.description)}
         </p>
       </div>
+      {/* Hairline accent — draws in left→right via HomepageChoreography */}
+      <div
+        className="card-accent absolute bottom-0 left-0 h-px w-full bg-accent"
+        style={{ transformOrigin: 'left' }}
+        aria-hidden="true"
+      />
     </Link>
   )
 }

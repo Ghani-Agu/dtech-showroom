@@ -4,12 +4,14 @@ import type { Brand } from '@/db/schema'
 
 interface BrandCardProps {
   brand: Brand
+  'data-scroll-brand'?: boolean
 }
 
-export function BrandCard({ brand }: BrandCardProps) {
+export function BrandCard({ brand, ...rest }: BrandCardProps) {
   return (
     <Link
       href={`/brands/${brand.slug}`}
+      data-scroll-brand={rest['data-scroll-brand']}
       className="group block rounded-md border border-transparent bg-surface-elevated transition-all duration-300 hover:-translate-y-1 hover:border-text-muted/20"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden rounded-t-md bg-surface-base">
