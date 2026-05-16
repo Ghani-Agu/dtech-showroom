@@ -1,7 +1,14 @@
 import { Card } from '@/components/ui/Card'
 
+type SpecValue = string | number | string[]
+
 interface ProductSpecsProps {
-  specs: Record<string, string>
+  specs: Record<string, SpecValue>
+}
+
+function formatSpec(value: SpecValue): string {
+  if (Array.isArray(value)) return value.join(', ')
+  return String(value)
 }
 
 export function ProductSpecs({ specs }: ProductSpecsProps) {
@@ -20,7 +27,7 @@ export function ProductSpecs({ specs }: ProductSpecsProps) {
               {key}
             </dt>
             <dd className="font-mono text-base text-text-primary tabular-nums">
-              {value}
+              {formatSpec(value)}
             </dd>
           </div>
         ))}

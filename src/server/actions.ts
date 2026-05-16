@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { db } from '@/db/client'
@@ -87,7 +87,10 @@ export async function submitInquiry(
   const data = parsed.data
 
   const product = await db.query.products.findFirst({
-    where: eq(products.slug, data.productSlug),
+    where: and(
+      eq(products.slug, data.productSlug),
+      isNull(products.archivedAt)
+    ),
     with: { brand: true },
   })
 

@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, asc, desc, eq, ilike, ne, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
 import {
   brands,
@@ -75,7 +75,7 @@ export async function getProductBySlug(
 ): Promise<ProductWithRelations | null> {
   return safe(async () => {
     const row = await db.query.products.findFirst({
-      where: eq(products.slug, slug),
+      where: and(eq(products.slug, slug), isNull(products.archivedAt)),
       with: { brand: true, category: true },
     })
     return row ?? null
@@ -94,7 +94,10 @@ export async function getProductsByBrand(
     const brandRow = brand[0]
     if (!brandRow) return []
     return db.query.products.findMany({
-      where: eq(products.brandId, brandRow.id),
+      where: and(
+        eq(products.brandId, brandRow.id),
+        isNull(products.archivedAt)
+      ),
       with: { brand: true, category: true },
       orderBy: [asc(products.sortOrder), asc(products.name)],
     })
@@ -113,7 +116,10 @@ export async function getProductsByCategory(
     const categoryRow = category[0]
     if (!categoryRow) return []
     return db.query.products.findMany({
-      where: eq(products.categoryId, categoryRow.id),
+      where: and(
+        eq(products.categoryId, categoryRow.id),
+        isNull(products.archivedAt)
+      ),
       with: { brand: true, category: true },
       orderBy: [asc(products.sortOrder), asc(products.name)],
     })
@@ -126,7 +132,10 @@ export async function getFeaturedProducts(
   return safe(
     () =>
       db.query.products.findMany({
-        where: eq(products.featured, true),
+        where: and(
+          eq(products.featured, true),
+          isNull(products.archivedAt)
+        ),
         with: { brand: true, category: true },
         orderBy: [asc(products.sortOrder)],
         limit,
@@ -143,7 +152,11 @@ export async function getRelatedProducts(
   return safe(
     () =>
       db.query.products.findMany({
-        where: and(eq(products.brandId, brandId), ne(products.id, productId)),
+        where: and(
+          eq(products.brandId, brandId),
+          ne(products.id, productId),
+          isNull(products.archivedAt)
+        ),
         with: { brand: true, category: true },
         orderBy: [asc(products.sortOrder)],
         limit,
@@ -159,13 +172,16 @@ export async function searchProducts(
   return safe(
     () =>
       db.query.products.findMany({
-        where: or(
-          ilike(products.name, q),
-          ilike(products.tagline, q),
-          ilike(products.searchKeywords, q),
-          ilike(products.cardSpec, q),
-          sql`EXISTS (SELECT 1 FROM ${brands} b WHERE b.id = ${products.brandId} AND b.name ILIKE ${q})`,
-          sql`EXISTS (SELECT 1 FROM ${categories} c WHERE c.id = ${products.categoryId} AND c.name ILIKE ${q})`
+        where: and(
+          isNull(products.archivedAt),
+          or(
+            ilike(products.name, q),
+            ilike(products.tagline, q),
+            ilike(products.searchKeywords, q),
+            ilike(products.cardSpec, q),
+            sql`EXISTS (SELECT 1 FROM ${brands} b WHERE b.id = ${products.brandId} AND b.name ILIKE ${q})`,
+            sql`EXISTS (SELECT 1 FROM ${categories} c WHERE c.id = ${products.categoryId} AND c.name ILIKE ${q})`
+          )
         ),
         with: { brand: true, category: true },
         orderBy: [asc(products.sortOrder), asc(products.name)],

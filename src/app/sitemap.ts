@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { isNull } from 'drizzle-orm'
 import { db } from '@/db/client'
 import {
   brands,
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ;[allBrands, allCategories, allProducts] = await Promise.all([
       db.select().from(brands),
       db.select().from(categories),
-      db.select().from(products),
+      db.select().from(products).where(isNull(products.archivedAt)),
     ])
   } catch {
     // DB unavailable at build time — sitemap will be the static-only baseline

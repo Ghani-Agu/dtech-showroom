@@ -71,7 +71,7 @@ export const products = pgTable(
       .default(sql`'[]'::jsonb`),
 
     specs: jsonb('specs')
-      .$type<Record<string, string>>()
+      .$type<Record<string, string | number | string[]>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
     cardSpec: text('card_spec').notNull(),
@@ -79,6 +79,20 @@ export const products = pgTable(
     searchKeywords: text('search_keywords').notNull().default(''),
     sortOrder: integer('sort_order').notNull().default(0),
     featured: boolean('featured').notNull().default(false),
+
+    // Bilingual content (Phase 7c) — EN is canonical, FR is optional translation
+    nameFr: text('name_fr'),
+    taglineFr: text('tagline_fr'),
+    descriptionFr: text('description_fr'),
+    cardSpecFr: text('card_spec_fr'),
+    searchKeywordsFr: text('search_keywords_fr'),
+
+    // SEO overrides (Phase 7c) — null falls back to name/tagline
+    seoTitle: text('seo_title'),
+    seoDescription: text('seo_description'),
+
+    // Soft delete (Phase 7c) — null = active
+    archivedAt: timestamp('archived_at'),
 
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -90,6 +104,7 @@ export const products = pgTable(
     index('products_featured_idx')
       .on(table.featured)
       .where(sql`${table.featured} = true`),
+    index('products_archived_at_idx').on(table.archivedAt),
   ]
 )
 
