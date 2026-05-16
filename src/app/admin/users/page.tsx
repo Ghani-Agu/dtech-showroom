@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { asc } from 'drizzle-orm'
-import { CircleDashed, Plus } from 'lucide-react'
+import { Plus, Users as UsersIcon } from 'lucide-react'
 import { Badge } from '@/components/admin/ui/Badge'
 import { Button } from '@/components/admin/ui/Button'
-import { Card, CardContent } from '@/components/admin/ui/Card'
+import { Card } from '@/components/admin/ui/Card'
+import { EmptyState } from '@/components/admin/ui/EmptyState'
 import { db } from '@/db/client'
 import { users } from '@/db/schema'
 import { requireAdmin } from '@/lib/auth-helpers'
@@ -45,15 +46,12 @@ export default async function UsersListPage() {
 
       {rows.length === 0 ? (
         <Card>
-          <CardContent className="px-6 py-16 text-center">
-            <CircleDashed
-              size={40}
-              className="mx-auto mb-4 text-text-muted"
-            />
-            <p className="font-body text-base text-text-secondary">
-              No users yet.
-            </p>
-          </CardContent>
+          <EmptyState
+            icon={UsersIcon}
+            title="No users yet."
+            description="Invite the team. New users receive a password reset email to set their own password."
+            action={{ label: 'Add a user', href: '/admin/users/new' }}
+          />
         </Card>
       ) : (
         <Card>

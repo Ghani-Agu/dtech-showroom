@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
 import { BilingualField } from '@/components/admin/products/BilingualField'
 import { ImageUpload } from '@/components/admin/products/ImageUpload'
 import { Button } from '@/components/admin/ui/Button'
@@ -50,11 +51,20 @@ export function CategoryForm({
   isArchived = false,
 }: CategoryFormProps) {
   const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
   const [values, setValues] = useState<CategoryFormValues>(
     initialValues ?? defaultValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
+
+  useKeyboardShortcut({
+    key: 's',
+    modifiers: ['cmd'],
+    handler: () => {
+      formRef.current?.requestSubmit()
+    },
+  })
 
   function update<K extends keyof CategoryFormValues>(
     key: K,
@@ -129,7 +139,11 @@ export function CategoryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="space-y-6 pb-24"
+    >
       <Card>
         <CardHeader>
           <CardTitle>Identity</CardTitle>
@@ -226,47 +240,50 @@ export function CategoryForm({
             label="Hero image"
             description="16:9 hero shown on the category landing page."
             variant="hero"
-            productSlug={values.slug}
+            entityType="category"
+            entitySlug={values.slug}
             value={values.heroImagePath}
             onChange={(url) => update('heroImagePath', url)}
           />
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-surface-overlay bg-surface-base py-4">
-        <div>
-          {mode === 'edit' && !isArchived && (
+      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-surface-overlay bg-surface-base/95 backdrop-blur">
+        <div className="flex max-w-5xl items-center justify-between gap-3 px-8 py-4">
+          <div>
+            {mode === 'edit' && !isArchived && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleArchive}
+                disabled={isPending}
+              >
+                Archive category
+              </Button>
+            )}
+            {mode === 'edit' && isArchived && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleRestore}
+                disabled={isPending}
+              >
+                Restore category
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
             <Button
               type="button"
-              variant="destructive"
-              onClick={handleArchive}
-              disabled={isPending}
+              variant="ghost"
+              onClick={() => router.push('/admin/categories')}
             >
-              Archive category
+              Cancel
             </Button>
-          )}
-          {mode === 'edit' && isArchived && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleRestore}
-              disabled={isPending}
-            >
-              Restore category
+            <Button type="submit" variant="primary" loading={isPending}>
+              {mode === 'create' ? 'Create category' : 'Save changes'}
             </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push('/admin/categories')}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={isPending}>
-            {mode === 'create' ? 'Create category' : 'Save changes'}
-          </Button>
+          </div>
         </div>
       </div>
     </form>

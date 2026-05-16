@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
 import { BilingualField } from '@/components/admin/products/BilingualField'
 import { ImageUpload } from '@/components/admin/products/ImageUpload'
 import { Button } from '@/components/admin/ui/Button'
@@ -53,11 +54,20 @@ export function BrandForm({
   isArchived = false,
 }: BrandFormProps) {
   const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
   const [values, setValues] = useState<BrandFormValues>(
     initialValues ?? defaultValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
+
+  useKeyboardShortcut({
+    key: 's',
+    modifiers: ['cmd'],
+    handler: () => {
+      formRef.current?.requestSubmit()
+    },
+  })
 
   function update<K extends keyof BrandFormValues>(
     key: K,
@@ -130,7 +140,11 @@ export function BrandForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="space-y-6 pb-24"
+    >
       <Card>
         <CardHeader>
           <CardTitle>Identity</CardTitle>
@@ -237,7 +251,8 @@ export function BrandForm({
             label="Logo"
             description="Square logo, transparent background recommended. 600×600."
             variant="logo"
-            productSlug={values.slug}
+            entityType="brand"
+            entitySlug={values.slug}
             value={values.logoPath}
             onChange={(url) => update('logoPath', url)}
           />
@@ -246,47 +261,50 @@ export function BrandForm({
             label="Hero image"
             description="16:9 hero shown on the brand landing page."
             variant="hero"
-            productSlug={values.slug}
+            entityType="brand"
+            entitySlug={values.slug}
             value={values.heroImagePath}
             onChange={(url) => update('heroImagePath', url)}
           />
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-surface-overlay bg-surface-base py-4">
-        <div>
-          {mode === 'edit' && !isArchived && (
+      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-surface-overlay bg-surface-base/95 backdrop-blur">
+        <div className="flex max-w-5xl items-center justify-between gap-3 px-8 py-4">
+          <div>
+            {mode === 'edit' && !isArchived && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleArchive}
+                disabled={isPending}
+              >
+                Archive brand
+              </Button>
+            )}
+            {mode === 'edit' && isArchived && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleRestore}
+                disabled={isPending}
+              >
+                Restore brand
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
             <Button
               type="button"
-              variant="destructive"
-              onClick={handleArchive}
-              disabled={isPending}
+              variant="ghost"
+              onClick={() => router.push('/admin/brands')}
             >
-              Archive brand
+              Cancel
             </Button>
-          )}
-          {mode === 'edit' && isArchived && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleRestore}
-              disabled={isPending}
-            >
-              Restore brand
+            <Button type="submit" variant="primary" loading={isPending}>
+              {mode === 'create' ? 'Create brand' : 'Save changes'}
             </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push('/admin/brands')}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={isPending}>
-            {mode === 'create' ? 'Create brand' : 'Save changes'}
-          </Button>
+          </div>
         </div>
       </div>
     </form>

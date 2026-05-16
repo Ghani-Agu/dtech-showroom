@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
 import { Button } from '@/components/admin/ui/Button'
 import {
   Card,
@@ -71,11 +72,20 @@ export function ProductForm({
   categories,
 }: ProductFormProps) {
   const router = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
   const [values, setValues] = useState<ProductFormValues>(
     initialValues ?? defaultValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
+
+  useKeyboardShortcut({
+    key: 's',
+    modifiers: ['cmd'],
+    handler: () => {
+      formRef.current?.requestSubmit()
+    },
+  })
 
   function update<K extends keyof ProductFormValues>(
     key: K,
@@ -150,7 +160,11 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="space-y-6 pb-24"
+    >
       <Card>
         <CardHeader>
           <CardTitle>Identity</CardTitle>
@@ -371,7 +385,8 @@ export function ProductForm({
             label="Card image"
             description="Shown in product grids. Recommended: 4:3 aspect, high contrast."
             variant="card"
-            productSlug={values.slug}
+            entityType="product"
+            entitySlug={values.slug}
             value={values.cardImagePath}
             onChange={(url) => update('cardImagePath', url)}
           />
@@ -380,7 +395,8 @@ export function ProductForm({
             label="Hero image"
             description="Shown on the product detail page header. 16:9 aspect, dramatic composition."
             variant="hero"
-            productSlug={values.slug}
+            entityType="product"
+            entitySlug={values.slug}
             value={values.heroImagePath}
             onChange={(url) => update('heroImagePath', url)}
           />
@@ -389,7 +405,8 @@ export function ProductForm({
             <ImageManager
               label="Carousel images"
               description="Additional product views for the long-tail tier. Drag to reorder. Max 8 images."
-              productSlug={values.slug}
+              entityType="product"
+              entitySlug={values.slug}
               value={values.photoCarouselPaths}
               onChange={(urls) => update('photoCarouselPaths', urls)}
               maxImages={8}
@@ -423,40 +440,42 @@ export function ProductForm({
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-surface-overlay bg-surface-base py-4">
-        <div>
-          {mode === 'edit' && !isArchived && (
+      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-surface-overlay bg-surface-base/95 backdrop-blur">
+        <div className="flex max-w-5xl items-center justify-between gap-3 px-8 py-4">
+          <div>
+            {mode === 'edit' && !isArchived && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleArchive}
+                disabled={isPending}
+              >
+                Archive product
+              </Button>
+            )}
+            {mode === 'edit' && isArchived && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleRestore}
+                disabled={isPending}
+              >
+                Restore product
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
             <Button
               type="button"
-              variant="destructive"
-              onClick={handleArchive}
-              disabled={isPending}
+              variant="ghost"
+              onClick={() => router.push('/admin/products')}
             >
-              Archive product
+              Cancel
             </Button>
-          )}
-          {mode === 'edit' && isArchived && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleRestore}
-              disabled={isPending}
-            >
-              Restore product
+            <Button type="submit" variant="primary" loading={isPending}>
+              {mode === 'create' ? 'Create product' : 'Save changes'}
             </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push('/admin/products')}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={isPending}>
-            {mode === 'create' ? 'Create product' : 'Save changes'}
-          </Button>
+          </div>
         </div>
       </div>
     </form>

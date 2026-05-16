@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { asc, isNotNull, isNull } from 'drizzle-orm'
-import { CircleDashed, Plus } from 'lucide-react'
+import { Plus, Tag } from 'lucide-react'
 import { Badge } from '@/components/admin/ui/Badge'
 import { Button } from '@/components/admin/ui/Button'
-import { Card, CardContent } from '@/components/admin/ui/Card'
+import { Card } from '@/components/admin/ui/Card'
+import { EmptyState } from '@/components/admin/ui/EmptyState'
 import { db } from '@/db/client'
 import { brands } from '@/db/schema'
 
@@ -83,15 +84,22 @@ export default async function BrandsListPage({ searchParams }: PageProps) {
 
       {rows.length === 0 ? (
         <Card>
-          <CardContent className="px-6 py-16 text-center">
-            <CircleDashed
-              size={40}
-              className="mx-auto mb-4 text-text-muted"
-            />
-            <p className="font-body text-base text-text-secondary">
-              No {state !== 'all' ? state : ''} brands.
-            </p>
-          </CardContent>
+          <EmptyState
+            icon={Tag}
+            title={
+              state !== 'all' ? `No ${state} brands.` : 'No brands yet.'
+            }
+            description={
+              state === 'all'
+                ? 'Brands organize products by manufacturer. Add the first one to get started.'
+                : 'Try a different filter or add a new brand.'
+            }
+            action={
+              state === 'all'
+                ? { label: 'Add the first brand', href: '/admin/brands/new' }
+                : undefined
+            }
+          />
         </Card>
       ) : (
         <Card>

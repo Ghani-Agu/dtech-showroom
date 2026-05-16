@@ -4,16 +4,18 @@ import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { GripVertical, Loader2, Upload, X } from 'lucide-react'
 import {
-  deleteProductImage,
-  uploadProductImage,
+  deleteEntityImage,
+  uploadEntityImage,
 } from '@/server/admin-image-actions'
+import type { EntityType } from '@/lib/admin-image-entity'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 interface ImageManagerProps {
   label: string
   description?: string
-  productSlug: string
+  entityType: EntityType
+  entitySlug: string
   value: string[]
   onChange: (urls: string[]) => void
   maxImages?: number
@@ -22,7 +24,8 @@ interface ImageManagerProps {
 export function ImageManager({
   label,
   description,
-  productSlug,
+  entityType,
+  entitySlug,
   value,
   onChange,
   maxImages = 8,
@@ -33,8 +36,8 @@ export function ImageManager({
 
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
-    if (!productSlug) {
-      toast.error('Save the product slug first before uploading images')
+    if (!entitySlug) {
+      toast.error('Save the slug first before uploading images')
       return
     }
 
@@ -56,8 +59,9 @@ export function ImageManager({
         const formData = new FormData()
         formData.append('file', file)
 
-        const result = await uploadProductImage(
-          productSlug,
+        const result = await uploadEntityImage(
+          entityType,
+          entitySlug,
           'carousel',
           formData
         )
@@ -81,7 +85,7 @@ export function ImageManager({
   async function handleRemove(url: string, index: number) {
     if (!confirm('Remove this image?')) return
 
-    const result = await deleteProductImage(url)
+    const result = await deleteEntityImage(url)
 
     if (!result.ok) {
       toast.error(result.error)

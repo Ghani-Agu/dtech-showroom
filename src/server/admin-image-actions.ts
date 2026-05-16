@@ -13,6 +13,10 @@ import {
   generateHash,
   uploadToR2,
 } from '@/lib/r2'
+import {
+  ENTITY_PREFIX,
+  type EntityType,
+} from '@/lib/admin-image-entity'
 
 async function requireSession() {
   const session = await auth.api
@@ -34,8 +38,9 @@ interface UploadResult {
   height: number
 }
 
-export async function uploadProductImage(
-  productSlug: string,
+export async function uploadEntityImage(
+  entityType: EntityType,
+  entitySlug: string,
   variant: ImageVariant,
   formData: FormData
 ): Promise<
@@ -49,8 +54,8 @@ export async function uploadProductImage(
       return { ok: false, error: 'No file provided' }
     }
 
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productSlug)) {
-      return { ok: false, error: 'Invalid product slug' }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entitySlug)) {
+      return { ok: false, error: `Invalid ${entityType} slug` }
     }
 
     const arrayBuffer = await file.arrayBuffer()
@@ -64,8 +69,9 @@ export async function uploadProductImage(
     ])
 
     const hash = generateHash(file.name)
-    const webpKey = `products/${productSlug}/${variant}-${hash}.webp`
-    const avifKey = `products/${productSlug}/${variant}-${hash}.avif`
+    const prefix = ENTITY_PREFIX[entityType]
+    const webpKey = `${prefix}/${entitySlug}/${variant}-${hash}.webp`
+    const avifKey = `${prefix}/${entitySlug}/${variant}-${hash}.avif`
 
     const [webpResult, avifResult] = await Promise.all([
       uploadToR2(webpKey, webpBuffer, 'image/webp'),
@@ -91,7 +97,16 @@ export async function uploadProductImage(
   }
 }
 
-export async function deleteProductImage(
+/** @deprecated Use uploadEntityImage instead */
+export async function uploadProductImage(
+  productSlug: string,
+  variant: ImageVariant,
+  formData: FormData
+) {
+  return uploadEntityImage('product', productSlug, variant, formData)
+}
+
+export async function deleteEntityImage(
   imageUrl: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -124,4 +139,9 @@ export async function deleteProductImage(
       error: err instanceof Error ? err.message : 'Delete failed',
     }
   }
+}
+
+/** @deprecated Use deleteEntityImage instead */
+export async function deleteProductImage(imageUrl: string) {
+  return deleteEntityImage(imageUrl)
 }

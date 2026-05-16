@@ -11,9 +11,10 @@ import {
   isNull,
   or,
 } from 'drizzle-orm'
-import { CircleDashed, Plus, Upload } from 'lucide-react'
+import { Package, Plus, Upload } from 'lucide-react'
 import { Button } from '@/components/admin/ui/Button'
-import { Card, CardContent } from '@/components/admin/ui/Card'
+import { Card } from '@/components/admin/ui/Card'
+import { EmptyState } from '@/components/admin/ui/EmptyState'
 import { Input } from '@/components/admin/ui/Input'
 import { ProductListRow } from '@/components/admin/products/ProductListRow'
 import { db } from '@/db/client'
@@ -334,15 +335,12 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
 
       {rows.length === 0 ? (
         <Card>
-          <CardContent className="px-6 py-16 text-center">
-            <CircleDashed
-              size={40}
-              className="mx-auto mb-4 text-text-muted"
-            />
-            <p className="font-body text-base text-text-secondary">
-              No products match the current filters.
-            </p>
-          </CardContent>
+          <EmptyState
+            icon={Package}
+            title="No products match the current filters."
+            description="Adjust the filters above, or add a new product."
+            action={{ label: 'Add the first product', href: '/admin/products/new' }}
+          />
         </Card>
       ) : (
         <Card>

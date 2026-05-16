@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { SQL } from 'drizzle-orm'
 import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
-import { CircleDashed } from 'lucide-react'
-import { Card, CardContent } from '@/components/admin/ui/Card'
+import { Mailbox } from 'lucide-react'
+import { Card } from '@/components/admin/ui/Card'
+import { EmptyState } from '@/components/admin/ui/EmptyState'
 import { Input } from '@/components/admin/ui/Input'
 import { InquiryListRow } from '@/components/admin/inquiries/InquiryListRow'
 import { db } from '@/db/client'
@@ -194,24 +195,21 @@ export default async function InquiriesPage({ searchParams }: PageProps) {
 
       {rows.length === 0 ? (
         <Card>
-          <CardContent className="px-6 py-16 text-center">
-            <CircleDashed
-              size={40}
-              className="mx-auto mb-4 text-text-muted"
-            />
-            <p className="font-body text-base text-text-secondary">
-              {query
+          <EmptyState
+            icon={Mailbox}
+            title={
+              query
                 ? `No inquiries match "${query}".`
                 : status !== 'all'
                   ? `No ${status} inquiries.`
-                  : 'No inquiries yet.'}
-            </p>
-            <p className="mt-1 font-body text-sm text-text-muted">
-              {query || status !== 'all'
+                  : 'No inquiries yet.'
+            }
+            description={
+              query || status !== 'all'
                 ? 'Try a different filter or search.'
-                : 'Customer inquiries from the contact form will appear here.'}
-            </p>
-          </CardContent>
+                : 'Customer inquiries from the contact form will appear here.'
+            }
+          />
         </Card>
       ) : (
         <Card>

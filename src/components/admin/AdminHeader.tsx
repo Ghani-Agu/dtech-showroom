@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, LogOut } from 'lucide-react'
+import { ChevronDown, LogOut, Search } from 'lucide-react'
 import { authClient, useSession } from '@/lib/auth-client'
 
 export function AdminHeader() {
@@ -34,7 +34,14 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="flex items-center justify-end border-b border-surface-overlay bg-surface-base px-6 py-3">
+    <header className="flex items-center justify-end gap-3 border-b border-surface-overlay bg-surface-base px-6 py-3">
+      <div
+        className="hidden items-center gap-1.5 rounded-md bg-surface-elevated px-3 py-1.5 text-text-muted md:flex"
+        aria-hidden="true"
+      >
+        <Search size={12} />
+        <span className="font-mono text-xs">⌘K</span>
+      </div>
       {!isPending && session?.user && (
         <div ref={menuRef} className="relative">
           <button

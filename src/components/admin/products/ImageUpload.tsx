@@ -4,9 +4,10 @@ import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { Loader2, Upload, X } from 'lucide-react'
 import {
-  deleteProductImage,
-  uploadProductImage,
+  deleteEntityImage,
+  uploadEntityImage,
 } from '@/server/admin-image-actions'
+import type { EntityType } from '@/lib/admin-image-entity'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import type { ImageVariant } from '@/lib/image-processing'
@@ -15,7 +16,8 @@ interface ImageUploadProps {
   label: string
   description?: string
   variant: ImageVariant
-  productSlug: string
+  entityType: EntityType
+  entitySlug: string
   value: string
   onChange: (url: string) => void
 }
@@ -24,7 +26,8 @@ export function ImageUpload({
   label,
   description,
   variant,
-  productSlug,
+  entityType,
+  entitySlug,
   value,
   onChange,
 }: ImageUploadProps) {
@@ -45,8 +48,8 @@ export function ImageUpload({
       return
     }
 
-    if (!productSlug) {
-      toast.error('Save the product slug first before uploading images')
+    if (!entitySlug) {
+      toast.error('Save the slug first before uploading images')
       return
     }
 
@@ -54,8 +57,9 @@ export function ImageUpload({
     formData.append('file', file)
 
     startUpload(async () => {
-      const result = await uploadProductImage(
-        productSlug,
+      const result = await uploadEntityImage(
+        entityType,
+        entitySlug,
         variant,
         formData
       )
@@ -75,7 +79,7 @@ export function ImageUpload({
     if (!confirm(`Delete the ${variant} image?`)) return
 
     startDelete(async () => {
-      const result = await deleteProductImage(value)
+      const result = await deleteEntityImage(value)
 
       if (!result.ok) {
         toast.error(result.error)
