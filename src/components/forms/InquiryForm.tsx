@@ -28,14 +28,40 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
     submitInquiry,
     null
   )
-  // State is reserved for inline error display in a future phase;
-  // for Phase 1 we rely on HTML5 native validation. Reading it once
-  // also keeps the type-check honest about the binding.
-  void state
+
+  // Phase 1 only surfaces top-level (_form) errors inline — typically the
+  // rate-limit message. Per-field validation still relies on HTML5 native
+  // validation; richer field-level error display lands in a later phase.
+  const formError =
+    state && state.ok === false ? state.errors?._form?.[0] : undefined
 
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="productSlug" value={productSlug} />
+
+      {/* Honeypot — off-screen field for bots. Real users can't see or
+          reach it (tabIndex -1, aria-hidden, autoComplete off). If anything
+          fills this field, the server-side action silently treats the
+          submission as successful without writing to the DB. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+        }}
+      >
+        <label htmlFor="website">Website (leave empty)</label>
+        <input
+          type="text"
+          id="website"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-2">
@@ -118,6 +144,15 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
           className={cn(fieldClasses, 'resize-y')}
         />
       </div>
+
+      {formError ? (
+        <p
+          role="alert"
+          className="font-body text-sm text-semantic-error"
+        >
+          {formError}
+        </p>
+      ) : null}
 
       <div className="pt-2">
         <Submit />

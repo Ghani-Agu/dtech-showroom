@@ -3,7 +3,7 @@
 Cinematic 3D showroom for Dtech Algérie's product catalog.
 
 - **Path:** D — The Catalog as Cinematic Showroom
-- **Phase:** 2–4a — Route surface, data model, component library, page implementations
+- **Phase:** 4b — Production-readiness gap closure
 - **Stack:** Next.js 16 · TypeScript strict · Tailwind v4 · React Three Fiber · Framer Motion · GSAP · Lenis · Drizzle · Postgres
 
 ## Development
@@ -49,6 +49,22 @@ This project uses Postgres via Drizzle ORM. To run locally:
    pnpm db:studio
    ```
 
+### Rate Limiting Setup (Production)
+
+Inquiry form submission is rate-limited via Upstash Redis (3 submissions per IP per hour). For development this is optional; submissions go through without checking. For production:
+
+1. Sign up at https://upstash.com (free tier covers ~10k/day)
+2. Create a Redis database (any region)
+3. Copy REST URL and REST TOKEN
+4. Add to `.env.local`:
+
+   ```
+   UPSTASH_REDIS_REST_URL="https://your-instance.upstash.io"
+   UPSTASH_REDIS_REST_TOKEN="your-token-here"
+   ```
+
+Also add `NEXT_PUBLIC_SITE_URL` so sitemap, robots, and OG images use the right absolute base.
+
 ## Adding Real Assets
 
 Asset folders are scaffolded under `public/images/` and `public/models/`. Drop real assets at the paths defined in seed data. Placeholders render automatically while assets are missing.
@@ -82,4 +98,4 @@ Generic SVG placeholders live in `public/images/placeholders/` and serve as the 
 
 ## Status
 
-Phase 2–4a complete. The 14-route site surface resolves, the data model is in place, the component library is built, every page is implemented, and the inquiry form writes records via a Drizzle-backed server action. Real product photography, brand imagery, and 3D scenes arrive in later phases.
+Phase 4b complete. The site is production-deployable: every route has an error boundary and loading state, sitemap/robots/OG images render correctly, the inquiry form is rate-limited with a honeypot, security headers are in place, and Vercel Analytics + Speed Insights are wired. Deployment instructions live in `docs/DEPLOYMENT.md`. Real product photography, brand imagery, and 3D scenes arrive in later phases.

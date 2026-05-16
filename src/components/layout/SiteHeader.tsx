@@ -36,6 +36,18 @@ export function SiteHeader() {
     }
   }, [open])
 
+  // Close mobile menu on Escape.
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+
   return (
     <header className="sticky top-0 z-40 border-b border-surface-elevated bg-surface-base/90 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-[80rem] items-center gap-6 px-6 py-4 md:px-12 lg:px-16">
