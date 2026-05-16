@@ -8,38 +8,34 @@ import {
 } from '@/components/admin/ui/Card'
 
 export const metadata: Metadata = {
-  title: 'Inquiries — Dtech Admin',
+  title: 'Products — Dtech Admin',
   robots: { index: false, follow: false },
 }
 
-export default function InquiriesPage() {
+export default function ProductsPage() {
   return (
     <div className="space-y-8">
       <div>
         <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Inquiries
+          Products
         </p>
         <h1 className="font-display text-3xl tracking-tight text-text-primary">
-          Customer inquiries<span className="text-accent">.</span>
+          Product catalog<span className="text-accent">.</span>
         </h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Coming in Phase 7b</CardTitle>
+          <CardTitle>Coming in Phase 7c</CardTitle>
           <CardDescription>
-            Full inquiry management — list, detail, status updates, notes,
-            search.
+            Full product CRUD — create, edit, delete, tier assignment, and
+            bilingual content.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="font-body text-text-secondary">
-            The inquiry management interface is part of Phase 7b. For now,
-            inquiries are stored in the database and visible via{' '}
-            <code className="rounded bg-surface-elevated px-1.5 py-0.5 font-mono text-sm">
-              pnpm db:studio
-            </code>
-            .
+            Product management arrives in Phase 7c. Image upload via Cloudflare
+            R2 follows in Phase 7d.
           </p>
         </CardContent>
       </Card>
