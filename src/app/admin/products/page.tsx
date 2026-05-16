@@ -11,7 +11,7 @@ import {
   isNull,
   or,
 } from 'drizzle-orm'
-import { CircleDashed, Plus } from 'lucide-react'
+import { CircleDashed, Plus, Upload } from 'lucide-react'
 import { Button } from '@/components/admin/ui/Button'
 import { Card, CardContent } from '@/components/admin/ui/Card'
 import { Input } from '@/components/admin/ui/Input'
@@ -197,12 +197,20 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
             Catalog<span className="text-accent">.</span>
           </h1>
         </div>
-        <Link href="/admin/products/new">
-          <Button variant="primary">
-            <Plus size={16} />
-            New product
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/products/import">
+            <Button variant="secondary">
+              <Upload size={16} />
+              Import
+            </Button>
+          </Link>
+          <Link href="/admin/products/new">
+            <Button variant="primary">
+              <Plus size={16} />
+              New product
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-3">
