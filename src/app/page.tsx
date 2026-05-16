@@ -5,6 +5,7 @@ import { InquiryButton } from '@/components/ui/InquiryButton'
 import { ProductGrid } from '@/components/catalog/ProductGrid'
 import { BrandCard } from '@/components/catalog/BrandCard'
 import { CategoryCard } from '@/components/catalog/CategoryCard'
+import { ShaderHeroDynamic } from '@/components/three/ShaderHero/ShaderHeroDynamic'
 import {
   getFeaturedProducts,
   getAllBrands,
@@ -23,23 +24,29 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="py-24 md:py-32 lg:py-40">
-        <Container>
-          <div className="max-w-4xl space-y-6">
-            <EyebrowLabel>DTECH ALGÉRIE · EST. 2006</EyebrowLabel>
-            <Heading as="h1" size="hero" accentChar=".">
-              Hardware, presented properly
-            </Heading>
-            <p className="max-w-2xl font-body text-lg text-text-secondary md:text-xl">
-              A curated catalog of laptops, networking, mobile, and accessories from
-              HP, Dell, ASUS, TP-Link, and the in-house D-Tech line. Browse the
-              showroom. Inquire when you find the machine.
-            </p>
-            <div className="pt-2">
-              <InquiryButton href="/categories">Browse the catalog</InquiryButton>
+      <section className="relative flex min-h-screen items-center overflow-hidden py-24 md:py-32 lg:py-40">
+        {/* Shader background — fills the section, sits behind content */}
+        <ShaderHeroDynamic />
+
+        {/* Hero content — relative + z-10 keeps it above the shader */}
+        <div className="relative z-10 w-full">
+          <Container>
+            <div className="max-w-4xl space-y-6">
+              <EyebrowLabel>DTECH ALGÉRIE · EST. 2006</EyebrowLabel>
+              <Heading as="h1" size="hero" accentChar=".">
+                Hardware, presented properly
+              </Heading>
+              <p className="max-w-2xl font-body text-lg text-text-secondary md:text-xl">
+                A curated catalog of laptops, networking, mobile, and accessories
+                from HP, Dell, ASUS, TP-Link, and the in-house D-Tech line. Browse
+                the showroom. Inquire when you find the machine.
+              </p>
+              <div className="pt-2">
+                <InquiryButton href="/categories">Browse the catalog</InquiryButton>
+              </div>
             </div>
-          </div>
-        </Container>
+          </Container>
+        </div>
       </section>
 
       {/* Featured */}
