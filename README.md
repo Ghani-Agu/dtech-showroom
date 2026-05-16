@@ -3,7 +3,7 @@
 Cinematic 3D showroom for Dtech Algérie's product catalog.
 
 - **Path:** D — The Catalog as Cinematic Showroom
-- **Phase:** 4b — Production-readiness gap closure
+- **Phase:** 6 — Authentication (better-auth + Resend)
 - **Stack:** Next.js 16 · TypeScript strict · Tailwind v4 · React Three Fiber · Framer Motion · GSAP · Lenis · Drizzle · Postgres
 
 ## Development
@@ -65,6 +65,51 @@ Inquiry form submission is rate-limited via Upstash Redis (3 submissions per IP 
 
 Also add `NEXT_PUBLIC_SITE_URL` so sitemap, robots, and OG images use the right absolute base.
 
+## Authentication Setup (Phase 6)
+
+The admin panel at `/admin/*` is protected by better-auth (email + password). Routes are blocked by `src/middleware.ts`; unauthenticated requests redirect to `/login?redirect=…`.
+
+### Initial setup
+
+1. Generate a secret:
+
+   ```bash
+   openssl rand -base64 32
+   ```
+
+   Set as `BETTER_AUTH_SECRET` in `.env.local`.
+
+2. Sign up for Resend (https://resend.com), create an API key, add to `.env.local` as `RESEND_API_KEY`. Password reset emails won't send without it.
+
+3. Apply the schema migration (creates `users`, `sessions`, `accounts`, `verifications`):
+
+   ```bash
+   pnpm db:push
+   ```
+
+4. Set initial admin credentials in `.env.local`:
+
+   ```
+   INITIAL_ADMIN_EMAIL=admin@d-techalgerie.com
+   INITIAL_ADMIN_NAME=Dtech Admin
+   INITIAL_ADMIN_PASSWORD=<min 12 chars>
+   ```
+
+5. Run the admin seed:
+
+   ```bash
+   pnpm db:seed-admin
+   ```
+
+6. Visit http://localhost:3000/login and sign in. Change the password from the admin UI when it lands in Phase 7.
+
+### Production notes
+
+- `RESEND_FROM_EMAIL` must be on a domain verified in Resend
+- `BETTER_AUTH_URL` must match the production URL
+- Never commit `BETTER_AUTH_SECRET` or `INITIAL_ADMIN_PASSWORD` to git
+- `.env.local` is gitignored; `.env.example` documents the full env surface
+
 ## Adding Real Assets
 
 Asset folders are scaffolded under `public/images/` and `public/models/`. Drop real assets at the paths defined in seed data. Placeholders render automatically while assets are missing.
@@ -94,8 +139,9 @@ Generic SVG placeholders live in `public/images/placeholders/` and serve as the 
 - `pnpm db:generate` — Generate Drizzle migrations from `src/db/schema.ts`
 - `pnpm db:push` — Sync schema to DB
 - `pnpm db:seed` — Seed demo data (30 products across 5 brands and 6 categories)
+- `pnpm db:seed-admin` — Create initial admin user from `INITIAL_ADMIN_*` env vars (Phase 6)
 - `pnpm db:studio` — Open Drizzle Studio
 
 ## Status
 
-Phase 4b complete. The site is production-deployable: every route has an error boundary and loading state, sitemap/robots/OG images render correctly, the inquiry form is rate-limited with a honeypot, security headers are in place, and Vercel Analytics + Speed Insights are wired. Deployment instructions live in `docs/DEPLOYMENT.md`. Real product photography, brand imagery, and 3D scenes arrive in later phases.
+Phase 6 complete. The customer-facing site is production-ready (5a–5c: real-photo tier stages, shader hero, scroll choreography). Authentication is in: `/login`, `/forgot-password`, `/reset-password`, and `/admin/*` are middleware-protected by better-auth. The actual admin tool UI arrives in Phase 7.

@@ -173,3 +173,66 @@ export type ProductWithRelations = Product & {
 
 export type Tier = (typeof tierEnum.enumValues)[number]
 export type InquiryStatus = (typeof inquiryStatusEnum.enumValues)[number]
+
+// =========================================================================
+// USERS + SESSIONS (Phase 6 — authentication)
+// =========================================================================
+
+export const userRoleEnum = pgEnum('user_role', ['admin', 'staff'])
+
+export const users = pgTable('users', {
+  id: text('id').primaryKey(), // better-auth uses string IDs
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  name: text('name').notNull(),
+  image: text('image'),
+  role: userRoleEnum('role').notNull().default('staff'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at').notNull(),
+  token: text('token').notNull().unique(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const accounts = pgTable('accounts', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  password: text('password'), // hashed by better-auth
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at'),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+  scope: text('scope'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export const verifications = pgTable('verifications', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export type User = InferSelectModel<typeof users>
+export type NewUser = InferInsertModel<typeof users>
+export type Session = InferSelectModel<typeof sessions>
+export type Account = InferSelectModel<typeof accounts>
+export type UserRole = (typeof userRoleEnum.enumValues)[number]
