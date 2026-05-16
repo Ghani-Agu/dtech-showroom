@@ -1,25 +1,27 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Suspense, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { AnimatePresence, motion } from 'framer-motion'
+import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher'
 import { SearchInput } from '@/components/search/SearchInput'
+import { Link, usePathname } from '@/i18n/routing'
 import { duration, easing } from '@/lib/animations'
 import { cn } from '@/lib/utils'
 
-const primaryLinks = [
-  { href: '/categories', label: 'Categories' },
-  { href: '/brands', label: 'Brands' },
-  { href: '/about', label: 'About' },
-]
-
 export function SiteHeader() {
+  const t = useTranslations('navigation')
+  const tCommon = useTranslations('common')
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [lastPathname, setLastPathname] = useState(pathname)
 
-  // Close mobile menu when route changes (adjust state during render).
+  const primaryLinks = [
+    { href: '/categories', label: t('categories') },
+    { href: '/brands', label: t('brands') },
+    { href: '/about', label: t('about') },
+  ] as const
+
   if (pathname !== lastPathname) {
     setLastPathname(pathname)
     setOpen(false)
@@ -36,7 +38,6 @@ export function SiteHeader() {
     }
   }, [open])
 
-  // Close mobile menu on Escape.
   useEffect(() => {
     if (!open) return
     function onKeyDown(event: KeyboardEvent) {
@@ -78,14 +79,18 @@ export function SiteHeader() {
               <SearchInput />
             </Suspense>
           </div>
+          <LocaleSwitcher />
           <Link
             href="/about#contact"
             className="group inline-flex items-baseline gap-2 font-body text-sm text-text-primary"
           >
             <span className="border-b border-text-muted pb-0.5 transition-colors group-hover:border-accent">
-              Contact Dtech
+              {t('contactDtech')}
             </span>
-            <span aria-hidden="true" className="text-accent transition-transform duration-200 group-hover:translate-x-1">
+            <span
+              aria-hidden="true"
+              className="text-accent transition-transform duration-200 group-hover:translate-x-1"
+            >
               →
             </span>
           </Link>
@@ -95,11 +100,11 @@ export function SiteHeader() {
           type="button"
           onClick={() => setOpen((prev) => !prev)}
           className="ml-auto inline-flex items-center justify-center lg:hidden"
-          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-label={open ? tCommon('close') : tCommon('open')}
           aria-expanded={open}
         >
           <span className="font-mono text-xs uppercase tracking-wider text-text-primary">
-            {open ? 'Close' : 'Menu'}
+            {open ? tCommon('close') : tCommon('menu')}
           </span>
         </button>
       </div>
@@ -135,7 +140,7 @@ export function SiteHeader() {
                   onClick={() => setOpen(false)}
                   className="font-mono text-xs uppercase tracking-wider text-text-primary"
                 >
-                  Close
+                  {tCommon('close')}
                 </button>
               </div>
               <Suspense fallback={null}>
@@ -155,8 +160,12 @@ export function SiteHeader() {
                   href="/about#contact"
                   className="font-display text-3xl text-text-primary"
                 >
-                  Contact Dtech<span className="text-accent"> →</span>
+                  {t('contactDtech')}
+                  <span className="text-accent"> →</span>
                 </Link>
+                <div className="pt-4">
+                  <LocaleSwitcher />
+                </div>
               </nav>
             </motion.div>
           </motion.div>

@@ -11,6 +11,7 @@ import {
   type Inquiry,
   type ProductWithRelations,
 } from '@/db/schema'
+import { defaultLocale, type Locale } from '@/i18n/config'
 
 // Wraps a DB call so a missing/unreachable database degrades to a safe
 // fallback rather than 500ing every page. Pages render their chrome and
@@ -29,77 +30,140 @@ async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-export async function getAllBrands(): Promise<Brand[]> {
-  return safe(
+// Swap EN fields with FR equivalents when locale is fr and FR field exists.
+// Keeps the return type the same so callers don't need to know about _fr columns.
+function localizeBrand(b: Brand, locale: Locale): Brand {
+  if (locale !== 'fr') return b
+  return {
+    ...b,
+    name: b.nameFr ?? b.name,
+    statement: b.statementFr ?? b.statement,
+    description: b.descriptionFr ?? b.description,
+    searchKeywords: b.searchKeywordsFr ?? b.searchKeywords,
+  }
+}
+
+function localizeCategory(c: Category, locale: Locale): Category {
+  if (locale !== 'fr') return c
+  return {
+    ...c,
+    name: c.nameFr ?? c.name,
+    description: c.descriptionFr ?? c.description,
+    searchKeywords: c.searchKeywordsFr ?? c.searchKeywords,
+  }
+}
+
+function localizeProduct(
+  p: ProductWithRelations,
+  locale: Locale
+): ProductWithRelations {
+  if (locale !== 'fr') {
+    return {
+      ...p,
+      brand: localizeBrand(p.brand, locale),
+      category: localizeCategory(p.category, locale),
+    }
+  }
+  return {
+    ...p,
+    name: p.nameFr ?? p.name,
+    tagline: p.taglineFr ?? p.tagline,
+    description: p.descriptionFr ?? p.description,
+    cardSpec: p.cardSpecFr ?? p.cardSpec,
+    searchKeywords: p.searchKeywordsFr ?? p.searchKeywords,
+    brand: localizeBrand(p.brand, locale),
+    category: localizeCategory(p.category, locale),
+  }
+}
+
+export async function getAllBrands(
+  locale: Locale = defaultLocale
+): Promise<Brand[]> {
+  const rows = await safe(
     () =>
       db
         .select()
         .from(brands)
         .where(isNull(brands.archivedAt))
         .orderBy(asc(brands.sortOrder), asc(brands.name)),
-    []
+    [] as Brand[]
   )
+  return rows.map((b) => localizeBrand(b, locale))
 }
 
-export async function getBrandBySlug(slug: string): Promise<Brand | null> {
-  return safe(async () => {
-    const rows = await db
+export async function getBrandBySlug(
+  slug: string,
+  locale: Locale = defaultLocale
+): Promise<Brand | null> {
+  const row = await safe(async () => {
+    const rs = await db
       .select()
       .from(brands)
       .where(and(eq(brands.slug, slug), isNull(brands.archivedAt)))
       .limit(1)
-    return rows[0] ?? null
+    return rs[0] ?? null
   }, null)
+  return row ? localizeBrand(row, locale) : null
 }
 
-export async function getAllCategories(): Promise<Category[]> {
-  return safe(
+export async function getAllCategories(
+  locale: Locale = defaultLocale
+): Promise<Category[]> {
+  const rows = await safe(
     () =>
       db
         .select()
         .from(categories)
         .where(isNull(categories.archivedAt))
         .orderBy(asc(categories.sortOrder), asc(categories.name)),
-    []
+    [] as Category[]
   )
+  return rows.map((c) => localizeCategory(c, locale))
 }
 
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  return safe(async () => {
-    const rows = await db
+export async function getCategoryBySlug(
+  slug: string,
+  locale: Locale = defaultLocale
+): Promise<Category | null> {
+  const row = await safe(async () => {
+    const rs = await db
       .select()
       .from(categories)
       .where(
         and(eq(categories.slug, slug), isNull(categories.archivedAt))
       )
       .limit(1)
-    return rows[0] ?? null
+    return rs[0] ?? null
   }, null)
+  return row ? localizeCategory(row, locale) : null
 }
 
 export async function getProductBySlug(
-  slug: string
+  slug: string,
+  locale: Locale = defaultLocale
 ): Promise<ProductWithRelations | null> {
-  return safe(async () => {
-    const row = await db.query.products.findFirst({
+  const row = await safe(async () => {
+    const r = await db.query.products.findFirst({
       where: and(eq(products.slug, slug), isNull(products.archivedAt)),
       with: { brand: true, category: true },
     })
-    return row ?? null
+    return r ?? null
   }, null)
+  return row ? localizeProduct(row, locale) : null
 }
 
 export async function getProductsByBrand(
-  brandSlug: string
+  brandSlug: string,
+  locale: Locale = defaultLocale
 ): Promise<ProductWithRelations[]> {
-  return safe(async () => {
+  const rows = await safe(async () => {
     const brand = await db
       .select()
       .from(brands)
       .where(eq(brands.slug, brandSlug))
       .limit(1)
     const brandRow = brand[0]
-    if (!brandRow) return []
+    if (!brandRow) return [] as ProductWithRelations[]
     return db.query.products.findMany({
       where: and(
         eq(products.brandId, brandRow.id),
@@ -108,20 +172,22 @@ export async function getProductsByBrand(
       with: { brand: true, category: true },
       orderBy: [asc(products.sortOrder), asc(products.name)],
     })
-  }, [])
+  }, [] as ProductWithRelations[])
+  return rows.map((p) => localizeProduct(p, locale))
 }
 
 export async function getProductsByCategory(
-  categorySlug: string
+  categorySlug: string,
+  locale: Locale = defaultLocale
 ): Promise<ProductWithRelations[]> {
-  return safe(async () => {
+  const rows = await safe(async () => {
     const category = await db
       .select()
       .from(categories)
       .where(eq(categories.slug, categorySlug))
       .limit(1)
     const categoryRow = category[0]
-    if (!categoryRow) return []
+    if (!categoryRow) return [] as ProductWithRelations[]
     return db.query.products.findMany({
       where: and(
         eq(products.categoryId, categoryRow.id),
@@ -130,13 +196,15 @@ export async function getProductsByCategory(
       with: { brand: true, category: true },
       orderBy: [asc(products.sortOrder), asc(products.name)],
     })
-  }, [])
+  }, [] as ProductWithRelations[])
+  return rows.map((p) => localizeProduct(p, locale))
 }
 
 export async function getFeaturedProducts(
-  limit = 8
+  limit = 8,
+  locale: Locale = defaultLocale
 ): Promise<ProductWithRelations[]> {
-  return safe(
+  const rows = await safe(
     () =>
       db.query.products.findMany({
         where: and(
@@ -147,16 +215,18 @@ export async function getFeaturedProducts(
         orderBy: [asc(products.sortOrder)],
         limit,
       }),
-    []
+    [] as ProductWithRelations[]
   )
+  return rows.map((p) => localizeProduct(p, locale))
 }
 
 export async function getRelatedProducts(
   productId: string,
   brandId: string,
-  limit = 3
+  limit = 3,
+  locale: Locale = defaultLocale
 ): Promise<ProductWithRelations[]> {
-  return safe(
+  const rows = await safe(
     () =>
       db.query.products.findMany({
         where: and(
@@ -168,34 +238,41 @@ export async function getRelatedProducts(
         orderBy: [asc(products.sortOrder)],
         limit,
       }),
-    []
+    [] as ProductWithRelations[]
   )
+  return rows.map((p) => localizeProduct(p, locale))
 }
 
 export async function searchProducts(
-  query: string
+  query: string,
+  locale: Locale = defaultLocale
 ): Promise<ProductWithRelations[]> {
   const q = `%${query.trim()}%`
-  return safe(
+  const rows = await safe(
     () =>
       db.query.products.findMany({
         where: and(
           isNull(products.archivedAt),
           or(
             ilike(products.name, q),
+            ilike(products.nameFr, q),
             ilike(products.tagline, q),
+            ilike(products.taglineFr, q),
             ilike(products.searchKeywords, q),
+            ilike(products.searchKeywordsFr, q),
             ilike(products.cardSpec, q),
-            sql`EXISTS (SELECT 1 FROM ${brands} b WHERE b.id = ${products.brandId} AND b.name ILIKE ${q})`,
-            sql`EXISTS (SELECT 1 FROM ${categories} c WHERE c.id = ${products.categoryId} AND c.name ILIKE ${q})`
+            ilike(products.cardSpecFr, q),
+            sql`EXISTS (SELECT 1 FROM ${brands} b WHERE b.id = ${products.brandId} AND (b.name ILIKE ${q} OR b.name_fr ILIKE ${q}))`,
+            sql`EXISTS (SELECT 1 FROM ${categories} c WHERE c.id = ${products.categoryId} AND (c.name ILIKE ${q} OR c.name_fr ILIKE ${q}))`
           )
         ),
         with: { brand: true, category: true },
         orderBy: [asc(products.sortOrder), asc(products.name)],
         limit: 60,
       }),
-    []
+    [] as ProductWithRelations[]
   )
+  return rows.map((p) => localizeProduct(p, locale))
 }
 
 export async function getAllInquiries(): Promise<Inquiry[]> {

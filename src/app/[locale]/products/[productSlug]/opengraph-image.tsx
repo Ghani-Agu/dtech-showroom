@@ -1,42 +1,54 @@
 import { ImageResponse } from 'next/og'
 import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/db/client'
-import { categories } from '@/db/schema'
+import { products, type Product, type Brand } from '@/db/schema'
+import { isValidLocale } from '@/i18n/config'
 
-export const alt = 'Dtech category'
+export const alt = 'Dtech product'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-function firstSentence(text: string): string {
-  const match = text.match(/^[^.]*\./)
-  return match ? match[0] : text
-}
+type ProductWithBrand = Product & { brand: Brand }
 
 export default async function Image({
   params,
 }: {
-  params: Promise<{ categorySlug: string }>
+  params: Promise<{ locale: string; productSlug: string }>
 }) {
-  const { categorySlug } = await params
+  const { locale, productSlug } = await params
+  const isFr = isValidLocale(locale) && locale === 'fr'
 
-  let category: Awaited<
-    ReturnType<typeof db.query.categories.findFirst>
-  > = undefined
+  let product: ProductWithBrand | undefined = undefined
   try {
-    category = await db.query.categories.findFirst({
-      where: and(
-        eq(categories.slug, categorySlug),
-        isNull(categories.archivedAt)
-      ),
+    const found = await db.query.products.findFirst({
+      where: and(eq(products.slug, productSlug), isNull(products.archivedAt)),
+      with: { brand: true },
     })
+    product = found ?? undefined
   } catch {
-    category = undefined
+    product = undefined
   }
 
-  const title = category?.name ?? 'Categories'
-  const description = category
-    ? firstSentence(category.description)
-    : 'The Dtech catalog, sorted by intent.'
+  const name = product
+    ? (isFr ? product.nameFr ?? product.name : product.name)
+    : null
+  const tagline = product
+    ? (isFr ? product.taglineFr ?? product.tagline : product.tagline)
+    : null
+  const brandName = product
+    ? (isFr ? product.brand.nameFr ?? product.brand.name : product.brand.name)
+    : null
+
+  const eyebrow = brandName
+    ? `${brandName.toUpperCase()} · DTECH`
+    : isFr
+      ? 'DTECH · VITRINE CINÉMATIQUE'
+      : 'DTECH · CINEMATIC SHOWROOM'
+  const title =
+    name ?? (isFr ? 'Vitrine Dtech' : 'Dtech Showroom')
+  const subtitle =
+    tagline ??
+    (isFr ? 'Le matériel, présenté avec soin.' : 'Hardware, presented properly.')
 
   return new ImageResponse(
     (
@@ -62,12 +74,12 @@ export default async function Image({
             opacity: 0.6,
           }}
         >
-          CATEGORY · DTECH
+          {eyebrow}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
-              fontSize: 96,
+              fontSize: 80,
               fontWeight: 500,
               letterSpacing: '-0.02em',
               lineHeight: 1.05,
@@ -79,7 +91,7 @@ export default async function Image({
             <span style={{ color: '#3ec5e0' }}>.</span>
           </div>
           <div style={{ fontSize: 28, opacity: 0.78, marginTop: 24 }}>
-            {description}
+            {subtitle}
           </div>
         </div>
         <div

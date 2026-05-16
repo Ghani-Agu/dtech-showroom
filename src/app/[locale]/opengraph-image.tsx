@@ -1,30 +1,32 @@
 import { ImageResponse } from 'next/og'
-import { and, eq, isNull } from 'drizzle-orm'
-import { db } from '@/db/client'
-import { brands } from '@/db/schema'
+import { defaultLocale, isValidLocale, type Locale } from '@/i18n/config'
 
-export const alt = 'Dtech brand'
+// Node runtime (default) — postgres.js does not run on edge.
+export const alt = 'Dtech Showroom — Hardware presented properly'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
+
+const COPY: Record<Locale, { eyebrow: string; headline: string; tagline: string }> = {
+  en: {
+    eyebrow: 'DTECH · CINEMATIC SHOWROOM',
+    headline: 'Hardware, presented properly',
+    tagline: 'The Dtech Algérie catalog.',
+  },
+  fr: {
+    eyebrow: 'DTECH · VITRINE CINÉMATIQUE',
+    headline: 'Le matériel, présenté avec soin',
+    tagline: 'Le catalogue Dtech Algérie.',
+  },
+}
 
 export default async function Image({
   params,
 }: {
-  params: Promise<{ brandSlug: string }>
+  params: Promise<{ locale: string }>
 }) {
-  const { brandSlug } = await params
-
-  let brand: Awaited<ReturnType<typeof db.query.brands.findFirst>> = undefined
-  try {
-    brand = await db.query.brands.findFirst({
-      where: and(eq(brands.slug, brandSlug), isNull(brands.archivedAt)),
-    })
-  } catch {
-    brand = undefined
-  }
-
-  const title = brand?.name ?? 'Brands'
-  const statement = brand?.statement ?? 'Brands carried by Dtech.'
+  const { locale } = await params
+  const lang: Locale = isValidLocale(locale) ? locale : defaultLocale
+  const copy = COPY[lang]
 
   return new ImageResponse(
     (
@@ -50,7 +52,7 @@ export default async function Image({
             opacity: 0.6,
           }}
         >
-          BRAND · DTECH
+          {copy.eyebrow}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
@@ -63,11 +65,11 @@ export default async function Image({
               flexWrap: 'wrap',
             }}
           >
-            {title}
+            {copy.headline}
             <span style={{ color: '#3ec5e0' }}>.</span>
           </div>
           <div style={{ fontSize: 28, opacity: 0.78, marginTop: 24 }}>
-            {statement}
+            {copy.tagline}
           </div>
         </div>
         <div

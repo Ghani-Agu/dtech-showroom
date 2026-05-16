@@ -1,23 +1,28 @@
-import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
+import { Link } from '@/i18n/routing'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
-
-const catalogLinks = [
-  { href: '/categories', label: 'All categories' },
-  { href: '/brands', label: 'All brands' },
-  { href: '/search', label: 'Search' },
-]
-
-const companyLinks = [
-  { href: '/about', label: 'About Dtech' },
-  { href: '/about#contact', label: 'Contact' },
-]
 
 const legalLinks = [
   { href: '#', label: 'Terms' },
   { href: '#', label: 'Privacy' },
 ]
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const t = await getTranslations('navigation')
+  const tFooter = await getTranslations('footer')
+  const tCommon = await getTranslations('common')
+
+  const catalogLinks = [
+    { href: '/categories', label: t('categories') },
+    { href: '/brands', label: t('brands') },
+    { href: '/search', label: tCommon('search') },
+  ]
+
+  const companyLinks = [
+    { href: '/about', label: t('about') },
+    { href: '/about#contact', label: t('contactDtech') },
+  ]
+
   return (
     <footer
       id="contact"
@@ -30,16 +35,15 @@ export function SiteFooter() {
               className="font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
               data-scroll-wordmark
             >
-              DTECH
+              {tFooter('wordmark')}
             </p>
             <p className="max-w-xs font-body text-sm text-text-secondary">
-              Distributor of HP, Dell, ASUS, TP-Link, and the in-house D-Tech line.
-              Based in Algeria since 2006.
+              {tFooter('tagline')}
             </p>
           </div>
 
           <div className="space-y-4">
-            <EyebrowLabel>CATALOG</EyebrowLabel>
+            <EyebrowLabel>{t('catalog').toUpperCase()}</EyebrowLabel>
             <ul className="space-y-2">
               {catalogLinks.map((link) => (
                 <li key={link.href}>
@@ -55,7 +59,7 @@ export function SiteFooter() {
           </div>
 
           <div className="space-y-4">
-            <EyebrowLabel>COMPANY</EyebrowLabel>
+            <EyebrowLabel>{t('about').toUpperCase()}</EyebrowLabel>
             <ul className="space-y-2">
               {companyLinks.map((link) => (
                 <li key={link.href}>
@@ -85,7 +89,7 @@ export function SiteFooter() {
           </div>
 
           <div className="space-y-4">
-            <EyebrowLabel>CONTACT</EyebrowLabel>
+            <EyebrowLabel>{t('contactDtech').toUpperCase()}</EyebrowLabel>
             <ul className="space-y-2 font-body text-sm text-text-secondary">
               <li>contact@d-techalgerie.com</li>
               <li>+213 0 00 00 00 00</li>
@@ -100,10 +104,10 @@ export function SiteFooter() {
 
         <div className="mt-16 flex flex-col gap-4 border-t border-surface-elevated pt-8 md:flex-row md:items-center md:justify-between">
           <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
-            DTECH — HARDWARE TECHNOLOGY SERVICE · ALGÉRIE · EST. 2006
+            {tFooter('established')}
           </p>
           <p className="font-mono text-xs uppercase tracking-wider text-text-disabled">
-            © {new Date().getFullYear()} Dtech Algérie
+            {tFooter('copyright', { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>

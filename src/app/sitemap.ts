@@ -1,65 +1,94 @@
 import type { MetadataRoute } from 'next'
-import { isNull } from 'drizzle-orm'
+import { asc, isNull } from 'drizzle-orm'
 import { db } from '@/db/client'
-import {
-  brands,
-  categories,
-  products,
-  type Brand,
-  type Category,
-  type Product,
-} from '@/db/schema'
+import { brands, categories, products } from '@/db/schema'
+import { locales } from '@/i18n/config'
 
-const BASE_URL =
+const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dtech-showroom.vercel.app'
 
 export const revalidate = 3600 // regenerate hourly
 
+const STATIC_PATHS = ['', '/about', '/brands', '/categories', '/search']
+
+function languageAlternates(path: string): Record<string, string> {
+  return Object.fromEntries(
+    locales.map((l) => [l, `${SITE_URL}/${l}${path}`])
+  )
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let allBrands: Brand[] = []
-  let allCategories: Category[] = []
-  let allProducts: Product[] = []
+  let productList: Array<{ slug: string; updatedAt: Date }> = []
+  let brandList: Array<{ slug: string; updatedAt: Date }> = []
+  let categoryList: Array<{ slug: string; updatedAt: Date }> = []
 
   try {
-    ;[allBrands, allCategories, allProducts] = await Promise.all([
-      db.select().from(brands).where(isNull(brands.archivedAt)),
-      db.select().from(categories).where(isNull(categories.archivedAt)),
-      db.select().from(products).where(isNull(products.archivedAt)),
+    ;[productList, brandList, categoryList] = await Promise.all([
+      db
+        .select({ slug: products.slug, updatedAt: products.updatedAt })
+        .from(products)
+        .where(isNull(products.archivedAt))
+        .orderBy(asc(products.sortOrder)),
+      db
+        .select({ slug: brands.slug, updatedAt: brands.updatedAt })
+        .from(brands)
+        .where(isNull(brands.archivedAt)),
+      db
+        .select({ slug: categories.slug, updatedAt: categories.updatedAt })
+        .from(categories)
+        .where(isNull(categories.archivedAt)),
     ])
   } catch {
     // DB unavailable at build time — sitemap will be the static-only baseline
   }
 
   const now = new Date()
+  const entries: MetadataRoute.Sitemap = []
 
-  const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${BASE_URL}/`, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${BASE_URL}/brands`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/categories`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${BASE_URL}/search`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-  ]
+  for (const locale of locales) {
+    for (const path of STATIC_PATHS) {
+      entries.push({
+        url: `${SITE_URL}/${locale}${path}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: path === '' ? 1.0 : 0.7,
+        alternates: { languages: languageAlternates(path) },
+      })
+    }
 
-  const brandRoutes: MetadataRoute.Sitemap = allBrands.map((brand) => ({
-    url: `${BASE_URL}/brands/${brand.slug}`,
-    lastModified: brand.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }))
+    for (const brand of brandList) {
+      const path = `/brands/${brand.slug}`
+      entries.push({
+        url: `${SITE_URL}/${locale}${path}`,
+        lastModified: brand.updatedAt ?? now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+        alternates: { languages: languageAlternates(path) },
+      })
+    }
 
-  const categoryRoutes: MetadataRoute.Sitemap = allCategories.map((cat) => ({
-    url: `${BASE_URL}/categories/${cat.slug}`,
-    lastModified: cat.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }))
+    for (const category of categoryList) {
+      const path = `/categories/${category.slug}`
+      entries.push({
+        url: `${SITE_URL}/${locale}${path}`,
+        lastModified: category.updatedAt ?? now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+        alternates: { languages: languageAlternates(path) },
+      })
+    }
 
-  const productRoutes: MetadataRoute.Sitemap = allProducts.map((product) => ({
-    url: `${BASE_URL}/products/${product.slug}`,
-    lastModified: product.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.6,
-  }))
+    for (const product of productList) {
+      const path = `/products/${product.slug}`
+      entries.push({
+        url: `${SITE_URL}/${locale}${path}`,
+        lastModified: product.updatedAt ?? now,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+        alternates: { languages: languageAlternates(path) },
+      })
+    }
+  }
 
-  return [...staticRoutes, ...brandRoutes, ...categoryRoutes, ...productRoutes]
+  return entries
 }

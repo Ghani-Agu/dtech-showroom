@@ -1,7 +1,9 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useRouter } from '@/i18n/routing'
 import { cn } from '@/lib/utils'
 
 interface SearchInputProps {
@@ -9,10 +11,8 @@ interface SearchInputProps {
   placeholder?: string
 }
 
-export function SearchInput({
-  className,
-  placeholder = 'Search the catalog',
-}: SearchInputProps) {
+export function SearchInput({ className, placeholder }: SearchInputProps) {
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentQuery = searchParams.get('q') ?? ''
@@ -42,7 +42,7 @@ export function SearchInput({
       className={cn('flex w-full items-center', className)}
     >
       <label htmlFor="site-search" className="sr-only">
-        Search the catalog
+        {tCommon('searchPlaceholder')}
       </label>
       <input
         id="site-search"
@@ -50,7 +50,7 @@ export function SearchInput({
         name="q"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? tCommon('searchPlaceholder')}
         className="w-full rounded-sm bg-surface-elevated px-4 py-2 font-body text-sm text-text-primary placeholder:text-text-muted outline-none focus:ring-1 focus:ring-accent"
       />
     </form>

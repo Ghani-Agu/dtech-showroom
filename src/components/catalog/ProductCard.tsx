@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import { SmartImage } from '@/components/ui/SmartImage'
 import { cn } from '@/lib/utils'
 import type { ProductWithRelations } from '@/db/schema'

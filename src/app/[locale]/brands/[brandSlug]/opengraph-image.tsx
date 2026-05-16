@@ -1,11 +1,41 @@
 import { ImageResponse } from 'next/og'
+import { and, eq, isNull } from 'drizzle-orm'
+import { db } from '@/db/client'
+import { brands } from '@/db/schema'
+import { isValidLocale } from '@/i18n/config'
 
-// Node runtime (default) — postgres.js does not run on edge.
-export const alt = 'Dtech Showroom — Hardware presented properly'
+export const alt = 'Dtech brand'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-export default async function Image() {
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ locale: string; brandSlug: string }>
+}) {
+  const { locale, brandSlug } = await params
+  const isFr = isValidLocale(locale) && locale === 'fr'
+
+  let brand: Awaited<ReturnType<typeof db.query.brands.findFirst>> = undefined
+  try {
+    brand = await db.query.brands.findFirst({
+      where: and(eq(brands.slug, brandSlug), isNull(brands.archivedAt)),
+    })
+  } catch {
+    brand = undefined
+  }
+
+  const title = brand
+    ? (isFr ? brand.nameFr ?? brand.name : brand.name)
+    : isFr
+      ? 'Marques'
+      : 'Brands'
+  const statement = brand
+    ? (isFr ? brand.statementFr ?? brand.statement : brand.statement)
+    : isFr
+      ? 'Marques distribuées par Dtech.'
+      : 'Brands carried by Dtech.'
+
   return new ImageResponse(
     (
       <div
@@ -30,7 +60,7 @@ export default async function Image() {
             opacity: 0.6,
           }}
         >
-          DTECH · CINEMATIC SHOWROOM
+          BRAND · DTECH
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
@@ -43,11 +73,11 @@ export default async function Image() {
               flexWrap: 'wrap',
             }}
           >
-            Hardware, presented properly
+            {title}
             <span style={{ color: '#3ec5e0' }}>.</span>
           </div>
           <div style={{ fontSize: 28, opacity: 0.78, marginTop: 24 }}>
-            The Dtech Algérie catalog.
+            {statement}
           </div>
         </div>
         <div

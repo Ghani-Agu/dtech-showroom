@@ -1,19 +1,26 @@
-import { InquiryButton } from '@/components/ui/InquiryButton'
+import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-[70vh] items-center justify-center bg-surface-base px-8 py-16">
-      <div className="mx-auto max-w-2xl space-y-6 text-center">
-        <h1 className="font-display text-7xl font-medium tracking-tight text-text-primary leading-tight">
-          404<span className="text-accent">.</span>
-        </h1>
-        <p className="font-body text-xl text-text-secondary">
-          This page isn&apos;t in the catalog.
-        </p>
-        <div className="flex justify-center pt-4">
-          <InquiryButton href="/">Return to the floor</InquiryButton>
+    <html lang="en">
+      <body className="bg-surface-base text-text-primary">
+        <div className="flex min-h-screen items-center justify-center px-8 py-16">
+          <div className="max-w-xl space-y-6 text-center">
+            <h1 className="font-display text-7xl font-medium leading-tight tracking-tight">
+              404<span className="text-accent">.</span>
+            </h1>
+            <p className="font-body text-xl text-text-secondary">
+              That page is not in the catalog.
+            </p>
+            <Link
+              href="/en"
+              className="font-body text-base text-text-primary underline decoration-text-muted underline-offset-4 hover:decoration-accent"
+            >
+              Back to home →
+            </Link>
+          </div>
         </div>
-      </div>
-    </div>
+      </body>
+    </html>
   )
 }

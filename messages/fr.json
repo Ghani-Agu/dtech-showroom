@@ -1,0 +1,132 @@
+{
+  "common": {
+    "siteName": "Dtech",
+    "tagline": "Le matériel, présenté avec soin.",
+    "search": "Rechercher",
+    "searchPlaceholder": "Rechercher dans le catalogue",
+    "viewAll": "Voir tout",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Envoyer",
+    "close": "Fermer",
+    "open": "Ouvrir",
+    "menu": "Menu",
+    "skipToContent": "Aller au contenu"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "catalog": "Catalogue",
+    "brands": "Marques",
+    "categories": "Catégories",
+    "about": "À propos",
+    "contactDtech": "Contacter Dtech",
+    "viewSite": "Voir le site"
+  },
+  "home": {
+    "eyebrow": "DTECH ALGÉRIE · DEPUIS 2006",
+    "headline": "Le matériel,",
+    "headlineLine2": "présenté",
+    "headlineLine3": "avec soin",
+    "description": "Un catalogue soigneusement sélectionné d'ordinateurs portables, équipements réseau, mobiles et accessoires des marques HP, Dell, ASUS, TP-Link, et de notre ligne maison D-Tech. Parcourez la vitrine. Contactez-nous lorsque vous trouvez l'équipement qu'il vous faut.",
+    "browseCatalog": "Parcourir le catalogue",
+    "featuredTitle": "Notre sélection actuelle",
+    "featuredSubtitle": "Cinq produits qui méritent votre attention.",
+    "brandsTitle": "Cinq marques, choisies avec soin",
+    "brandsSubtitle": "Nous distribuons les marques qui répondent à nos standards.",
+    "categoriesTitle": "Triées par usage",
+    "categoriesSubtitle": "Trouvez selon votre besoin, pas selon notre nomenclature."
+  },
+  "brands": {
+    "pageTitle": "Marques",
+    "indexHeading": "Les marques que nous distribuons",
+    "indexSubtitle": "Cinq lignes sélectionnées pour leur qualité de fabrication, leurs droits de distribution, et la profondeur de leur gamme.",
+    "viewProducts": "Voir les produits"
+  },
+  "categories": {
+    "pageTitle": "Catégories",
+    "indexHeading": "Triées par usage",
+    "indexSubtitle": "Parcourez le catalogue selon ce que vous recherchez.",
+    "viewCategory": "Voir la catégorie"
+  },
+  "products": {
+    "pageTitle": "Produits",
+    "specifications": "Caractéristiques",
+    "inquireButton": "Demander des informations",
+    "relatedProducts": "Produits associés",
+    "viewProduct": "Voir le produit",
+    "notAvailable": "Non disponible"
+  },
+  "search": {
+    "pageTitle": "Recherche",
+    "heading": "Résultats de recherche",
+    "placeholder": "Rechercher un produit, une marque, ou une catégorie",
+    "resultsFor": "Résultats pour",
+    "noResults": "Aucun résultat trouvé",
+    "noResultsHint": "Essayez un autre terme ou parcourez directement le catalogue.",
+    "tooShort": "La recherche doit contenir au moins 2 caractères"
+  },
+  "inquiry": {
+    "pageTitle": "Demander des informations",
+    "heading": "Informations sur",
+    "subheading": "Envoyez-nous un message au sujet de ce produit. Nous répondons sous un jour ouvrable.",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Votre nom complet",
+    "email": "E-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "phone": "Téléphone",
+    "phonePlaceholder": "+213 ...",
+    "company": "Entreprise (facultatif)",
+    "companyPlaceholder": "Votre entreprise",
+    "message": "Message",
+    "messagePlaceholder": "Dites-nous ce que vous aimeriez savoir sur ce produit...",
+    "submit": "Envoyer la demande",
+    "submitting": "Envoi en cours...",
+    "sentTitle": "Demande envoyée",
+    "sentMessage": "Nous avons bien reçu votre demande et y répondrons sous un jour ouvrable.",
+    "sentAction": "Parcourir le catalogue",
+    "errors": {
+      "required": "Ce champ est requis",
+      "invalidEmail": "Veuillez saisir une adresse e-mail valide",
+      "messageTooShort": "Le message doit contenir au moins 10 caractères",
+      "submitFailed": "Impossible d'envoyer la demande. Veuillez réessayer."
+    }
+  },
+  "about": {
+    "pageTitle": "À propos",
+    "heading": "À propos de Dtech",
+    "establishedSince": "Depuis 2006",
+    "introduction": "Dtech est un distributeur de matériel technologique algérien basé à Alger. Nous distribuons du matériel des marques HP, Dell, ASUS, TP-Link, et de notre ligne maison D-Tech, au service des entreprises et particuliers à travers l'Algérie.",
+    "approach": "Notre approche",
+    "approachBody": "Nous sélectionnons ce que nous distribuons. Nous ne listons pas chaque référence disponible chez chaque fabricant. Nous distribuons les produits que nous recommanderions, et nous présentons chacun avec l'attention qu'il mérite.",
+    "contact": "Contact",
+    "contactBody": "Pour les demandes produits, utilisez le bouton d'information sur chaque page produit. Pour les partenariats ou les demandes de gros, écrivez-nous directement."
+  },
+  "footer": {
+    "wordmark": "DTECH",
+    "tagline": "Le matériel. Présenté avec soin.",
+    "copyright": "© {year} Dtech Algérie. Tous droits réservés.",
+    "established": "Depuis 2006 · Alger"
+  },
+  "notFound": {
+    "title": "Introuvable",
+    "heading": "Page introuvable",
+    "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "action": "Retour à l'accueil"
+  },
+  "errors": {
+    "title": "Une erreur est survenue",
+    "heading": "Erreur",
+    "description": "Nous avons été notifiés. Veuillez réessayer ou retourner à la page d'accueil.",
+    "retry": "Réessayer",
+    "home": "Retour à l'accueil"
+  },
+  "metadata": {
+    "siteName": "Dtech Algérie",
+    "defaultTitle": "Dtech — Le matériel, présenté avec soin.",
+    "defaultDescription": "Un catalogue soigneusement sélectionné d'ordinateurs portables, équipements réseau, mobiles et accessoires des marques HP, Dell, ASUS, TP-Link, et de notre ligne maison D-Tech.",
+    "ogImageAlt": "Dtech Algérie"
+  }
+}

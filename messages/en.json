@@ -1,0 +1,132 @@
+{
+  "common": {
+    "siteName": "Dtech",
+    "tagline": "Hardware, presented properly.",
+    "search": "Search",
+    "searchPlaceholder": "Search the catalog",
+    "viewAll": "View all",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "close": "Close",
+    "open": "Open",
+    "menu": "Menu",
+    "skipToContent": "Skip to content"
+  },
+  "navigation": {
+    "home": "Home",
+    "catalog": "Catalog",
+    "brands": "Brands",
+    "categories": "Categories",
+    "about": "About",
+    "contactDtech": "Contact Dtech",
+    "viewSite": "View site"
+  },
+  "home": {
+    "eyebrow": "DTECH ALGÉRIE · EST. 2006",
+    "headline": "Hardware,",
+    "headlineLine2": "presented",
+    "headlineLine3": "properly",
+    "description": "A curated catalog of laptops, networking, mobile, and accessories from HP, Dell, ASUS, TP-Link, and the in-house D-Tech line. Browse the showroom. Inquire when you find the machine.",
+    "browseCatalog": "Browse the catalog",
+    "featuredTitle": "The current selection",
+    "featuredSubtitle": "Five products we think are worth your time.",
+    "brandsTitle": "Five lines, considered",
+    "brandsSubtitle": "We carry brands that match the showroom standard.",
+    "categoriesTitle": "Sorted by intent",
+    "categoriesSubtitle": "Find by what you need it for, not what we call it."
+  },
+  "brands": {
+    "pageTitle": "Brands",
+    "indexHeading": "Brands we carry",
+    "indexSubtitle": "Five lines selected for build quality, distribution rights, and product depth.",
+    "viewProducts": "View products"
+  },
+  "categories": {
+    "pageTitle": "Categories",
+    "indexHeading": "Sorted by intent",
+    "indexSubtitle": "Browse the catalog by what you're looking for.",
+    "viewCategory": "View category"
+  },
+  "products": {
+    "pageTitle": "Products",
+    "specifications": "Specifications",
+    "inquireButton": "Inquire about this product",
+    "relatedProducts": "Related products",
+    "viewProduct": "View product",
+    "notAvailable": "Not available"
+  },
+  "search": {
+    "pageTitle": "Search",
+    "heading": "Search results",
+    "placeholder": "Search for a product, brand, or category",
+    "resultsFor": "Results for",
+    "noResults": "No results found",
+    "noResultsHint": "Try a different search term or browse the catalog directly.",
+    "tooShort": "Search must be at least 2 characters"
+  },
+  "inquiry": {
+    "pageTitle": "Inquire",
+    "heading": "Inquire about",
+    "subheading": "Send us a message about this product. We'll respond within one business day.",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Your full name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+213 ...",
+    "company": "Company (optional)",
+    "companyPlaceholder": "Your company",
+    "message": "Message",
+    "messagePlaceholder": "Tell us what you'd like to know about this product...",
+    "submit": "Send inquiry",
+    "submitting": "Sending...",
+    "sentTitle": "Inquiry sent",
+    "sentMessage": "We've received your inquiry and will respond within one business day.",
+    "sentAction": "Browse the catalog",
+    "errors": {
+      "required": "This field is required",
+      "invalidEmail": "Please enter a valid email address",
+      "messageTooShort": "Message must be at least 10 characters",
+      "submitFailed": "Could not send inquiry. Please try again."
+    }
+  },
+  "about": {
+    "pageTitle": "About",
+    "heading": "About Dtech",
+    "establishedSince": "Established 2006",
+    "introduction": "Dtech is an Algerian technology distributor based in Algiers. We carry hardware from HP, Dell, ASUS, TP-Link, and our in-house D-Tech line, serving businesses and individuals across Algeria.",
+    "approach": "Our approach",
+    "approachBody": "We curate what we carry. We don't list every SKU available from every manufacturer. We carry products we'd recommend, and we present each one with the attention it deserves.",
+    "contact": "Contact",
+    "contactBody": "For product inquiries, use the inquiry button on any product page. For partnership or wholesale inquiries, write to us directly."
+  },
+  "footer": {
+    "wordmark": "DTECH",
+    "tagline": "Hardware. Quietly considered.",
+    "copyright": "© {year} Dtech Algérie. All rights reserved.",
+    "established": "Est. 2006 · Algiers"
+  },
+  "notFound": {
+    "title": "Not found",
+    "heading": "We couldn't find that page",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "action": "Back to home"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "heading": "An error occurred",
+    "description": "We've been notified. Please try again or return to the home page.",
+    "retry": "Try again",
+    "home": "Back to home"
+  },
+  "metadata": {
+    "siteName": "Dtech Algérie",
+    "defaultTitle": "Dtech — Hardware, presented properly.",
+    "defaultDescription": "A curated catalog of laptops, networking, mobile, and accessories from HP, Dell, ASUS, TP-Link, and the in-house D-Tech line.",
+    "ogImageAlt": "Dtech Algérie"
+  }
+}
