@@ -1,7 +1,7 @@
 import 'server-only'
 import sharp from 'sharp'
 
-export type ImageVariant = 'card' | 'hero' | 'carousel'
+export type ImageVariant = 'card' | 'hero' | 'carousel' | 'logo'
 export type ImageFormat = 'webp' | 'avif'
 
 interface VariantSpec {
@@ -32,6 +32,12 @@ export const VARIANT_SPECS: Record<ImageVariant, VariantSpec> = {
     height: 1200,
     fit: 'cover',
     quality: { webp: 82, avif: 60 },
+  },
+  logo: {
+    width: 600,
+    height: 600,
+    fit: 'contain',
+    quality: { webp: 85, avif: 65 },
   },
 }
 
@@ -79,9 +85,13 @@ export async function processVariant(
 ): Promise<Buffer> {
   const spec = VARIANT_SPECS[variant]
 
+  const isContain = spec.fit === 'contain'
   let pipeline = sharp(sourceBuffer).resize(spec.width, spec.height, {
     fit: spec.fit,
-    position: 'attention',
+    position: isContain ? 'center' : 'attention',
+    background: isContain
+      ? { r: 0, g: 0, b: 0, alpha: 0 }
+      : undefined,
     withoutEnlargement: false,
   })
 

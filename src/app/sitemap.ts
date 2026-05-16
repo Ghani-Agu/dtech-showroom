@@ -22,8 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     ;[allBrands, allCategories, allProducts] = await Promise.all([
-      db.select().from(brands),
-      db.select().from(categories),
+      db.select().from(brands).where(isNull(brands.archivedAt)),
+      db.select().from(categories).where(isNull(categories.archivedAt)),
       db.select().from(products).where(isNull(products.archivedAt)),
     ])
   } catch {

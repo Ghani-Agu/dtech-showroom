@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
+import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { categories } from '@/db/schema'
-import { eq } from 'drizzle-orm'
 
 export const alt = 'Dtech category'
 export const size = { width: 1200, height: 630 }
@@ -24,7 +24,10 @@ export default async function Image({
   > = undefined
   try {
     category = await db.query.categories.findFirst({
-      where: eq(categories.slug, categorySlug),
+      where: and(
+        eq(categories.slug, categorySlug),
+        isNull(categories.archivedAt)
+      ),
     })
   } catch {
     category = undefined

@@ -32,7 +32,11 @@ async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 export async function getAllBrands(): Promise<Brand[]> {
   return safe(
     () =>
-      db.select().from(brands).orderBy(asc(brands.sortOrder), asc(brands.name)),
+      db
+        .select()
+        .from(brands)
+        .where(isNull(brands.archivedAt))
+        .orderBy(asc(brands.sortOrder), asc(brands.name)),
     []
   )
 }
@@ -42,7 +46,7 @@ export async function getBrandBySlug(slug: string): Promise<Brand | null> {
     const rows = await db
       .select()
       .from(brands)
-      .where(eq(brands.slug, slug))
+      .where(and(eq(brands.slug, slug), isNull(brands.archivedAt)))
       .limit(1)
     return rows[0] ?? null
   }, null)
@@ -54,6 +58,7 @@ export async function getAllCategories(): Promise<Category[]> {
       db
         .select()
         .from(categories)
+        .where(isNull(categories.archivedAt))
         .orderBy(asc(categories.sortOrder), asc(categories.name)),
     []
   )
@@ -64,7 +69,9 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     const rows = await db
       .select()
       .from(categories)
-      .where(eq(categories.slug, slug))
+      .where(
+        and(eq(categories.slug, slug), isNull(categories.archivedAt))
+      )
       .limit(1)
     return rows[0] ?? null
   }, null)

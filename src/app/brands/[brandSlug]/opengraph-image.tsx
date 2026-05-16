@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
+import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { brands } from '@/db/schema'
-import { eq } from 'drizzle-orm'
 
 export const alt = 'Dtech brand'
 export const size = { width: 1200, height: 630 }
@@ -17,7 +17,7 @@ export default async function Image({
   let brand: Awaited<ReturnType<typeof db.query.brands.findFirst>> = undefined
   try {
     brand = await db.query.brands.findFirst({
-      where: eq(brands.slug, brandSlug),
+      where: and(eq(brands.slug, brandSlug), isNull(brands.archivedAt)),
     })
   } catch {
     brand = undefined

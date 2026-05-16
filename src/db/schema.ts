@@ -20,29 +20,58 @@ export const inquiryStatusEnum = pgEnum('inquiry_status', [
   'spam',
 ])
 
-export const brands = pgTable('brands', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  slug: text('slug').notNull().unique(),
-  name: text('name').notNull(),
-  statement: text('statement').notNull(),
-  description: text('description').notNull(),
-  heroImagePath: text('hero_image_path'),
-  logoPath: text('logo_path'),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+export const brands = pgTable(
+  'brands',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    statement: text('statement').notNull(),
+    description: text('description').notNull(),
+    heroImagePath: text('hero_image_path'),
+    logoPath: text('logo_path'),
+    sortOrder: integer('sort_order').notNull().default(0),
 
-export const categories = pgTable('categories', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  slug: text('slug').notNull().unique(),
-  name: text('name').notNull(),
-  description: text('description').notNull(),
-  heroImagePath: text('hero_image_path'),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+    // Bilingual content (Phase 7e)
+    nameFr: text('name_fr'),
+    statementFr: text('statement_fr'),
+    descriptionFr: text('description_fr'),
+    searchKeywords: text('search_keywords'),
+    searchKeywordsFr: text('search_keywords_fr'),
+
+    // Soft delete (Phase 7e)
+    archivedAt: timestamp('archived_at'),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [index('brands_archived_at_idx').on(table.archivedAt)]
+)
+
+export const categories = pgTable(
+  'categories',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description').notNull(),
+    heroImagePath: text('hero_image_path'),
+    sortOrder: integer('sort_order').notNull().default(0),
+
+    // Bilingual content (Phase 7e)
+    nameFr: text('name_fr'),
+    descriptionFr: text('description_fr'),
+    searchKeywords: text('search_keywords'),
+    searchKeywordsFr: text('search_keywords_fr'),
+
+    // Soft delete (Phase 7e)
+    archivedAt: timestamp('archived_at'),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [index('categories_archived_at_idx').on(table.archivedAt)]
+)
 
 export const products = pgTable(
   'products',
@@ -218,16 +247,27 @@ export type InquiryStatus = (typeof inquiryStatusEnum.enumValues)[number]
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'staff'])
 
-export const users = pgTable('users', {
-  id: text('id').primaryKey(), // better-auth uses string IDs
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  name: text('name').notNull(),
-  image: text('image'),
-  role: userRoleEnum('role').notNull().default('staff'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+export const users = pgTable(
+  'users',
+  {
+    id: text('id').primaryKey(), // better-auth uses string IDs
+    email: text('email').notNull().unique(),
+    emailVerified: boolean('email_verified').notNull().default(false),
+    name: text('name').notNull(),
+    image: text('image'),
+    role: userRoleEnum('role').notNull().default('staff'),
+
+    // Phase 7e — admin user management
+    deactivatedAt: timestamp('deactivated_at'),
+    lastLoginAt: timestamp('last_login_at'),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('users_deactivated_at_idx').on(table.deactivatedAt),
+  ]
+)
 
 export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(),

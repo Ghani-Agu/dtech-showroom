@@ -126,7 +126,11 @@ export function ImageUpload({
           <div
             className={cn(
               'relative overflow-hidden rounded-md bg-surface-elevated',
-              variant === 'hero' ? 'aspect-[16/9]' : 'aspect-[4/3]'
+              variant === 'hero'
+                ? 'aspect-[16/9]'
+                : variant === 'logo'
+                  ? 'aspect-square'
+                  : 'aspect-[4/3]'
             )}
           >
             <Image
@@ -169,7 +173,11 @@ export function ImageUpload({
           onClick={() => !isPending && inputRef.current?.click()}
           className={cn(
             'relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed transition-colors',
-            variant === 'hero' ? 'aspect-[16/9]' : 'aspect-[4/3]',
+            variant === 'hero'
+              ? 'aspect-[16/9]'
+              : variant === 'logo'
+                ? 'aspect-square'
+                : 'aspect-[4/3]',
             isDragging
               ? 'border-accent bg-accent/5'
               : 'border-surface-overlay bg-surface-elevated hover:border-text-muted',
@@ -198,7 +206,9 @@ export function ImageUpload({
                     ? '2400×1350'
                     : variant === 'card'
                       ? '800×600'
-                      : '1600×1200'}{' '}
+                      : variant === 'logo'
+                        ? '600×600'
+                        : '1600×1200'}{' '}
                   · WebP + AVIF
                 </p>
               </div>
