@@ -1,24 +1,26 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { SmartImage } from '@/components/ui/SmartImage'
 import { ProductGrid } from '@/components/catalog/ProductGrid'
+import { type Locale } from '@/i18n/config'
 import { getBrandBySlug, getProductsByBrand } from '@/server/queries'
 
 export const dynamic = 'force-dynamic'
 
 interface BrandPageProps {
-  params: Promise<{ brandSlug: string }>
+  params: Promise<{ locale: string; brandSlug: string }>
 }
 
 export async function generateMetadata({
   params,
 }: BrandPageProps): Promise<Metadata> {
-  const { brandSlug } = await params
-  const brand = await getBrandBySlug(brandSlug)
+  const { locale, brandSlug } = await params
+  const brand = await getBrandBySlug(brandSlug, locale as Locale)
   if (!brand) return { title: 'Brand not found' }
   return {
     title: brand.name,
@@ -28,10 +30,13 @@ export async function generateMetadata({
 
 export default async function BrandPage({ params }: BrandPageProps) {
   const { brandSlug } = await params
-  const brand = await getBrandBySlug(brandSlug)
+  const locale = (await getLocale()) as Locale
+  const tNav = await getTranslations('navigation')
+
+  const brand = await getBrandBySlug(brandSlug, locale)
   if (!brand) notFound()
 
-  const productList = await getProductsByBrand(brandSlug)
+  const productList = await getProductsByBrand(brandSlug, locale)
   const featured = productList.filter((p) => p.featured)
   const rest = productList.filter((p) => !p.featured)
 
@@ -41,8 +46,8 @@ export default async function BrandPage({ params }: BrandPageProps) {
         <div className="space-y-16">
           <Breadcrumbs
             items={[
-              { label: 'Home', href: '/' },
-              { label: 'Brands', href: '/brands' },
+              { label: tNav('home'), href: '/' },
+              { label: tNav('brands'), href: '/brands' },
               { label: brand.name },
             ]}
           />
@@ -61,7 +66,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
               />
             </div>
             <div className="max-w-3xl space-y-4">
-              <EyebrowLabel>BRAND</EyebrowLabel>
+              <EyebrowLabel>{tNav('brands').toUpperCase()}</EyebrowLabel>
               <Heading as="h1" size="hero">
                 {brand.name}
               </Heading>

@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
@@ -8,6 +9,7 @@ import { CategoryCard } from '@/components/catalog/CategoryCard'
 import { ShaderHeroDynamic } from '@/components/three/ShaderHero/ShaderHeroDynamic'
 import { HeroRevealOrchestrator } from '@/components/sections/HeroRevealOrchestrator'
 import { HomepageChoreography } from '@/components/sections/HomepageChoreography'
+import { type Locale } from '@/i18n/config'
 import {
   getFeaturedProducts,
   getAllBrands,
@@ -17,11 +19,21 @@ import {
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
+  const locale = (await getLocale()) as Locale
+  const t = await getTranslations('home')
+  const tNav = await getTranslations('navigation')
+  const tCommon = await getTranslations('common')
+
   const [featured, brandList, categoryList] = await Promise.all([
-    getFeaturedProducts(5),
-    getAllBrands(),
-    getAllCategories(),
+    getFeaturedProducts(5, locale),
+    getAllBrands(locale),
+    getAllCategories(locale),
   ])
+
+  // 3-line headline joined with spaces; visual line break comes from
+  // typography at hero font size, not hard breaks (preserves the existing
+  // single-Heading reveal choreography from Phase 5).
+  const headline = `${t('headline')} ${t('headlineLine2')} ${t('headlineLine3')}`
 
   return (
     <>
@@ -31,31 +43,29 @@ export default async function HomePage() {
 
       {/* Hero */}
       <section className="relative flex min-h-screen items-center overflow-hidden py-24 md:py-32 lg:py-40">
-        {/* Shader background — fills the section, sits behind content */}
         <ShaderHeroDynamic />
 
-        {/* Hero content — relative + z-10 keeps it above the shader */}
         <div className="relative z-10 w-full">
           <Container>
             <div className="max-w-4xl space-y-6">
               <div data-hero-reveal>
-                <EyebrowLabel>DTECH ALGÉRIE · EST. 2006</EyebrowLabel>
+                <EyebrowLabel>{t('eyebrow')}</EyebrowLabel>
               </div>
               <div data-hero-reveal>
                 <Heading as="h1" size="hero" accentChar=".">
-                  Hardware, presented properly
+                  {headline}
                 </Heading>
               </div>
               <p
                 data-hero-reveal
                 className="max-w-2xl font-body text-lg text-text-secondary md:text-xl"
               >
-                A curated catalog of laptops, networking, mobile, and accessories
-                from HP, Dell, ASUS, TP-Link, and the in-house D-Tech line. Browse
-                the showroom. Inquire when you find the machine.
+                {t('description')}
               </p>
               <div data-hero-reveal className="pt-2">
-                <InquiryButton href="/categories">Browse the catalog</InquiryButton>
+                <InquiryButton href="/categories">
+                  {t('browseCatalog')}
+                </InquiryButton>
               </div>
             </div>
           </Container>
@@ -69,8 +79,11 @@ export default async function HomePage() {
             <div className="space-y-2">
               <EyebrowLabel>FEATURED · IN THE GALLERY NOW</EyebrowLabel>
               <Heading as="h2" size="lg">
-                The current selection
+                {t('featuredTitle')}
               </Heading>
+              <p className="font-body text-base text-text-secondary">
+                {t('featuredSubtitle')}
+              </p>
             </div>
             <ProductGrid
               products={featured}
@@ -88,8 +101,11 @@ export default async function HomePage() {
             <div className="space-y-2">
               <EyebrowLabel>BRANDS · CARRIED BY DTECH</EyebrowLabel>
               <Heading as="h2" size="lg">
-                Five lines, considered
+                {t('brandsTitle')}
               </Heading>
+              <p className="font-body text-base text-text-secondary">
+                {t('brandsSubtitle')}
+              </p>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {brandList.map((brand) => (
@@ -107,8 +123,11 @@ export default async function HomePage() {
             <div className="space-y-2">
               <EyebrowLabel>CATEGORIES · THE CATALOG</EyebrowLabel>
               <Heading as="h2" size="lg">
-                Sorted by intent
+                {t('categoriesTitle')}
               </Heading>
+              <p className="font-body text-base text-text-secondary">
+                {t('categoriesSubtitle')}
+              </p>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {categoryList.map((category) => (
@@ -129,15 +148,13 @@ export default async function HomePage() {
           <div className="max-w-3xl space-y-6">
             <EyebrowLabel>LOOKING FOR SOMETHING SPECIFIC?</EyebrowLabel>
             <Heading as="h2" size="md" accentChar=".">
-              Search the catalog
+              {tCommon('search')}
             </Heading>
-            <p className="font-body text-lg text-text-secondary">
-              Filter by brand, by category, or search by spec. If you don&apos;t see
-              what you need, the inquiry form lives one click away.
-            </p>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-2">
-              <InquiryButton href="/search">Search the catalog</InquiryButton>
-              <InquiryButton href="/about">About Dtech</InquiryButton>
+              <InquiryButton href="/search">
+                {tCommon('search')}
+              </InquiryButton>
+              <InquiryButton href="/about">{tNav('about')}</InquiryButton>
             </div>
           </div>
         </Container>

@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { SmartImage } from '@/components/ui/SmartImage'
 import { ProductGrid } from '@/components/catalog/ProductGrid'
+import { type Locale } from '@/i18n/config'
 import {
   getCategoryBySlug,
   getProductsByCategory,
@@ -14,14 +16,14 @@ import {
 export const dynamic = 'force-dynamic'
 
 interface CategoryPageProps {
-  params: Promise<{ categorySlug: string }>
+  params: Promise<{ locale: string; categorySlug: string }>
 }
 
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
-  const { categorySlug } = await params
-  const category = await getCategoryBySlug(categorySlug)
+  const { locale, categorySlug } = await params
+  const category = await getCategoryBySlug(categorySlug, locale as Locale)
   if (!category) return { title: 'Category not found' }
   return {
     title: category.name,
@@ -31,10 +33,13 @@ export async function generateMetadata({
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { categorySlug } = await params
-  const category = await getCategoryBySlug(categorySlug)
+  const locale = (await getLocale()) as Locale
+  const tNav = await getTranslations('navigation')
+
+  const category = await getCategoryBySlug(categorySlug, locale)
   if (!category) notFound()
 
-  const productList = await getProductsByCategory(categorySlug)
+  const productList = await getProductsByCategory(categorySlug, locale)
 
   return (
     <section className="py-16 md:py-24">
@@ -42,8 +47,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <div className="space-y-16">
           <Breadcrumbs
             items={[
-              { label: 'Home', href: '/' },
-              { label: 'Categories', href: '/categories' },
+              { label: tNav('home'), href: '/' },
+              { label: tNav('categories'), href: '/categories' },
               { label: category.name },
             ]}
           />
@@ -61,7 +66,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               />
             </div>
             <div className="max-w-3xl space-y-4">
-              <EyebrowLabel>CATEGORY</EyebrowLabel>
+              <EyebrowLabel>{tNav('categories').toUpperCase()}</EyebrowLabel>
               <Heading as="h1" size="hero">
                 {category.name}
               </Heading>

@@ -1,34 +1,41 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { SmartImage } from '@/components/ui/SmartImage'
 import { InquiryForm } from '@/components/forms/InquiryForm'
+import { type Locale } from '@/i18n/config'
 import { getProductBySlug } from '@/server/queries'
 
 export const dynamic = 'force-dynamic'
 
 interface InquiryPageProps {
-  params: Promise<{ productSlug: string }>
+  params: Promise<{ locale: string; productSlug: string }>
 }
 
 export async function generateMetadata({
   params,
 }: InquiryPageProps): Promise<Metadata> {
-  const { productSlug } = await params
-  const product = await getProductBySlug(productSlug)
-  if (!product) return { title: 'Inquiry' }
+  const { locale, productSlug } = await params
+  const t = await getTranslations('inquiry')
+  const product = await getProductBySlug(productSlug, locale as Locale)
+  if (!product) return { title: t('pageTitle') }
   return {
-    title: `Inquire about ${product.name}`,
-    description: `Send Dtech an inquiry about the ${product.name}.`,
+    title: `${t('heading')} ${product.name}`,
+    description: t('subheading'),
   }
 }
 
 export default async function InquiryPage({ params }: InquiryPageProps) {
   const { productSlug } = await params
-  const product = await getProductBySlug(productSlug)
+  const locale = (await getLocale()) as Locale
+  const t = await getTranslations('inquiry')
+  const tNav = await getTranslations('navigation')
+
+  const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
 
   return (
@@ -37,26 +44,25 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
         <div className="space-y-12">
           <Breadcrumbs
             items={[
-              { label: 'Home', href: '/' },
-              { label: 'Brands', href: '/brands' },
+              { label: tNav('home'), href: '/' },
+              { label: tNav('brands'), href: '/brands' },
               { label: product.brand.name, href: `/brands/${product.brand.slug}` },
               {
                 label: product.name,
                 href: `/products/${product.slug}`,
               },
-              { label: 'Inquiry' },
+              { label: tNav('inquiry') },
             ]}
           />
 
           {/* Header */}
           <div className="max-w-3xl space-y-4">
-            <EyebrowLabel>INQUIRY</EyebrowLabel>
+            <EyebrowLabel>{tNav('inquiry').toUpperCase()}</EyebrowLabel>
             <Heading as="h1" size="lg" accentChar=".">
-              Discuss this with us
+              {t('heading')} {product.name}
             </Heading>
             <p className="font-body text-lg text-text-secondary">
-              Tell Dtech how you intend to use this. We respond within one business
-              day with availability, configuration options, and a quote.
+              {t('subheading')}
             </p>
           </div>
 

@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { submitInquiry, type InquiryActionResult } from '@/server/actions'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
 import { cn } from '@/lib/utils'
@@ -16,14 +17,16 @@ const fieldClasses =
 
 function Submit() {
   const { pending } = useFormStatus()
+  const t = useTranslations('inquiry')
   return (
     <SecondaryButton as="button" type="submit" disabled={pending}>
-      {pending ? 'Sending…' : 'Send to Dtech →'}
+      {pending ? t('submitting') : `${t('submit')} →`}
     </SecondaryButton>
   )
 }
 
 export function InquiryForm({ productSlug }: InquiryFormProps) {
+  const t = useTranslations('inquiry')
   const [state, formAction] = useActionState<InquiryActionResult, FormData>(
     submitInquiry,
     null
@@ -66,7 +69,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="fullName" className={labelClasses}>
-            Your name
+            {t('fullName')}
           </label>
           <input
             id="fullName"
@@ -76,13 +79,13 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
             minLength={2}
             maxLength={120}
             autoComplete="name"
-            placeholder="Yacine Benali"
+            placeholder={t('fullNamePlaceholder')}
             className={fieldClasses}
           />
         </div>
         <div className="space-y-2">
           <label htmlFor="email" className={labelClasses}>
-            Email
+            {t('email')}
           </label>
           <input
             id="email"
@@ -91,7 +94,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
             required
             maxLength={255}
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={t('emailPlaceholder')}
             className={fieldClasses}
           />
         </div>
@@ -100,7 +103,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="phone" className={labelClasses}>
-            Phone
+            {t('phone')}
           </label>
           <input
             id="phone"
@@ -110,13 +113,13 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
             minLength={6}
             maxLength={40}
             autoComplete="tel"
-            placeholder="+213 ..."
+            placeholder={t('phonePlaceholder')}
             className={fieldClasses}
           />
         </div>
         <div className="space-y-2">
           <label htmlFor="company" className={labelClasses}>
-            Company <span className="text-text-muted">(optional)</span>
+            {t('company')}
           </label>
           <input
             id="company"
@@ -124,6 +127,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
             type="text"
             maxLength={120}
             autoComplete="organization"
+            placeholder={t('companyPlaceholder')}
             className={fieldClasses}
           />
         </div>
@@ -131,7 +135,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
 
       <div className="space-y-2">
         <label htmlFor="message" className={labelClasses}>
-          How will you be using this?
+          {t('message')}
         </label>
         <textarea
           id="message"
@@ -140,7 +144,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
           minLength={10}
           maxLength={5000}
           rows={5}
-          placeholder="A short note about intended use, volume, timing, configuration."
+          placeholder={t('messagePlaceholder')}
           className={cn(fieldClasses, 'resize-y')}
         />
       </div>

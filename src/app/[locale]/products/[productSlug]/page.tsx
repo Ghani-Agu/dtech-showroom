@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
@@ -9,6 +10,7 @@ import { ProductStage } from '@/components/product/ProductStage'
 import { ProductSpecs } from '@/components/product/ProductSpecs'
 import { ProductInquiryBlock } from '@/components/product/ProductInquiryBlock'
 import { ProductGrid } from '@/components/catalog/ProductGrid'
+import { type Locale } from '@/i18n/config'
 import {
   getProductBySlug,
   getRelatedProducts,
@@ -17,14 +19,14 @@ import {
 export const dynamic = 'force-dynamic'
 
 interface ProductPageProps {
-  params: Promise<{ productSlug: string }>
+  params: Promise<{ locale: string; productSlug: string }>
 }
 
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
-  const { productSlug } = await params
-  const product = await getProductBySlug(productSlug)
+  const { locale, productSlug } = await params
+  const product = await getProductBySlug(productSlug, locale as Locale)
   if (!product) return { title: 'Product not found' }
   return {
     title: `${product.name} — ${product.brand.name}`,
@@ -34,10 +36,19 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { productSlug } = await params
-  const product = await getProductBySlug(productSlug)
+  const locale = (await getLocale()) as Locale
+  const t = await getTranslations('products')
+  const tNav = await getTranslations('navigation')
+
+  const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
 
-  const related = await getRelatedProducts(product.id, product.brandId, 3)
+  const related = await getRelatedProducts(
+    product.id,
+    product.brandId,
+    3,
+    locale
+  )
   const paragraphs = product.description.split(/\n\n+/)
 
   return (
@@ -46,8 +57,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="space-y-12">
           <Breadcrumbs
             items={[
-              { label: 'Home', href: '/' },
-              { label: 'Brands', href: '/brands' },
+              { label: tNav('home'), href: '/' },
+              { label: tNav('brands'), href: '/brands' },
               { label: product.brand.name, href: `/brands/${product.brand.slug}` },
               { label: product.name },
             ]}
@@ -71,7 +82,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
             <div className="lg:pb-2">
               <InquiryButton href={`/inquiry/${product.slug}`}>
-                Discuss this with us
+                {t('inquireButton')}
               </InquiryButton>
             </div>
           </div>
@@ -87,7 +98,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* Specs */}
           <div className="space-y-6">
-            <EyebrowLabel>SPECIFICATIONS</EyebrowLabel>
+            <EyebrowLabel>{t('specifications').toUpperCase()}</EyebrowLabel>
             <ProductSpecs specs={product.specs} />
           </div>
 
@@ -101,7 +112,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           {related.length > 0 ? (
             <div className="space-y-8">
               <EyebrowLabel>
-                OTHER {product.brand.name.toUpperCase()} PRODUCTS
+                {t('relatedProducts').toUpperCase()}
               </EyebrowLabel>
               <ProductGrid products={related} />
             </div>

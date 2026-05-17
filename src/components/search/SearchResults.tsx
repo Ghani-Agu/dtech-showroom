@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
 import { ProductGrid } from '@/components/catalog/ProductGrid'
@@ -9,30 +10,29 @@ interface SearchResultsProps {
   results: ProductWithRelations[]
 }
 
-export function SearchResults({ query, results }: SearchResultsProps) {
+export async function SearchResults({ query, results }: SearchResultsProps) {
+  const t = await getTranslations('search')
+  const tNav = await getTranslations('navigation')
+
   if (query.trim().length === 0) {
-    return (
-      <EmptyState
-        message="Type at least two characters to search the catalog."
-      />
-    )
+    return <EmptyState message={t('tooShort')} />
   }
 
   if (results.length === 0) {
     return (
       <div className="space-y-12">
         <div className="space-y-2">
-          <EyebrowLabel>SEARCH</EyebrowLabel>
+          <EyebrowLabel>{tNav('search').toUpperCase()}</EyebrowLabel>
           <Heading as="h1" size="lg">
-            No matches for{' '}
+            {t('noResults')}{' '}
             <span className="text-accent">&ldquo;{query}&rdquo;</span>
           </Heading>
         </div>
         <EmptyState
-          message="Nothing in the catalog matched. Try a different word, or browse the brands and categories."
+          message={t('noResultsHint')}
           actions={[
-            { label: 'All brands', href: '/brands' },
-            { label: 'All categories', href: '/categories' },
+            { label: tNav('brands'), href: '/brands' },
+            { label: tNav('categories'), href: '/categories' },
           ]}
         />
       </div>
@@ -42,9 +42,11 @@ export function SearchResults({ query, results }: SearchResultsProps) {
   return (
     <div className="space-y-12">
       <div className="space-y-2">
-        <EyebrowLabel>SEARCH · {results.length} RESULTS</EyebrowLabel>
+        <EyebrowLabel>
+          {tNav('search').toUpperCase()} · {results.length}
+        </EyebrowLabel>
         <Heading as="h1" size="lg">
-          Showing results for{' '}
+          {t('resultsFor')}{' '}
           <span className="text-accent">&ldquo;{query}&rdquo;</span>
         </Heading>
       </div>
