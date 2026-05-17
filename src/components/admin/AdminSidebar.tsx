@@ -10,6 +10,7 @@ import {
   Tag,
   Users,
 } from 'lucide-react'
+import { Logo } from '@/components/brand/Logo'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -44,9 +45,13 @@ export function AdminSidebar({ userRole }: AdminSidebarProps) {
       <div className="border-b border-surface-overlay px-6 py-5">
         <Link
           href="/admin"
-          className="font-mono text-sm uppercase tracking-wider text-text-primary transition-colors hover:text-accent"
+          className="flex items-center gap-2 font-mono text-sm uppercase tracking-wider text-text-primary transition-colors hover:text-accent"
         >
-          DTECH · ADMIN
+          <Logo size="sm" />
+          <span>
+            DTECH
+            <span className="ml-1 text-text-muted">· ADMIN</span>
+          </span>
         </Link>
       </div>
 

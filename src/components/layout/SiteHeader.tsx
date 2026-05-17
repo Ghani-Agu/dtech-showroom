@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Logo } from '@/components/brand/Logo'
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher'
 import { SearchInput } from '@/components/search/SearchInput'
 import { Link, usePathname } from '@/i18n/routing'
@@ -54,9 +55,10 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-[80rem] items-center gap-6 px-6 py-4 md:px-12 lg:px-16">
         <Link
           href="/"
-          className="font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
+          className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
         >
-          DTECH
+          <Logo size="sm" priority />
+          <span>DTECH</span>
         </Link>
 
         <nav className="hidden flex-1 items-center gap-6 lg:flex">
@@ -131,9 +133,10 @@ export function SiteHeader() {
               <div className="flex items-center justify-between">
                 <Link
                   href="/"
-                  className="font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
+                  className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
                 >
-                  DTECH
+                  <Logo size="sm" />
+                  <span>DTECH</span>
                 </Link>
                 <button
                   type="button"

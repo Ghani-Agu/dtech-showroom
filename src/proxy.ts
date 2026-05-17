@@ -3,13 +3,9 @@ import createMiddleware from 'next-intl/middleware'
 import { auth } from '@/lib/auth'
 import { routing } from '@/i18n/routing'
 
-// Node runtime — better-auth needs DB access (postgres-js, Drizzle) which
-// doesn't bundle for the Edge runtime.
-export const runtime = 'nodejs'
-
 const intlMiddleware = createMiddleware(routing)
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Admin routes: protect with auth, do NOT apply locale routing
@@ -43,7 +39,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Customer-facing routes: apply locale middleware
+  // Customer-facing routes: apply locale proxy
   return intlMiddleware(request)
 }
 

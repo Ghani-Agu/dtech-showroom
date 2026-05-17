@@ -108,3 +108,36 @@ samp {
   background-color: var(--color-accent);
   color: var(--color-surface-void);
 }
+
+/* Conic-gradient breathing border (login card)
+   --gradient-angle must be a registered @property to animate smoothly. */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes conic-rotate {
+  0% {
+    --gradient-angle: 0deg;
+  }
+  100% {
+    --gradient-angle: 360deg;
+  }
+}
+
+@keyframes conic-breathe {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conic-border-wrapper {
+    animation: none !important;
+    background: linear-gradient(135deg, oklch(0.45 0.10 215), oklch(0.28 0.06 215)) !important;
+  }
+}
