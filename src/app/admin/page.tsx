@@ -1,24 +1,27 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { count, desc, eq } from 'drizzle-orm'
+import { headers } from 'next/headers'
+import { count, desc, eq, isNull } from 'drizzle-orm'
 import {
-  CircleDashed,
+  ArrowRight,
   FolderOpen,
   MailQuestion,
   Package,
+  PlusCircle,
   Tag,
+  Upload,
 } from 'lucide-react'
-import { InquiryListRow } from '@/components/admin/inquiries/InquiryListRow'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/admin/ui/Card'
-import { Stat } from '@/components/admin/ui/Stat'
+import { auth } from '@/lib/auth'
 import { db } from '@/db/client'
 import { brands, categories, inquiries, products } from '@/db/schema'
+import {
+  Badge,
+  Button,
+  Card,
+  CardDescription,
+  CardTitle,
+  EmptyState,
+} from '@/components/admin-v2/ui'
 
 export const metadata: Metadata = {
   title: 'Dashboard — Dtech Admin',
@@ -27,175 +30,282 @@ export const metadata: Metadata = {
 
 async function getDashboardData() {
   const [
-    productCount,
-    brandCount,
-    categoryCount,
-    inquiryNewCount,
-    inquiryTotalCount,
+    productCountResult,
+    brandCountResult,
+    categoryCountResult,
+    newInquiriesCountResult,
     recentInquiries,
   ] = await Promise.all([
     db
       .select({ count: count() })
       .from(products)
-      .then((r) => r[0]?.count ?? 0),
+      .where(isNull(products.archivedAt)),
     db
       .select({ count: count() })
       .from(brands)
-      .then((r) => r[0]?.count ?? 0),
+      .where(isNull(brands.archivedAt)),
     db
       .select({ count: count() })
       .from(categories)
-      .then((r) => r[0]?.count ?? 0),
+      .where(isNull(categories.archivedAt)),
     db
       .select({ count: count() })
       .from(inquiries)
-      .where(eq(inquiries.status, 'new'))
-      .then((r) => r[0]?.count ?? 0),
+      .where(eq(inquiries.status, 'new')),
     db
-      .select({ count: count() })
-      .from(inquiries)
-      .then((r) => r[0]?.count ?? 0),
-    db
-      .select()
+      .select({
+        id: inquiries.id,
+        fullName: inquiries.fullName,
+        productName: inquiries.productName,
+        productBrand: inquiries.productBrand,
+        submittedAt: inquiries.submittedAt,
+        status: inquiries.status,
+      })
       .from(inquiries)
       .orderBy(desc(inquiries.submittedAt))
       .limit(5),
   ])
 
   return {
-    productCount,
-    brandCount,
-    categoryCount,
-    inquiryNewCount,
-    inquiryTotalCount,
+    products: productCountResult[0]?.count ?? 0,
+    brands: brandCountResult[0]?.count ?? 0,
+    categories: categoryCountResult[0]?.count ?? 0,
+    newInquiries: newInquiriesCountResult[0]?.count ?? 0,
     recentInquiries,
   }
 }
 
+const STATUS_LABEL: Record<
+  'new' | 'contacted' | 'closed' | 'spam',
+  string
+> = {
+  new: 'New',
+  contacted: 'Contacted',
+  closed: 'Closed',
+  spam: 'Spam',
+}
+
 export default async function AdminDashboardPage() {
+  const session = await auth.api.getSession({ headers: await headers() })
+  const userName = session?.user?.name || 'there'
+  const firstName = userName.split(' ')[0]
+
   const data = await getDashboardData()
 
+  const hasWaitingInquiries = data.newInquiries > 0
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Dashboard
-        </p>
-        <h1 className="font-display text-3xl tracking-tight text-text-primary">
-          Overview<span className="text-accent">.</span>
+        <h1 className="font-display text-4xl font-medium text-text-primary tracking-tight">
+          Hello, {firstName}<span className="text-accent">.</span>
         </h1>
+        <p className="font-body text-base text-text-secondary mt-2">
+          {hasWaitingInquiries
+            ? `You have ${data.newInquiries} new ${
+                data.newInquiries === 1 ? 'message' : 'messages'
+              } waiting for a response.`
+            : 'Everything is up to date.'}
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat
-          label="Products"
-          value={data.productCount}
-          icon={<Package size={16} />}
-        />
-        <Stat
-          label="Brands"
-          value={data.brandCount}
-          icon={<Tag size={16} />}
-        />
-        <Stat
-          label="Categories"
-          value={data.categoryCount}
-          icon={<FolderOpen size={16} />}
-        />
-        <Stat
-          label="New inquiries"
-          value={data.inquiryNewCount}
-          hint={`${data.inquiryTotalCount} total`}
-          icon={<MailQuestion size={16} />}
-        />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent inquiries</CardTitle>
-              <CardDescription>
-                Latest 5 inquiries submitted by customers.
+      {hasWaitingInquiries && (
+        <Card className="border-accent/40 bg-gradient-to-br from-admin-surface-raised to-admin-surface-elevated">
+          <div className="flex items-start gap-5">
+            <div className="size-12 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0">
+              <MailQuestion size={22} className="text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle>Reply to your customers</CardTitle>
+              <CardDescription className="mt-1">
+                {data.newInquiries}{' '}
+                {data.newInquiries === 1
+                  ? 'customer is'
+                  : 'customers are'}{' '}
+                waiting to hear from you about products in your catalog.
               </CardDescription>
             </div>
+            <Link href="/admin/inquiries">
+              <Button variant="primary">
+                Review messages
+                <ArrowRight size={14} />
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      <div>
+        <h2 className="font-display text-xl font-medium text-text-primary mb-5">
+          Your catalog at a glance
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Products"
+            value={data.products}
+            href="/admin/products"
+            icon={Package}
+            accent="primary"
+          />
+          <StatCard
+            label="Brands"
+            value={data.brands}
+            href="/admin/brands"
+            icon={Tag}
+          />
+          <StatCard
+            label="Categories"
+            value={data.categories}
+            href="/admin/categories"
+            icon={FolderOpen}
+          />
+          <StatCard
+            label="New messages"
+            value={data.newInquiries}
+            href="/admin/inquiries"
+            icon={MailQuestion}
+            accent={hasWaitingInquiries ? 'warning' : undefined}
+          />
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-baseline justify-between mb-5">
+          <h2 className="font-display text-xl font-medium text-text-primary">
+            Recent customer messages
+          </h2>
+          {data.recentInquiries.length > 0 && (
             <Link
               href="/admin/inquiries"
-              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-text-primary"
+              className="font-body text-sm text-accent hover:underline"
             >
               View all →
             </Link>
-          </div>
-        </CardHeader>
-        <CardContent className="px-0 py-0">
-          {data.recentInquiries.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <CircleDashed
-                size={32}
-                className="mx-auto mb-3 text-text-muted"
-              />
-              <p className="font-body text-base text-text-secondary">
-                No inquiries yet.
-              </p>
-              <p className="mt-1 font-body text-sm text-text-muted">
-                Customer inquiries from the contact form will appear here.
-              </p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-surface-overlay">
-              {data.recentInquiries.map((inquiry) => (
-                <InquiryListRow key={inquiry.id} inquiry={inquiry} />
+          )}
+        </div>
+
+        {data.recentInquiries.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={MailQuestion}
+              title="No messages yet"
+              description="When customers send inquiries about your products, they will appear here."
+            />
+          </Card>
+        ) : (
+          <Card padded={false}>
+            <ul className="divide-y divide-admin-border">
+              {data.recentInquiries.map((inq) => (
+                <li key={inq.id}>
+                  <Link
+                    href={`/admin/inquiries/${inq.id}`}
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-admin-surface-elevated transition-colors"
+                  >
+                    <div className="size-10 rounded-full bg-admin-surface-elevated flex items-center justify-center flex-shrink-0">
+                      <span className="font-mono text-xs font-medium text-text-secondary uppercase">
+                        {(inq.fullName || '?').slice(0, 1)}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-body text-sm font-medium text-text-primary truncate">
+                        {inq.fullName}
+                      </p>
+                      <p className="font-body text-xs text-text-muted truncate mt-0.5">
+                        About {inq.productName} ({inq.productBrand})
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        inq.status === 'new'
+                          ? 'info'
+                          : inq.status === 'spam'
+                            ? 'error'
+                            : 'default'
+                      }
+                    >
+                      {STATUS_LABEL[inq.status]}
+                    </Badge>
+                  </Link>
+                </li>
               ))}
             </ul>
-          )}
-        </CardContent>
-      </Card>
+          </Card>
+        )}
+      </div>
 
-      <Card variant="outline">
-        <CardHeader>
-          <CardTitle>Quick actions</CardTitle>
-          <CardDescription>
-            Common admin tasks. Full CRUD interfaces in the relevant sections.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
-              href="/admin/products"
-              className="block rounded-md bg-surface-base px-4 py-3 transition-colors hover:bg-surface-overlay"
-            >
-              <p className="font-body text-sm font-medium text-text-primary">
-                Manage products
-              </p>
-              <p className="mt-1 font-body text-xs text-text-muted">
-                Create, edit, and organize the catalog
-              </p>
-            </Link>
-            <Link
-              href="/admin/inquiries"
-              className="block rounded-md bg-surface-base px-4 py-3 transition-colors hover:bg-surface-overlay"
-            >
-              <p className="font-body text-sm font-medium text-text-primary">
-                Review inquiries
-              </p>
-              <p className="mt-1 font-body text-xs text-text-muted">
-                Respond to customer questions
-              </p>
-            </Link>
-            <Link
-              href="/admin/brands"
-              className="block rounded-md bg-surface-base px-4 py-3 transition-colors hover:bg-surface-overlay"
-            >
-              <p className="font-body text-sm font-medium text-text-primary">
-                Manage brands
-              </p>
-              <p className="mt-1 font-body text-xs text-text-muted">
-                Update brand info and imagery
-              </p>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      <div>
+        <h2 className="font-display text-xl font-medium text-text-primary mb-5">
+          Quick actions
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/admin/products/new">
+            <Card hover className="h-full">
+              <div className="flex flex-col gap-3">
+                <div className="size-10 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <PlusCircle size={18} className="text-accent" />
+                </div>
+                <CardTitle>Add a product</CardTitle>
+                <CardDescription>
+                  Create a new product entry in your catalog.
+                </CardDescription>
+              </div>
+            </Card>
+          </Link>
+          <Link href="/admin/products/import">
+            <Card hover className="h-full">
+              <div className="flex flex-col gap-3">
+                <div className="size-10 rounded-lg bg-admin-surface-elevated flex items-center justify-center">
+                  <Upload size={18} className="text-text-secondary" />
+                </div>
+                <CardTitle>Import products</CardTitle>
+                <CardDescription>
+                  Bulk import multiple products from a spreadsheet.
+                </CardDescription>
+              </div>
+            </Card>
+          </Link>
+          <Link href="/admin/inquiries">
+            <Card hover className="h-full">
+              <div className="flex flex-col gap-3">
+                <div className="size-10 rounded-lg bg-admin-surface-elevated flex items-center justify-center">
+                  <MailQuestion size={18} className="text-text-secondary" />
+                </div>
+                <CardTitle>Reply to customers</CardTitle>
+                <CardDescription>
+                  See messages from customers about your products.
+                </CardDescription>
+              </div>
+            </Card>
+          </Link>
+        </div>
+      </div>
     </div>
+  )
+}
+
+interface StatCardProps {
+  label: string
+  value: number
+  href: string
+  icon: typeof Package
+  accent?: 'primary' | 'warning'
+}
+
+function StatCard({ label, value, href, icon: Icon, accent }: StatCardProps) {
+  return (
+    <Link href={href}>
+      <Card hover className="h-full">
+        <div className="flex items-start justify-between mb-3">
+          <Icon size={20} strokeWidth={1.5} className="text-text-muted" />
+          {accent === 'warning' && value > 0 && (
+            <span className="size-2 rounded-full bg-accent animate-pulse" />
+          )}
+        </div>
+        <p className="font-display text-4xl font-medium text-text-primary tracking-tight">
+          {value}
+        </p>
+        <p className="font-body text-sm text-text-secondary mt-1">{label}</p>
+      </Card>
+    </Link>
   )
 }

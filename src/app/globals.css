@@ -58,6 +58,21 @@
   --tracking-normal: 0;
   --tracking-wide: 0.04em;
   --tracking-wider: 0.08em;
+
+  /* Admin-specific surface variants — slightly warmer than customer
+     surfaces to feel less "void" and more "workspace". Registered
+     here so Tailwind v4 generates utility classes like
+     bg-admin-surface-raised, border-admin-border, shadow-admin-sm. */
+  --color-admin-surface-base: oklch(0.13 0.012 250);
+  --color-admin-surface-raised: oklch(0.17 0.014 250);
+  --color-admin-surface-elevated: oklch(0.21 0.016 250);
+  --color-admin-surface-interactive: oklch(0.24 0.020 250);
+  --color-admin-border: oklch(0.28 0.018 250);
+  --color-admin-border-strong: oklch(0.38 0.020 250);
+
+  --shadow-admin-sm: 0 1px 2px oklch(0.05 0 0 / 0.4);
+  --shadow-admin-md: 0 4px 12px oklch(0.05 0 0 / 0.5);
+  --shadow-admin-lg: 0 12px 32px oklch(0.05 0 0 / 0.6);
 }
 
 /* Root styling */
