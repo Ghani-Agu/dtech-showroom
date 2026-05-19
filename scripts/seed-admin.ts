@@ -15,9 +15,15 @@ async function main() {
     process.exit(1)
   }
 
-  if (password.length < 12) {
-    console.error('INITIAL_ADMIN_PASSWORD must be at least 12 characters')
+  if (password.length < 8) {
+    console.error('INITIAL_ADMIN_PASSWORD must be at least 8 characters')
     process.exit(1)
+  }
+
+  if (password.length < 12) {
+    console.warn(
+      'Warning: INITIAL_ADMIN_PASSWORD is shorter than 12 characters. Consider a stronger password for production.'
+    )
   }
 
   console.log(`Creating initial admin: ${email}`)
