@@ -12,7 +12,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl bg-admin-surface-raised border border-admin-border',
+          'rounded-2xl bg-admin-surface-raised border border-admin-border',
           'transition-all duration-200',
           padded && 'p-6',
           hover &&
@@ -46,7 +46,7 @@ export function CardTitle({
   return (
     <h2
       className={cn(
-        'font-display text-xl font-medium text-text-primary tracking-tight',
+        'font-display text-xl font-medium text-admin-text-primary tracking-tight',
         className
       )}
       {...props}
@@ -63,7 +63,7 @@ export function CardDescription({
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn('font-body text-sm text-text-secondary', className)}
+      className={cn('font-body text-sm text-admin-text-secondary', className)}
       {...props}
     >
       {children}

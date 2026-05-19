@@ -3,17 +3,30 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { asc } from 'drizzle-orm'
 import { Plus, Users as UsersIcon } from 'lucide-react'
-import { Badge } from '@/components/admin/ui/Badge'
-import { Button } from '@/components/admin/ui/Button'
-import { Card } from '@/components/admin/ui/Card'
-import { EmptyState } from '@/components/admin/ui/EmptyState'
+import {
+  Avatar,
+  Button,
+  DataTable,
+  EmptyState,
+  PageHeader,
+  Pill,
+} from '@/components/admin-v2/ui'
 import { db } from '@/db/client'
 import { users } from '@/db/schema'
 import { requireAdmin } from '@/lib/auth-helpers'
 
 export const metadata: Metadata = {
-  title: 'Users — Dtech Admin',
+  title: 'Team · Dtech Admin',
   robots: { index: false, follow: false },
+}
+
+type UserRow = {
+  id: string
+  name: string
+  email: string
+  role: 'admin' | 'staff'
+  deactivatedAt: Date | null
+  lastLoginAt: Date | null
 }
 
 export default async function UsersListPage() {
@@ -23,94 +36,104 @@ export default async function UsersListPage() {
     redirect('/admin')
   }
 
-  const rows = await db.select().from(users).orderBy(asc(users.createdAt))
+  const rows = (await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      deactivatedAt: users.deactivatedAt,
+      lastLoginAt: users.lastLoginAt,
+    })
+    .from(users)
+    .orderBy(asc(users.createdAt))) as UserRow[]
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-            Users
-          </p>
-          <h1 className="font-display text-3xl tracking-tight text-text-primary">
-            Users<span className="text-accent">.</span>
-          </h1>
-        </div>
-        <Link href="/admin/users/new">
-          <Button variant="primary">
-            <Plus size={16} />
-            New user
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Team"
+        description={`${rows.length} ${rows.length === 1 ? 'admin user' : 'admin users'} with access to this dashboard.`}
+        action={
+          <Link href="/admin/users/new">
+            <Button variant="primary">
+              <Plus size={14} />
+              Add user
+            </Button>
+          </Link>
+        }
+      />
 
       {rows.length === 0 ? (
-        <Card>
+        <div className="bg-admin-surface-raised border border-admin-border rounded-2xl">
           <EmptyState
             icon={UsersIcon}
             title="No users yet."
             description="Invite the team. New users receive a password reset email to set their own password."
-            action={{ label: 'Add a user', href: '/admin/users/new' }}
+            action={{ label: 'Add user', href: '/admin/users/new' }}
           />
-        </Card>
+        </div>
       ) : (
-        <Card>
-          <ul className="divide-y divide-surface-overlay">
-            {rows.map((user) => {
-              const isDeactivated = user.deactivatedAt !== null
-              return (
-                <li key={user.id}>
-                  <Link
-                    href={`/admin/users/${user.id}/edit`}
-                    className={
-                      isDeactivated
-                        ? 'block px-6 py-4 opacity-60 transition-colors hover:bg-surface-overlay/40'
-                        : 'block px-6 py-4 transition-colors hover:bg-surface-overlay/40'
-                    }
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-surface-elevated font-mono text-sm uppercase text-text-secondary">
-                        {user.name.slice(0, 2)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-body text-base font-medium text-text-primary">
-                            {user.name}
-                          </p>
-                          <Badge
-                            variant={
-                              user.role === 'admin' ? 'accent' : 'neutral'
-                            }
-                          >
-                            {user.role}
-                          </Badge>
-                          {isDeactivated && (
-                            <Badge variant="error">Deactivated</Badge>
-                          )}
-                        </div>
-                        <p className="mt-1 font-body text-sm text-text-secondary">
-                          {user.email}
-                        </p>
-                      </div>
-                      {user.lastLoginAt && (
-                        <div className="flex-shrink-0 text-right">
-                          <p className="font-mono text-xs text-text-muted">
-                            Last login
-                          </p>
-                          <p className="font-body text-xs text-text-secondary">
-                            {new Date(
-                              user.lastLoginAt
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </Card>
+        <DataTable<UserRow>
+          rows={rows}
+          rowKey={(u) => u.id}
+          rowHref={(u) => `/admin/users/${u.id}/edit`}
+          columns={[
+            {
+              key: 'avatar',
+              header: '',
+              width: '60px',
+              render: (u) => <Avatar name={u.name} size="md" />,
+            },
+            {
+              key: 'name',
+              header: 'Name',
+              render: (u) => (
+                <div className="min-w-0">
+                  <p className="font-body text-sm font-medium text-admin-text-primary truncate">
+                    {u.name}
+                  </p>
+                  <p className="font-body text-xs text-admin-text-muted truncate mt-0.5">
+                    {u.email}
+                  </p>
+                </div>
+              ),
+            },
+            {
+              key: 'role',
+              header: 'Role',
+              render: (u) => (
+                <Pill
+                  variant={u.role === 'admin' ? 'accent' : 'default'}
+                  withDot={false}
+                >
+                  {u.role}
+                </Pill>
+              ),
+            },
+            {
+              key: 'status',
+              header: 'Status',
+              render: (u) =>
+                u.deactivatedAt ? (
+                  <Pill variant="error">Deactivated</Pill>
+                ) : (
+                  <Pill variant="success">Active</Pill>
+                ),
+            },
+            {
+              key: 'lastLogin',
+              header: 'Last login',
+              align: 'right',
+              render: (u) => (
+                <span className="font-mono text-xs text-admin-text-muted">
+                  {u.lastLoginAt
+                    ? new Date(u.lastLoginAt).toLocaleDateString()
+                    : '—'}
+                </span>
+              ),
+            },
+          ]}
+        />
       )}
     </div>
   )

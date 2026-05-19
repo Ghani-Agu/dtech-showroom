@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { asc } from 'drizzle-orm'
-import { ProductForm } from '@/components/admin/products/ProductForm'
+import { PageHeader } from '@/components/admin-v2/ui'
+import { NewProductForm } from '@/components/admin-v2/products/NewProductForm'
 import { db } from '@/db/client'
 import { brands, categories } from '@/db/schema'
 
 export const metadata: Metadata = {
-  title: 'New product — Dtech Admin',
+  title: 'New product · Dtech Admin',
   robots: { index: false, follow: false },
 }
 
@@ -22,21 +23,17 @@ export default async function NewProductPage() {
   ])
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <div>
-        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Products / New
-        </p>
-        <h1 className="font-display text-3xl tracking-tight text-text-primary">
-          New product<span className="text-accent">.</span>
-        </h1>
-      </div>
-
-      <ProductForm
-        mode="create"
-        brands={brandList}
-        categories={categoryList}
+    <div className="space-y-6">
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Products', href: '/admin/products' },
+          { label: 'New' },
+        ]}
+        title="New product"
+        description="Just the essentials to get started — fill in the rest after."
       />
+
+      <NewProductForm brands={brandList} categories={categoryList} />
     </div>
   )
 }

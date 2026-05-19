@@ -29,12 +29,12 @@ export function EmptyState({
       )}
     >
       <div className="mb-6 size-16 rounded-2xl bg-admin-surface-elevated flex items-center justify-center">
-        <Icon size={28} strokeWidth={1.5} className="text-text-muted" />
+        <Icon size={28} strokeWidth={1.5} className="text-admin-text-muted" />
       </div>
-      <h3 className="font-display text-xl font-medium text-text-primary mb-2 tracking-tight">
+      <h3 className="font-display text-xl font-medium text-admin-text-primary mb-2 tracking-tight">
         {title}
       </h3>
-      <p className="font-body text-sm text-text-secondary max-w-md mb-6 leading-relaxed">
+      <p className="font-body text-sm text-admin-text-secondary max-w-md mb-6 leading-relaxed">
         {description}
       </p>
       {action && (

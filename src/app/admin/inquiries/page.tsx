@@ -3,15 +3,19 @@ import Link from 'next/link'
 import type { SQL } from 'drizzle-orm'
 import { and, count, desc, eq, ilike, or } from 'drizzle-orm'
 import { Mailbox } from 'lucide-react'
-import { Card } from '@/components/admin/ui/Card'
-import { EmptyState } from '@/components/admin/ui/EmptyState'
-import { Input } from '@/components/admin/ui/Input'
-import { InquiryListRow } from '@/components/admin/inquiries/InquiryListRow'
+import {
+  PageHeader,
+  SearchInput,
+  FilterSelect,
+  EmptyState,
+  Avatar,
+  Pill,
+} from '@/components/admin-v2/ui'
 import { db } from '@/db/client'
 import { inquiries } from '@/db/schema'
 
 export const metadata: Metadata = {
-  title: 'Inquiries — Dtech Admin',
+  title: 'Messages · Dtech Admin',
   robots: { index: false, follow: false },
 }
 
@@ -60,8 +64,7 @@ async function getInquiries(
     if (fieldMatch) conditions.push(fieldMatch)
   }
 
-  const whereClause =
-    conditions.length > 0 ? and(...conditions) : undefined
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
   const [rows, totalRow] = await Promise.all([
     db
@@ -102,6 +105,18 @@ async function getStatusCounts() {
   return counts
 }
 
+function timeAgo(date: Date): string {
+  const diff = Date.now() - date.getTime()
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+  if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}m ago`
+  if (diff < day) return `${Math.floor(diff / hour)}h ago`
+  if (diff < 7 * day) return `${Math.floor(diff / day)}d ago`
+  if (diff < 30 * day) return `${Math.floor(diff / (7 * day))}w ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 function buildHref(
   status: StatusFilter,
   query: string,
@@ -115,6 +130,23 @@ function buildHref(
   }
   const qs = params.toString()
   return '/admin/inquiries' + (qs ? `?${qs}` : '')
+}
+
+const STATUS_VARIANT: Record<
+  Exclude<StatusFilter, 'all'>,
+  'info' | 'warning' | 'success' | 'default'
+> = {
+  new: 'info',
+  contacted: 'warning',
+  closed: 'success',
+  spam: 'default',
+}
+
+const STATUS_LABEL: Record<Exclude<StatusFilter, 'all'>, string> = {
+  new: 'New',
+  contacted: 'In progress',
+  closed: 'Closed',
+  spam: 'Spam',
 }
 
 export default async function InquiriesPage({ searchParams }: PageProps) {
@@ -132,77 +164,47 @@ export default async function InquiriesPage({ searchParams }: PageProps) {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  const statusTabs: Array<{ value: StatusFilter; label: string }> = [
-    { value: 'all', label: 'All' },
-    { value: 'new', label: 'New' },
-    { value: 'contacted', label: 'Contacted' },
-    { value: 'closed', label: 'Closed' },
-    { value: 'spam', label: 'Spam' },
-  ]
-
   return (
     <div className="space-y-6">
-      <div>
-        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Inquiries
-        </p>
-        <h1 className="font-display text-3xl tracking-tight text-text-primary">
-          Customer inquiries<span className="text-accent">.</span>
-        </h1>
-      </div>
+      <PageHeader
+        title="Messages"
+        description={
+          statusCounts.new > 0
+            ? `${statusCounts.new} new ${statusCounts.new === 1 ? 'message' : 'messages'} waiting for a response.`
+            : 'All messages from customer inquiries.'
+        }
+      />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <nav className="flex items-center gap-1 rounded-md bg-surface-elevated p-1">
-          {statusTabs.map((tab) => {
-            const isActive = status === tab.value
-            const href = buildHref(tab.value, query)
-            return (
-              <Link
-                key={tab.value}
-                href={href}
-                className={
-                  isActive
-                    ? 'inline-flex items-center gap-2 rounded-md bg-surface-overlay px-3 py-1.5 font-body text-sm font-medium text-text-primary'
-                    : 'inline-flex items-center gap-2 rounded-md px-3 py-1.5 font-body text-sm text-text-secondary transition-colors hover:text-text-primary'
-                }
-              >
-                {tab.label}
-                <span className="font-mono text-xs text-text-muted">
-                  {statusCounts[tab.value]}
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
-
-        <form
-          action="/admin/inquiries"
-          method="GET"
-          className="flex items-center gap-2"
-        >
-          {status !== 'all' && (
-            <input type="hidden" name="status" value={status} />
-          )}
-          <Input
-            type="search"
-            name="q"
-            placeholder="Search name, email, product..."
-            defaultValue={query}
-            className="w-64"
-          />
-        </form>
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          paramName="q"
+          placeholder="Search name, email, product..."
+        />
+        <FilterSelect
+          paramName="status"
+          label="Status"
+          options={[
+            { value: 'new', label: `New (${statusCounts.new})` },
+            {
+              value: 'contacted',
+              label: `In progress (${statusCounts.contacted})`,
+            },
+            { value: 'closed', label: `Closed (${statusCounts.closed})` },
+            { value: 'spam', label: `Spam (${statusCounts.spam})` },
+          ]}
+        />
       </div>
 
       {rows.length === 0 ? (
-        <Card>
+        <div className="bg-admin-surface-raised border border-admin-border rounded-2xl">
           <EmptyState
             icon={Mailbox}
             title={
               query
-                ? `No inquiries match "${query}".`
+                ? `No messages match "${query}".`
                 : status !== 'all'
-                  ? `No ${status} inquiries.`
-                  : 'No inquiries yet.'
+                  ? `No ${status} messages.`
+                  : 'No messages yet.'
             }
             description={
               query || status !== 'all'
@@ -210,23 +212,52 @@ export default async function InquiriesPage({ searchParams }: PageProps) {
                 : 'Customer inquiries from the contact form will appear here.'
             }
           />
-        </Card>
+        </div>
       ) : (
-        <Card>
-          <ul className="divide-y divide-surface-overlay">
-            {rows.map((inquiry) => (
-              <InquiryListRow key={inquiry.id} inquiry={inquiry} />
-            ))}
-          </ul>
-        </Card>
+        <div className="bg-admin-surface-raised border border-admin-border rounded-2xl divide-y divide-admin-border overflow-hidden">
+          {rows.map((inq) => (
+            <Link
+              key={inq.id}
+              href={`/admin/inquiries/${inq.id}`}
+              className="flex items-start gap-4 px-5 py-4 hover:bg-admin-surface-elevated transition-colors"
+            >
+              <Avatar name={inq.fullName} size="md" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <p className="font-body text-sm font-semibold text-admin-text-primary truncate">
+                    {inq.fullName}
+                  </p>
+                  <p className="font-body text-xs text-admin-text-muted truncate">
+                    {inq.email}
+                  </p>
+                </div>
+                <p className="font-body text-xs text-admin-text-secondary mt-1 truncate">
+                  About <strong className="text-admin-text-primary">{inq.productName}</strong>
+                  {' · '}{inq.productBrand}
+                </p>
+                <p className="font-body text-sm text-admin-text-muted mt-1.5 line-clamp-2">
+                  {inq.message}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <span className="font-mono text-xs text-admin-text-muted">
+                  {timeAgo(new Date(inq.submittedAt))}
+                </span>
+                <Pill variant={STATUS_VARIANT[inq.status]}>
+                  {STATUS_LABEL[inq.status]}
+                </Pill>
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
 
       {totalPages > 1 && (
         <nav
           aria-label="Pagination"
-          className="flex items-center justify-between"
+          className="flex items-center justify-between pt-2"
         >
-          <p className="font-body text-sm text-text-muted">
+          <p className="font-body text-sm text-admin-text-muted">
             Showing {(page - 1) * PAGE_SIZE + 1}–
             {Math.min(page * PAGE_SIZE, total)} of {total}
           </p>
@@ -234,18 +265,18 @@ export default async function InquiriesPage({ searchParams }: PageProps) {
             {page > 1 && (
               <Link
                 href={buildHref(status, query, { page: String(page - 1) })}
-                className="font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="font-body text-sm text-admin-text-secondary transition-colors hover:text-admin-text-primary"
               >
                 ← Previous
               </Link>
             )}
-            <span className="font-mono text-sm text-text-muted">
+            <span className="font-mono text-sm text-admin-text-muted">
               {page} / {totalPages}
             </span>
             {page < totalPages && (
               <Link
                 href={buildHref(status, query, { page: String(page + 1) })}
-                className="font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="font-body text-sm text-admin-text-secondary transition-colors hover:text-admin-text-primary"
               >
                 Next →
               </Link>

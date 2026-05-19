@@ -59,20 +59,98 @@
   --tracking-wide: 0.04em;
   --tracking-wider: 0.08em;
 
-  /* Admin-specific surface variants — slightly warmer than customer
-     surfaces to feel less "void" and more "workspace". Registered
-     here so Tailwind v4 generates utility classes like
-     bg-admin-surface-raised, border-admin-border, shadow-admin-sm. */
-  --color-admin-surface-base: oklch(0.13 0.012 250);
-  --color-admin-surface-raised: oklch(0.17 0.014 250);
-  --color-admin-surface-elevated: oklch(0.21 0.016 250);
-  --color-admin-surface-interactive: oklch(0.24 0.020 250);
-  --color-admin-border: oklch(0.28 0.018 250);
-  --color-admin-border-strong: oklch(0.38 0.020 250);
+  /* Admin tokens — theme-aware. The actual VALUES live on :root and
+     [data-admin-theme='light'] below; here we just re-export each
+     custom property as a Tailwind --color-* / --shadow-* so utility
+     classes like bg-admin-surface-raised, text-admin-text-primary,
+     and shadow-admin-md are generated. */
+  --color-admin-surface-base: var(--admin-surface-base);
+  --color-admin-surface-raised: var(--admin-surface-raised);
+  --color-admin-surface-elevated: var(--admin-surface-elevated);
+  --color-admin-surface-interactive: var(--admin-surface-interactive);
 
-  --shadow-admin-sm: 0 1px 2px oklch(0.05 0 0 / 0.4);
-  --shadow-admin-md: 0 4px 12px oklch(0.05 0 0 / 0.5);
-  --shadow-admin-lg: 0 12px 32px oklch(0.05 0 0 / 0.6);
+  --color-admin-border: var(--admin-border);
+  --color-admin-border-strong: var(--admin-border-strong);
+
+  --color-admin-text-primary: var(--admin-text-primary);
+  --color-admin-text-secondary: var(--admin-text-secondary);
+  --color-admin-text-muted: var(--admin-text-muted);
+
+  --color-admin-accent: var(--admin-accent);
+  --color-admin-accent-soft: var(--admin-accent-soft);
+  --color-admin-success: var(--admin-success);
+  --color-admin-success-soft: var(--admin-success-soft);
+  --color-admin-warning: var(--admin-warning);
+  --color-admin-warning-soft: var(--admin-warning-soft);
+  --color-admin-error: var(--admin-error);
+  --color-admin-error-soft: var(--admin-error-soft);
+  --color-admin-info: var(--admin-info);
+  --color-admin-info-soft: var(--admin-info-soft);
+
+  --shadow-admin-sm: var(--admin-shadow-sm);
+  --shadow-admin-md: var(--admin-shadow-md);
+  --shadow-admin-lg: var(--admin-shadow-lg);
+  --shadow-admin-glow: var(--admin-shadow-glow);
+}
+
+/* Admin theme tokens — dark is default (no data attribute needed);
+   [data-admin-theme='light'] on the <html> element switches everything. */
+:root {
+  --admin-surface-base: oklch(0.13 0.012 250);
+  --admin-surface-raised: oklch(0.17 0.014 250);
+  --admin-surface-elevated: oklch(0.21 0.016 250);
+  --admin-surface-interactive: oklch(0.24 0.020 250);
+  --admin-border: oklch(0.28 0.018 250);
+  --admin-border-strong: oklch(0.38 0.020 250);
+
+  --admin-text-primary: oklch(0.97 0.01 90);
+  --admin-text-secondary: oklch(0.72 0.02 90);
+  --admin-text-muted: oklch(0.55 0.02 90);
+
+  --admin-accent: oklch(0.74 0.14 215);
+  --admin-accent-soft: oklch(0.74 0.14 215 / 0.15);
+  --admin-success: oklch(0.72 0.15 145);
+  --admin-success-soft: oklch(0.72 0.15 145 / 0.15);
+  --admin-warning: oklch(0.80 0.15 70);
+  --admin-warning-soft: oklch(0.80 0.15 70 / 0.15);
+  --admin-error: oklch(0.65 0.20 25);
+  --admin-error-soft: oklch(0.65 0.20 25 / 0.15);
+  --admin-info: oklch(0.70 0.12 260);
+  --admin-info-soft: oklch(0.70 0.12 260 / 0.15);
+
+  --admin-shadow-sm: 0 1px 2px oklch(0.05 0 0 / 0.4);
+  --admin-shadow-md: 0 4px 12px oklch(0.05 0 0 / 0.5);
+  --admin-shadow-lg: 0 12px 32px oklch(0.05 0 0 / 0.6);
+  --admin-shadow-glow: 0 0 24px oklch(0.74 0.14 215 / 0.3);
+}
+
+[data-admin-theme='light'] {
+  --admin-surface-base: oklch(0.99 0.003 90);
+  --admin-surface-raised: oklch(1 0 0);
+  --admin-surface-elevated: oklch(0.97 0.005 90);
+  --admin-surface-interactive: oklch(0.94 0.007 90);
+  --admin-border: oklch(0.90 0.008 90);
+  --admin-border-strong: oklch(0.82 0.010 90);
+
+  --admin-text-primary: oklch(0.18 0.02 240);
+  --admin-text-secondary: oklch(0.40 0.02 240);
+  --admin-text-muted: oklch(0.58 0.02 240);
+
+  --admin-accent: oklch(0.62 0.16 215);
+  --admin-accent-soft: oklch(0.62 0.16 215 / 0.12);
+  --admin-success: oklch(0.58 0.16 145);
+  --admin-success-soft: oklch(0.58 0.16 145 / 0.12);
+  --admin-warning: oklch(0.70 0.15 70);
+  --admin-warning-soft: oklch(0.70 0.15 70 / 0.15);
+  --admin-error: oklch(0.55 0.20 25);
+  --admin-error-soft: oklch(0.55 0.20 25 / 0.12);
+  --admin-info: oklch(0.55 0.14 260);
+  --admin-info-soft: oklch(0.55 0.14 260 / 0.12);
+
+  --admin-shadow-sm: 0 1px 2px oklch(0.10 0 0 / 0.05);
+  --admin-shadow-md: 0 4px 16px oklch(0.10 0 0 / 0.08);
+  --admin-shadow-lg: 0 12px 40px oklch(0.10 0 0 / 0.10);
+  --admin-shadow-glow: 0 0 24px oklch(0.62 0.16 215 / 0.25);
 }
 
 /* Root styling */

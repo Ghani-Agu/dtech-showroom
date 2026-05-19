@@ -14,14 +14,14 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 const VARIANT_STYLES: Record<BadgeVariant, string> = {
   default:
-    'bg-admin-surface-elevated text-text-secondary border-admin-border',
+    'bg-admin-surface-elevated text-admin-text-secondary border-admin-border',
   success:
-    'bg-semantic-success/15 text-semantic-success border-semantic-success/30',
+    'bg-admin-success-soft text-admin-success border-admin-success/30',
   warning:
-    'bg-semantic-warning/15 text-semantic-warning border-semantic-warning/30',
-  error: 'bg-semantic-error/15 text-semantic-error border-semantic-error/30',
-  info: 'bg-accent/15 text-accent border-accent/30',
-  accent: 'bg-accent text-surface-base border-transparent',
+    'bg-admin-warning-soft text-admin-warning border-admin-warning/30',
+  error: 'bg-admin-error-soft text-admin-error border-admin-error/30',
+  info: 'bg-admin-info-soft text-admin-info border-admin-info/30',
+  accent: 'bg-admin-accent text-admin-surface-base border-transparent',
 }
 
 export function Badge({
