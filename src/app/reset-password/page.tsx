@@ -41,7 +41,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps) {
             New password<span className="text-accent">.</span>
           </h1>
           <p className="mt-4 font-body text-base text-text-secondary">
-            Set a new password. Minimum 12 characters.
+            Set a new password. Minimum 8 characters.
           </p>
         </header>
 

@@ -32,11 +32,8 @@ export async function SiteFooter() {
       <div className="mx-auto w-full max-w-[80rem] px-6 py-16 md:px-12 lg:px-16">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-3" data-scroll-wordmark>
-              <Logo size="sm" />
-              <p className="font-mono text-sm uppercase tracking-[0.16em] text-text-primary">
-                {tFooter('wordmark')}
-              </p>
+            <div className="flex items-center" data-scroll-wordmark>
+              <Logo size="lg" />
             </div>
             <p className="max-w-xs font-body text-sm text-text-secondary">
               {tFooter('tagline')}

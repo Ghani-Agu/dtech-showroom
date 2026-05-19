@@ -55,10 +55,10 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-[80rem] items-center gap-6 px-6 py-4 md:px-12 lg:px-16">
         <Link
           href="/"
-          className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
+          className="flex items-center text-text-primary"
+          aria-label="Dtech home"
         >
-          <Logo size="sm" priority />
-          <span>DTECH</span>
+          <Logo size="md" priority />
         </Link>
 
         <nav className="hidden flex-1 items-center gap-6 lg:flex">
@@ -133,10 +133,10 @@ export function SiteHeader() {
               <div className="flex items-center justify-between">
                 <Link
                   href="/"
-                  className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.16em] text-text-primary"
+                  className="flex items-center text-text-primary"
+                  aria-label="Dtech home"
                 >
-                  <Logo size="sm" />
-                  <span>DTECH</span>
+                  <Logo size="md" />
                 </Link>
                 <button
                   type="button"

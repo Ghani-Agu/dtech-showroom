@@ -21,8 +21,8 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     e.preventDefault()
     setError(null)
 
-    if (password.length < 12) {
-      setError('Password must be at least 12 characters.')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
       return
     }
     if (password !== confirm) {
@@ -76,7 +76,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           name="password"
           autoComplete="new-password"
           required
-          minLength={12}
+          minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-md bg-surface-elevated px-4 py-3 font-body text-base text-text-primary outline-none transition placeholder:text-text-muted focus:ring-1 focus:ring-accent"
@@ -96,7 +96,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           name="confirm"
           autoComplete="new-password"
           required
-          minLength={12}
+          minLength={8}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           className="w-full rounded-md bg-surface-elevated px-4 py-3 font-body text-base text-text-primary outline-none transition placeholder:text-text-muted focus:ring-1 focus:ring-accent"

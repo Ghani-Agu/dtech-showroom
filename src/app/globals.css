@@ -109,35 +109,37 @@ samp {
   color: var(--color-surface-void);
 }
 
-/* Conic-gradient breathing border (login card)
-   --gradient-angle must be a registered @property to animate smoothly. */
-@property --gradient-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
-@keyframes conic-rotate {
-  0% {
-    --gradient-angle: 0deg;
-  }
-  100% {
-    --gradient-angle: 360deg;
-  }
-}
-
-@keyframes conic-breathe {
+/* Breathing cyan bar — system heartbeat indicator below the login card. */
+@keyframes breathing-bar {
   0%, 100% {
-    opacity: 0.4;
+    opacity: 0.35;
+    box-shadow: 0 0 12px 2px oklch(0.74 0.14 215 / 0.4);
   }
   50% {
-    opacity: 0.85;
+    opacity: 1;
+    box-shadow: 0 0 32px 4px oklch(0.74 0.14 215 / 0.85);
   }
+}
+
+.breathing-bar {
+  display: block;
+  margin: 1.5rem auto 0;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.74 0.14 215) 30%,
+    oklch(0.74 0.14 215) 70%,
+    transparent 100%
+  );
+  border-radius: 1px;
+  animation: breathing-bar 3.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .conic-border-wrapper {
-    animation: none !important;
-    background: linear-gradient(135deg, oklch(0.45 0.10 215), oklch(0.28 0.06 215)) !important;
+  .breathing-bar {
+    animation: none;
+    opacity: 0.6;
   }
 }

@@ -92,7 +92,7 @@ The admin panel at `/admin/*` is protected by better-auth (email + password). Ro
    ```
    INITIAL_ADMIN_EMAIL=admin@d-techalgerie.com
    INITIAL_ADMIN_NAME=Dtech Admin
-   INITIAL_ADMIN_PASSWORD=<min 12 chars>
+   INITIAL_ADMIN_PASSWORD=<min 8 chars>
    ```
 
 5. Run the admin seed:
