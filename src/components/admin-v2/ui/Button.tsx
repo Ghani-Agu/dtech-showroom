@@ -15,13 +15,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary:
-    'bg-admin-accent text-admin-surface-base hover:brightness-110 active:brightness-95 disabled:bg-admin-surface-elevated disabled:text-admin-text-muted shadow-admin-sm',
+    'bg-accent text-surface-base hover:brightness-110 active:brightness-95 disabled:bg-admin-surface-elevated disabled:text-text-muted',
   secondary:
-    'bg-admin-surface-raised text-admin-text-primary border border-admin-border hover:bg-admin-surface-elevated hover:border-admin-border-strong',
+    'bg-admin-surface-raised text-text-primary border border-admin-border hover:bg-admin-surface-elevated hover:border-admin-border-strong',
   ghost:
-    'bg-transparent text-admin-text-secondary hover:bg-admin-surface-raised hover:text-admin-text-primary',
+    'bg-transparent text-text-secondary hover:bg-admin-surface-raised hover:text-text-primary',
   danger:
-    'bg-admin-error-soft text-admin-error border border-admin-error/30 hover:bg-admin-error/25',
+    'bg-semantic-error/15 text-semantic-error border border-semantic-error/30 hover:bg-semantic-error/25',
 }
 
 const SIZE_STYLES: Record<ButtonSize, string> = {
@@ -51,7 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           'inline-flex items-center justify-center rounded-lg font-medium font-body',
           'transition-all duration-200 ease-out',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-accent focus-visible:ring-offset-2 focus-visible:ring-offset-admin-surface-base',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-admin-surface-base',
           'disabled:cursor-not-allowed disabled:opacity-60',
           VARIANT_STYLES[variant],
           SIZE_STYLES[size],

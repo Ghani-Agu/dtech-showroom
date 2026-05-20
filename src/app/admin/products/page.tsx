@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import type { SQL } from 'drizzle-orm'
 import {
   and,
@@ -13,20 +12,16 @@ import {
   or,
 } from 'drizzle-orm'
 import { Package, Plus, Upload } from 'lucide-react'
-import {
-  Button,
-  PageHeader,
-  SearchInput,
-  FilterSelect,
-  DataTable,
-  Pill,
-  EmptyState,
-} from '@/components/admin-v2/ui'
+import { Button } from '@/components/admin/ui/Button'
+import { Card } from '@/components/admin/ui/Card'
+import { EmptyState } from '@/components/admin/ui/EmptyState'
+import { Input } from '@/components/admin/ui/Input'
+import { ProductListRow } from '@/components/admin/products/ProductListRow'
 import { db } from '@/db/client'
 import { brands, categories, products } from '@/db/schema'
 
 export const metadata: Metadata = {
-  title: 'Products · Dtech Admin',
+  title: 'Products — Dtech Admin',
   robots: { index: false, follow: false },
 }
 
@@ -105,7 +100,8 @@ async function getProducts(
     if (match) conditions.push(match)
   }
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+  const whereClause =
+    conditions.length > 0 ? and(...conditions) : undefined
 
   const [rows, totalRow] = await Promise.all([
     db
@@ -119,7 +115,6 @@ async function getProducts(
         sortOrder: products.sortOrder,
         cardImagePath: products.cardImagePath,
         archivedAt: products.archivedAt,
-        updatedAt: products.updatedAt,
         brandName: brands.name,
         categoryName: categories.name,
       })
@@ -154,31 +149,13 @@ async function getFilterOptions() {
   return { brands: brandList, categories: categoryList }
 }
 
-function buildHref(params: Record<string, string | undefined>) {
+function buildHref(params: Partial<Record<string, string>>) {
   const sp = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
     if (value) sp.set(key, value)
   }
   const str = sp.toString()
   return '/admin/products' + (str ? `?${str}` : '')
-}
-
-type ProductRow = Awaited<ReturnType<typeof getProducts>>['rows'][number]
-
-const TIER_LABEL: Record<ProductRow['tier'], string> = {
-  hero: 'Hero',
-  featured: 'Featured',
-  longtail: 'Long-tail',
-}
-
-function timeAgo(date: Date): string {
-  const diff = Date.now() - date.getTime()
-  const day = 24 * 60 * 60 * 1000
-  if (diff < day) return 'today'
-  if (diff < 7 * day) return `${Math.floor(diff / day)}d`
-  if (diff < 30 * day) return `${Math.floor(diff / (7 * day))}w`
-  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))}mo`
-  return `${Math.floor(diff / (365 * day))}y`
 }
 
 export default async function ProductsListPage({ searchParams }: PageProps) {
@@ -197,196 +174,190 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
+  const tierFilters: Array<{ value: TierFilter; label: string }> = [
+    { value: 'all', label: 'All tiers' },
+    { value: 'hero', label: 'Hero' },
+    { value: 'featured', label: 'Featured' },
+    { value: 'longtail', label: 'Long-tail' },
+  ]
+
+  const stateFilters: Array<{ value: FilterState; label: string }> = [
+    { value: 'active', label: 'Active' },
+    { value: 'archived', label: 'Archived' },
+    { value: 'all', label: 'All' },
+  ]
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Products"
-        description={`${total} ${total === 1 ? 'product' : 'products'} in your catalog.`}
-        action={
-          <div className="flex items-center gap-2">
-            <Link href="/admin/products/import">
-              <Button variant="secondary">
-                <Upload size={14} />
-                Import
-              </Button>
-            </Link>
-            <Link href="/admin/products/new">
-              <Button variant="primary">
-                <Plus size={14} />
-                Add product
-              </Button>
-            </Link>
-          </div>
-        }
-      />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
+            Products
+          </p>
+          <h1 className="font-display text-3xl tracking-tight text-text-primary">
+            Catalog<span className="text-accent">.</span>
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/products/import">
+            <Button variant="secondary">
+              <Upload size={16} />
+              Import
+            </Button>
+          </Link>
+          <Link href="/admin/products/new">
+            <Button variant="primary">
+              <Plus size={16} />
+              New product
+            </Button>
+          </Link>
+        </div>
+      </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchInput
-          paramName="q"
-          placeholder="Search name, slug, keywords..."
-        />
-        <FilterSelect
-          paramName="brand"
-          label="Brand"
-          options={filterOptions.brands.map((b) => ({
-            value: b.slug,
-            label: b.name,
-          }))}
-        />
-        <FilterSelect
-          paramName="category"
-          label="Category"
-          options={filterOptions.categories.map((c) => ({
-            value: c.slug,
-            label: c.name,
-          }))}
-        />
-        <FilterSelect
-          paramName="tier"
-          label="Tier"
-          options={[
-            { value: 'hero', label: 'Hero' },
-            { value: 'featured', label: 'Featured' },
-            { value: 'longtail', label: 'Long-tail' },
-          ]}
-        />
-        <FilterSelect
-          paramName="state"
-          label="State"
-          options={[
-            { value: 'active', label: 'Active' },
-            { value: 'archived', label: 'Archived' },
-            { value: 'all', label: 'All' },
-          ]}
-          includeAll={false}
-        />
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
+            State:
+          </span>
+          {stateFilters.map((f) => {
+            const isActive = state === f.value
+            return (
+              <Link
+                key={f.value}
+                href={buildHref({
+                  state: f.value === 'active' ? undefined : f.value,
+                  tier: tier === 'all' ? undefined : tier,
+                  brand: brandSlug || undefined,
+                  category: categorySlug || undefined,
+                  q: query || undefined,
+                })}
+                className={
+                  isActive
+                    ? 'inline-flex items-center rounded-full bg-surface-overlay px-2.5 py-1 font-body text-xs font-medium text-text-primary'
+                    : 'inline-flex items-center rounded-full px-2.5 py-1 font-body text-xs text-text-secondary transition-colors hover:text-text-primary'
+                }
+              >
+                {f.label}
+              </Link>
+            )
+          })}
+
+          <span className="ml-4 font-mono text-xs uppercase tracking-wider text-text-muted">
+            Tier:
+          </span>
+          {tierFilters.map((f) => {
+            const isActive = tier === f.value
+            return (
+              <Link
+                key={f.value}
+                href={buildHref({
+                  state: state === 'active' ? undefined : state,
+                  tier: f.value === 'all' ? undefined : f.value,
+                  brand: brandSlug || undefined,
+                  category: categorySlug || undefined,
+                  q: query || undefined,
+                })}
+                className={
+                  isActive
+                    ? 'inline-flex items-center rounded-full bg-surface-overlay px-2.5 py-1 font-body text-xs font-medium text-text-primary'
+                    : 'inline-flex items-center rounded-full px-2.5 py-1 font-body text-xs text-text-secondary transition-colors hover:text-text-primary'
+                }
+              >
+                {f.label}
+              </Link>
+            )
+          })}
+        </div>
+
+        <form
+          action="/admin/products"
+          method="GET"
+          className="flex flex-wrap items-end gap-3"
+        >
+          {state !== 'active' && (
+            <input type="hidden" name="state" value={state} />
+          )}
+          {tier !== 'all' && (
+            <input type="hidden" name="tier" value={tier} />
+          )}
+
+          <div className="min-w-[180px]">
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-text-muted">
+              Brand
+            </label>
+            <select
+              name="brand"
+              defaultValue={brandSlug}
+              className="w-full rounded-md bg-surface-elevated px-3 py-2 font-body text-sm text-text-primary outline-none focus:ring-1 focus:ring-accent"
+            >
+              <option value="">All brands</option>
+              {filterOptions.brands.map((b) => (
+                <option key={b.slug} value={b.slug}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="min-w-[180px]">
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-text-muted">
+              Category
+            </label>
+            <select
+              name="category"
+              defaultValue={categorySlug}
+              className="w-full rounded-md bg-surface-elevated px-3 py-2 font-body text-sm text-text-primary outline-none focus:ring-1 focus:ring-accent"
+            >
+              <option value="">All categories</option>
+              {filterOptions.categories.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="min-w-[240px] flex-1">
+            <Input
+              type="search"
+              name="q"
+              label="Search"
+              placeholder="Name, slug, tagline, keywords..."
+              defaultValue={query}
+            />
+          </div>
+
+          <Button type="submit" variant="secondary">
+            Filter
+          </Button>
+        </form>
       </div>
 
       {rows.length === 0 ? (
-        <div className="bg-admin-surface-raised border border-admin-border rounded-2xl">
+        <Card>
           <EmptyState
             icon={Package}
-            title="No products match"
-            description="Adjust the filters above, or add a new product to your catalog."
-            action={{ label: 'Add product', href: '/admin/products/new' }}
+            title="No products match the current filters."
+            description="Adjust the filters above, or add a new product."
+            action={{ label: 'Add the first product', href: '/admin/products/new' }}
           />
-        </div>
+        </Card>
       ) : (
-        <DataTable<ProductRow>
-          rows={rows}
-          rowKey={(p) => p.id}
-          rowHref={(p) => `/admin/products/${p.id}/edit`}
-          columns={[
-            {
-              key: 'image',
-              header: '',
-              width: '60px',
-              render: (p) => (
-                <div className="size-10 rounded-lg bg-admin-surface-elevated overflow-hidden flex-shrink-0">
-                  {p.cardImagePath && (
-                    <Image
-                      src={p.cardImagePath}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="size-full object-cover"
-                    />
-                  )}
-                </div>
-              ),
-            },
-            {
-              key: 'name',
-              header: 'Name',
-              render: (p) => (
-                <div className="min-w-0">
-                  <p className="font-body text-sm font-medium text-admin-text-primary truncate">
-                    {p.name}
-                  </p>
-                  <p className="font-mono text-xs text-admin-text-muted mt-0.5 truncate">
-                    /{p.slug}
-                  </p>
-                </div>
-              ),
-            },
-            {
-              key: 'brand',
-              header: 'Brand',
-              render: (p) => (
-                <span className="font-body text-sm text-admin-text-secondary">
-                  {p.brandName ?? '—'}
-                </span>
-              ),
-            },
-            {
-              key: 'category',
-              header: 'Category',
-              render: (p) => (
-                <span className="font-body text-sm text-admin-text-secondary">
-                  {p.categoryName ?? '—'}
-                </span>
-              ),
-            },
-            {
-              key: 'tier',
-              header: 'Tier',
-              render: (p) => (
-                <Pill
-                  variant={
-                    p.tier === 'hero'
-                      ? 'accent'
-                      : p.tier === 'featured'
-                        ? 'info'
-                        : 'default'
-                  }
-                  withDot={false}
-                >
-                  {TIER_LABEL[p.tier]}
-                </Pill>
-              ),
-            },
-            {
-              key: 'status',
-              header: 'Status',
-              render: (p) => (
-                <div className="flex flex-wrap gap-1.5">
-                  {p.archivedAt ? (
-                    <Pill variant="warning" withDot>
-                      Archived
-                    </Pill>
-                  ) : (
-                    <Pill variant="success" withDot>
-                      Active
-                    </Pill>
-                  )}
-                  {p.featured && (
-                    <Pill variant="accent" withDot={false}>
-                      Featured
-                    </Pill>
-                  )}
-                </div>
-              ),
-            },
-            {
-              key: 'updated',
-              header: 'Updated',
-              align: 'right',
-              render: (p) => (
-                <span className="font-mono text-xs text-admin-text-muted">
-                  {timeAgo(new Date(p.updatedAt))}
-                </span>
-              ),
-            },
-          ]}
-        />
+        <Card>
+          <ul className="divide-y divide-surface-overlay">
+            {rows.map((p) => (
+              <ProductListRow key={p.id} product={p} />
+            ))}
+          </ul>
+        </Card>
       )}
 
       {totalPages > 1 && (
         <nav
           aria-label="Pagination"
-          className="flex items-center justify-between pt-2"
+          className="flex items-center justify-between"
         >
-          <p className="font-body text-sm text-admin-text-muted">
+          <p className="font-body text-sm text-text-muted">
             Showing {(page - 1) * PAGE_SIZE + 1}–
             {Math.min(page * PAGE_SIZE, total)} of {total}
           </p>
@@ -401,12 +372,12 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
                   q: query || undefined,
                   page: String(page - 1),
                 })}
-                className="font-body text-sm text-admin-text-secondary transition-colors hover:text-admin-text-primary"
+                className="font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
               >
                 ← Previous
               </Link>
             )}
-            <span className="font-mono text-sm text-admin-text-muted">
+            <span className="font-mono text-sm text-text-muted">
               {page} / {totalPages}
             </span>
             {page < totalPages && (
@@ -419,7 +390,7 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
                   q: query || undefined,
                   page: String(page + 1),
                 })}
-                className="font-body text-sm text-admin-text-secondary transition-colors hover:text-admin-text-primary"
+                className="font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
               >
                 Next →
               </Link>

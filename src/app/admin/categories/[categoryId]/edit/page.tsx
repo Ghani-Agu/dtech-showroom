@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
-import { PageHeader, Pill } from '@/components/admin-v2/ui'
+import { ArrowLeft } from 'lucide-react'
+import { Badge } from '@/components/admin/ui/Badge'
 import { CategoryForm } from '@/components/admin/categories/CategoryForm'
 import { db } from '@/db/client'
 import { categories } from '@/db/schema'
@@ -25,7 +27,7 @@ export async function generateMetadata({
   if (!category) return { title: 'Category not found' }
 
   return {
-    title: `Edit ${category.name} · Dtech Admin`,
+    title: `Edit ${category.name} — Dtech Admin`,
     robots: { index: false, follow: false },
   }
 }
@@ -44,22 +46,31 @@ export default async function EditCategoryPage({ params }: PageProps) {
   if (!category) notFound()
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Categories', href: '/admin/categories' },
-          { label: 'Edit' },
-        ]}
-        title={category.name}
-        action={
-          <div className="flex items-center gap-2">
-            <Pill variant="default" withDot={false}>
-              /{category.slug}
-            </Pill>
-            {category.archivedAt && <Pill variant="warning">Archived</Pill>}
+    <div className="max-w-5xl space-y-6">
+      <Link
+        href="/admin/categories"
+        className="inline-flex items-center gap-2 font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+      >
+        <ArrowLeft size={14} />
+        All categories
+      </Link>
+
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
+            Categories / Edit
+          </p>
+          <h1 className="font-display text-3xl tracking-tight text-text-primary">
+            {category.name}
+          </h1>
+          <div className="mt-3 flex items-center gap-2">
+            <Badge variant="neutral">/{category.slug}</Badge>
+            {category.archivedAt && (
+              <Badge variant="warning">Archived</Badge>
+            )}
           </div>
-        }
-      />
+        </div>
+      </div>
 
       <CategoryForm
         mode="edit"

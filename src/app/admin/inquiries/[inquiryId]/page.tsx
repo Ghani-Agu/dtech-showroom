@@ -3,22 +3,21 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { desc, eq } from 'drizzle-orm'
 import {
+  ArrowLeft,
   Building2,
   Clock,
   ExternalLink,
   Mail,
   Phone,
 } from 'lucide-react'
+import { Badge } from '@/components/admin/ui/Badge'
 import {
-  Avatar,
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  PageHeader,
-  Pill,
-} from '@/components/admin-v2/ui'
+} from '@/components/admin/ui/Card'
 import { InquiryNotesEditor } from '@/components/admin/inquiries/InquiryNotesEditor'
 import { InquiryStatusControl } from '@/components/admin/inquiries/InquiryStatusControl'
 import { db } from '@/db/client'
@@ -44,33 +43,20 @@ export async function generateMetadata({
     .catch(() => null)
 
   if (!inquiry) {
-    return { title: 'Message not found' }
+    return { title: 'Inquiry not found' }
   }
 
   return {
-    title: `${inquiry.fullName} · Messages · Dtech Admin`,
+    title: `${inquiry.fullName} — Inquiries — Dtech Admin`,
     robots: { index: false, follow: false },
   }
 }
 
-const STATUS_VARIANT: Record<
-  'new' | 'contacted' | 'closed' | 'spam',
-  'info' | 'warning' | 'success' | 'default'
-> = {
-  new: 'info',
-  contacted: 'warning',
-  closed: 'success',
-  spam: 'default',
-}
-
-const STATUS_LABEL: Record<
-  'new' | 'contacted' | 'closed' | 'spam',
-  string
-> = {
-  new: 'New',
-  contacted: 'In progress',
-  closed: 'Closed',
-  spam: 'Spam',
+const statusVariant = {
+  new: 'accent' as const,
+  contacted: 'success' as const,
+  closed: 'neutral' as const,
+  spam: 'error' as const,
 }
 
 export default async function InquiryDetailPage({ params }: PageProps) {
@@ -88,7 +74,7 @@ export default async function InquiryDetailPage({ params }: PageProps) {
 
   const [product, history] = await Promise.all([
     db
-      .select({ slug: products.slug, cardImagePath: products.cardImagePath })
+      .select({ slug: products.slug })
       .from(products)
       .where(eq(products.id, inquiry.productId))
       .limit(1)
@@ -103,69 +89,97 @@ export default async function InquiryDetailPage({ params }: PageProps) {
   ])
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Messages', href: '/admin/inquiries' },
-          {
-            label: new Intl.DateTimeFormat('en-US', {
+    <div className="max-w-4xl space-y-6">
+      <Link
+        href="/admin/inquiries"
+        className="inline-flex items-center gap-2 font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+      >
+        <ArrowLeft size={14} />
+        All inquiries
+      </Link>
+
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
+            Inquiry ·{' '}
+            {new Intl.DateTimeFormat('en-US', {
               dateStyle: 'medium',
               timeStyle: 'short',
-            }).format(new Date(inquiry.submittedAt)),
-          },
-        ]}
-        title={inquiry.fullName}
-        action={
-          <Pill variant={STATUS_VARIANT[inquiry.status]}>
-            {STATUS_LABEL[inquiry.status]}
-          </Pill>
-        }
-      />
+            }).format(new Date(inquiry.submittedAt))}
+          </p>
+          <h1 className="font-display text-3xl tracking-tight text-text-primary">
+            {inquiry.fullName}
+          </h1>
+        </div>
+        <Badge variant={statusVariant[inquiry.status]}>
+          {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+        </Badge>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main column */}
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Customer</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-4">
-                <Avatar name={inquiry.fullName} size="lg" />
-                <div className="flex-1 space-y-2">
-                  <p className="font-body text-base font-medium text-admin-text-primary">
-                    {inquiry.fullName}
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <Mail size={14} className="text-admin-text-muted" />
-                    <a
-                      href={`mailto:${inquiry.email}?subject=Re: Inquiry about ${inquiry.productName}`}
-                      className="font-body text-sm text-admin-text-primary transition-colors hover:text-admin-accent"
-                    >
-                      {inquiry.email}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone size={14} className="text-admin-text-muted" />
-                    <a
-                      href={`tel:${inquiry.phone}`}
-                      className="font-body text-sm text-admin-text-primary transition-colors hover:text-admin-accent"
-                    >
-                      {inquiry.phone}
-                    </a>
-                  </div>
-                  {inquiry.company && (
-                    <div className="flex items-center gap-3">
-                      <Building2
-                        size={14}
-                        className="text-admin-text-muted"
-                      />
-                      <span className="font-body text-sm text-admin-text-primary">
-                        {inquiry.company}
-                      </span>
-                    </div>
-                  )}
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Mail size={16} className="text-text-muted" />
+                <a
+                  href={`mailto:${inquiry.email}?subject=Re: Inquiry about ${inquiry.productName}`}
+                  className="font-body text-sm text-text-primary transition-colors hover:text-accent"
+                >
+                  {inquiry.email}
+                </a>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone size={16} className="text-text-muted" />
+                <a
+                  href={`tel:${inquiry.phone}`}
+                  className="font-body text-sm text-text-primary transition-colors hover:text-accent"
+                >
+                  {inquiry.phone}
+                </a>
+              </div>
+              {inquiry.company && (
+                <div className="flex items-center gap-3">
+                  <Building2 size={16} className="text-text-muted" />
+                  <span className="font-body text-sm text-text-primary">
+                    {inquiry.company}
+                  </span>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Product</CardTitle>
+              <CardDescription>
+                The product this inquiry is about.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-body text-base text-text-primary">
+                    {inquiry.productName}
+                  </p>
+                  <p className="mt-1 font-body text-sm text-text-secondary">
+                    {inquiry.productBrand}
+                  </p>
+                </div>
+                {product && (
+                  <Link
+                    href={`/products/${product.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+                  >
+                    View product
+                    <ExternalLink size={14} />
+                  </Link>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -175,24 +189,9 @@ export default async function InquiryDetailPage({ params }: PageProps) {
               <CardTitle>Message</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap font-body text-base leading-relaxed text-admin-text-primary">
+              <p className="whitespace-pre-wrap font-body text-base leading-relaxed text-text-primary">
                 {inquiry.message}
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Status</CardTitle>
-              <CardDescription>
-                Change the inquiry status as you work through it.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InquiryStatusControl
-                inquiryId={inquiry.id}
-                currentStatus={inquiry.status}
-              />
             </CardContent>
           </Card>
 
@@ -212,110 +211,62 @@ export default async function InquiryDetailPage({ params }: PageProps) {
           </Card>
         </div>
 
-        {/* Sidebar column */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Product</CardTitle>
+              <CardTitle>Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <div>
-                <p className="font-body text-base font-medium text-admin-text-primary">
-                  {inquiry.productName}
-                </p>
-                <p className="mt-1 font-body text-sm text-admin-text-secondary">
-                  {inquiry.productBrand}
-                </p>
-                {product && (
-                  <Link
-                    href={`/products/${product.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 font-body text-sm text-admin-accent hover:underline"
-                  >
-                    View product page
-                    <ExternalLink size={14} />
-                  </Link>
-                )}
-              </div>
+              <InquiryStatusControl
+                inquiryId={inquiry.id}
+                currentStatus={inquiry.status}
+              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Meta</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="space-y-2 font-mono text-xs">
-                <div className="flex justify-between">
-                  <dt className="text-admin-text-muted uppercase tracking-wider">
-                    Submitted
-                  </dt>
-                  <dd className="text-admin-text-secondary">
-                    {new Intl.DateTimeFormat('en-US', {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                    }).format(new Date(inquiry.submittedAt))}
-                  </dd>
-                </div>
-                {inquiry.contactedAt && (
-                  <div className="flex justify-between">
-                    <dt className="text-admin-text-muted uppercase tracking-wider">
-                      Contacted
-                    </dt>
-                    <dd className="text-admin-text-secondary">
-                      {new Intl.DateTimeFormat('en-US', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      }).format(new Date(inquiry.contactedAt))}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </CardContent>
-          </Card>
-
-          <Card padded={false}>
-            <div className="px-6 pt-6 pb-3">
               <CardTitle>Activity</CardTitle>
-            </div>
-            {history.length === 0 ? (
-              <p className="px-6 py-4 font-body text-sm text-admin-text-muted">
-                No activity yet.
-              </p>
-            ) : (
-              <ul className="divide-y divide-admin-border">
-                {history.map((h) => (
-                  <li key={h.id} className="px-6 py-3">
-                    <div className="flex items-start gap-2">
-                      <Clock
-                        size={12}
-                        className="mt-1 flex-shrink-0 text-admin-text-muted"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-body text-sm text-admin-text-primary">
-                          {h.fromStatus
-                            ? `${h.fromStatus} → ${h.toStatus}`
-                            : `Created as ${h.toStatus}`}
-                        </p>
-                        <p className="mt-0.5 font-mono text-xs text-admin-text-muted">
-                          {h.changedByEmail ?? 'system'} ·{' '}
-                          {new Intl.DateTimeFormat('en-US', {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          }).format(new Date(h.createdAt))}
-                        </p>
-                        {h.note && (
-                          <p className="mt-1 font-body text-sm text-admin-text-secondary">
-                            {h.note}
+            </CardHeader>
+            <CardContent className="px-0 py-0">
+              {history.length === 0 ? (
+                <p className="px-6 py-4 font-body text-sm text-text-muted">
+                  No activity yet.
+                </p>
+              ) : (
+                <ul className="divide-y divide-surface-overlay">
+                  {history.map((h) => (
+                    <li key={h.id} className="px-6 py-3">
+                      <div className="flex items-start gap-2">
+                        <Clock
+                          size={12}
+                          className="mt-1 flex-shrink-0 text-text-muted"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-body text-sm text-text-primary">
+                            {h.fromStatus
+                              ? `${h.fromStatus} → ${h.toStatus}`
+                              : `Created as ${h.toStatus}`}
                           </p>
-                        )}
+                          <p className="mt-0.5 font-mono text-xs text-text-muted">
+                            {h.changedByEmail ?? 'system'} ·{' '}
+                            {new Intl.DateTimeFormat('en-US', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            }).format(new Date(h.createdAt))}
+                          </p>
+                          {h.note && (
+                            <p className="mt-1 font-body text-sm text-text-secondary">
+                              {h.note}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>
