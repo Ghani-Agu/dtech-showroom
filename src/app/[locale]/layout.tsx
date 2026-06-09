@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
+import { HideOnHome } from '@/components/layout/HideOnHome'
 import { ScrollProvider } from '@/components/layout/ScrollProvider'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { SiteHeader } from '@/components/layout/SiteHeader'
@@ -37,11 +38,15 @@ export default async function LocaleLayout({
       </a>
       <ScrollProvider>
         <div className="flex min-h-screen flex-col">
-          <SiteHeader />
+          <HideOnHome>
+            <SiteHeader />
+          </HideOnHome>
           <main id="main-content" className="flex-1">
             {children}
           </main>
-          <SiteFooter />
+          <HideOnHome>
+            <SiteFooter />
+          </HideOnHome>
         </div>
       </ScrollProvider>
     </NextIntlClientProvider>

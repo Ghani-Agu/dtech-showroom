@@ -1,34 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  /* Surface tokens */
-  --color-surface-void: oklch(0.06 0.005 240);
-  --color-surface-base: oklch(0.10 0.008 240);
-  --color-surface-base-plus: oklch(0.13 0.010 240);
-  --color-surface-elevated: oklch(0.16 0.012 240);
-  --color-surface-overlay: oklch(0.20 0.014 240);
-  --color-surface-overlay-plus: oklch(0.24 0.016 240);
+  /* Surface tokens — flipped to v2 values (names preserved). The
+     overlay / overlay-plus values are derived to continue the v2
+     base→edge ladder above `elevated` (0.22 L) using the same +0.04 L
+     gap and +0.002 chroma increments. */
+  --color-surface-void: oklch(0.08 0.015 240);
+  --color-surface-base: oklch(0.12 0.018 240);
+  --color-surface-base-plus: oklch(0.16 0.020 240);
+  --color-surface-elevated: oklch(0.22 0.022 240);
+  --color-surface-overlay: oklch(0.26 0.024 240);
+  --color-surface-overlay-plus: oklch(0.30 0.026 240);
 
-  /* Text tokens */
-  --color-text-primary: oklch(0.97 0.005 90);
-  --color-text-secondary: oklch(0.78 0.008 90);
-  --color-text-muted: oklch(0.58 0.010 90);
-  --color-text-disabled: oklch(0.38 0.008 90);
+  /* Text tokens — flipped to v2 hue 80 (warm-tinted). Disabled adopts
+     v2's "quiet" value (slightly lighter, marginally more chroma). */
+  --color-text-primary: oklch(0.97 0.005 80);
+  --color-text-secondary: oklch(0.78 0.008 80);
+  --color-text-muted: oklch(0.58 0.010 80);
+  --color-text-disabled: oklch(0.42 0.012 80);
 
-  /* Product material tones (for 3D shading) */
+  /* Product material tones (for 3D shading) — not in v2 spec; preserved. */
   --color-product-shadow: oklch(0.14 0.004 250);
   --color-product-base: oklch(0.22 0.005 250);
   --color-product-base-light: oklch(0.62 0.004 250);
   --color-product-keyline: oklch(0.32 0.006 250);
   --color-product-highlight: oklch(0.78 0.008 250);
 
-  /* Accent (single, restrained) */
-  --color-accent: oklch(0.74 0.14 215);
+  /* Accent — flipped to v2's brighter, more saturated value. The
+     `text-accent` / `bg-accent` utilities everywhere on the public site
+     now resolve to this; hover/muted/glow live in the v2 additive
+     block below. */
+  --color-accent: oklch(0.78 0.18 220);
 
-  /* Semantic (functional only) */
-  --color-semantic-success: oklch(0.72 0.13 155);
-  --color-semantic-warning: oklch(0.80 0.14 80);
-  --color-semantic-error: oklch(0.66 0.18 25);
+  /* Semantic — flipped to v2 §4 values; -info preserved at v1 because
+     v2 §4 does not redefine it. */
+  --color-semantic-success: oklch(0.78 0.16 150);
+  --color-semantic-warning: oklch(0.82 0.16 75);
+  --color-semantic-error: oklch(0.68 0.20 25);
   --color-semantic-info: oklch(0.74 0.12 230);
 
   /* Type scale (1.250 minor third) */
@@ -73,6 +81,76 @@
   --shadow-admin-sm: 0 1px 2px oklch(0.05 0 0 / 0.4);
   --shadow-admin-md: 0 4px 12px oklch(0.05 0 0 / 0.5);
   --shadow-admin-lg: 0 12px 32px oklch(0.05 0 0 / 0.6);
+
+  /* =============================================================
+     BRAND v2 TOKENS — additive layer per the v2 spec.
+
+     v1 token names above remain at their v1 values for back-
+     compatibility. v2-aware public-site components should consume
+     the layered tokens below.
+
+       base-*    — 95% of every surface; cool deep darks
+       accent-*  — the single dominant brand color (cyan-blue)
+       chroma-*  — animation-only palette; never on static surfaces
+       shadow-*  — elevation system; v2 lifted the v1 ban on shadows
+
+     Per v2 §4: OKLCH only. Per v2 §5: gradients allowed within rules.
+     Per v2 §12: admin aesthetic is unaffected.
+     ============================================================= */
+
+  /* v2 — base canvas */
+  --color-base-void: oklch(0.08 0.015 240);
+  --color-base-surface: oklch(0.12 0.018 240);
+  --color-base-raised: oklch(0.16 0.020 240);
+  --color-base-edge: oklch(0.22 0.022 240);
+
+  /* v2 — warm-tinted text (hue 80, not v1's 90). Available for opt-in
+     migration; v1 text-* utilities remain at their v1 values until
+     the Hero v2 pass + component audit are run. */
+  --color-text-warm-primary: oklch(0.97 0.005 80);
+  --color-text-warm-secondary: oklch(0.78 0.008 80);
+  --color-text-warm-tertiary: oklch(0.58 0.010 80);
+  --color-text-warm-quiet: oklch(0.42 0.012 80);
+
+  /* v2 — the Dtech color. Brighter and more saturated than v1's
+     accent (oklch 0.74 0.14 215). Consumers using --color-accent
+     are still on v1 until they migrate to accent-primary. */
+  --color-accent-primary: oklch(0.78 0.18 220);
+  --color-accent-hover: oklch(0.85 0.16 220);
+  --color-accent-muted: oklch(0.62 0.14 220);
+  /* primary at 25% alpha — for halos and glows */
+  --color-accent-glow: oklch(0.78 0.18 220 / 0.25);
+
+  /* v2 — chroma palette. Animation-only. Static usage is forbidden
+     per spec §4. Tooling cannot enforce this; reviewers must. */
+  --color-chroma-cool: oklch(0.70 0.18 240);
+  --color-chroma-cyan: oklch(0.82 0.16 200);
+  --color-chroma-violet: oklch(0.68 0.20 290);
+  --color-chroma-warm: oklch(0.78 0.15 50);
+
+  /* v2 — elevation system. Use sparingly. Only one `glow` per view. */
+  --shadow-hairline: 0 0 0 1px oklch(0.22 0.022 240 / 0.5);
+  --shadow-card: 0 4px 20px -4px oklch(0.04 0.01 240 / 0.5),
+    0 0 0 1px oklch(0.22 0.022 240 / 0.4);
+  --shadow-card-hover: 0 8px 32px -6px oklch(0.04 0.01 240 / 0.6),
+    0 0 0 1px oklch(0.78 0.18 220 / 0.3);
+  --shadow-glow: 0 0 32px -4px oklch(0.78 0.18 220 / 0.35);
+  --shadow-deep: 0 24px 60px -12px oklch(0.04 0.01 240 / 0.8);
+}
+
+/* Font aliasing — Geist now provides the typeface stack via
+   --font-geist-sans / --font-geist-mono (set on <html> by next/font in
+   the root layout). The project's existing CSS rules + utility classes
+   reference --font-display / --font-body / --font-mono; aliasing here
+   keeps them working without touching every callsite. Lives at :root,
+   NOT inside @theme — Tailwind v4 @theme self-references (e.g.
+   --font-display: var(--font-display)) silently break font resolution
+   per memory feedback_tailwind_v4_nextfont. These are forward
+   references to different variables, so they're safe. */
+:root {
+  --font-display: var(--font-geist-sans);
+  --font-body: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 /* Root styling */
@@ -124,6 +202,14 @@ samp {
   color: var(--color-surface-void);
 }
 
+/* Hero CTA — slow horizontal gradient sweep so the cyan→violet→pink
+   stops drift over a 12s cycle. Used inline via `animation: gradient-
+   shift 12s ease-in-out infinite` on a 200%-wide background. */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
 /* Breathing cyan bar — system heartbeat indicator below the login card. */
 @keyframes breathing-bar {
   0%, 100% {
@@ -157,4 +243,145 @@ samp {
     animation: none;
     opacity: 0.6;
   }
+}
+
+/* =========================================================================
+   ADMIN GLASS SHELL — scoped to .admin-shell so none of this leaks into
+   the public catalog. The .admin-shell class is applied to the outermost
+   wrapper inside src/app/admin/layout.tsx only.
+   ========================================================================= */
+
+.admin-shell {
+  --admin-canvas: #0a0e1a;
+  --admin-glass-bg: rgba(20, 28, 45, 0.45);
+  --admin-glass-border: rgba(255, 255, 255, 0.08);
+  --admin-glass-border-strong: rgba(255, 255, 255, 0.14);
+  --admin-cyan: #22d3ee;
+  --admin-purple: #a855f7;
+  --admin-pink: #ec4899;
+  --admin-amber: #fbbf24;
+  --admin-text-primary: #ffffff;
+  --admin-text-secondary: #94a3b8;
+  --admin-text-tertiary: #64748b;
+  --admin-blur: blur(24px) saturate(180%);
+  --admin-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Glass surface — shared recipe used by GlassCard, sidebar, topbar, etc. */
+@layer components {
+  .glass-surface {
+    background: var(--admin-glass-bg);
+    backdrop-filter: var(--admin-blur);
+    -webkit-backdrop-filter: var(--admin-blur);
+    border: 1px solid var(--admin-glass-border);
+    border-radius: 16px;
+  }
+
+  .glass-surface-strong {
+    border-color: var(--admin-glass-border-strong);
+  }
+}
+
+/* Contrast guard — when the spec's tertiary text (#64748b) sits on a
+   tinted glass surface (which has additional luminance behind it), the
+   contrast can drop below WCAG AA. Authors opting into this class get a
+   one-notch bump to the secondary token (#94a3b8). Apply manually where
+   a tertiary value reads as too faint over glass. */
+.admin-shell .text-tertiary-on-glass {
+  color: var(--admin-text-secondary);
+}
+
+/* Ambient motion — only transform/opacity animate per frame. Blur is
+   static. */
+@keyframes admin-float-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(60px, -40px) scale(1.1); }
+  66%      { transform: translate(-30px, 50px) scale(0.95); }
+}
+@keyframes admin-float-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-80px, 60px) scale(1.15); }
+}
+@keyframes admin-float-orb-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%      { transform: translate(40px, 70px) scale(0.9); }
+  75%      { transform: translate(-50px, -30px) scale(1.05); }
+}
+@keyframes admin-pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
+  50%      { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+}
+@keyframes admin-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes admin-border-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px var(--admin-glass-border),
+      0 0 24px -8px rgba(34, 211, 238, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(34, 211, 238, 0.25),
+      0 0 48px -8px rgba(34, 211, 238, 0.45);
+  }
+}
+@keyframes admin-drift {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(40px); opacity: 0; }
+}
+@keyframes admin-count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduced-motion: kill all admin-shell animations, hide ambient decoration */
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell *,
+  .admin-shell *::before,
+  .admin-shell *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .admin-shell .ambient-orb,
+  .admin-shell .ambient-particle {
+    display: none !important;
+  }
+}
+
+/* When the D-Tech 2026 showcase is mounted on a page, it provides its own
+   nav + footer. The locale layout's SiteHeader / SiteFooter are removed
+   from the tree by <HideOnHome>; the rules below are a CSS fallback and
+   also restyle the body/layout shell behind the showcase.
+   `body:has(...)` applies from the very first SSR paint; the
+   `data-home-chrome` attribute (set on mount) is kept as a fallback for
+   engines without :has() support. */
+body[data-home-chrome='showcase'] > div > header,
+body:has(.home-showcase-root) > div > header,
+body[data-home-chrome='showcase'] > div > footer,
+body:has(.home-showcase-root) > div > footer {
+  display: none !important;
+}
+body[data-home-chrome='showcase'],
+body:has(.home-showcase-root) {
+  background: #0a0a0c;
+  /* Allow z-index: -1 fixed layers (the showcase ambient/grid/orbs) to be
+     visible. Without an isolation override the body's own stacking context
+     would clip them out of view. */
+  isolation: auto;
+}
+body[data-home-chrome='showcase'] > div > main,
+body:has(.home-showcase-root) > div > main {
+  flex: 1 1 auto;
+  padding: 0;
+}
+/* The locale layout's flex column container also needs to be transparent
+   so the body's #0a0a0c shows behind the z-index: -1 ambient layers. */
+body[data-home-chrome='showcase'] > div,
+body:has(.home-showcase-root) > div {
+  background: transparent;
 }

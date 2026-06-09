@@ -38,7 +38,201 @@
     "brandsTitle": "Five lines, considered",
     "brandsSubtitle": "We carry brands that match the showroom standard.",
     "categoriesTitle": "Sorted by intent",
-    "categoriesSubtitle": "Find by what you need it for, not what we call it."
+    "categoriesSubtitle": "Find by what you need it for, not what we call it.",
+    "nav": {
+      "products": "Products",
+      "about": "About",
+      "support": "Support",
+      "stores": "Stores",
+      "contact": "Contact",
+      "cta": "Explore"
+    },
+    "hero": {
+      "kicker": "D-Tech Algeria · Since 2006",
+      "headline": "Algerian innovation, reimagined.",
+      "lead": "Tablets, laptops and smartphones built for everyday use — designed here, priced for everyone.",
+      "leadAccent": "Affordable innovations, within your reach.",
+      "primaryCta": "Explore the lineup",
+      "secondaryCta": "Our story",
+      "trustRating": "4.7 · Certified service",
+      "madeInDz": "Made in DZ",
+      "chip1Label": "Display",
+      "chip1Value": "10.1″ · 2K",
+      "chip2Label": "Processor",
+      "chip2Value": "Octa-Core",
+      "chip3Label": "Battery",
+      "chip3Value": "12h",
+      "scroll": "Scroll",
+      "statYears": "yrs",
+      "statYearsLabel": "DZ presence",
+      "statBrands": "brands",
+      "statBrandsLabel": "Official partners",
+      "statWilayas": "/ 58",
+      "statWilayasLabel": "Wilayas delivered",
+      "card1Head": "Customer satisfaction · 2026",
+      "card1Verified": "Verified",
+      "card1Out": "/ 5",
+      "card1Sub": "Across 1,248 verified reviews — Google, Avis Vérifiés, Trustpilot.",
+      "card1RowConseil": "Advice",
+      "card1RowDelais": "Speed",
+      "card1RowSav": "Service",
+      "card2Head": "Coverage · Algeria",
+      "card2Status": "58 / 58",
+      "card2Title": "Nationwide delivery",
+      "card2Sub": "48 h average · live tracking.",
+      "card2Marker": "ALGIERS",
+      "card3Head": "Warranty & in-house service",
+      "card3Status": "Certified",
+      "card3TitlePrefix": "2 years",
+      "card3TitleSuffix": "of manufacturer warranty",
+      "card3Sub": "On-site workshop in Bab Ezzouar — HP, Dell, Lenovo and Canon certified technicians.",
+      "card3Bullet1": "Free 24 h diagnostic",
+      "card3Bullet2": "Original parts, official invoice",
+      "card3Bullet3": "Loaner unit during repair",
+      "chipA": "7 official brands",
+      "chipB": "58 / 58 wilayas",
+      "chipC": "2-year warranty"
+    },
+    "products": {
+      "kicker": "2026 Collection",
+      "titleLine1": "One lineup,",
+      "titleAccent": "several formats",
+      "lead": "Every D-Tech device is built for real use — not for the spec sheet. Pick the format that fits your day.",
+      "viewRange": "View the range"
+    },
+    "featured": {
+      "kicker": "Product of the moment",
+      "badge": "Selection · 2026",
+      "specBrand": "Brand",
+      "specCategory": "Category",
+      "specTier": "Tier",
+      "tierHero": "Hero",
+      "tierFeatured": "Featured",
+      "tierLongtail": "Catalog",
+      "cta": "See details",
+      "ctaSecondary": "Visit brand"
+    },
+    "about": {
+      "kicker": "Our story",
+      "titleLine1": "Twenty years",
+      "titleAccent": "democratizing",
+      "titleLine3": "technology.",
+      "lead": "Founded in 2006 as <em>Hardware Technology Services</em>, D-Tech grew from a simple conviction: a good tool should never be a luxury.",
+      "lead2": "Twenty years on, we assemble and distribute devices in Algeria, for Algeria — backed by certified service and a nationwide retail network.",
+      "statYears": "Years of experience",
+      "statClients": "Customers served",
+      "statNational": "Nationwide availability",
+      "m1Title": "Hardware Technology Services is born",
+      "m1Body": "Founded in Algiers around a simple idea: make technology accessible.",
+      "m2Title": "First reseller network",
+      "m2Body": "Nationwide rollout and the first structured after-sales service.",
+      "m3Title": "Mass production launches",
+      "m3Body": "Local industrialization and the birth of the D-Tech brand as we know it.",
+      "m4Title": "The LiteBook line",
+      "m4Body": "Entry into the laptop market, designed for Algerian use.",
+      "m5Title": "Today",
+      "m5Body": "Tablets, smartphones, laptops, feature phones — a full lineup, distributed across Algeria."
+    },
+    "why": {
+      "kicker": "Why D-Tech",
+      "titleLine1": "Four reasons",
+      "titleAccent": "to trust us.",
+      "p1Title": "Affordable innovation",
+      "p1Body": "Best-in-class value across every tier, without cutting corners on the essentials.",
+      "p2Title": "Certified service",
+      "p2Body": "A trained technical team, spare parts in stock, short turnaround.",
+      "p3Title": "Nationwide availability",
+      "p3Body": "A network of stores and resellers, from the north to the south.",
+      "p4Title": "Algerian brand",
+      "p4Body": "Designed, assembled and supported here — close to the people who use it."
+    },
+    "contact": {
+      "kicker": "Find us",
+      "openStatus": "Open · 14:32",
+      "openNow": "OPEN NOW",
+      "storeName": "D-Tech · HQ & Showroom",
+      "addressLine1": "Cité 05 Juillet 1962",
+      "addressLine2": "Bab Ezzouar, Algiers",
+      "coords": "36°43′N · 03°11′E · ALT 24m",
+      "scaleLabel": "Scale · 1:8 000",
+      "legendHeading": "Legend",
+      "legendHQ": "D-Tech (HQ)",
+      "showroomLabel": "SHOWROOM RENDER · ASSET PENDING",
+      "showroomTitle": "Bab Ezzouar Showroom",
+      "since": "EST. 2006 · DZA",
+      "tabs": {
+        "showroom": "Showroom",
+        "commercial": "Sales",
+        "sav": "Service"
+      },
+      "rowLabels": {
+        "phone": "Phone",
+        "email": "Email",
+        "service": "Service"
+      },
+      "info": {
+        "showroomPhone": "Walk-ins welcome · no appointment",
+        "showroomEmail": "contact@dtech.dz",
+        "showroomService": "Cité 05 Juillet 1962, Bab Ezzouar, Algiers",
+        "showroomServiceHours": "Mon–Thu · Sun · 9 AM–5 PM",
+        "commercialPhone": "+213 560 99 05 06",
+        "commercialEmail": "commercial@dtech.dz",
+        "commercialService": "Sales · B2B and consumer",
+        "commercialServiceHours": "Sun–Thu · 9 AM–5 PM",
+        "savPhone": "+213 561 61 69 11",
+        "savEmail": "sav@dtech.dz",
+        "savService": "After-sales service · 2-year warranty",
+        "savServiceHours": "Sun–Thu · 9 AM–4 PM"
+      },
+      "actions": {
+        "call": "Call",
+        "directions": "Directions",
+        "whatsapp": "WhatsApp"
+      },
+      "map": {
+        "sea": "MEDITERRANEAN SEA",
+        "highway": "A1",
+        "district": "BAB EZZOUAR",
+        "poiUni": "USTHB",
+        "poiMall": "Bab Ezzouar Mall",
+        "poiAirport": "Airport · 6 km",
+        "pinLabel": "D-TECH · HERE"
+      },
+      "hours": {
+        "heading": "Opening hours",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun",
+        "today": "Today",
+        "closed": "Closed",
+        "open": "09:00 – 17:00"
+      }
+    },
+    "footer": {
+      "blurb": "Affordable innovations, within your reach. Algerian brand since 2006.",
+      "colProducts": "Products",
+      "lProducts1": "Tablets",
+      "lProducts2": "LiteBook",
+      "lProducts3": "Smartphones",
+      "lProducts4": "Feature phones",
+      "colCompany": "Company",
+      "lCompany1": "About",
+      "lCompany2": "Stores",
+      "lCompany3": "Contact",
+      "colSupport": "Support",
+      "lSupport1": "Service",
+      "lSupport2": "Warranty",
+      "lSupport3": "Write to us",
+      "copyright": "© 2026 D-Tech Algeria",
+      "legal": "Legal",
+      "privacy": "Privacy",
+      "madeWith": "Made with",
+      "madeIn": "in Algeria 🇩🇿"
+    }
   },
   "brands": {
     "pageTitle": "Brands",
@@ -105,6 +299,16 @@
     "contact": "Contact",
     "contactBody": "For product inquiries, use the inquiry button on any product page. For partnership or wholesale inquiries, write to us directly."
   },
+  "hero": {
+    "eyebrow": "Dtech · Est. 2006",
+    "headline": "Dtech distributes the world. Builds its own.",
+    "headlinePrefix": "Dtech",
+    "headlineRest": " distributes the world. Builds its own.",
+    "subhead": "Official channel for DELL, ASUS, HP, TP-Link. Maker of the LiteBook line.",
+    "primaryCTA": "Browse the catalog",
+    "scrollCue": "Scroll to explore",
+    "ariaLabel": "A glowing cyan particle sphere on a deep navy field"
+  },
   "footer": {
     "wordmark": "DTECH",
     "tagline": "Hardware. Quietly considered.",
@@ -129,5 +333,263 @@
     "defaultTitle": "Dtech — Hardware, presented properly.",
     "defaultDescription": "A curated catalog of laptops, networking, mobile, and accessories from HP, Dell, ASUS, TP-Link, and the in-house D-Tech line.",
     "ogImageAlt": "Dtech Algérie"
+  },
+  "showcase": {
+    "nav": {
+      "catalogue": "Catalog",
+      "brands": "Brands",
+      "products": "Products",
+      "about": "About",
+      "contact": "Contact",
+      "explore": "Explore",
+      "searchAria": "Search",
+      "accountAria": "Account",
+      "cartAria": "Cart"
+    },
+    "logo": {
+      "tagline": "Algeria · 2026"
+    },
+    "hero": {
+      "kicker": "D-Tech Algeria · Since 2006",
+      "title1": "Tech that",
+      "title2": "feels like you.",
+      "sub": "Over <strong>{count} hand-picked products</strong> — HP, Dell, Lenovo, ASUS, TP-Link, Canon, Epson — distributed and covered by warranty in Algeria. Our job: finding you the right hardware.",
+      "ctaCatalog": "Browse the catalog",
+      "ctaStory": "Our story",
+      "stats": {
+        "yearsSuffix": "yrs",
+        "presence": "In Algeria",
+        "brandsSuffix": "brands",
+        "partners": "Official partners",
+        "wilayasSuffix": "/ 58",
+        "wilayas": "Wilayas served"
+      },
+      "cards": {
+        "satisfaction": {
+          "head": "Customer satisfaction · 2026",
+          "verified": "Verified",
+          "outOf": "/ 5",
+          "reviews": "From 1,248 verified customer reviews — Google, Avis Vérifiés, Trustpilot.",
+          "advice": "Advice",
+          "delivery": "Delivery",
+          "support": "Support"
+        },
+        "coverage": {
+          "head": "Coverage · Algeria",
+          "led": "58 / 58",
+          "title": "Delivery to every wilaya",
+          "sub": "48 h on average · real-time tracking.",
+          "capital": "ALGIERS"
+        },
+        "warranty": {
+          "head": "Warranty & in-house service",
+          "certified": "Certified",
+          "title": "<accent>2-year</accent> manufacturer warranty",
+          "sub": "In-house workshop in Bab Ezzouar — HP, Dell, Lenovo and Canon certified technicians.",
+          "l1": "Free diagnosis within 24 h",
+          "l2": "Genuine parts, official invoice",
+          "l3": "Loaner hardware during repairs"
+        }
+      },
+      "chips": {
+        "brands": "{count} official brands",
+        "wilayas": "58 / 58 wilayas",
+        "warranty": "2-year warranty"
+      },
+      "scrollCue": "Scroll"
+    },
+    "categories": {
+      "kicker": "{count} product families",
+      "title1": "The catalog,",
+      "title2": "by category.",
+      "sub": "From desktop PCs to gaming components, office printers and Wi-Fi 6 networking — you will find what you need.",
+      "countLabel": "{count} products · in stock",
+      "items": {
+        "desktop": "Desktop PCs",
+        "laptop": "Laptops",
+        "aio": "All-in-One",
+        "tablet": "Tablets",
+        "phone": "Phones",
+        "print": "Printers & Scanners",
+        "network": "Networking",
+        "parts": "Components",
+        "gaming": "Gaming"
+      }
+    },
+    "brands": {
+      "kicker": "Officially distributed brands",
+      "title1": "{count} partners,",
+      "title2": "one home.",
+      "sub": "We officially represent and locally distribute the brands we have worked with for years.",
+      "cta": "View all products",
+      "items": {
+        "hp": "Laptops · Desktops · Printers",
+        "dell": "OptiPlex · Vostro · Latitude",
+        "lenovo": "ThinkCentre All-in-One",
+        "asus": "Wi-Fi adapters · TUF Gaming PSU",
+        "tplink": "Routers, switches, AP",
+        "canon": "Printers, scanners, copiers",
+        "epson": "Printers, copiers"
+      }
+    },
+    "catalog": {
+      "kicker": "{products} products · {categories} categories · {brands} brands",
+      "title1": "All our",
+      "title2": "products.",
+      "sub": "Click a category to filter. Every product comes with a 2-year warranty, delivered within 48h across all 58 wilayas.",
+      "results": "{count} results · in stock",
+      "all": "All",
+      "showing": "Showing <b>{from}–{to}</b> of <b>{total}</b>",
+      "page": "Page <b>{page}</b> / {total}",
+      "prev": "Prev",
+      "next": "Next",
+      "prevAria": "Previous page",
+      "nextAria": "Next page",
+      "pageAria": "Page {n}",
+      "inStock": "In stock",
+      "currency": "DA",
+      "addAria": "Add"
+    },
+    "about": {
+      "kicker": "About · D-Tech Algeria",
+      "title1": "Twenty years",
+      "title2": "equipping",
+      "title3": "Algeria.",
+      "p1": "Founded in <strong>2006</strong> as <strong>Hardware Technology Services</strong>, D-Tech grew into a reference distributor for Algerian businesses and consumers. We officially represent <strong>HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson</strong> — and we have carried our own tablet and phone brand since 2017.",
+      "p2": "<strong>Our job:</strong> finding the right hardware at the right price, delivering it anywhere, covering it for two years, and repairing it when needed.",
+      "stats": {
+        "founded": "Founded in Algiers",
+        "clients": "Customers served",
+        "brandsSuffix": "brands",
+        "partners": "Official partners",
+        "skuSuffix": "SKU",
+        "sku": "In active catalog"
+      },
+      "timeline": {
+        "t1Title": "Hardware Technology Services",
+        "t1Desc": "Company founded in Algiers.",
+        "t2Title": "National network",
+        "t2Desc": "Reseller rollout and after-sales structuring.",
+        "t3Title": "The D-Tech brand",
+        "t3Desc": "Launch of our own tablet and phone range.",
+        "t4Title": "Official partnerships",
+        "t4Desc": "HP, Dell, Lenovo, ASUS, Canon, Epson, TP-Link.",
+        "t5Title": "{count} products · 58 wilayas",
+        "t5Desc": "Full catalog, nationwide delivery, two-year warranty."
+      }
+    },
+    "contact": {
+      "kicker": "Find us · Bab Ezzouar, Algiers",
+      "title1": "Come and",
+      "title2": "see us.",
+      "sub": "Headquarters are in Bab Ezzouar. Sales and after-sales are reachable Sunday to Thursday, 9am–5pm.",
+      "tabs": {
+        "show": "Showroom",
+        "comm": "Sales",
+        "sav": "Service"
+      },
+      "tabData": {
+        "show": {
+          "phone": "Walk-ins welcome · no appointment",
+          "addr": "Cité 05 Juillet 1962, Bab Ezzouar, Algiers",
+          "hours": "Mon–Thu · Sun · 9am–5pm"
+        },
+        "comm": {
+          "phone": "+213 560 99 05 06",
+          "addr": "Sales department · B2B and consumers",
+          "hours": "Sun–Thu · 9am–5pm"
+        },
+        "sav": {
+          "phone": "+213 561 61 69 11",
+          "addr": "After-sales service · 2-year warranty",
+          "hours": "Sun–Thu · 9am–4pm"
+        }
+      },
+      "rows": {
+        "phone": "Phone",
+        "email": "E-mail",
+        "service": "Department"
+      },
+      "actions": {
+        "call": "Call",
+        "route": "Directions",
+        "whatsapp": "WhatsApp"
+      },
+      "hoursTitle": "Opening hours",
+      "today": "Today",
+      "closed": "Closed",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "panel": {
+        "openNow": "● Open now",
+        "closedNow": "● Currently closed",
+        "storeName": "Bab Ezzouar Showroom",
+        "since": "EST. 2006 · DZA"
+      },
+      "map": {
+        "open": "Open",
+        "closedNow": "Closed",
+        "name": "D-Tech · HQ & Showroom",
+        "addr1": "Cité 05 Juillet 1962",
+        "addr2": "Bab Ezzouar, Algiers",
+        "coords": "36°43′N · 03°11′E · ALT 24m",
+        "scale": "Scale · 1:8,000",
+        "legend": "Legend",
+        "legendMain": "D-Tech (HQ)",
+        "legendPoi": "Points of interest",
+        "sea": "MEDITERRANEAN SEA",
+        "area": "BAB EZZOUAR",
+        "pin": "D-TECH · HERE",
+        "poiUsthb": "USTHB",
+        "poiMall": "Bab Ezzouar Mall",
+        "poiAirport": "Airport · 6 km"
+      }
+    },
+    "footer": {
+      "blurb": "Algerian innovation, at your price. Official distributor of HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson since 2006.",
+      "cols": {
+        "catalog": {
+          "title": "Catalog",
+          "l1": "Desktop PCs",
+          "l2": "Laptops",
+          "l3": "All-in-One",
+          "l4": "Tablets & Phones",
+          "l5": "Printers"
+        },
+        "brands": {
+          "title": "Brands",
+          "l1": "HP · Dell · Lenovo",
+          "l2": "ASUS · TUF Gaming",
+          "l3": "TP-Link",
+          "l4": "Canon · Epson"
+        },
+        "service": {
+          "title": "Service",
+          "l1": "Order tracking",
+          "l2": "Warranty & service",
+          "l3": "Delivery to 58 wilayas",
+          "l4": "Stores"
+        },
+        "contact": {
+          "title": "Contact",
+          "l1": "Bab Ezzouar, Algiers",
+          "l2": "0560 99 05 06",
+          "l3": "0561 616 911",
+          "l4": "contact@dtech.dz"
+        }
+      },
+      "copyright": "© 2026 D-Tech Algeria",
+      "legal": "Legal notice",
+      "terms": "Terms of sale",
+      "privacy": "Privacy",
+      "made": "Made in Algeria 🇩🇿"
+    }
   }
 }

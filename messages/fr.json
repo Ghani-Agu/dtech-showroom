@@ -38,7 +38,201 @@
     "brandsTitle": "Cinq marques, choisies avec soin",
     "brandsSubtitle": "Nous distribuons les marques qui répondent à nos standards.",
     "categoriesTitle": "Triées par usage",
-    "categoriesSubtitle": "Trouvez selon votre besoin, pas selon notre nomenclature."
+    "categoriesSubtitle": "Trouvez selon votre besoin, pas selon notre nomenclature.",
+    "nav": {
+      "products": "Produits",
+      "about": "À propos",
+      "support": "Support",
+      "stores": "Boutiques",
+      "contact": "Contact",
+      "cta": "Découvrir"
+    },
+    "hero": {
+      "kicker": "D-Tech Algérie · Depuis 2006",
+      "headline": "L'innovation algérienne, repensée.",
+      "lead": "Des tablettes, ordinateurs et smartphones conçus pour le quotidien — pensés ici, tarifés pour tous.",
+      "leadAccent": "Des innovations abordables, à portée de main.",
+      "primaryCta": "Explorer la gamme",
+      "secondaryCta": "Notre histoire",
+      "trustRating": "4,7 · SAV qualifié",
+      "madeInDz": "Made in DZ",
+      "chip1Label": "Écran",
+      "chip1Value": "10,1″ · 2K",
+      "chip2Label": "Processeur",
+      "chip2Value": "Octa-Core",
+      "chip3Label": "Autonomie",
+      "chip3Value": "12h",
+      "scroll": "Défiler",
+      "statYears": "ans",
+      "statYearsLabel": "Présence DZ",
+      "statBrands": "marques",
+      "statBrandsLabel": "Partenaires officiels",
+      "statWilayas": "/ 58",
+      "statWilayasLabel": "Wilayas livrées",
+      "card1Head": "Satisfaction client · 2026",
+      "card1Verified": "Vérifié",
+      "card1Out": "/ 5",
+      "card1Sub": "Sur 1 248 avis clients vérifiés — Google, Avis Vérifiés, Trustpilot.",
+      "card1RowConseil": "Conseil",
+      "card1RowDelais": "Délais",
+      "card1RowSav": "SAV",
+      "card2Head": "Couverture · Algérie",
+      "card2Status": "58 / 58",
+      "card2Title": "Livraison toutes wilayas",
+      "card2Sub": "48 h en moyenne · suivi en temps réel.",
+      "card2Marker": "ALGER",
+      "card3Head": "Garantie & SAV interne",
+      "card3Status": "Certifié",
+      "card3TitlePrefix": "2 ans",
+      "card3TitleSuffix": "de garantie constructeur",
+      "card3Sub": "Atelier intégré à Bab Ezzouar — techniciens certifiés HP, Dell, Lenovo et Canon.",
+      "card3Bullet1": "Diagnostic gratuit en 24 h",
+      "card3Bullet2": "Pièces d'origine, facture officielle",
+      "card3Bullet3": "Prêt de matériel pendant réparation",
+      "chipA": "7 marques officielles",
+      "chipB": "58 / 58 wilayas",
+      "chipC": "Garantie 2 ans"
+    },
+    "products": {
+      "kicker": "Collection 2026",
+      "titleLine1": "Une gamme,",
+      "titleAccent": "plusieurs formats",
+      "lead": "Chaque appareil D-Tech est pensé pour l'usage réel — pas pour la fiche technique. Choisissez le format qui colle à votre journée.",
+      "viewRange": "Voir la gamme"
+    },
+    "featured": {
+      "kicker": "Produit du moment",
+      "badge": "Sélection · 2026",
+      "specBrand": "Marque",
+      "specCategory": "Catégorie",
+      "specTier": "Niveau",
+      "tierHero": "Phare",
+      "tierFeatured": "Sélection",
+      "tierLongtail": "Catalogue",
+      "cta": "Voir les détails",
+      "ctaSecondary": "Voir la marque"
+    },
+    "about": {
+      "kicker": "Notre histoire",
+      "titleLine1": "Vingt ans à",
+      "titleAccent": "démocratiser",
+      "titleLine3": "la technologie.",
+      "lead": "Fondée en 2006 sous le nom de <em>Hardware Technology Services</em>, D-Tech est née d'une conviction simple : un bon outil ne devrait jamais être un luxe.",
+      "lead2": "Vingt ans plus tard, nous assemblons et distribuons des appareils en Algérie, pour l'Algérie — soutenus par un service après-vente qualifié et un réseau de boutiques d'un bout à l'autre du pays.",
+      "statYears": "Ans d'expérience",
+      "statClients": "Clients servis",
+      "statNational": "Disponibilité nationale",
+      "m1Title": "Naissance de Hardware Technology Services",
+      "m1Body": "Création de la société à Alger, autour d'une idée : rendre la technologie accessible.",
+      "m2Title": "Premier réseau de revendeurs",
+      "m2Body": "Déploiement sur le territoire et premier service après-vente structuré.",
+      "m3Title": "Lancement de la production de masse",
+      "m3Body": "Industrialisation locale et naissance de la marque D-Tech telle qu'on la connaît.",
+      "m4Title": "La gamme LiteBook",
+      "m4Body": "Entrée dans le marché des ordinateurs portables, conçus pour l'usage algérien.",
+      "m5Title": "Aujourd'hui",
+      "m5Body": "Tablettes, smartphones, ordinateurs, feature phones — une gamme complète, distribuée partout en Algérie."
+    },
+    "why": {
+      "kicker": "Pourquoi D-Tech",
+      "titleLine1": "Quatre raisons",
+      "titleAccent": "de nous faire confiance.",
+      "p1Title": "Innovation abordable",
+      "p1Body": "Le meilleur rapport qualité-prix sur chaque gamme, sans rogner sur les essentiels.",
+      "p2Title": "SAV qualifié",
+      "p2Body": "Une équipe technique formée, des pièces détachées en stock, des délais courts.",
+      "p3Title": "Disponibilité nationale",
+      "p3Body": "Un réseau de boutiques et revendeurs, du nord au sud, pour acheter et faire réparer.",
+      "p4Title": "Marque algérienne",
+      "p4Body": "Pensée, assemblée et accompagnée ici — au plus près de ceux qui l'utilisent."
+    },
+    "contact": {
+      "kicker": "Nous trouver",
+      "openStatus": "Ouvert · 14:32",
+      "openNow": "OUVERT MAINTENANT",
+      "storeName": "D-Tech · Siège & Showroom",
+      "addressLine1": "Cité 05 Juillet 1962",
+      "addressLine2": "Bab Ezzouar, Alger",
+      "coords": "36°43′N · 03°11′E · ALT 24m",
+      "scaleLabel": "Échelle · 1:8 000",
+      "legendHeading": "Légende",
+      "legendHQ": "D-Tech (siège)",
+      "showroomLabel": "SHOWROOM RENDER · ASSET PENDING",
+      "showroomTitle": "Showroom Bab Ezzouar",
+      "since": "EST. 2006 · DZA",
+      "tabs": {
+        "showroom": "Showroom",
+        "commercial": "Commercial",
+        "sav": "SAV"
+      },
+      "rowLabels": {
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "service": "Service"
+      },
+      "info": {
+        "showroomPhone": "Visite libre · sans RDV",
+        "showroomEmail": "contact@dtech.dz",
+        "showroomService": "Cité 05 Juillet 1962, Bab Ezzouar, Alger",
+        "showroomServiceHours": "Lun–Jeu · Dim · 9h–17h",
+        "commercialPhone": "+213 560 99 05 06",
+        "commercialEmail": "commercial@dtech.dz",
+        "commercialService": "Service commercial · B2B et particuliers",
+        "commercialServiceHours": "Dim–Jeu · 9h–17h",
+        "savPhone": "+213 561 61 69 11",
+        "savEmail": "sav@dtech.dz",
+        "savService": "Service après-vente · garantie 2 ans",
+        "savServiceHours": "Dim–Jeu · 9h–16h"
+      },
+      "actions": {
+        "call": "Appeler",
+        "directions": "Itinéraire",
+        "whatsapp": "WhatsApp"
+      },
+      "map": {
+        "sea": "MER MÉDITERRANÉE",
+        "highway": "A1",
+        "district": "BAB EZZOUAR",
+        "poiUni": "USTHB",
+        "poiMall": "C.C. Bab Ezzouar",
+        "poiAirport": "Aéroport · 6 km",
+        "pinLabel": "D-TECH · ICI"
+      },
+      "hours": {
+        "heading": "Horaires d'ouverture",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam",
+        "sun": "Dim",
+        "today": "Aujourd'hui",
+        "closed": "Fermé",
+        "open": "09:00 – 17:00"
+      }
+    },
+    "footer": {
+      "blurb": "Des innovations abordables, à portée de main. Marque algérienne depuis 2006.",
+      "colProducts": "Produits",
+      "lProducts1": "Tablettes",
+      "lProducts2": "LiteBook",
+      "lProducts3": "Smartphones",
+      "lProducts4": "Feature phones",
+      "colCompany": "Société",
+      "lCompany1": "À propos",
+      "lCompany2": "Boutiques",
+      "lCompany3": "Contact",
+      "colSupport": "Support",
+      "lSupport1": "SAV",
+      "lSupport2": "Garantie",
+      "lSupport3": "Nous écrire",
+      "copyright": "© 2026 D-Tech Algérie",
+      "legal": "Mentions légales",
+      "privacy": "Confidentialité",
+      "madeWith": "Conçu avec",
+      "madeIn": "en Algérie 🇩🇿"
+    }
   },
   "brands": {
     "pageTitle": "Marques",
@@ -105,6 +299,16 @@
     "contact": "Contact",
     "contactBody": "Pour les demandes produits, utilisez le bouton d'information sur chaque page produit. Pour les partenariats ou les demandes de gros, écrivez-nous directement."
   },
+  "hero": {
+    "eyebrow": "Dtech · Depuis 2006",
+    "headline": "Dtech distribue le monde. Construit le sien.",
+    "headlinePrefix": "Dtech",
+    "headlineRest": " distribue le monde. Construit le sien.",
+    "subhead": "Canal officiel DELL, ASUS, HP, TP-Link. Fabricant de la gamme LiteBook.",
+    "primaryCTA": "Parcourir le catalogue",
+    "scrollCue": "Défiler pour explorer",
+    "ariaLabel": "Une sphère cyan de particules lumineuses sur fond bleu nuit"
+  },
   "footer": {
     "wordmark": "DTECH",
     "tagline": "Le matériel. Présenté avec soin.",
@@ -129,5 +333,263 @@
     "defaultTitle": "Dtech — Le matériel, présenté avec soin.",
     "defaultDescription": "Un catalogue soigneusement sélectionné d'ordinateurs portables, équipements réseau, mobiles et accessoires des marques HP, Dell, ASUS, TP-Link, et de notre ligne maison D-Tech.",
     "ogImageAlt": "Dtech Algérie"
+  },
+  "showcase": {
+    "nav": {
+      "catalogue": "Catalogue",
+      "brands": "Marques",
+      "products": "Produits",
+      "about": "À propos",
+      "contact": "Contact",
+      "explore": "Explorer",
+      "searchAria": "Rechercher",
+      "accountAria": "Compte",
+      "cartAria": "Panier"
+    },
+    "logo": {
+      "tagline": "Algérie · 2026"
+    },
+    "hero": {
+      "kicker": "D-Tech Algérie · Depuis 2006",
+      "title1": "La techno qui",
+      "title2": "vous ressemble.",
+      "sub": "Plus de <strong>{count} produits</strong> sélectionnés — HP, Dell, Lenovo, ASUS, TP-Link, Canon, Epson — distribués et garantis en Algérie. Notre métier : vous trouver le bon matériel.",
+      "ctaCatalog": "Voir le catalogue",
+      "ctaStory": "Notre histoire",
+      "stats": {
+        "yearsSuffix": "ans",
+        "presence": "Présence DZ",
+        "brandsSuffix": "marques",
+        "partners": "Partenaires officiels",
+        "wilayasSuffix": "/ 58",
+        "wilayas": "Wilayas livrées"
+      },
+      "cards": {
+        "satisfaction": {
+          "head": "Satisfaction client · 2026",
+          "verified": "Vérifié",
+          "outOf": "/ 5",
+          "reviews": "Sur 1 248 avis clients vérifiés — Google, Avis Vérifiés, Trustpilot.",
+          "advice": "Conseil",
+          "delivery": "Délais",
+          "support": "SAV"
+        },
+        "coverage": {
+          "head": "Couverture · Algérie",
+          "led": "58 / 58",
+          "title": "Livraison toutes wilayas",
+          "sub": "48 h en moyenne · suivi en temps réel.",
+          "capital": "ALGER"
+        },
+        "warranty": {
+          "head": "Garantie & SAV interne",
+          "certified": "Certifié",
+          "title": "<accent>2 ans</accent> de garantie constructeur",
+          "sub": "Atelier intégré à Bab Ezzouar — techniciens certifiés HP, Dell, Lenovo et Canon.",
+          "l1": "Diagnostic gratuit en 24 h",
+          "l2": "Pièces d'origine, facture officielle",
+          "l3": "Prêt de matériel pendant réparation"
+        }
+      },
+      "chips": {
+        "brands": "{count} marques officielles",
+        "wilayas": "58 / 58 wilayas",
+        "warranty": "Garantie 2 ans"
+      },
+      "scrollCue": "Défiler"
+    },
+    "categories": {
+      "kicker": "{count} familles de produits",
+      "title1": "Le catalogue,",
+      "title2": "par catégorie.",
+      "sub": "Du PC de bureau au composant gaming, en passant par l'imprimante de bureau et le réseau Wi-Fi 6 — vous trouverez ce qu'il vous faut.",
+      "countLabel": "{count} produits · en stock",
+      "items": {
+        "desktop": "PC de bureau",
+        "laptop": "Laptop",
+        "aio": "All-in-One",
+        "tablet": "Tablette",
+        "phone": "Téléphone",
+        "print": "Imprimante & Scanner",
+        "network": "Réseau",
+        "parts": "Composants",
+        "gaming": "Gaming"
+      }
+    },
+    "brands": {
+      "kicker": "Marques officiellement distribuées",
+      "title1": "{count} partenaires,",
+      "title2": "une seule maison.",
+      "sub": "Nous représentons et distribuons localement les marques avec lesquelles nous travaillons depuis des années.",
+      "cta": "Voir tous les produits",
+      "items": {
+        "hp": "Laptops · Desktops · Printers",
+        "dell": "OptiPlex · Vostro · Latitude",
+        "lenovo": "ThinkCentre All-in-One",
+        "asus": "Wi-Fi adapters · TUF Gaming PSU",
+        "tplink": "Routers, switches, AP",
+        "canon": "Printers, scanners, copiers",
+        "epson": "Printers, copiers"
+      }
+    },
+    "catalog": {
+      "kicker": "{products} produits · {categories} catégories · {brands} marques",
+      "title1": "Tous nos",
+      "title2": "produits.",
+      "sub": "Cliquez sur une catégorie pour filtrer. Tous les produits sont garantis 2 ans, livrés en 48h dans les 58 wilayas.",
+      "results": "{count} résultats · en stock",
+      "all": "Tous",
+      "showing": "Affichage de <b>{from}–{to}</b> sur <b>{total}</b>",
+      "page": "Page <b>{page}</b> / {total}",
+      "prev": "Préc.",
+      "next": "Suiv.",
+      "prevAria": "Page précédente",
+      "nextAria": "Page suivante",
+      "pageAria": "Page {n}",
+      "inStock": "En stock",
+      "currency": "DA",
+      "addAria": "Ajouter"
+    },
+    "about": {
+      "kicker": "À propos · D-Tech Algérie",
+      "title1": "Vingt ans à",
+      "title2": "équiper",
+      "title3": "l'Algérie.",
+      "p1": "Fondée en <strong>2006</strong> sous le nom de <strong>Hardware Technology Services</strong>, D-Tech a grandi en distributeur de référence pour les entreprises et particuliers algériens. Nous représentons officiellement <strong>HP, Dell, Lenovo, ASUS, TP-Link, Canon et Epson</strong> — et nous portons notre propre marque de tablettes et téléphones depuis 2017.",
+      "p2": "<strong>Notre métier :</strong> trouver le bon matériel au juste prix, le livrer partout, le garantir deux ans, et le réparer si besoin.",
+      "stats": {
+        "founded": "Fondation à Alger",
+        "clients": "Clients servis",
+        "brandsSuffix": "marques",
+        "partners": "Partenaires officiels",
+        "skuSuffix": "SKU",
+        "sku": "En catalogue actif"
+      },
+      "timeline": {
+        "t1Title": "Hardware Technology Services",
+        "t1Desc": "Création de la société à Alger.",
+        "t2Title": "Réseau national",
+        "t2Desc": "Déploiement des revendeurs et structuration du SAV.",
+        "t3Title": "Marque D-Tech",
+        "t3Desc": "Lancement de notre gamme de tablettes et téléphones.",
+        "t4Title": "Partenariats officiels",
+        "t4Desc": "HP, Dell, Lenovo, ASUS, Canon, Epson, TP-Link.",
+        "t5Title": "{count} produits · 58 wilayas",
+        "t5Desc": "Catalogue complet, livraison nationale, garantie deux ans."
+      }
+    },
+    "contact": {
+      "kicker": "Nous trouver · Bab Ezzouar, Alger",
+      "title1": "Passez nous",
+      "title2": "voir.",
+      "sub": "Le siège est à Bab Ezzouar. Commercial et SAV sont joignables du dimanche au jeudi, 9h–17h.",
+      "tabs": {
+        "show": "Showroom",
+        "comm": "Commercial",
+        "sav": "SAV"
+      },
+      "tabData": {
+        "show": {
+          "phone": "Visite libre · sans RDV",
+          "addr": "Cité 05 Juillet 1962, Bab Ezzouar, Alger",
+          "hours": "Lun–Jeu · Dim · 9h–17h"
+        },
+        "comm": {
+          "phone": "+213 560 99 05 06",
+          "addr": "Service commercial · B2B et particuliers",
+          "hours": "Dim–Jeu · 9h–17h"
+        },
+        "sav": {
+          "phone": "+213 561 61 69 11",
+          "addr": "Service après-vente · garantie 2 ans",
+          "hours": "Dim–Jeu · 9h–16h"
+        }
+      },
+      "rows": {
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "service": "Service"
+      },
+      "actions": {
+        "call": "Appeler",
+        "route": "Itinéraire",
+        "whatsapp": "WhatsApp"
+      },
+      "hoursTitle": "Horaires d'ouverture",
+      "today": "Aujourd'hui",
+      "closed": "Fermé",
+      "days": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam",
+        "sun": "Dim"
+      },
+      "panel": {
+        "openNow": "● Ouvert maintenant",
+        "closedNow": "● Fermé actuellement",
+        "storeName": "Showroom Bab Ezzouar",
+        "since": "EST. 2006 · DZA"
+      },
+      "map": {
+        "open": "Ouvert",
+        "closedNow": "Fermé",
+        "name": "D-Tech · Siège & Showroom",
+        "addr1": "Cité 05 Juillet 1962",
+        "addr2": "Bab Ezzouar, Alger",
+        "coords": "36°43′N · 03°11′E · ALT 24m",
+        "scale": "Échelle · 1:8 000",
+        "legend": "Légende",
+        "legendMain": "D-Tech (siège)",
+        "legendPoi": "Points d'intérêt",
+        "sea": "MER MÉDITERRANÉE",
+        "area": "BAB EZZOUAR",
+        "pin": "D-TECH · ICI",
+        "poiUsthb": "USTHB",
+        "poiMall": "C.C. Bab Ezzouar",
+        "poiAirport": "Aéroport · 6 km"
+      }
+    },
+    "footer": {
+      "blurb": "L'innovation algérienne, à votre prix. Distributeur officiel HP, Dell, Lenovo, ASUS, TP-Link, Canon et Epson depuis 2006.",
+      "cols": {
+        "catalog": {
+          "title": "Catalogue",
+          "l1": "PC de bureau",
+          "l2": "Laptops",
+          "l3": "All-in-One",
+          "l4": "Tablettes & Téléphones",
+          "l5": "Imprimantes"
+        },
+        "brands": {
+          "title": "Marques",
+          "l1": "HP · Dell · Lenovo",
+          "l2": "ASUS · TUF Gaming",
+          "l3": "TP-Link",
+          "l4": "Canon · Epson"
+        },
+        "service": {
+          "title": "Service",
+          "l1": "Suivi de commande",
+          "l2": "SAV & garantie",
+          "l3": "Livraison 58 wilayas",
+          "l4": "Boutiques"
+        },
+        "contact": {
+          "title": "Contact",
+          "l1": "Bab Ezzouar, Alger",
+          "l2": "0560 99 05 06",
+          "l3": "0561 616 911",
+          "l4": "contact@dtech.dz"
+        }
+      },
+      "copyright": "© 2026 D-Tech Algérie",
+      "legal": "Mentions légales",
+      "terms": "CGV",
+      "privacy": "Confidentialité",
+      "made": "Conçu en Algérie 🇩🇿"
+    }
   }
 }
