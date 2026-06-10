@@ -593,6 +593,33 @@
       "terms": "CGV",
       "privacy": "Confidentialité",
       "made": "Conçu en Algérie 🇩🇿"
+    },
+    "quote": {
+      "title": "Demande de devis",
+      "empty": "Votre liste est vide. Ajoutez des produits avec le bouton +.",
+      "count": "{count, plural, one {# produit} other {# produits}}",
+      "total": "Total estimatif",
+      "send": "Demander un devis",
+      "clear": "Vider la liste",
+      "closeAria": "Fermer",
+      "removeAria": "Retirer {name}",
+      "moreAria": "Augmenter la quantité",
+      "lessAria": "Réduire la quantité",
+      "note": "Prix indicatifs TTC. Le devis final est confirmé par notre équipe commerciale.",
+      "mailSubject": "Demande de devis — D-Tech Algérie",
+      "mailIntro": "Bonjour, je souhaite un devis pour les produits suivants :"
     }
+  },
+  "legal": {
+    "pageTitle": "Informations légales",
+    "heading": "Informations légales",
+    "updated": "Dernière mise à jour : juin 2026",
+    "mentionsTitle": "Mentions légales",
+    "mentionsBody": "D-Tech Algérie (Hardware Technology Services), Cité 05 Juillet 1962, Bab Ezzouar, Alger. Distributeur officiel HP, Dell, Lenovo, ASUS, TP-Link, Canon et Epson. Contact : contact@dtech.dz · +213 560 99 05 06. Le contenu complet de cette page sera fourni par le service juridique.",
+    "cgvTitle": "Conditions générales de vente",
+    "cgvBody": "Les produits sont garantis deux ans (garantie constructeur) et livrés dans les 58 wilayas. Les prix affichés sont indicatifs et confirmés par devis. Le texte complet des CGV sera publié ici prochainement.",
+    "privacyTitle": "Confidentialité",
+    "privacyBody": "Les informations transmises via nos formulaires (nom, e-mail, téléphone) servent uniquement à traiter vos demandes et ne sont jamais cédées à des tiers. Pour toute question ou demande de suppression : contact@dtech.dz.",
+    "back": "Retour à l'accueil"
   }
 }

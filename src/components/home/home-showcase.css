@@ -1391,3 +1391,148 @@ body[data-home-theme='light'] .home-showcase-root .contact-hero {
 body[data-home-theme='light'] .home-showcase-root footer {
   background: rgba(255,255,255,0.5);
 }
+
+
+/* ─────────────────────────────────────────────────────────────────
+ * RTL / ARABIC
+ * The locale layout sets dir="rtl" + lang="ar" on its wrapper for /ar.
+ * Flex/grid auto-mirror; the pieces below need explicit handling.
+ * ──────────────────────────────────────────────────────────────── */
+
+/* Arabic glyphs come from Noto Sans Arabic (Inter has no Arabic);
+   Latin glyphs (brand names, numbers) keep rendering in Inter. */
+[dir='rtl'] .home-showcase-root,
+[dir='rtl'] .home-showcase-root .display,
+[dir='rtl'] .home-showcase-root .h-mega,
+[dir='rtl'] .home-showcase-root .h-big,
+[dir='rtl'] .home-showcase-root .h-mid,
+[dir='rtl'] .home-showcase-root .serif-i,
+[dir='rtl'] .home-showcase-root .btn,
+[dir='rtl'] .home-showcase-root .wordmark .name,
+[dir='rtl'] .home-showcase-root .gc-title {
+  font-family: 'Inter', 'Noto Sans Arabic', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+/* Visual set pieces drawn LTR — keep their internal geometry stable */
+[dir='rtl'] .home-showcase-root .hero-stage,
+[dir='rtl'] .home-showcase-root .map-panel,
+[dir='rtl'] .home-showcase-root .contact-hero,
+[dir='rtl'] .home-showcase-root .prod .canvas {
+  direction: ltr;
+}
+
+/* tighter tracking hurts Arabic script legibility */
+[dir='rtl'] .home-showcase-root .kicker { letter-spacing: 0.08em; }
+
+
+/* ─────────────────────────────────────────────────────────────────
+ * QUOTE DRAWER ("cart")
+ * Logical properties (inset-inline-end) so it mirrors in RTL.
+ * ──────────────────────────────────────────────────────────────── */
+
+.home-showcase-root .cart-count {
+  position: absolute;
+  bottom: -4px;
+  inset-inline-end: -4px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--cyan);
+  color: var(--bg-0);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+.home-showcase-root .quote-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(4, 8, 12, 0.55);
+  backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+}
+.home-showcase-root .quote-overlay.open { opacity: 1; pointer-events: auto; }
+
+.home-showcase-root .quote-drawer {
+  position: fixed; top: 0; bottom: 0;
+  inset-inline-end: 0;
+  width: min(420px, 92vw);
+  z-index: 91;
+  display: flex; flex-direction: column;
+  background: var(--bg-1);
+  border-inline-start: 1px solid var(--line-2);
+  box-shadow: -24px 0 80px rgba(0,0,0,0.45);
+  padding: 22px;
+  transform: translateX(calc(100% * var(--qd-dir, 1)));
+  transition: transform .35s cubic-bezier(.22,1,.36,1);
+}
+[dir='rtl'] .home-showcase-root .quote-drawer { --qd-dir: -1; }
+.home-showcase-root .quote-drawer.open { transform: translateX(0); }
+
+.home-showcase-root .qd-head {
+  display: flex; align-items: center; gap: 12px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+.home-showcase-root .qd-title { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+.home-showcase-root .qd-count { font-size: 10px; color: var(--mute); letter-spacing: 0.06em; }
+.home-showcase-root .qd-head .icn { margin-inline-start: auto; }
+
+.home-showcase-root .qd-empty { color: var(--mute); font-size: 13.5px; padding: 28px 4px; }
+
+.home-showcase-root .qd-items { flex: 1; overflow-y: auto; padding: 6px 0; }
+.home-showcase-root .qd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 2px; border-bottom: 1px solid var(--line);
+}
+.home-showcase-root .qd-item-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-showcase-root .qd-item-name { font-size: 13px; font-weight: 600; }
+.home-showcase-root .qd-item-spec {
+  font-size: 11px; color: var(--mute);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-showcase-root .qd-item-price { font-size: 12px; color: var(--cyan); }
+.home-showcase-root .qd-item-price small { color: var(--mute); }
+
+.home-showcase-root .qd-item-qty {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px;
+}
+.home-showcase-root .qd-item-qty button {
+  width: 24px; height: 24px; border-radius: 999px;
+  border: 1px solid var(--line-2); background: transparent;
+  color: var(--text); font-size: 13px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color .2s, color .2s;
+}
+.home-showcase-root .qd-item-qty button:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.home-showcase-root .qd-remove {
+  border: none; background: transparent; color: var(--mute);
+  padding: 6px; border-radius: 8px;
+  transition: color .2s;
+}
+.home-showcase-root .qd-remove:hover { color: var(--warn); }
+
+.home-showcase-root .qd-total {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-top: 14px; font-size: 14px; font-weight: 600;
+}
+.home-showcase-root .qd-total .mono { font-size: 17px; color: var(--cyan); }
+.home-showcase-root .qd-total .mono small { font-size: 11px; color: var(--mute); }
+.home-showcase-root .qd-note { font-size: 10.5px; color: var(--mute); line-height: 1.5; margin-top: 6px; }
+
+.home-showcase-root .qd-actions { display: flex; gap: 10px; margin-top: 14px; }
+.home-showcase-root .qd-actions .btn { flex: 1; justify-content: center; }
+
+body[data-home-theme='light'] .home-showcase-root .quote-drawer {
+  background: #fbfdfc;
+  box-shadow: -24px 0 80px rgba(15,45,36,0.18);
+}
+body[data-home-theme='light'] .home-showcase-root .quote-overlay {
+  background: rgba(20, 32, 28, 0.30);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-showcase-root .quote-drawer, .home-showcase-root .quote-overlay { transition: none; }
+}

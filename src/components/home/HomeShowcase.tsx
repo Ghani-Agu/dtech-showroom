@@ -23,7 +23,7 @@ import {
   type SVGProps,
 } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { usePathname, useRouter } from '@/i18n/routing'
+import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { locales, type Locale } from '@/i18n/config'
 import './home-showcase.css'
 
@@ -39,18 +39,50 @@ import {
 
 type Theme = 'dark' | 'light'
 
+/** product id → quantity, persisted in localStorage */
+type Quote = Record<string, number>
+
+function parsePrice(p: string): number {
+  return parseInt(p.replace(/\s/g, ''), 10) || 0
+}
+
 export function HomeShowcase() {
   const [activeCat, setActiveCat] = useState<IconKind | 'all'>('all')
   const [theme, setTheme] = useState<Theme>('dark')
+  const [quote, setQuote] = useState<Quote>({})
+  const [quoteOpen, setQuoteOpen] = useState(false)
 
   useEffect(() => {
     document.body.dataset.homeChrome = 'showcase'
     if (window.localStorage.getItem('nl-theme') === 'light') setTheme('light')
+    try {
+      const saved = window.localStorage.getItem('nl-quote')
+      if (saved) setQuote(JSON.parse(saved) as Quote)
+    } catch {
+      /* corrupted storage — start fresh */
+    }
     return () => {
       delete document.body.dataset.homeChrome
       delete document.body.dataset.homeTheme
     }
   }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem('nl-quote', JSON.stringify(quote))
+  }, [quote])
+
+  const quoteCount = Object.values(quote).reduce((a, b) => a + b, 0)
+  const addToQuote = (id: string) => {
+    setQuote((q) => ({ ...q, [id]: (q[id] || 0) + 1 }))
+  }
+  const setQty = (id: string, qty: number) => {
+    setQuote((q) => {
+      const next = { ...q }
+      if (qty <= 0) delete next[id]
+      else next[id] = qty
+      return next
+    })
+  }
 
   useEffect(() => {
     document.body.dataset.homeTheme = theme
@@ -68,17 +100,30 @@ export function HomeShowcase() {
       <Nav
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        quoteCount={quoteCount}
+        onOpenQuote={() => setQuoteOpen(true)}
       />
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
         <Hero />
         <CategoriesSection onSelect={setActiveCat} />
         <BrandsSection />
-        <CatalogSection activeCat={activeCat} setActiveCat={setActiveCat} />
+        <CatalogSection
+          activeCat={activeCat}
+          setActiveCat={setActiveCat}
+          onAdd={addToQuote}
+        />
         <AboutSection />
         <ContactSection />
       </div>
-      <Footer />
+      <Footer onSelectCat={setActiveCat} />
+      <QuoteDrawer
+        open={quoteOpen}
+        onClose={() => setQuoteOpen(false)}
+        quote={quote}
+        setQty={setQty}
+        onClear={() => setQuote({})}
+      />
     </div>
   )
 }
@@ -163,7 +208,9 @@ function Counter({
   return (
     <span ref={ref}>
       {prefix}
-      {v.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US')}
+      {v.toLocaleString(
+        locale === 'fr' ? 'fr-FR' : locale === 'ar' ? 'ar-DZ' : 'en-US'
+      )}
       {suffix}
     </span>
   )
@@ -208,15 +255,6 @@ function NavLocaleSwitcher() {
           {l.toUpperCase()}
         </button>
       ))}
-      {/* Arabic appears in the design; the locale isn't wired up yet. */}
-      <button
-        type="button"
-        className="seg dis"
-        aria-disabled="true"
-        title={t('arSoon')}
-      >
-        AR
-      </button>
     </span>
   )
 }
@@ -224,11 +262,16 @@ function NavLocaleSwitcher() {
 function Nav({
   theme,
   onToggleTheme,
+  quoteCount,
+  onOpenQuote,
 }: {
   theme: Theme
   onToggleTheme: () => void
+  quoteCount: number
+  onOpenQuote: () => void
 }) {
   const t = useTranslations('showcase.nav')
+  const router = useRouter()
   return (
     <header>
       <div className="wrap hdr">
@@ -258,23 +301,35 @@ function Nav({
               </svg>
             )}
           </button>
-          <button className="icn" aria-label={t('searchAria')} type="button">
+          <button
+            className="icn"
+            aria-label={t('searchAria')}
+            type="button"
+            onClick={() => router.push('/search')}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />
               <path d="m21 21-4.3-4.3" />
             </svg>
           </button>
-          <button className="icn" aria-label={t('accountAria')} type="button">
+          {/* /login lives outside the locale tree — plain anchor */}
+          <a className="icn" aria-label={t('accountAria')} href="/login">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
             </svg>
-          </button>
-          <button className="icn" aria-label={t('cartAria')} type="button">
+          </a>
+          <button
+            className="icn"
+            aria-label={t('cartAria')}
+            type="button"
+            onClick={onOpenQuote}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path d="M5 7h14l-1.4 11a2 2 0 01-2 1.8H8.4a2 2 0 01-2-1.8L5 7zM9 7V5a3 3 0 016 0v2" />
             </svg>
-            <span className="dot" />
+            {quoteCount > 0 && <span className="dot" />}
+            {quoteCount > 0 && <span className="cart-count">{quoteCount}</span>}
           </button>
           <a className="btn btn-primary" href="#products">
             <span className="shimmer" />
@@ -1263,9 +1318,11 @@ const PER_PAGE = 8
 function CatalogSection({
   activeCat,
   setActiveCat,
+  onAdd,
 }: {
   activeCat: IconKind | 'all'
   setActiveCat: (c: IconKind | 'all') => void
+  onAdd: (id: string) => void
 }) {
   const t = useTranslations('showcase.catalog')
   const tCat = useTranslations('showcase.categories')
@@ -1380,7 +1437,12 @@ function CatalogSection({
 
         <div className="prod-grid" style={{ marginTop: 18 }}>
           {pageItems.map((p, i) => (
-            <ProductCard key={p.id} product={p} animationDelay={(i % 8) * 40} />
+            <ProductCard
+              key={p.id}
+              product={p}
+              animationDelay={(i % 8) * 40}
+              onAdd={onAdd}
+            />
           ))}
         </div>
 
@@ -1438,9 +1500,11 @@ function CatalogSection({
 function ProductCard({
   product,
   animationDelay,
+  onAdd,
 }: {
   product: ProductDef
   animationDelay: number
+  onAdd: (id: string) => void
 }) {
   const t = useTranslations('showcase.catalog')
   const tCat = useTranslations('showcase.categories')
@@ -1450,7 +1514,12 @@ function ProductCard({
         <span className="brand-tag">{product.brand}</span>
         {product.badge && <span className="badge">{product.badge}</span>}
         <DeviceArt kind={product.img} />
-        <button type="button" className="add" aria-label={t('addAria')}>
+        <button
+          type="button"
+          className="add"
+          aria-label={t('addAria')}
+          onClick={() => onAdd(product.id)}
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M5 12h14M12 5v14" />
           </svg>
@@ -2008,8 +2077,14 @@ function ContactPanel({
  * Footer
  * ──────────────────────────────────────────────────────────────── */
 
-function Footer() {
+function Footer({ onSelectCat }: { onSelectCat: (c: IconKind) => void }) {
   const t = useTranslations('showcase.footer')
+  const filterTo = (cat: IconKind) => () => {
+    onSelectCat(cat)
+    document
+      .getElementById('products')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   return (
     <footer>
       <div className="wrap">
@@ -2018,19 +2093,19 @@ function Footer() {
             <Logo />
             <p>{t('blurb')}</p>
             <div className="ft-socials">
-              <a className="icn" aria-label="Facebook">
+              <a className="icn" aria-label="Facebook" href="https://www.facebook.com/DtechDZ/" target="_blank" rel="noopener noreferrer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.5 2.9h-2.4v7A10 10 0 0022 12z" />
                 </svg>
               </a>
-              <a className="icn" aria-label="Instagram">
+              <a className="icn" aria-label="Instagram" href="https://www.instagram.com/dtechdz/" target="_blank" rel="noopener noreferrer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                   <rect x="3" y="3" width="18" height="18" rx="5" />
                   <circle cx="12" cy="12" r="4" />
                   <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
                 </svg>
               </a>
-              <a className="icn" aria-label="LinkedIn">
+              <a className="icn" aria-label="LinkedIn" href="https://www.linkedin.com/company/d-techalgerie" target="_blank" rel="noopener noreferrer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM8.3 18.3H5.7V10h2.6v8.3zM7 8.7a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm11.3 9.6h-2.6V14c0-1-.4-1.7-1.3-1.7-.7 0-1.1.5-1.3 1V18.3h-2.6V10h2.5v1c.4-.6 1.2-1.3 2.5-1.3 1.8 0 2.9 1.2 2.9 3.6v5z" />
                 </svg>
@@ -2040,47 +2115,51 @@ function Footer() {
           <FootCol
             title={t('cols.catalog.title')}
             links={[
-              t('cols.catalog.l1'),
-              t('cols.catalog.l2'),
-              t('cols.catalog.l3'),
-              t('cols.catalog.l4'),
-              t('cols.catalog.l5'),
+              { label: t('cols.catalog.l1'), onClick: filterTo('desktop') },
+              { label: t('cols.catalog.l2'), onClick: filterTo('laptop') },
+              { label: t('cols.catalog.l3'), onClick: filterTo('aio') },
+              { label: t('cols.catalog.l4'), onClick: filterTo('tablet') },
+              { label: t('cols.catalog.l5'), onClick: filterTo('print') },
             ]}
           />
           <FootCol
             title={t('cols.brands.title')}
             links={[
-              t('cols.brands.l1'),
-              t('cols.brands.l2'),
-              t('cols.brands.l3'),
-              t('cols.brands.l4'),
+              { label: t('cols.brands.l1'), href: '#brands' },
+              { label: t('cols.brands.l2'), href: '#brands' },
+              { label: t('cols.brands.l3'), href: '#brands' },
+              { label: t('cols.brands.l4'), href: '#brands' },
             ]}
           />
           <FootCol
             title={t('cols.service.title')}
             links={[
-              t('cols.service.l1'),
-              t('cols.service.l2'),
-              t('cols.service.l3'),
-              t('cols.service.l4'),
+              { label: t('cols.service.l1'), href: '#contact' },
+              { label: t('cols.service.l2'), href: '#contact' },
+              { label: t('cols.service.l3'), href: '#about' },
+              { label: t('cols.service.l4'), href: '#contact' },
             ]}
           />
           <FootCol
             title={t('cols.contact.title')}
             links={[
-              t('cols.contact.l1'),
-              t('cols.contact.l2'),
-              t('cols.contact.l3'),
-              t('cols.contact.l4'),
+              {
+                label: t('cols.contact.l1'),
+                href: 'https://maps.google.com/?q=Bab+Ezzouar+Alger',
+                external: true,
+              },
+              { label: t('cols.contact.l2'), href: 'tel:+213560990506' },
+              { label: t('cols.contact.l3'), href: 'tel:+213561616911' },
+              { label: t('cols.contact.l4'), href: 'mailto:contact@dtech.dz' },
             ]}
           />
         </div>
         <div className="ft-bottom">
           <span>{t('copyright')}</span>
           <span style={{ display: 'inline-flex', gap: 20 }}>
-            <a>{t('legal')}</a>
-            <a>{t('terms')}</a>
-            <a>{t('privacy')}</a>
+            <Link href="/legal#mentions">{t('legal')}</Link>
+            <Link href="/legal#cgv">{t('terms')}</Link>
+            <Link href="/legal#privacy">{t('privacy')}</Link>
           </span>
           <span>{t('made')}</span>
         </div>
@@ -2089,17 +2168,188 @@ function Footer() {
   )
 }
 
-function FootCol({ title, links }: { title: string; links: string[] }) {
+interface FootLink {
+  label: string
+  href?: string
+  onClick?: () => void
+  external?: boolean
+}
+
+function FootCol({ title, links }: { title: string; links: FootLink[] }) {
   return (
     <div className="ft-col">
       <h4>{title}</h4>
       <ul>
         {links.map((l) => (
-          <li key={l}>
-            <a>{l}</a>
+          <li key={l.label}>
+            {l.onClick ? (
+              <a
+                href="#products"
+                onClick={(e) => {
+                  e.preventDefault()
+                  l.onClick?.()
+                }}
+              >
+                {l.label}
+              </a>
+            ) : (
+              <a
+                href={l.href}
+                {...(l.external
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+              >
+                {l.label}
+              </a>
+            )}
           </li>
         ))}
       </ul>
     </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Quote drawer ("cart") — quote-request list, persisted locally
+ * ──────────────────────────────────────────────────────────────── */
+
+function QuoteDrawer({
+  open,
+  onClose,
+  quote,
+  setQty,
+  onClear,
+}: {
+  open: boolean
+  onClose: () => void
+  quote: Quote
+  setQty: (id: string, qty: number) => void
+  onClear: () => void
+}) {
+  const t = useTranslations('showcase.quote')
+  const locale = useLocale()
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  const items = PRODUCTS.filter((p) => quote[p.id])
+  const count = items.reduce((a, p) => a + (quote[p.id] || 0), 0)
+  const total = items.reduce(
+    (a, p) => a + parsePrice(p.price) * (quote[p.id] || 0),
+    0
+  )
+  const numberLocale =
+    locale === 'fr' ? 'fr-FR' : locale === 'ar' ? 'ar-DZ' : 'en-US'
+
+  const mailHref = () => {
+    const lines = items.map(
+      (p) => `${quote[p.id]}× ${p.name} (${p.spec}) — ${p.price} DA`
+    )
+    const body = `${t('mailIntro')}\n\n${lines.join('\n')}\n\nTotal: ${total.toLocaleString(numberLocale)} DA`
+    return `mailto:commercial@dtech.dz?subject=${encodeURIComponent(t('mailSubject'))}&body=${encodeURIComponent(body)}`
+  }
+
+  return (
+    <>
+      <div
+        className={`quote-overlay ${open ? 'open' : ''}`}
+        onClick={onClose}
+        aria-hidden
+      />
+      <aside
+        className={`quote-drawer ${open ? 'open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('title')}
+      >
+        <div className="qd-head">
+          <span className="qd-title">{t('title')}</span>
+          {count > 0 && (
+            <span className="qd-count mono">{t('count', { count })}</span>
+          )}
+          <button
+            type="button"
+            className="icn"
+            aria-label={t('closeAria')}
+            onClick={onClose}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="qd-empty">{t('empty')}</p>
+        ) : (
+          <>
+            <div className="qd-items">
+              {items.map((p) => (
+                <div className="qd-item" key={p.id}>
+                  <div className="qd-item-info">
+                    <span className="qd-item-name">{p.name}</span>
+                    <span className="qd-item-spec">{p.spec}</span>
+                    <span className="qd-item-price mono">
+                      {p.price} <small>DA</small>
+                    </span>
+                  </div>
+                  <div className="qd-item-qty">
+                    <button
+                      type="button"
+                      aria-label={t('lessAria')}
+                      onClick={() => setQty(p.id, (quote[p.id] || 0) - 1)}
+                    >
+                      −
+                    </button>
+                    <span className="mono">{quote[p.id]}</span>
+                    <button
+                      type="button"
+                      aria-label={t('moreAria')}
+                      onClick={() => setQty(p.id, (quote[p.id] || 0) + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="qd-remove"
+                    aria-label={t('removeAria', { name: p.name })}
+                    onClick={() => setQty(p.id, 0)}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="qd-total">
+              <span>{t('total')}</span>
+              <span className="mono">
+                {total.toLocaleString(numberLocale)} <small>DA</small>
+              </span>
+            </div>
+            <p className="qd-note">{t('note')}</p>
+
+            <div className="qd-actions">
+              <a className="btn btn-primary" href={mailHref()}>
+                <span className="shimmer" />
+                {t('send')}
+              </a>
+              <button type="button" className="btn btn-ghost" onClick={onClear}>
+                {t('clear')}
+              </button>
+            </div>
+          </>
+        )}
+      </aside>
+    </>
   )
 }

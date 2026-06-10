@@ -593,6 +593,33 @@
       "terms": "Terms of sale",
       "privacy": "Privacy",
       "made": "Made in Algeria 🇩🇿"
+    },
+    "quote": {
+      "title": "Quote request",
+      "empty": "Your list is empty. Add products with the + button.",
+      "count": "{count, plural, one {# product} other {# products}}",
+      "total": "Estimated total",
+      "send": "Request a quote",
+      "clear": "Clear list",
+      "closeAria": "Close",
+      "removeAria": "Remove {name}",
+      "moreAria": "Increase quantity",
+      "lessAria": "Decrease quantity",
+      "note": "Indicative prices incl. tax. Final quote confirmed by our sales team.",
+      "mailSubject": "Quote request — D-Tech Algeria",
+      "mailIntro": "Hello, I would like a quote for the following products:"
     }
+  },
+  "legal": {
+    "pageTitle": "Legal information",
+    "heading": "Legal information",
+    "updated": "Last updated: June 2026",
+    "mentionsTitle": "Legal notice",
+    "mentionsBody": "D-Tech Algeria (Hardware Technology Services), Cité 05 Juillet 1962, Bab Ezzouar, Algiers. Official distributor of HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson. Contact: contact@dtech.dz · +213 560 99 05 06. The full content of this page will be provided by the legal department.",
+    "cgvTitle": "Terms of sale",
+    "cgvBody": "Products carry a two-year manufacturer warranty and are delivered across all 58 wilayas. Displayed prices are indicative and confirmed by quote. The full terms will be published here soon.",
+    "privacyTitle": "Privacy",
+    "privacyBody": "Information submitted through our forms (name, e-mail, phone) is used solely to process your requests and is never shared with third parties. Questions or deletion requests: contact@dtech.dz.",
+    "back": "Back to home"
   }
 }

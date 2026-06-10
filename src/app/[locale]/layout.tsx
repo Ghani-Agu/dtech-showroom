@@ -37,7 +37,11 @@ export default async function LocaleLayout({
         Skip to content
       </a>
       <ScrollProvider>
-        <div className="flex min-h-screen flex-col">
+        <div
+          className="flex min-h-screen flex-col"
+          lang={locale}
+          dir={locale === 'ar' ? 'rtl' : 'ltr'}
+        >
           <HideOnHome>
             <SiteHeader />
           </HideOnHome>

@@ -17,6 +17,11 @@ const COPY: Record<Locale, { eyebrow: string; headline: string; tagline: string 
     headline: 'Le matériel, présenté avec soin',
     tagline: 'Le catalogue Dtech Algérie.',
   },
+  ar: {
+    eyebrow: 'ديتك · معرض سينمائي',
+    headline: 'العتاد، معروض كما يجب',
+    tagline: 'كتالوج ديتك الجزائر.',
+  },
 }
 
 export default async function Image({
