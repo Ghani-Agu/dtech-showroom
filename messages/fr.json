@@ -344,7 +344,10 @@
       "explore": "Explorer",
       "searchAria": "Rechercher",
       "accountAria": "Compte",
-      "cartAria": "Panier"
+      "cartAria": "Panier",
+      "themeAria": "Thème",
+      "langAria": "Langue",
+      "arSoon": "Arabe — bientôt disponible"
     },
     "logo": {
       "tagline": "Algérie · 2026"

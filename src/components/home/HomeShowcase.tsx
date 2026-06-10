@@ -174,44 +174,36 @@ function Logo() {
 }
 
 function NavLocaleSwitcher() {
+  const t = useTranslations('showcase.nav')
   const locale = useLocale() as Locale
   const router = useRouter()
   const pathname = usePathname()
 
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: 10,
-        letterSpacing: '0.08em',
-      }}
-    >
-      {locales.map((l, i) => (
-        <span key={l} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          {i > 0 && <span style={{ color: 'var(--mute)', opacity: 0.5 }}>/</span>}
-          <button
-            type="button"
-            onClick={() => {
-              if (l !== locale) router.replace(pathname, { locale: l })
-            }}
-            aria-current={l === locale ? 'true' : undefined}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: l === locale ? 'default' : 'pointer',
-              font: 'inherit',
-              letterSpacing: 'inherit',
-              color: l === locale ? 'var(--cyan)' : 'var(--mute)',
-            }}
-          >
-            {l.toUpperCase()}
-          </button>
-        </span>
+    <span className="lang-switch" role="group" aria-label={t('langAria')}>
+      {/* FR first to match the design (config order is en-first) */}
+      {[...locales].sort((a, b) => (a === 'fr' ? -1 : b === 'fr' ? 1 : 0)).map((l) => (
+        <button
+          key={l}
+          type="button"
+          className={`seg ${l === locale ? 'on' : ''}`}
+          onClick={() => {
+            if (l !== locale) router.replace(pathname, { locale: l })
+          }}
+          aria-current={l === locale ? 'true' : undefined}
+        >
+          {l.toUpperCase()}
+        </button>
       ))}
+      {/* Arabic appears in the design; the locale isn't wired up yet. */}
+      <button
+        type="button"
+        className="seg dis"
+        aria-disabled="true"
+        title={t('arSoon')}
+      >
+        AR
+      </button>
     </span>
   )
 }
@@ -226,11 +218,15 @@ function Nav() {
           <a href="#categories" className="on">{t('catalogue')}</a>
           <a href="#brands">{t('brands')}</a>
           <a href="#products">{t('products')}</a>
-          <a href="#about" data-h="">{t('about')}</a>
-          <a href="#contact" data-h="">{t('contact')}</a>
         </nav>
         <div className="hdr-right">
           <NavLocaleSwitcher />
+          <button className="icn" aria-label={t('themeAria')} type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+          </button>
           <button className="icn" aria-label={t('searchAria')} type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />
