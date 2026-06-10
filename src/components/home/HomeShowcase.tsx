@@ -37,15 +37,25 @@ import {
   type ProductDef,
 } from './nightline-data'
 
+type Theme = 'dark' | 'light'
+
 export function HomeShowcase() {
   const [activeCat, setActiveCat] = useState<IconKind | 'all'>('all')
+  const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
     document.body.dataset.homeChrome = 'showcase'
+    if (window.localStorage.getItem('nl-theme') === 'light') setTheme('light')
     return () => {
       delete document.body.dataset.homeChrome
+      delete document.body.dataset.homeTheme
     }
   }, [])
+
+  useEffect(() => {
+    document.body.dataset.homeTheme = theme
+    window.localStorage.setItem('nl-theme', theme)
+  }, [theme])
 
   return (
     <div className="home-showcase-root">
@@ -55,7 +65,10 @@ export function HomeShowcase() {
       <div className="bg-orb b" />
       <div className="bg-orb c" />
 
-      <Nav />
+      <Nav
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      />
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
         <Hero />
@@ -208,7 +221,13 @@ function NavLocaleSwitcher() {
   )
 }
 
-function Nav() {
+function Nav({
+  theme,
+  onToggleTheme,
+}: {
+  theme: Theme
+  onToggleTheme: () => void
+}) {
   const t = useTranslations('showcase.nav')
   return (
     <header>
@@ -221,11 +240,23 @@ function Nav() {
         </nav>
         <div className="hdr-right">
           <NavLocaleSwitcher />
-          <button className="icn" aria-label={t('themeAria')} type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-            </svg>
+          <button
+            className="icn"
+            aria-label={t('themeAria')}
+            aria-pressed={theme === 'light'}
+            type="button"
+            onClick={onToggleTheme}
+          >
+            {theme === 'dark' ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+              </svg>
+            )}
           </button>
           <button className="icn" aria-label={t('searchAria')} type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

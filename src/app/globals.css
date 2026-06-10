@@ -385,3 +385,10 @@ body[data-home-chrome='showcase'] > div,
 body:has(.home-showcase-root) > div {
   background: transparent;
 }
+
+/* Nightline light mode — set by the showcase theme toggle */
+body[data-home-theme='light']:has(.home-showcase-root),
+body[data-home-theme='light'][data-home-chrome='showcase'] {
+  background: #f3f6f5;
+  color-scheme: light;
+}
