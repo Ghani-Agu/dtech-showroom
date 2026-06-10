@@ -25,6 +25,22 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}
     >
+      <head>
+        {/* Nightline homepage typography — matches the design prototype
+            (D-Tech - Nightline.html), which loads Inter + JetBrains Mono
+            from Google Fonts. Loaded with literal family names so the
+            showcase CSS and inline SVG fontFamily references resolve. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
         suppressHydrationWarning
         className="bg-surface-base font-body text-text-primary antialiased"

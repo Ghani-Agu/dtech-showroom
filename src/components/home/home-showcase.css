@@ -56,9 +56,11 @@
   letter-spacing: -0.04em;
   line-height: 0.95;
 }
-.home-showcase-root .h-mega { font-size: clamp(54px, 7.2vw, 116px); line-height: 0.94; letter-spacing: -0.045em; }
-.home-showcase-root .h-big  { font-size: clamp(36px, 4.5vw, 60px); letter-spacing: -0.04em; line-height: 0.98; }
-.home-showcase-root .h-mid  { font-size: clamp(22px, 2.4vw, 32px); letter-spacing: -0.025em; line-height: 1.05; }
+/* letter-spacing -0.04em on all three per the Nightline HTML override
+   (it !important-overrides the base CSS's -0.045/-0.035/-0.025 values) */
+.home-showcase-root .h-mega { font-size: clamp(54px, 7.2vw, 116px); line-height: 0.94; }
+.home-showcase-root .h-big  { font-size: clamp(36px, 4.5vw, 60px); line-height: 0.98; }
+.home-showcase-root .h-mid  { font-size: clamp(22px, 2.4vw, 32px); line-height: 1.05; }
 
 /* accent emphasis with terminal-style brackets */
 .home-showcase-root .serif-i {
