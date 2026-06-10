@@ -345,8 +345,8 @@
       "searchAria": "Rechercher",
       "accountAria": "Compte",
       "cartAria": "Panier",
-      "themeAria": "Thème",
-      "langAria": "Langue",
+      "themeAria": "Basculer le thème",
+      "langAria": "Changer de langue",
       "arSoon": "Arabe — bientôt disponible"
     },
     "logo": {
@@ -356,7 +356,7 @@
       "kicker": "D-Tech Algérie · Depuis 2006",
       "title1": "La techno qui",
       "title2": "vous ressemble.",
-      "sub": "Plus de <strong>{count} produits</strong> sélectionnés — HP, Dell, Lenovo, ASUS, TP-Link, Canon, Epson — distribués et garantis en Algérie. Notre métier : vous trouver le bon matériel.",
+      "sub": "Plus de <strong>{count} produits</strong> sélectionnés — HP, Dell, Lenovo, ASUS, TP-Link, Canon, Epson — distribués et garantis en Algérie. Notre métier : vous trouver le bon matériel.",
       "ctaCatalog": "Voir le catalogue",
       "ctaStory": "Notre histoire",
       "stats": {
@@ -457,9 +457,9 @@
       "kicker": "À propos · D-Tech Algérie",
       "title1": "Vingt ans à",
       "title2": "équiper",
-      "title3": "l'Algérie.",
+      "title3": " l'Algérie.",
       "p1": "Fondée en <strong>2006</strong> sous le nom de <strong>Hardware Technology Services</strong>, D-Tech a grandi en distributeur de référence pour les entreprises et particuliers algériens. Nous représentons officiellement <strong>HP, Dell, Lenovo, ASUS, TP-Link, Canon et Epson</strong> — et nous portons notre propre marque de tablettes et téléphones depuis 2017.",
-      "p2": "<strong>Notre métier :</strong> trouver le bon matériel au juste prix, le livrer partout, le garantir deux ans, et le réparer si besoin.",
+      "p2": "<strong>Notre métier :</strong> trouver le bon matériel au juste prix, le livrer partout, le garantir deux ans, et le réparer si besoin.",
       "stats": {
         "founded": "Fondation à Alger",
         "clients": "Clients servis",
@@ -537,7 +537,7 @@
         "since": "EST. 2006 · DZA"
       },
       "map": {
-        "open": "Ouvert",
+        "open": "Ouvert · 14:32",
         "closedNow": "Fermé",
         "name": "D-Tech · Siège & Showroom",
         "addr1": "Cité 05 Juillet 1962",

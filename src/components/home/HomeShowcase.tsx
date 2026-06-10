@@ -246,7 +246,7 @@ function NavLocaleSwitcher() {
         <button
           key={l}
           type="button"
-          className={`seg ${l === locale ? 'on' : ''}`}
+          className={`lang-opt ${l === locale ? 'on' : ''}`}
           onClick={() => {
             if (l !== locale) router.replace(pathname, { locale: l })
           }}
@@ -272,37 +272,49 @@ function Nav({
 }) {
   const t = useTranslations('showcase.nav')
   const router = useRouter()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header>
+    <header className={scrolled ? 'shrink' : ''}>
       <div className="wrap hdr">
         <Logo />
         <nav className="primary">
           <a href="#categories" className="on">{t('catalogue')}</a>
           <a href="#brands">{t('brands')}</a>
           <a href="#products">{t('products')}</a>
+          <a href="#about" data-h="">{t('about')}</a>
+          <a href="#contact" data-h="">{t('contact')}</a>
         </nav>
         <div className="hdr-right">
           <NavLocaleSwitcher />
           <button
-            className="icn"
+            className="icn theme-toggle"
             aria-label={t('themeAria')}
+            title={t('themeAria')}
             aria-pressed={theme === 'light'}
             type="button"
             onClick={onToggleTheme}
           >
             {theme === 'dark' ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
               </svg>
             )}
           </button>
           <button
-            className="icn"
+            className="icn icn-mq"
             aria-label={t('searchAria')}
             type="button"
             onClick={() => router.push('/search')}
@@ -313,7 +325,7 @@ function Nav({
             </svg>
           </button>
           {/* /login lives outside the locale tree — plain anchor */}
-          <a className="icn" aria-label={t('accountAria')} href="/login">
+          <a className="icn icn-mq" aria-label={t('accountAria')} href="/login">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
@@ -331,7 +343,7 @@ function Nav({
             {quoteCount > 0 && <span className="dot" />}
             {quoteCount > 0 && <span className="cart-count">{quoteCount}</span>}
           </button>
-          <a className="btn btn-primary" href="#products">
+          <a className="btn btn-primary btn-explore" href="#products">
             <span className="shimmer" />
             {t('explore')}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -1455,7 +1467,7 @@ function CatalogSection({
               onClick={() => goPage(page - 1)}
               aria-label={t('prevAria')}
             >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg className="ico-prev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
               {t('prev')}
@@ -1486,7 +1498,7 @@ function CatalogSection({
               aria-label={t('nextAria')}
             >
               {t('next')}
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg className="ico-next" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </button>
