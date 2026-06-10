@@ -491,9 +491,8 @@ function Hero() {
           <div className="halo-mint" />
           <div className="halo-steel" />
 
-          <div className="ring r3" />
-          <div className="ring r1" />
-          <div className="ring r2" />
+          {/* orbital rings removed by request — CSS rules kept in the
+              generated stylesheet for easy reinstatement */}
 
           <div className="stack-glow" />
           <div className="stack-glow steel" />
