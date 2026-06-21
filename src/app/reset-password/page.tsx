@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ResetPasswordForm from './ResetPasswordForm'
 
 export const metadata: Metadata = {
-  title: 'Set new password — Dtech',
+  title: 'Nouveau mot de passe — Dtech',
   robots: { index: false, follow: false },
 }
 
@@ -19,11 +19,11 @@ export default async function ResetPasswordPage({ searchParams }: PageProps) {
       <main className="flex min-h-screen items-center justify-center bg-surface-base px-6">
         <div className="max-w-md text-center">
           <h1 className="mb-4 font-display text-3xl text-text-primary">
-            Invalid reset link<span className="text-accent">.</span>
+            Lien de réinitialisation invalide<span className="text-accent">.</span>
           </h1>
           <p className="font-body text-base text-text-secondary">
-            This link is missing or expired. Request a new one from the sign-in
-            page.
+            Ce lien est manquant ou expiré. Demandez-en un nouveau depuis la
+            page de connexion.
           </p>
         </div>
       </main>
@@ -38,10 +38,10 @@ export default async function ResetPasswordPage({ searchParams }: PageProps) {
             Dtech Algérie · Admin
           </p>
           <h1 className="font-display text-4xl tracking-tight text-text-primary">
-            New password<span className="text-accent">.</span>
+            Nouveau mot de passe<span className="text-accent">.</span>
           </h1>
           <p className="mt-4 font-body text-base text-text-secondary">
-            Set a new password. Minimum 8 characters.
+            Définissez un nouveau mot de passe. 8 caractères minimum.
           </p>
         </header>
 

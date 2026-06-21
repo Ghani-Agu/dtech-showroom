@@ -1,10 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { db } from '@/db/client'
-import { categories } from '@/db/schema'
-import { requireSession } from '@/lib/auth-helpers'
+import { categories, products } from '@/db/schema'
+import { requireSection } from '@/lib/auth-helpers'
 import {
   categoryFormSchema,
   type CategoryFormValues,
@@ -22,7 +22,7 @@ function normalize(values: CategoryFormValues) {
 }
 
 export async function createCategory(values: CategoryFormValues) {
-  await requireSession()
+  await requireSection('categories')
 
   const parsed = categoryFormSchema.safeParse(values)
   if (!parsed.success) {
@@ -66,7 +66,7 @@ export async function updateCategory(
   categoryId: string,
   values: CategoryFormValues
 ) {
-  await requireSession()
+  await requireSection('categories')
 
   const parsed = categoryFormSchema.safeParse(values)
   if (!parsed.success) {
@@ -105,7 +105,7 @@ export async function updateCategory(
 }
 
 export async function archiveCategory(categoryId: string) {
-  await requireSession()
+  await requireSection('categories')
 
   await db
     .update(categories)
@@ -119,7 +119,7 @@ export async function archiveCategory(categoryId: string) {
 }
 
 export async function restoreCategory(categoryId: string) {
-  await requireSession()
+  await requireSection('categories')
 
   await db
     .update(categories)
@@ -128,6 +128,35 @@ export async function restoreCategory(categoryId: string) {
 
   revalidatePath('/admin/categories')
   revalidatePath('/categories')
+
+  return { ok: true as const }
+}
+
+/**
+ * Permanently removes a category — only allowed when no product uses it,
+ * so the catalog can never break.
+ */
+export async function deleteCategoryPermanently(categoryId: string) {
+  await requireSection('categories')
+
+  const used = await db
+    .select({ n: count() })
+    .from(products)
+    .where(eq(products.categoryId, categoryId))
+    .then((rows) => rows[0]?.n ?? 0)
+
+  if (used > 0) {
+    return {
+      ok: false as const,
+      error: `Impossible de supprimer : ${used} produit(s) utilisent cette catégorie. Déplacez-les ou supprimez-les d'abord.`,
+    }
+  }
+
+  await db.delete(categories).where(eq(categories.id, categoryId))
+
+  revalidatePath('/admin/categories')
+  revalidatePath('/categories')
+  revalidatePath('/')
 
   return { ok: true as const }
 }

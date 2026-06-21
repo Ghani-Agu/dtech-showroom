@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { users } from '@/db/schema'
 import { auth } from './auth'
+import { hasAccess, type SectionKey } from './permissions'
 
 export async function getSessionUser() {
   const session = await auth.api
@@ -18,6 +19,7 @@ export async function getSessionUser() {
       email: users.email,
       role: users.role,
       name: users.name,
+      permissions: users.permissions,
     })
     .from(users)
     .where(eq(users.id, session.user.id))
@@ -31,6 +33,15 @@ export async function getSessionUser() {
 export async function requireSession() {
   const user = await getSessionUser()
   if (!user) throw new Error('Unauthorized')
+  return user
+}
+
+/** Session + per-section permission gate (admins pass everything). */
+export async function requireSection(section: SectionKey) {
+  const user = await requireSession()
+  if (!hasAccess(user, section)) {
+    throw new Error(`Forbidden: accès « ${section} » requis`)
+  }
   return user
 }
 

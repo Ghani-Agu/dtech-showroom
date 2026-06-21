@@ -1,55 +1,63 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { Container } from '@/components/ui/Container'
-import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
-import { Heading } from '@/components/ui/Heading'
-import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
-import { CategoryCard } from '@/components/catalog/CategoryCard'
+import { Link } from '@/i18n/routing'
 import { type Locale } from '@/i18n/config'
-import { getAllCategories } from '@/server/queries'
+import { getAllCategories, getAllProducts } from '@/server/queries'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('categories')
-  return {
-    title: t('pageTitle'),
-    description: t('indexSubtitle'),
-  }
+  const t = await getTranslations('showroom.categoriesPage')
+  return { title: `${t('title1')} ${t('title2')}`, description: t('sub') }
 }
 
 export default async function CategoriesPage() {
   const locale = (await getLocale()) as Locale
-  const t = await getTranslations('categories')
-  const tNav = await getTranslations('navigation')
-  const categoryList = await getAllCategories(locale)
+  const t = await getTranslations('showroom.categoriesPage')
+  const [categories, products] = await Promise.all([
+    getAllCategories(locale),
+    getAllProducts(locale),
+  ])
+  const counts = new Map<string, number>()
+  for (const p of products)
+    counts.set(p.category.slug, (counts.get(p.category.slug) ?? 0) + 1)
 
   return (
-    <section className="py-16 md:py-24">
-      <Container>
-        <div className="space-y-12">
-          <Breadcrumbs
-            items={[
-              { label: tNav('home'), href: '/' },
-              { label: tNav('categories') },
-            ]}
-          />
-          <div className="max-w-3xl space-y-4">
-            <EyebrowLabel>{tNav('categories').toUpperCase()}</EyebrowLabel>
-            <Heading as="h1" size="lg" accentChar=".">
-              {t('indexHeading')}
-            </Heading>
-            <p className="font-body text-lg text-text-secondary">
-              {t('indexSubtitle')}
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-            {categoryList.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-        </div>
-      </Container>
+    <section className="sr-wrap" style={{ paddingTop: 34, paddingBottom: 60 }}>
+      <div className="sr-in" style={{ marginBottom: 34 }}>
+        <span className="sr-kicker">{t('kicker', { count: categories.length })}</span>
+        <h1 className="sr-h1" style={{ marginTop: 14 }}>
+          {t('title1')} <span className="acc">{t('title2')}</span>
+        </h1>
+        <p className="sr-sub" style={{ marginTop: 12 }}>{t('sub')}</p>
+      </div>
+      <div className="sr-grid sr-in sr-in-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))' }}>
+        {categories.map((c, i) => (
+          <article key={c.id} className="sr-card" style={{ animationDelay: `${Math.min(i, 11) * 45}ms` }}>
+            <Link href={`/categories/${c.slug}`} className="cover" aria-label={c.name} />
+            <div className="imgbox" style={{ aspectRatio: '16 / 9' }}>
+              <Image
+                src={c.heroImagePath ?? '/images/placeholders/category-placeholder.svg'}
+                alt={c.name}
+                fill
+                sizes="(min-width: 1024px) 320px, 50vw"
+                priority={i < 3}
+              />
+            </div>
+            <div className="info">
+              <span className="cat">{t('products', { count: counts.get(c.slug) ?? 0 })}</span>
+              <h3 className="name" style={{ fontSize: 17 }}>{c.name}</h3>
+              <p className="spec">{c.description}</p>
+              <div className="meta">
+                <span className="sr-mono" style={{ color: 'var(--sr-cyan)' }}>
+                  {t('explore')} →
+                </span>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   )
 }

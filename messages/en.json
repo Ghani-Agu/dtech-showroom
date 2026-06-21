@@ -24,7 +24,8 @@
     "search": "Search",
     "about": "About",
     "contactDtech": "Contact Dtech",
-    "viewSite": "View site"
+    "viewSite": "View site",
+    "inquiry": "Inquiry"
   },
   "home": {
     "eyebrow": "DTECH ALGÉRIE · EST. 2006",
@@ -238,13 +239,18 @@
     "pageTitle": "Brands",
     "indexHeading": "Brands we carry",
     "indexSubtitle": "Five lines selected for build quality, distribution rights, and product depth.",
-    "viewProducts": "View products"
+    "viewProducts": "View products",
+    "featured": "Featured · {brand}",
+    "allProducts": "All {brand} products · {count}",
+    "noProducts": "No {brand} products in the catalog yet."
   },
   "categories": {
     "pageTitle": "Categories",
     "indexHeading": "Sorted by intent",
     "indexSubtitle": "Browse the catalog by what you're looking for.",
-    "viewCategory": "View category"
+    "viewCategory": "View category",
+    "allProducts": "All {category} · {count}",
+    "noProducts": "No products in {category} yet."
   },
   "products": {
     "pageTitle": "Products",
@@ -252,7 +258,57 @@
     "inquireButton": "Inquire about this product",
     "relatedProducts": "Related products",
     "viewProduct": "View product",
-    "notAvailable": "Not available"
+    "notAvailable": "Not available",
+    "interested": "Interested?",
+    "discussTitle": "Discuss this with us",
+    "discussBody": "Send a short note about how you intend to use the {product}. Dtech will respond within one business day with availability, configuration options, and a quote.",
+    "indexHeading": "The full catalog",
+    "indexSubtitle": "Every product we currently distribute, in one place. Filter by brand or category, and ask us about anything.",
+    "countLabel": "{count} products",
+    "specLabels": {
+      "ANC": "ANC",
+      "Antennas": "Antennas",
+      "Bands": "Bands",
+      "Battery": "Battery",
+      "Buttons": "Buttons",
+      "Cable": "Cable",
+      "Camera": "Camera",
+      "Capacity": "Capacity",
+      "Chip": "Chip",
+      "Connectivity": "Connectivity",
+      "Cooling": "Cooling",
+      "Coverage": "Coverage",
+      "DPI": "DPI",
+      "Display": "Display",
+      "Frame": "Frame",
+      "Functions": "Functions",
+      "Graphics": "Graphics",
+      "Housing": "Housing",
+      "Indicator": "Indicator",
+      "Input": "Input",
+      "Interface": "Interface",
+      "Jacket": "Jacket",
+      "Keycaps": "Keycaps",
+      "Length": "Length",
+      "Memory": "Memory",
+      "Microphone": "Microphone",
+      "Output": "Output",
+      "Port": "Port",
+      "Ports": "Ports",
+      "Power": "Power",
+      "Processor": "Processor",
+      "Rating": "Rating",
+      "Security": "Security",
+      "Standard": "Standard",
+      "Storage": "Storage",
+      "Stylus": "Stylus",
+      "Switches": "Switches",
+      "Switching": "Switching",
+      "Technology": "Technology",
+      "Throughput": "Throughput",
+      "Type": "Type",
+      "Weight": "Weight"
+    }
   },
   "search": {
     "pageTitle": "Search",
@@ -287,7 +343,8 @@
       "invalidEmail": "Please enter a valid email address",
       "messageTooShort": "Message must be at least 10 characters",
       "submitFailed": "Could not send inquiry. Please try again."
-    }
+    },
+    "rateLimited": "Too many inquiries from this address. Please try again in an hour, or email contact@dtech.dz directly."
   },
   "about": {
     "pageTitle": "About",
@@ -313,7 +370,14 @@
     "wordmark": "DTECH",
     "tagline": "Hardware. Quietly considered.",
     "copyright": "© {year} Dtech Algérie. All rights reserved.",
-    "established": "Est. 2006 · Algiers"
+    "established": "Est. 2006 · Algiers",
+    "legalNotice": "Legal notice",
+    "terms": "Terms of sale",
+    "privacy": "Privacy",
+    "commercial": "Sales",
+    "sav": "After-sales service",
+    "addressLine1": "Cité 05 Juillet 1962",
+    "addressLine2": "Bab Ezzouar, Algiers"
   },
   "notFound": {
     "title": "Not found",
@@ -347,7 +411,10 @@
       "cartAria": "Cart",
       "themeAria": "Toggle theme",
       "langAria": "Change language",
-      "arSoon": "Arabic — coming soon"
+      "arSoon": "Arabic — coming soon",
+      "searchPlaceholder": "Search products…",
+      "searchNoResults": "No results",
+      "searchSeeAll": "See all results"
     },
     "logo": {
       "tagline": "Algeria · 2026"
@@ -417,7 +484,8 @@
         "network": "Network",
         "parts": "Components",
         "gaming": "Gaming"
-      }
+      },
+      "viewAll": "All categories"
     },
     "brands": {
       "kicker": "Officially distributed brands",
@@ -433,7 +501,8 @@
         "tplink": "Routers, switches, AP",
         "canon": "Printers, scanners, copiers",
         "epson": "Printers, copiers"
-      }
+      },
+      "viewAll": "All brands"
     },
     "catalog": {
       "kicker": "{products} products · {categories} categories · {brands} brands",
@@ -451,7 +520,9 @@
       "pageAria": "Page {n}",
       "inStock": "In stock",
       "currency": "DA",
-      "addAria": "Add"
+      "addAria": "Add",
+      "addToCart": "Add to cart",
+      "added": "Added"
     },
     "about": {
       "kicker": "About · D-Tech Algeria",
@@ -621,5 +692,120 @@
     "privacyTitle": "Privacy",
     "privacyBody": "Information submitted through our forms (name, e-mail, phone) is used solely to process your requests and is never shared with third parties. Questions or deletion requests: contact@dtech.dz.",
     "back": "Back to home"
+  },
+  "showroom": {
+    "nav": {
+      "home": "Home",
+      "catalog": "Catalog",
+      "categories": "Categories",
+      "brands": "Brands",
+      "about": "About",
+      "search": "Search",
+      "cart": "Cart",
+      "menu": "Menu",
+      "close": "Close"
+    },
+    "footer": {
+      "blurb": "Official distributor of HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson in Algeria since 2006. 393 products, delivered across the 58 wilayas.",
+      "allProducts": "All products",
+      "service": "Service",
+      "contact": "Contact"
+    },
+    "cart": {
+      "title": "My cart",
+      "count": "{count} item(s)",
+      "empty": "Your cart is empty. Browse the catalog and add products.",
+      "add": "Add to cart",
+      "close": "Close",
+      "less": "Decrease quantity",
+      "more": "Increase quantity",
+      "remove": "Remove {name}",
+      "clear": "Clear the cart",
+      "orderWhatsApp": "Order via WhatsApp",
+      "note": "No online payment — send your cart on WhatsApp and our sales team confirms availability and price.",
+      "waIntro": "Hello D-Tech! I would like to order:"
+    },
+    "filters": {
+      "all": "All",
+      "searchPlaceholder": "Filter these products…",
+      "results": "{count} product(s)",
+      "sort": "Sort",
+      "sortAz": "Name A–Z",
+      "sortZa": "Name Z–A",
+      "sortFeatured": "Featured first",
+      "noResults": "No products match these filters.",
+      "reset": "Reset filters",
+      "prev": "Scroll back",
+      "next": "Scroll forward",
+      "page": "Page {n}",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "brandsLabel": "Brands",
+      "categoriesLabel": "Categories"
+    },
+    "product": {
+      "addToCart": "Add to cart",
+      "orderWhatsApp": "Order via WhatsApp",
+      "waProduct": "Hello D-Tech! I am interested in:",
+      "similar": "Similar products",
+      "inquire": "Ask a question",
+      "backCatalog": "Full catalog",
+      "brandLabel": "Brand",
+      "categoryLabel": "Category",
+      "availability": "In stock · delivery 58 wilayas",
+      "added": "Added to cart"
+    },
+    "reviews": {
+      "title": "Customer reviews",
+      "basedOn": "Based on {count} review(s)",
+      "write": "Write a review",
+      "name": "Your name",
+      "namePlaceholder": "e.g. Yacine B.",
+      "comment": "Your review",
+      "commentPlaceholder": "Share your experience with this product…",
+      "rating": "Your rating",
+      "submit": "Publish review",
+      "thanks": "Thank you! Your review is saved on this device and will be published with the next site update.",
+      "mine": "Your review",
+      "empty": "No reviews yet — be the first."
+    },
+    "categoriesPage": {
+      "kicker": "{count} categories",
+      "title1": "The catalog,",
+      "title2": "by category.",
+      "sub": "From laptops to toners — every family of the D-Tech catalog.",
+      "explore": "Explore",
+      "products": "{count} products"
+    },
+    "brandsPage": {
+      "kicker": "{count} brands",
+      "title1": "The brands",
+      "title2": "we distribute.",
+      "sub": "Official distribution, local warranty and after-sales service.",
+      "explore": "View products"
+    },
+    "productsPage": {
+      "kicker": "{count} products · {cats} categories · {brands} brands",
+      "title1": "The full",
+      "title2": "catalog.",
+      "sub": "Filter by category or brand, sort, and order directly on WhatsApp."
+    }
+  },
+  "newsletter": {
+    "headline": "Stay in the loop.",
+    "lede": "Subscribe to the D-Tech newsletter — new arrivals, offers and updates straight to your inbox.",
+    "emailPlaceholder": "your@email.com",
+    "submit": "Subscribe",
+    "consent": "By subscribing you agree to receive emails from D-Tech. One-click unsubscribe any time.",
+    "successPending": "Check your inbox — a confirmation message is on its way.",
+    "successAlready": "You're already subscribed — thanks!",
+    "successResent": "Confirmation link sent again. Please check your inbox.",
+    "errInvalid": "Invalid email address.",
+    "errRateLimited": "Too many attempts. Try again in an hour.",
+    "errGeneric": "Something went wrong. Please try again.",
+    "confirmedTitle": "Subscription confirmed.",
+    "alreadyTitle": "Already on the list.",
+    "invalidTitle": "Invalid or expired link.",
+    "errorTitle": "Technical error."
   }
 }

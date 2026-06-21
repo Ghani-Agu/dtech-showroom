@@ -30,7 +30,7 @@
      `text-accent` / `bg-accent` utilities everywhere on the public site
      now resolve to this; hover/muted/glow live in the v2 additive
      block below. */
-  --color-accent: oklch(0.78 0.18 220);
+  --color-accent: oklch(0.85 0.09 172);
 
   /* Semantic — flipped to v2 §4 values; -info preserved at v1 because
      v2 §4 does not redefine it. */
@@ -115,11 +115,11 @@
   /* v2 — the Dtech color. Brighter and more saturated than v1's
      accent (oklch 0.74 0.14 215). Consumers using --color-accent
      are still on v1 until they migrate to accent-primary. */
-  --color-accent-primary: oklch(0.78 0.18 220);
-  --color-accent-hover: oklch(0.85 0.16 220);
-  --color-accent-muted: oklch(0.62 0.14 220);
+  --color-accent-primary: oklch(0.85 0.09 172);
+  --color-accent-hover: oklch(0.9 0.09 172);
+  --color-accent-muted: oklch(0.68 0.08 172);
   /* primary at 25% alpha — for halos and glows */
-  --color-accent-glow: oklch(0.78 0.18 220 / 0.25);
+  --color-accent-glow: oklch(0.85 0.09 172 / 0.25);
 
   /* v2 — chroma palette. Animation-only. Static usage is forbidden
      per spec §4. Tooling cannot enforce this; reviewers must. */
@@ -136,6 +136,37 @@
     0 0 0 1px oklch(0.78 0.18 220 / 0.3);
   --shadow-glow: 0 0 32px -4px oklch(0.78 0.18 220 / 0.35);
   --shadow-deep: 0 24px 60px -12px oklch(0.04 0.01 240 / 0.8);
+
+  /* =============================================================
+     ADMIN SHELL — utility aliases over the runtime tokens defined
+     in .admin-shell (lines 254+). PURELY ADDITIVE: every existing
+     `style={{ color: 'var(--admin-text-tertiary)' }}` keeps working
+     unchanged. These aliases just expose the same values as Tailwind
+     v4 utilities (`text-admin-tertiary`, `bg-admin-soft`, etc.) so
+     the upcoming inline-style sweep stays small and reviewable.
+
+     Because the values are `var(--admin-...)` references, the
+     utilities respect the active admin theme (the light/dark flip
+     at `html[data-admin-theme='light'] .admin-shell { ... }` cascades
+     through naturally).
+     ============================================================= */
+  --color-admin-canvas: var(--admin-canvas);
+  --color-admin-soft: var(--admin-soft);
+  --color-admin-soft-2: var(--admin-soft-2);
+  --color-admin-line: var(--admin-line);
+  --color-admin-glass: var(--admin-glass-bg);
+  --color-admin-glass-line: var(--admin-glass-border);
+  --color-admin-glass-line-strong: var(--admin-glass-border-strong);
+  --color-admin-text-primary: var(--admin-text-primary);
+  --color-admin-text-secondary: var(--admin-text-secondary);
+  --color-admin-text-tertiary: var(--admin-text-tertiary);
+  --color-admin-mint: var(--c-mint);
+  --color-admin-blue: var(--c-blue);
+  --color-admin-violet: var(--c-violet);
+  --color-admin-orange: var(--c-orange);
+  --color-admin-rose: var(--c-rose);
+  --color-admin-amber: var(--c-amber);
+  --color-admin-emerald: var(--c-emerald);
 }
 
 /* Font aliasing — Geist now provides the typeface stack via
@@ -252,19 +283,288 @@ samp {
    ========================================================================= */
 
 .admin-shell {
-  --admin-canvas: #0a0e1a;
-  --admin-glass-bg: rgba(20, 28, 45, 0.45);
-  --admin-glass-border: rgba(255, 255, 255, 0.08);
-  --admin-glass-border-strong: rgba(255, 255, 255, 0.14);
-  --admin-cyan: #22d3ee;
-  --admin-purple: #a855f7;
-  --admin-pink: #ec4899;
-  --admin-amber: #fbbf24;
+  --admin-canvas: #07100d;
+  --admin-glass-bg: rgba(13, 26, 22, 0.48);
+  --admin-glass-border: rgba(124, 224, 195, 0.10);
+  --admin-glass-border-strong: rgba(124, 224, 195, 0.24);
+  --admin-cyan: var(--c-mint);
+  --admin-purple: var(--c-violet);
+  --admin-pink: var(--c-rose);
+  --admin-amber: var(--c-amber);
+  --admin-blue: var(--c-blue);
+  --admin-violet: var(--c-violet);
+  --admin-orange: var(--c-orange);
+  --admin-rose: var(--c-rose);
+  /* accent family — flips with the admin theme */
+  --c-mint: #7ce0c3;
+  --c-blue: #5fb7e8;
+  --c-violet: #a78bfa;
+  --c-orange: #f0a36b;
+  --c-rose: #f47ea0;
+  --c-amber: #f5c97b;
+  --c-emerald: #34d399;
+  --c-emerald-text: #6ee7b7;
+  /* neutral surfaces */
+  --admin-soft: rgba(255, 255, 255, 0.03);
+  --admin-soft-2: rgba(255, 255, 255, 0.06);
+  --admin-line: rgba(255, 255, 255, 0.05);
+  --admin-on-accent: #04110c;
+  --admin-overlay: rgba(5, 10, 8, 0.65);
   --admin-text-primary: #ffffff;
-  --admin-text-secondary: #94a3b8;
-  --admin-text-tertiary: #64748b;
+  --admin-text-secondary: #9db3ac;
+  --admin-text-tertiary: #69807a;
   --admin-blur: blur(24px) saturate(180%);
   --admin-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Native form controls follow the dark theme (select popups were white) */
+.admin-shell {
+  color-scheme: dark;
+}
+.admin-shell select option {
+  background-color: #0c1713;
+  color: #e8efec;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ADMIN LIGHT ("white") MODE — its own palette, not an inversion:
+   paper canvas, white cards with soft shadows, deepened accents
+   for contrast. Toggled via html[data-admin-theme='light'].
+   ════════════════════════════════════════════════════════════════ */
+/* ────────────────────────────────────────────────────────────────
+   ADMIN LIGHT ("white") MODE — v3: warm dashboard
+   ────────────────────────────────────────────────────────────────
+   Direction inspired by the modern SaaS dashboards Ghani referenced
+   (warm cream canvas + dark forest-green sidebar + vivid section
+   chips). Adapted to D-Tech: mint is the primary brand colour and
+   each section keeps its own accent (blue · orange · violet · rose ·
+   amber · emerald · mint).
+
+   Scoped under `html[data-admin-theme='light']`. Dark mode is
+   completely untouched.
+   ──────────────────────────────────────────────────────────────── */
+html[data-admin-theme='light'] .admin-shell {
+  color-scheme: light;
+
+  /* ── Foundation ─────────────────────────────────────────────── */
+  --admin-canvas: #f8f3e9;           /* warm cream */
+  --admin-glass-bg: #ffffff;
+  --admin-glass-border: #efe6d1;     /* warm hairline */
+  --admin-glass-border-strong: #d9cdb0;
+
+  /* ── Text ───────────────────────────────────────────────────── */
+  --admin-text-primary: #181410;     /* warm near-black */
+  --admin-text-secondary: #4d4438;
+  --admin-text-tertiary: #847762;
+
+  /* ── Vivid section accents ──────────────────────────────────── */
+  --c-mint:    #0aa17a;
+  --c-blue:    #2563eb;
+  --c-violet:  #7c3aed;
+  --c-orange:  #ea580c;
+  --c-rose:    #e11d48;
+  --c-amber:   #d97706;
+  --c-emerald: #10b981;
+  --c-emerald-text: #047857;
+
+  /* Soft surfaces (warm-tinted) */
+  --admin-soft:   rgba(24, 20, 16, 0.030);
+  --admin-soft-2: rgba(24, 20, 16, 0.055);
+  --admin-line:   rgba(24, 20, 16, 0.060);
+
+  --admin-on-accent: #ffffff;
+  --admin-overlay:   rgba(248, 243, 233, 0.85);
+  --admin-cyan:      var(--c-mint);
+}
+
+html[data-admin-theme='light'] .admin-shell select option {
+  background-color: #ffffff;
+  color: #181410;
+}
+
+/* ── Ambient horizon accent (kept from v2) ─────────────────────── */
+html[data-admin-theme='light'] .admin-shell::before {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; height: 2px;
+  z-index: 60; pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(10, 161, 122, 0)   8%,
+    rgba(10, 161, 122, 0.55) 28%,
+    rgba(10, 161, 122, 0.85) 50%,
+    rgba(10, 161, 122, 0.55) 72%,
+    rgba(10, 161, 122, 0)   92%,
+    transparent 100%);
+  opacity: 0.6;
+  animation: admin-horizon 6s ease-in-out infinite;
+}
+@keyframes admin-horizon {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.85; }
+}
+
+/* ── Cards / panels — bigger radius, warm tinted shadow ───────── */
+html[data-admin-theme='light'] .admin-shell .glass-surface {
+  background: #ffffff;
+  border: 1px solid var(--admin-glass-border);
+  border-radius: 20px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 1px 2px rgba(24, 20, 16, 0.04),
+    0 12px 28px -16px rgba(24, 20, 16, 0.14);
+  transition: border-color .18s var(--admin-ease),
+              box-shadow .18s var(--admin-ease),
+              transform .18s var(--admin-ease);
+}
+html[data-admin-theme='light'] .admin-shell .glass-surface:hover {
+  border-color: var(--admin-glass-border-strong);
+  box-shadow:
+    0 2px 4px rgba(24, 20, 16, 0.06),
+    0 18px 36px -16px rgba(24, 20, 16, 0.20);
+}
+
+/* ── SIDEBAR — dark forest green with mint active state ───────── */
+html[data-admin-theme='light'] .admin-shell aside.glass-surface,
+html[data-admin-theme='light'] .admin-shell aside.glass-surface:hover {
+  /* Override the admin tokens inside the sidebar so every inline
+     style="color: var(--admin-text-primary)" etc. flips to light
+     against the dark sidebar background. */
+  --admin-text-primary:   #f5fdf9;
+  --admin-text-secondary: #b8d9c9;
+  --admin-text-tertiary:  #80a796;
+  --admin-soft:           rgba(255, 255, 255, 0.04);
+  --admin-soft-2:         rgba(255, 255, 255, 0.08);
+  --admin-glass-border:        rgba(255, 255, 255, 0.08);
+  --admin-glass-border-strong: rgba(255, 255, 255, 0.16);
+  --admin-line:                rgba(255, 255, 255, 0.06);
+
+  background: linear-gradient(180deg, #0c2c25 0%, #0b261f 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 0; /* full-height, snaps to viewport edges */
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+  color: #f5fdf9;
+}
+
+/* Sidebar — bright wordmark "D-Tech" in light cream */
+html[data-admin-theme='light'] .admin-shell aside.glass-surface .text-white {
+  color: #f5fdf9;
+}
+
+/* Sidebar active item — solid colored pill that adopts the section
+   colour. The inline style already sets background via
+   `color-mix(... ${item.color} 9% ...)`; we punch it up by raising
+   the percentage on the link wrapper. */
+html[data-admin-theme='light'] .admin-shell aside.glass-surface ul a[aria-current='page'],
+html[data-admin-theme='light'] .admin-shell aside.glass-surface ul a[aria-current='page']:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6) !important;
+}
+/* Active item: the icon chip glows in its section colour against
+   the dark sidebar — high contrast and energetic. */
+html[data-admin-theme='light'] .admin-shell aside.glass-surface ul a[aria-current='page'] > span:first-of-type {
+  background: color-mix(in oklab, var(--c-mint) 24%, transparent) !important;
+  border-color: var(--c-mint) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+              0 0 22px -4px var(--c-mint) !important;
+}
+html[data-admin-theme='light'] .admin-shell aside.glass-surface ul li:hover a:not([aria-current='page']) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Sidebar logotype square — keep the bright mint glow */
+html[data-admin-theme='light'] .admin-shell aside.glass-surface span[aria-label='Accueil admin D-Tech'] > span:first-child,
+html[data-admin-theme='light'] .admin-shell aside.glass-surface a[aria-label='Accueil admin D-Tech'] > span:first-child {
+  background: linear-gradient(135deg,
+    color-mix(in oklab, var(--c-mint) 40%, transparent),
+    color-mix(in oklab, var(--c-mint) 18%, transparent)) !important;
+  border-color: var(--c-mint) !important;
+  color: #f5fdf9 !important;
+}
+
+/* "Site en ligne" button on dark sidebar */
+html[data-admin-theme='light'] .admin-shell aside.glass-surface a[href='/'] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+html[data-admin-theme='light'] .admin-shell aside.glass-surface a[href='/']:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ── Topbar — keeps the warm cream feel ──────────────────────── */
+html[data-admin-theme='light'] .admin-shell header.glass-surface {
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+/* ── Primary CTA / mint button — solid + lifted ──────────────── */
+html[data-admin-theme='light'] .admin-shell button[type='button'].rounded-2xl,
+html[data-admin-theme='light'] .admin-shell button[type='button'].rounded-xl,
+html[data-admin-theme='light'] .admin-shell a.rounded-2xl,
+html[data-admin-theme='light'] .admin-shell a.rounded-xl {
+  transition: transform .15s var(--admin-ease),
+              box-shadow .18s var(--admin-ease),
+              background-color .15s, border-color .15s;
+}
+html[data-admin-theme='light'] .admin-shell button[type='button'].rounded-2xl:hover,
+html[data-admin-theme='light'] .admin-shell button[type='button'].rounded-xl:hover,
+html[data-admin-theme='light'] .admin-shell a.rounded-2xl:hover,
+html[data-admin-theme='light'] .admin-shell a.rounded-xl:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -4px rgba(10, 161, 122, 0.30);
+}
+
+/* ── Stat / KPI icon chips — saturate the section colour ─────── */
+html[data-admin-theme='light'] .admin-shell .stat-icon,
+html[data-admin-theme='light'] .admin-shell [data-stat-icon] {
+  background: linear-gradient(135deg,
+    color-mix(in oklab, var(--stat-color, var(--c-mint)) 100%, transparent),
+    color-mix(in oklab, var(--stat-color, var(--c-mint)) 70%, white 30%));
+  color: #ffffff;
+  box-shadow: 0 8px 18px -6px color-mix(in oklab, var(--stat-color, var(--c-mint)) 55%, transparent);
+}
+
+/* ── Selection — light mint wash ─────────────────────────────── */
+html[data-admin-theme='light'] .admin-shell ::selection {
+  background: rgba(10, 161, 122, 0.20);
+  color: #181410;
+}
+
+/* ── Tailwind white-alpha utilities — re-tinted for light bg ── */
+html[data-admin-theme='light'] .admin-shell main .text-white,
+html[data-admin-theme='light'] .admin-shell header.glass-surface .text-white {
+  color: var(--admin-text-primary);
+}
+html[data-admin-theme='light'] .admin-shell main .bg-white\/\[0\.03\],
+html[data-admin-theme='light'] .admin-shell main .bg-white\/\[0\.02\] {
+  background-color: var(--admin-soft);
+}
+html[data-admin-theme='light'] .admin-shell main .bg-white\/\[0\.04\],
+html[data-admin-theme='light'] .admin-shell main .bg-white\/\[0\.06\] {
+  background-color: var(--admin-soft-2);
+}
+html[data-admin-theme='light'] .admin-shell main .hover\:bg-white\/\[0\.03\]:hover,
+html[data-admin-theme='light'] .admin-shell main .hover\:bg-white\/\[0\.04\]:hover,
+html[data-admin-theme='light'] .admin-shell main .hover\:bg-white\/\[0\.06\]:hover {
+  background-color: var(--admin-soft-2);
+}
+html[data-admin-theme='light'] .admin-shell main .hover\:text-white:hover {
+  color: var(--admin-text-primary);
+}
+html[data-admin-theme='light'] .admin-shell main .border-white\/\[0\.08\] {
+  border-color: var(--admin-glass-border);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html[data-admin-theme='light'] .admin-shell::before,
+  html[data-admin-theme='light'] .admin-shell .glass-surface,
+  html[data-admin-theme='light'] .admin-shell button[type='button'].rounded-2xl,
+  html[data-admin-theme='light'] .admin-shell button[type='button'].rounded-xl {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Glass surface — shared recipe used by GlassCard, sidebar, topbar, etc. */
@@ -274,7 +574,7 @@ samp {
     backdrop-filter: var(--admin-blur);
     -webkit-backdrop-filter: var(--admin-blur);
     border: 1px solid var(--admin-glass-border);
-    border-radius: 16px;
+    border-radius: 18px;
   }
 
   .glass-surface-strong {
@@ -308,8 +608,8 @@ samp {
   75%      { transform: translate(-50px, -30px) scale(1.05); }
 }
 @keyframes admin-pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
-  50%      { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(124, 224, 195, 0.7); }
+  50%      { opacity: 0.7; box-shadow: 0 0 0 6px rgba(124, 224, 195, 0); }
 }
 @keyframes admin-shimmer {
   0%   { transform: translateX(-100%); }
@@ -319,12 +619,12 @@ samp {
   0%, 100% {
     box-shadow:
       0 0 0 1px var(--admin-glass-border),
-      0 0 24px -8px rgba(34, 211, 238, 0.25);
+      0 0 24px -8px rgba(124, 224, 195, 0.25);
   }
   50% {
     box-shadow:
-      0 0 0 1px rgba(34, 211, 238, 0.25),
-      0 0 48px -8px rgba(34, 211, 238, 0.45);
+      0 0 0 1px rgba(124, 224, 195, 0.25),
+      0 0 48px -8px rgba(124, 224, 195, 0.45);
   }
 }
 @keyframes admin-drift {

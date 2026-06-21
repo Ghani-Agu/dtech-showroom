@@ -1,0 +1,102 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Site themes — applied to the REAL site via body[data-site-theme="<id>"].
+   Each theme retints the .home-showcase-root token palette (and the page
+   background). Light themes reuse the existing body[data-home-theme='light']
+   surface treatment (set by <SiteTheme>); these blocks override the palette.
+   'nightline' is the default and needs no override. Higher specificity
+   (html body …) guarantees these win over the base light/dark token blocks.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Méditerranée éditoriale — ivoire froid · cobalt · ocre (light) ──────── */
+html body[data-site-theme='mediterranean'] .home-showcase-root {
+  --bg-0: oklch(0.965 0.010 235); --bg-1: oklch(0.982 0.008 235);
+  --bg-2: oklch(0.998 0.004 235); --bg-3: #ffffff;
+  --line: rgba(20, 34, 64, 0.12); --line-2: rgba(20, 34, 64, 0.20);
+  --text: oklch(0.220 0.045 255); --mute: oklch(0.470 0.035 255);
+  --cyan: oklch(0.525 0.155 248); --cyan-2: oklch(0.460 0.150 248); --ice: oklch(0.620 0.130 248);
+  --blue: oklch(0.745 0.140 78); --blue-2: oklch(0.680 0.135 78);
+  --warn: oklch(0.700 0.140 60); --ok: oklch(0.525 0.155 248);
+}
+html body[data-site-theme='mediterranean'] { background: oklch(0.965 0.010 235); }
+
+/* ── Onyx & Or — charbon chaud · or champagne (dark) ─────────────────────── */
+html body[data-site-theme='onyx'] .home-showcase-root {
+  --bg-0: #15120e; --bg-1: #1c1813; --bg-2: #221d16; --bg-3: #2a241b;
+  --line: rgba(239, 232, 219, 0.10); --line-2: rgba(239, 232, 219, 0.18);
+  --text: #efe8db; --mute: #a89e8c;
+  --cyan: oklch(0.800 0.115 85); --cyan-2: oklch(0.720 0.110 85); --ice: oklch(0.870 0.100 85);
+  --blue: oklch(0.700 0.100 35); --blue-2: oklch(0.620 0.100 35);
+  --warn: oklch(0.700 0.120 50); --ok: oklch(0.800 0.115 85);
+}
+html body[data-site-theme='onyx'] { background: #15120e; }
+html body[data-site-theme='onyx'] .home-showcase-root .bg-ambient {
+  background:
+    radial-gradient(1200px 800px at 80% -10%, rgba(208,170,92,0.10), transparent 60%),
+    radial-gradient(900px 700px at -10% 30%, rgba(160,110,60,0.08), transparent 60%),
+    linear-gradient(180deg, #171309 0%, #15120e 50%, #100d09 100%);
+}
+
+/* ── Studio Solaire — papier chaud · corail · prune (light) ──────────────── */
+html body[data-site-theme='solar'] .home-showcase-root {
+  --bg-0: oklch(0.965 0.025 70); --bg-1: oklch(0.980 0.020 70);
+  --bg-2: oklch(0.995 0.012 70); --bg-3: #ffffff;
+  --line: rgba(70, 38, 22, 0.12); --line-2: rgba(70, 38, 22, 0.20);
+  --text: oklch(0.270 0.035 40); --mute: oklch(0.490 0.035 40);
+  --cyan: oklch(0.640 0.190 35); --cyan-2: oklch(0.575 0.185 35); --ice: oklch(0.720 0.160 35);
+  --blue: oklch(0.550 0.130 320); --blue-2: oklch(0.490 0.130 320);
+  --warn: oklch(0.660 0.160 60); --ok: oklch(0.560 0.150 150);
+}
+html body[data-site-theme='solar'] { background: oklch(0.965 0.025 70); }
+
+/* ── Noir Éditorial — papier blanc · encre · rouge (light) ───────────────── */
+html body[data-site-theme='noir'] .home-showcase-root {
+  --bg-0: oklch(0.985 0 0); --bg-1: oklch(0.965 0 0); --bg-2: #ffffff; --bg-3: #ffffff;
+  --line: rgba(0, 0, 0, 0.14); --line-2: rgba(0, 0, 0, 0.24);
+  --text: oklch(0.180 0 0); --mute: oklch(0.440 0 0);
+  --cyan: oklch(0.300 0 0); --cyan-2: oklch(0.200 0 0); --ice: oklch(0.420 0 0);
+  --blue: oklch(0.560 0.200 25); --blue-2: oklch(0.500 0.200 25);
+  --warn: oklch(0.560 0.200 25); --ok: oklch(0.300 0 0);
+}
+html body[data-site-theme='noir'] { background: oklch(0.985 0 0); }
+
+/* ── Botanique — crème chaude · vert forêt · terracotta (light) ──────────── */
+html body[data-site-theme='botanique'] .home-showcase-root {
+  --bg-0: oklch(0.965 0.020 95); --bg-1: oklch(0.980 0.016 95);
+  --bg-2: oklch(0.995 0.010 95); --bg-3: #ffffff;
+  --line: rgba(30, 54, 34, 0.12); --line-2: rgba(30, 54, 34, 0.20);
+  --text: oklch(0.270 0.045 150); --mute: oklch(0.470 0.040 150);
+  --cyan: oklch(0.520 0.110 150); --cyan-2: oklch(0.450 0.110 150); --ice: oklch(0.620 0.100 150);
+  --blue: oklch(0.620 0.130 45); --blue-2: oklch(0.550 0.130 45);
+  --warn: oklch(0.620 0.130 45); --ok: oklch(0.520 0.110 150);
+}
+html body[data-site-theme='botanique'] { background: oklch(0.965 0.020 95); }
+
+/* ── Aurore — blush · prune · pervenche (light) ──────────────────────────── */
+html body[data-site-theme='aurore'] .home-showcase-root {
+  --bg-0: oklch(0.970 0.022 330); --bg-1: oklch(0.984 0.018 330);
+  --bg-2: oklch(0.996 0.010 330); --bg-3: #ffffff;
+  --line: rgba(54, 30, 54, 0.12); --line-2: rgba(54, 30, 54, 0.20);
+  --text: oklch(0.300 0.060 330); --mute: oklch(0.500 0.050 330);
+  --cyan: oklch(0.650 0.150 350); --cyan-2: oklch(0.580 0.150 350); --ice: oklch(0.740 0.130 350);
+  --blue: oklch(0.680 0.120 255); --blue-2: oklch(0.610 0.120 255);
+  --warn: oklch(0.680 0.130 60); --ok: oklch(0.650 0.150 350);
+}
+html body[data-site-theme='aurore'] { background: oklch(0.970 0.022 330); }
+
+/* ── Cyber Néon — indigo profond · cyan · magenta (dark) ─────────────────── */
+html body[data-site-theme='cyber'] .home-showcase-root {
+  --bg-0: oklch(0.170 0.030 280); --bg-1: oklch(0.205 0.032 280);
+  --bg-2: oklch(0.245 0.036 280); --bg-3: oklch(0.285 0.040 280);
+  --line: rgba(180, 200, 255, 0.12); --line-2: rgba(180, 200, 255, 0.22);
+  --text: oklch(0.950 0.020 220); --mute: oklch(0.700 0.030 240);
+  --cyan: oklch(0.800 0.150 195); --cyan-2: oklch(0.720 0.150 195); --ice: oklch(0.870 0.130 195);
+  --blue: oklch(0.650 0.250 330); --blue-2: oklch(0.580 0.250 330);
+  --warn: oklch(0.800 0.150 60); --ok: oklch(0.800 0.150 195);
+}
+html body[data-site-theme='cyber'] { background: oklch(0.170 0.030 280); }
+html body[data-site-theme='cyber'] .home-showcase-root .bg-ambient {
+  background:
+    radial-gradient(1200px 800px at 80% -10%, oklch(0.55 0.18 195 / 0.16), transparent 60%),
+    radial-gradient(900px 700px at -10% 30%, oklch(0.50 0.24 330 / 0.14), transparent 60%),
+    linear-gradient(180deg, oklch(0.20 0.035 280) 0%, oklch(0.17 0.030 280) 50%, oklch(0.14 0.028 280) 100%);
+}

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { asc, eq } from 'drizzle-orm'
@@ -24,10 +24,10 @@ export async function generateMetadata({
     .then((rows) => rows[0])
     .catch(() => null)
 
-  if (!product) return { title: 'Product not found' }
+  if (!product) return { title: 'Produit introuvable' }
 
   return {
-    title: `Edit ${product.name} — Dtech Admin`,
+    title: `Modifier ${product.name} · Dtech Admin`,
     robots: { index: false, follow: false },
   }
 }
@@ -56,27 +56,27 @@ export default async function EditProductPage({ params }: PageProps) {
   if (!product) notFound()
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="max-w-[1200px] space-y-6">
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-2 font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+        className="inline-flex items-center gap-2 font-body text-sm text-[var(--admin-text-secondary)] transition-colors hover:text-white"
       >
         <ArrowLeft size={14} />
-        All products
+        Tous les produits
       </Link>
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-            Products / Edit
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+            Produits / Modifier
           </p>
-          <h1 className="font-display text-3xl tracking-tight text-text-primary">
+          <h1 className="font-display text-3xl tracking-tight text-white">
             {product.name}
           </h1>
           <div className="mt-3 flex items-center gap-2">
             <Badge variant="neutral">/{product.slug}</Badge>
             {product.archivedAt && (
-              <Badge variant="warning">Archived</Badge>
+              <Badge variant="warning">Masqué</Badge>
             )}
           </div>
         </div>

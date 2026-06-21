@@ -8,8 +8,9 @@ const intlMiddleware = createMiddleware(routing)
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Admin routes: protect with auth, do NOT apply locale routing
-  if (pathname.startsWith('/admin')) {
+  // Admin routes + the full-screen web editor: protect with auth, do NOT
+  // apply locale routing (the editor opens in its own tab at /editor).
+  if (pathname.startsWith('/admin') || pathname.startsWith('/editor')) {
     const session = await auth.api
       .getSession({ headers: request.headers })
       .catch(() => null)

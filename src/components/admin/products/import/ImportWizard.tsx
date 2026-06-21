@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Check } from 'lucide-react'
@@ -34,14 +34,14 @@ export function ImportWizard({ context }: ImportWizardProps) {
   >(new Map())
 
   const steps: Array<{ key: Step; label: string }> = [
-    { key: 'upload', label: 'Upload' },
-    { key: 'map', label: 'Map columns' },
-    { key: 'review', label: 'Review & import' },
+    { key: 'upload', label: 'Envoyer' },
+    { key: 'map', label: 'Associer les colonnes' },
+    { key: 'review', label: 'Vérifier et importer' },
   ]
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Import progress">
+      <nav aria-label="Progression de l'importation">
         <ol className="flex items-center gap-4">
           {steps.map((s, idx) => {
             const isActive = s.key === step
@@ -52,10 +52,10 @@ export function ImportWizard({ context }: ImportWizardProps) {
                 <div
                   className={
                     isComplete
-                      ? 'flex h-7 w-7 items-center justify-center rounded-full bg-accent text-surface-base'
+                      ? 'flex h-7 w-7 items-center justify-center rounded-full bg-[var(--admin-cyan)] text-surface-base'
                       : isActive
-                        ? 'flex h-7 w-7 items-center justify-center rounded-full bg-surface-overlay text-text-primary ring-1 ring-accent'
-                        : 'flex h-7 w-7 items-center justify-center rounded-full bg-surface-elevated text-text-muted'
+                        ? 'flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-white ring-1 ring-cyan-400/50'
+                        : 'flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.04] text-[var(--admin-text-tertiary)]'
                   }
                 >
                   {isComplete ? (
@@ -67,14 +67,14 @@ export function ImportWizard({ context }: ImportWizardProps) {
                 <span
                   className={
                     isActive
-                      ? 'font-body text-sm font-medium text-text-primary'
-                      : 'font-body text-sm text-text-secondary'
+                      ? 'font-body text-sm font-medium text-white'
+                      : 'font-body text-sm text-[var(--admin-text-secondary)]'
                   }
                 >
                   {s.label}
                 </span>
                 {idx < steps.length - 1 && (
-                  <div className="ml-2 h-px w-12 bg-surface-overlay" />
+                  <div className="ml-2 h-px w-12 bg-white/[0.06]" />
                 )}
               </li>
             )

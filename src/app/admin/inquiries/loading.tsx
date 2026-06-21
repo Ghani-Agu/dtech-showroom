@@ -1,4 +1,4 @@
-import { Card } from '@/components/admin/ui/Card'
+﻿import { Card } from '@/components/admin/ui/Card'
 import { Skeleton } from '@/components/admin/ui/Skeleton'
 
 export default function InquiriesLoading() {
@@ -16,7 +16,7 @@ export default function InquiriesLoading() {
       </div>
 
       <Card>
-        <ul className="divide-y divide-surface-overlay">
+        <ul className="divide-y divide-white/[0.06]">
           {Array.from({ length: 5 }).map((_, i) => (
             <li key={i} className="px-6 py-4">
               <Skeleton className="mb-2 h-4 w-48" />

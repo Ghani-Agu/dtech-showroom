@@ -1,29 +1,29 @@
 export const IMPORTABLE_FIELDS = {
-  slug: { label: 'URL Slug', required: true },
-  name: { label: 'Name (English)', required: true },
-  brandSlug: { label: 'Brand (slug)', required: true },
-  categorySlug: { label: 'Category (slug)', required: true },
-  tier: { label: 'Tier (hero | featured | longtail)', required: true },
+  slug: { label: 'Adresse URL (slug)', required: true },
+  name: { label: 'Nom (anglais)', required: true },
+  brandSlug: { label: 'Marque (slug)', required: true },
+  categorySlug: { label: 'Catégorie (slug)', required: true },
+  tier: { label: 'Mise en scène (hero | featured | longtail)', required: true },
 
-  tagline: { label: 'Tagline (English)', required: false },
-  description: { label: 'Description (English)', required: false },
-  cardSpec: { label: 'Card Spec (English)', required: false },
-  searchKeywords: { label: 'Search Keywords (English)', required: false },
+  tagline: { label: 'Accroche (anglais)', required: false },
+  description: { label: 'Description (anglais)', required: false },
+  cardSpec: { label: 'Spécification carte (anglais)', required: false },
+  searchKeywords: { label: 'Mots-clés (anglais)', required: false },
 
-  nameFr: { label: 'Name (French)', required: false },
-  taglineFr: { label: 'Tagline (French)', required: false },
-  descriptionFr: { label: 'Description (French)', required: false },
-  cardSpecFr: { label: 'Card Spec (French)', required: false },
-  searchKeywordsFr: { label: 'Search Keywords (French)', required: false },
+  nameFr: { label: 'Nom (français)', required: false },
+  taglineFr: { label: 'Accroche (français)', required: false },
+  descriptionFr: { label: 'Description (français)', required: false },
+  cardSpecFr: { label: 'Spécification carte (français)', required: false },
+  searchKeywordsFr: { label: 'Mots-clés (français)', required: false },
 
-  featured: { label: 'Featured (true/false)', required: false },
-  sortOrder: { label: 'Sort Order (number)', required: false },
+  featured: { label: 'Vedette (true/false)', required: false },
+  sortOrder: { label: 'Ordre de tri (nombre)', required: false },
 
-  cardImagePath: { label: 'Card Image URL', required: false },
-  heroImagePath: { label: 'Hero Image URL', required: false },
+  cardImagePath: { label: 'URL photo carte', required: false },
+  heroImagePath: { label: 'URL photo couverture', required: false },
 
-  seoTitle: { label: 'SEO Title', required: false },
-  seoDescription: { label: 'SEO Description', required: false },
+  seoTitle: { label: 'Titre SEO', required: false },
+  seoDescription: { label: 'Description SEO', required: false },
 } as const
 
 export type ImportableField = keyof typeof IMPORTABLE_FIELDS

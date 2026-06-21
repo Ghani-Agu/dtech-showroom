@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
@@ -37,13 +37,13 @@ export function ImageManager({
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
     if (!entitySlug) {
-      toast.error('Save the slug first before uploading images')
+      toast.error("Enregistrez d'abord le produit avant d'ajouter des photos")
       return
     }
 
     if (value.length + files.length > maxImages) {
       toast.error(
-        `Maximum ${maxImages} images. Currently have ${value.length}.`
+        `Maximum ${maxImages} photos (actuellement ${value.length}).`
       )
       return
     }
@@ -69,7 +69,7 @@ export function ImageManager({
         if (result.ok) {
           newUrls.push(result.result.url)
         } else {
-          toast.error(`Failed: ${file.name} — ${result.error}`)
+          toast.error(`Failed: ${file.name} ” ${result.error}`)
         }
       }
 
@@ -83,7 +83,7 @@ export function ImageManager({
   }
 
   async function handleRemove(url: string, index: number) {
-    if (!confirm('Remove this image?')) return
+    if (!confirm('Retirer cette photo ?')) return
 
     const result = await deleteEntityImage(url)
 
@@ -93,7 +93,7 @@ export function ImageManager({
     }
 
     onChange(value.filter((_, i) => i !== index))
-    toast.success('Image removed')
+    toast.success('Photo retirée')
   }
 
   function handleDragStart(index: number) {
@@ -124,11 +124,11 @@ export function ImageManager({
   return (
     <div className="space-y-2">
       <div>
-        <label className="block font-body text-sm font-medium text-text-secondary">
+        <label className="block font-body text-sm font-medium text-[var(--admin-text-secondary)]">
           {label}
         </label>
         {description && (
-          <p className="mt-1 font-body text-xs text-text-muted">
+          <p className="mt-1 font-body text-xs text-[var(--admin-text-tertiary)]">
             {description}
           </p>
         )}
@@ -143,7 +143,7 @@ export function ImageManager({
             onDragOver={(e) => handleDragOver(e, index)}
             onDragEnd={handleDragEnd}
             className={cn(
-              'group relative aspect-[4/3] cursor-move overflow-hidden rounded-md bg-surface-elevated',
+              'group relative aspect-[4/3] cursor-move overflow-hidden rounded-md bg-white/[0.04]',
               draggedIndex === index && 'opacity-50'
             )}
           >
@@ -154,20 +154,20 @@ export function ImageManager({
               sizes="300px"
               className="object-cover"
             />
-            <div className="absolute left-1 top-1 rounded bg-surface-base/80 p-1 text-text-muted backdrop-blur">
+            <div className="absolute left-1 top-1 rounded bg-[var(--admin-canvas)]/80 p-1 text-[var(--admin-text-tertiary)] backdrop-blur">
               <GripVertical size={12} />
             </div>
             <div className="absolute right-1 top-1">
               <button
                 type="button"
                 onClick={() => handleRemove(url, index)}
-                className="rounded bg-semantic-error/90 p-1 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100"
-                aria-label="Remove image"
+                className="rounded bg-rose-500/90 p-1 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100"
+                aria-label="Retirer la photo"
               >
                 <X size={12} />
               </button>
             </div>
-            <div className="absolute bottom-1 left-1 rounded bg-surface-base/80 px-1.5 py-0.5 font-mono text-xs text-text-muted backdrop-blur">
+            <div className="absolute bottom-1 left-1 rounded bg-[var(--admin-canvas)]/80 px-1.5 py-0.5 font-mono text-xs text-[var(--admin-text-tertiary)] backdrop-blur">
               {index + 1}
             </div>
           </div>
@@ -181,24 +181,24 @@ export function ImageManager({
             className={cn(
               'flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed transition-colors',
               isPending
-                ? 'cursor-not-allowed border-surface-overlay opacity-50'
-                : 'cursor-pointer border-surface-overlay hover:border-text-muted'
+                ? 'cursor-not-allowed border-white/[0.08] opacity-50'
+                : 'cursor-pointer border-white/[0.08] hover:border-text-muted'
             )}
           >
             {isPending ? (
               <>
-                <Loader2 size={20} className="animate-spin text-accent" />
-                <p className="font-body text-xs text-text-secondary">
-                  Uploading...
+                <Loader2 size={20} className="animate-spin text-[var(--admin-cyan)]" />
+                <p className="font-body text-xs text-[var(--admin-text-secondary)]">
+                  Envoi en cours…
                 </p>
               </>
             ) : (
               <>
-                <Upload size={20} className="text-text-muted" />
-                <p className="font-body text-xs text-text-secondary">
-                  Add images
+                <Upload size={20} className="text-[var(--admin-text-tertiary)]" />
+                <p className="font-body text-xs text-[var(--admin-text-secondary)]">
+                  Ajouter des photos
                 </p>
-                <p className="font-mono text-xs text-text-muted">
+                <p className="font-mono text-xs text-[var(--admin-text-tertiary)]">
                   {value.length}/{maxImages}
                 </p>
               </>

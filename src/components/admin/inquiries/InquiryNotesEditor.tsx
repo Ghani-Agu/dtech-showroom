@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { Textarea } from '@/components/admin/ui/Textarea'
@@ -32,7 +32,7 @@ export function InquiryNotesEditor({
         if (result.ok) {
           setLastSaved(notes)
         } else {
-          toast.error('Failed to save notes')
+          toast.error('Échec de l’enregistrement des notes')
         }
       })
     }, 2500)
@@ -52,9 +52,9 @@ export function InquiryNotesEditor({
       const result = await updateInquiryNotes(inquiryId, notes)
       if (result.ok) {
         setLastSaved(notes)
-        toast.success('Notes saved')
+        toast.success('Notes enregistrées')
       } else {
-        toast.error('Failed to save notes')
+        toast.error('Échec de l’enregistrement des notes')
       }
     })
   }
@@ -68,20 +68,20 @@ export function InquiryNotesEditor({
         onChange={(e) => setNotes(e.target.value)}
         onBlur={handleBlur}
         rows={6}
-        placeholder="Add internal notes — visible only to the team..."
+        placeholder="Ajouter des notes internes — visibles uniquement par l'équipe…"
         maxLength={5000}
       />
       <div className="flex items-center justify-between">
-        <p className="font-mono text-xs text-text-muted">
+        <p className="font-mono text-xs text-[var(--admin-text-tertiary)]">
           {notes.length} / 5000
         </p>
-        <p className="font-mono text-xs text-text-muted">
+        <p className="font-mono text-xs text-[var(--admin-text-tertiary)]">
           {isPending
-            ? 'Saving...'
+            ? 'Enregistrement…'
             : isDirty
-              ? 'Unsaved changes'
+              ? 'Modifications non enregistrées'
               : initialNotes || lastSaved
-                ? 'Saved'
+                ? 'Enregistré'
                 : ''}
         </p>
       </div>

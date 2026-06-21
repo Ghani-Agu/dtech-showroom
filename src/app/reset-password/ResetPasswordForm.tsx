@@ -22,11 +22,11 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     setError(null)
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
+      setError('Le mot de passe doit contenir au moins 8 caractères.')
       return
     }
     if (password !== confirm) {
-      setError('Passwords do not match.')
+      setError('Les mots de passe ne correspondent pas.')
       return
     }
 
@@ -40,7 +40,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     if (result.error) {
       setError(
         result.error.message ??
-          'Reset failed. The link may be expired or already used.'
+          'Échec de la réinitialisation. Le lien a peut-être expiré ou déjà été utilisé.'
       )
       setIsPending(false)
       return
@@ -55,7 +55,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     return (
       <div className="space-y-6 text-center">
         <p className="font-body text-lg text-text-secondary">
-          Password updated. Redirecting to sign in…
+          Mot de passe mis à jour. Redirection vers la connexion…
         </p>
       </div>
     )
@@ -68,7 +68,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           htmlFor="password"
           className="block font-body text-sm font-medium text-text-secondary"
         >
-          New password
+          Nouveau mot de passe
         </label>
         <input
           type="password"
@@ -88,7 +88,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           htmlFor="confirm"
           className="block font-body text-sm font-medium text-text-secondary"
         >
-          Confirm new password
+          Confirmer le nouveau mot de passe
         </label>
         <input
           type="password"
@@ -114,7 +114,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         disabled={isPending}
         className="w-full rounded-md bg-surface-elevated px-6 py-3 font-body text-base font-medium text-text-primary transition hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isPending ? 'Setting password…' : 'Set new password →'}
+        {isPending ? 'Enregistrement…' : 'Définir le mot de passe →'}
       </button>
 
       <div className="pt-2 text-center">
@@ -122,7 +122,7 @@ export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           href="/login"
           className="font-body text-sm text-text-muted underline decoration-text-muted underline-offset-2 hover:text-text-secondary hover:decoration-accent"
         >
-          ← Back to sign in
+          ← Retour à la connexion
         </Link>
       </div>
     </form>

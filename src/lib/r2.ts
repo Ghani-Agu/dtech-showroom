@@ -19,12 +19,8 @@ if (
   !bucketName ||
   !publicUrl
 ) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('Missing required R2 environment variables')
-  }
-  console.warn(
-    '[r2] Missing R2 env vars — uploads will fail until configured'
-  )
+  // R2 is optional: when unset, admin uploads are stored in Postgres
+  // (image_blobs) and served via /api/images. No warning needed.
 }
 
 export const r2Client = new S3Client({
@@ -38,6 +34,9 @@ export const r2Client = new S3Client({
   },
 })
 
+export const R2_CONFIGURED = Boolean(
+  accountId && accessKeyId && secretAccessKey && bucketName && publicUrl
+)
 export const R2_BUCKET = bucketName ?? ''
 export const R2_PUBLIC_BASE = publicUrl ?? ''
 

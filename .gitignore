@@ -43,3 +43,13 @@ next-env.d.ts
 
 # claude code agent state
 .claude/
+
+# sandbox / round-trip scratch dirs (used by the workspace agent)
+/.build-sandbox/
+/.build-fresh/
+/.design-handoff/
+
+# user uploads not meant for the repo
+/Photos/
+/Dtech*.zip
+

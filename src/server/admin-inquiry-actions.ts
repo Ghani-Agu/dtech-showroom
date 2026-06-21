@@ -7,10 +7,12 @@ import { z } from 'zod'
 import { db } from '@/db/client'
 import { inquiries, inquiryStatusHistory } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { requireSection } from '@/lib/auth-helpers'
 
 const inquiryStatusSchema = z.enum(['new', 'contacted', 'closed', 'spam'])
 
 async function getSessionUser() {
+  await requireSection('inquiries')
   const session = await auth.api
     .getSession({ headers: await headers() })
     .catch(() => null)

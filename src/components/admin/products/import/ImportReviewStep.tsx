@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -65,12 +65,12 @@ export function ImportReviewStep({
       if (!result.ok) {
         toast.error(
           result.errors[0]?.message ??
-            'Import failed. No products were created.'
+            'Échec de l\'importation. Aucun produit n\'a été créé.'
         )
         return
       }
 
-      toast.success(`Imported ${result.inserted} products successfully.`)
+      toast.success(`${result.inserted} produits importés avec succès.`)
       onComplete()
       router.refresh()
       router.push('/admin/products')
@@ -80,60 +80,61 @@ export function ImportReviewStep({
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Step 3 of 3
+        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+          Étape 3 sur 3
         </p>
-        <h2 className="font-display text-xl tracking-tight text-text-primary">
-          Review and import
+        <h2 className="font-display text-xl tracking-tight text-white">
+          Vérifier et importer
         </h2>
-        <p className="mt-2 font-body text-sm text-text-secondary">
-          File: <span className="font-mono">{parsed.fileName}</span>
+        <p className="mt-2 font-body text-sm text-[var(--admin-text-secondary)]">
+          Fichier : <span className="font-mono">{parsed.fileName}</span>
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Stat label="Total rows" value={summary.total} />
+        <Stat label="Lignes au total" value={summary.total} />
         <Stat
-          label="Valid"
+          label="Valides"
           value={summary.valid}
           hint={
-            summary.valid === summary.total ? 'All rows pass' : undefined
+            summary.valid === summary.total ? 'Toutes les lignes sont bonnes' : undefined
           }
         />
         <Stat
-          label="Errors"
+          label="Erreurs"
           value={summary.invalid}
-          hint={summary.invalid > 0 ? 'Fix CSV and re-upload' : 'Clean'}
+          hint={summary.invalid > 0 ? 'Corrigez le CSV et renvoyez-le' : 'Aucune'}
         />
       </div>
 
       {summary.invalid > 0 && (
-        <div className="rounded-md border border-semantic-error/30 bg-semantic-error/10 px-4 py-3">
-          <p className="font-body text-sm text-semantic-error">
+        <div className="rounded-md border border-rose-500/30/30 bg-rose-500/10 px-4 py-3">
+          <p className="font-body text-sm text-rose-300">
             <AlertCircle size={14} className="-mt-0.5 mr-1 inline" />
-            {summary.invalid} row{summary.invalid > 1 ? 's' : ''} have
-            validation errors. Fix them in your file and re-upload.
-            Nothing will be imported until all rows are valid.
+            {summary.invalid} ligne{summary.invalid > 1 ? 's' : ''} avec des
+            erreurs de validation. Corrigez-les dans votre fichier puis
+            renvoyez-le. Rien ne sera importé tant que toutes les lignes ne
+            sont pas valides.
           </p>
         </div>
       )}
 
       {summary.valid > 0 && summary.invalid === 0 && (
-        <div className="rounded-md border border-semantic-success/30 bg-semantic-success/10 px-4 py-3">
-          <p className="font-body text-sm text-semantic-success">
+        <div className="rounded-md border border-semantic-success/30 bg-emerald-500/10 px-4 py-3">
+          <p className="font-body text-sm text-emerald-300">
             <CheckCircle2 size={14} className="-mt-0.5 mr-1 inline" />
-            All {summary.valid} rows are valid. Ready to import.
+            Les {summary.valid} lignes sont toutes valides. Prêt à importer.
           </p>
         </div>
       )}
 
       <div className="max-h-[500px] space-y-2 overflow-y-auto">
-        <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
-          Row-by-row
+        <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+          Ligne par ligne
         </p>
         {validations.map((v) => {
-          const slug = v.mapped?.slug ?? '(no slug)'
-          const name = v.mapped?.name ?? '(no name)'
+          const slug = v.mapped?.slug ?? '(sans slug)'
+          const name = v.mapped?.name ?? '(sans nom)'
           const hasErrors = v.errors.length > 0
 
           return (
@@ -141,26 +142,26 @@ export function ImportReviewStep({
               key={v.rowIndex}
               className={
                 hasErrors
-                  ? 'rounded-md border border-semantic-error/20 bg-semantic-error/5 px-4 py-3'
-                  : 'rounded-md bg-surface-elevated px-4 py-3'
+                  ? 'rounded-md border border-rose-500/30/20 bg-rose-500/5 px-4 py-3'
+                  : 'rounded-md bg-white/[0.04] px-4 py-3'
               }
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-text-muted">
-                      Row {v.rowIndex + 1}
+                    <span className="font-mono text-xs text-[var(--admin-text-tertiary)]">
+                      Ligne {v.rowIndex + 1}
                     </span>
                     <Badge variant={hasErrors ? 'error' : 'success'}>
                       {hasErrors
-                        ? `${v.errors.length} error${v.errors.length > 1 ? 's' : ''}`
+                        ? `${v.errors.length} erreur${v.errors.length > 1 ? 's' : ''}`
                         : 'OK'}
                     </Badge>
                   </div>
-                  <p className="mt-1 truncate font-body text-sm text-text-primary">
+                  <p className="mt-1 truncate font-body text-sm text-white">
                     {name}
                   </p>
-                  <p className="mt-0.5 truncate font-mono text-xs text-text-muted">
+                  <p className="mt-0.5 truncate font-mono text-xs text-[var(--admin-text-tertiary)]">
                     /{slug}
                   </p>
                 </div>
@@ -170,7 +171,7 @@ export function ImportReviewStep({
                   {v.errors.map((err, i) => (
                     <li
                       key={i}
-                      className="font-body text-xs text-semantic-error"
+                      className="font-body text-xs text-rose-300"
                     >
                       {err.field && (
                         <span className="font-mono">{err.field}: </span>
@@ -185,10 +186,10 @@ export function ImportReviewStep({
         })}
       </div>
 
-      <div className="flex items-center justify-between border-t border-surface-overlay pt-4">
+      <div className="flex items-center justify-between border-t border-white/[0.08] pt-4">
         <Button variant="ghost" onClick={onBack} disabled={isPending}>
           <ArrowLeft size={14} />
-          Back to mapping
+          Retour aux colonnes
         </Button>
         <Button
           variant="primary"
@@ -196,7 +197,7 @@ export function ImportReviewStep({
           disabled={!canImport}
           loading={isPending}
         >
-          Import {summary.valid} product
+          Importer {summary.valid} produit
           {summary.valid !== 1 ? 's' : ''}
         </Button>
       </div>

@@ -23,73 +23,93 @@ import {
   type SVGProps,
 } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { Link, usePathname, useRouter } from '@/i18n/routing'
-import { locales, type Locale } from '@/i18n/config'
+import { Link } from '@/i18n/routing'
 import './home-showcase.css'
 
-import {
-  BRANDS,
-  CATEGORIES,
-  COUNT_BY_CAT,
-  PRODUCTS,
-  type DeviceKind,
-  type IconKind,
-  type ProductDef,
-} from './nightline-data'
+import Image from 'next/image'
+import { useCart } from '@/lib/cart'
+import { CartDrawer } from '@/components/showroom/CartDrawer'
+import { seededRating } from '@/lib/reviews'
+import { Stars } from '@/components/showroom/Stars'
+import { Carousel } from '@/components/showroom/Carousel'
+import { SiteNav, Logo } from '@/components/showroom/SiteNav'
 
-type Theme = 'dark' | 'light'
+export type IconKind =
+  | 'desktop'
+  | 'laptop'
+  | 'aio'
+  | 'tablet'
+  | 'phone'
+  | 'print'
+  | 'network'
+  | 'parts'
+  | 'gaming'
 
-/** product id → quantity, persisted in localStorage */
-type Quote = Record<string, number>
-
-function parsePrice(p: string): number {
-  return parseInt(p.replace(/\s/g, ''), 10) || 0
+/** Lightweight catalogue rows the server page passes down. */
+export interface HomeProduct {
+  slug: string
+  name: string
+  brandName: string
+  categorySlug: string
+  categoryName: string
+  cardSpec: string
+  cardImagePath: string
+  featured: boolean
 }
 
-export function HomeShowcase() {
-  const [activeCat, setActiveCat] = useState<IconKind | 'all'>('all')
-  const [theme, setTheme] = useState<Theme>('dark')
-  const [quote, setQuote] = useState<Quote>({})
-  const [quoteOpen, setQuoteOpen] = useState(false)
+export interface HomeCategory {
+  slug: string
+  name: string
+  count: number
+  icon: IconKind
+}
+
+export interface HomeBrand {
+  slug: string
+  name: string
+  count: number
+}
+
+import type { HeroConfig } from './hero-config'
+import { EditProvider, Editable, EditableLink, SectionList, type EditData } from '@/components/site-edit/edit-context'
+
+export function HomeShowcase({
+  products,
+  categories,
+  brands,
+  heroConfig = null,
+  content = {},
+}: {
+  products: HomeProduct[]
+  categories: HomeCategory[]
+  brands: HomeBrand[]
+  heroConfig?: HeroConfig | null
+  content?: Partial<EditData>
+}) {
+  const [activeCat, setActiveCat] = useState<string | 'all'>('all')
+
+  // Slides for the image-slider hero. Curated via the admin "featured" flag:
+  // featured products lead; otherwise fall back to the first products in stock.
+  const heroSource = (() => {
+    const feat = products.filter((p) => p.featured && p.cardImagePath)
+    const pool = feat.length >= 2 ? feat : products.filter((p) => p.cardImagePath)
+    return pool.slice(0, 6)
+  })()
+  const fallbackSlides = heroSource.map((p) => ({ src: p.cardImagePath, alt: p.name }))
+  const heroSlides =
+    heroConfig?.slides && heroConfig.slides.length > 0
+      ? heroConfig.slides
+      : fallbackSlides
 
   useEffect(() => {
     document.body.dataset.homeChrome = 'showcase'
-    if (window.localStorage.getItem('nl-theme') === 'light') setTheme('light')
-    try {
-      const saved = window.localStorage.getItem('nl-quote')
-      if (saved) setQuote(JSON.parse(saved) as Quote)
-    } catch {
-      /* corrupted storage — start fresh */
-    }
     return () => {
       delete document.body.dataset.homeChrome
-      delete document.body.dataset.homeTheme
     }
   }, [])
 
-  useEffect(() => {
-    window.localStorage.setItem('nl-quote', JSON.stringify(quote))
-  }, [quote])
-
-  const quoteCount = Object.values(quote).reduce((a, b) => a + b, 0)
-  const addToQuote = (id: string) => {
-    setQuote((q) => ({ ...q, [id]: (q[id] || 0) + 1 }))
-  }
-  const setQty = (id: string, qty: number) => {
-    setQuote((q) => {
-      const next = { ...q }
-      if (qty <= 0) delete next[id]
-      else next[id] = qty
-      return next
-    })
-  }
-
-  useEffect(() => {
-    document.body.dataset.homeTheme = theme
-    window.localStorage.setItem('nl-theme', theme)
-  }, [theme])
-
   return (
+    <EditProvider initial={content}>
     <div className="home-showcase-root">
       <div className="bg-ambient" />
       <div className="bg-grid" />
@@ -97,34 +117,43 @@ export function HomeShowcase() {
       <div className="bg-orb b" />
       <div className="bg-orb c" />
 
-      <Nav
-        theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-        quoteCount={quoteCount}
-        onOpenQuote={() => setQuoteOpen(true)}
-      />
+      <SiteNav variant="home" />
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
-        <Hero />
-        <CategoriesSection onSelect={setActiveCat} />
-        <BrandsSection />
-        <CatalogSection
-          activeCat={activeCat}
-          setActiveCat={setActiveCat}
-          onAdd={addToQuote}
+        <SectionList
+          defaultOrder={['hero', 'categories', 'catalog', 'brands', 'about', 'contact']}
+          nodes={{
+            hero:
+              heroSlides.length > 0 ? (
+                <HeroSlider
+                  productCount={products.length}
+                  brandCount={brands.length}
+                  slides={heroSlides}
+                  config={heroConfig}
+                />
+              ) : (
+                <Hero productCount={products.length} brandCount={brands.length} />
+              ),
+            categories: <CategoriesSection categories={categories} />,
+            catalog: (
+              <CatalogSection
+                activeCat={activeCat}
+                setActiveCat={setActiveCat}
+                products={products}
+                categories={categories}
+                brandCount={brands.length}
+              />
+            ),
+            brands: <BrandsSection brands={brands} />,
+            about: <AboutSection productCount={products.length} brandCount={brands.length} />,
+            contact: <ContactSection />,
+          }}
         />
-        <AboutSection />
-        <ContactSection />
       </div>
       <Footer onSelectCat={setActiveCat} />
-      <QuoteDrawer
-        open={quoteOpen}
-        onClose={() => setQuoteOpen(false)}
-        quote={quote}
-        setQty={setQty}
-        onClear={() => setQuote({})}
-      />
+      <CartDrawer />
     </div>
+    </EditProvider>
   )
 }
 
@@ -217,150 +246,125 @@ function Counter({
 }
 
 /* ─────────────────────────────────────────────────────────────────
- * Logo + Nav
- * ──────────────────────────────────────────────────────────────── */
-
-function Logo() {
-  const t = useTranslations('showcase.logo')
-  return (
-    <a href="#top" className="wordmark">
-      <span className="logo">D</span>
-      <span className="name">
-        D-Tech<span className="dot">.</span>
-        <small>{t('tagline')}</small>
-      </span>
-    </a>
-  )
-}
-
-function NavLocaleSwitcher() {
-  const t = useTranslations('showcase.nav')
-  const locale = useLocale() as Locale
-  const router = useRouter()
-  const pathname = usePathname()
-
-  return (
-    <span className="lang-switch" role="group" aria-label={t('langAria')}>
-      {/* FR first to match the design (config order is en-first) */}
-      {[...locales].sort((a, b) => (a === 'fr' ? -1 : b === 'fr' ? 1 : 0)).map((l) => (
-        <button
-          key={l}
-          type="button"
-          className={`lang-opt ${l === locale ? 'on' : ''}`}
-          onClick={() => {
-            if (l !== locale) router.replace(pathname, { locale: l })
-          }}
-          aria-current={l === locale ? 'true' : undefined}
-        >
-          {l.toUpperCase()}
-        </button>
-      ))}
-    </span>
-  )
-}
-
-function Nav({
-  theme,
-  onToggleTheme,
-  quoteCount,
-  onOpenQuote,
-}: {
-  theme: Theme
-  onToggleTheme: () => void
-  quoteCount: number
-  onOpenQuote: () => void
-}) {
-  const t = useTranslations('showcase.nav')
-  const router = useRouter()
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  return (
-    <header className={scrolled ? 'shrink' : ''}>
-      <div className="wrap hdr">
-        <Logo />
-        <nav className="primary">
-          <a href="#categories" className="on">{t('catalogue')}</a>
-          <a href="#brands">{t('brands')}</a>
-          <a href="#products">{t('products')}</a>
-          <a href="#about" data-h="">{t('about')}</a>
-          <a href="#contact" data-h="">{t('contact')}</a>
-        </nav>
-        <div className="hdr-right">
-          <NavLocaleSwitcher />
-          <button
-            className="icn theme-toggle"
-            aria-label={t('themeAria')}
-            title={t('themeAria')}
-            aria-pressed={theme === 'light'}
-            type="button"
-            onClick={onToggleTheme}
-          >
-            {theme === 'dark' ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-              </svg>
-            ) : (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-              </svg>
-            )}
-          </button>
-          <button
-            className="icn icn-mq"
-            aria-label={t('searchAria')}
-            type="button"
-            onClick={() => router.push('/search')}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-          </button>
-          {/* /login lives outside the locale tree — plain anchor */}
-          <a className="icn icn-mq" aria-label={t('accountAria')} href="/login">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
-            </svg>
-          </a>
-          <button
-            className="icn"
-            aria-label={t('cartAria')}
-            type="button"
-            onClick={onOpenQuote}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path d="M5 7h14l-1.4 11a2 2 0 01-2 1.8H8.4a2 2 0 01-2-1.8L5 7zM9 7V5a3 3 0 016 0v2" />
-            </svg>
-            {quoteCount > 0 && <span className="dot" />}
-            {quoteCount > 0 && <span className="cart-count">{quoteCount}</span>}
-          </button>
-          <a className="btn btn-primary btn-explore" href="#products">
-            <span className="shimmer" />
-            {t('explore')}
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M5 12h14M13 5l7 7-7 7" />
-            </svg>
-          </a>
-        </div>
-      </div>
-    </header>
-  )
-}
-
-/* ─────────────────────────────────────────────────────────────────
  * Hero — 3D floating glass-card stack
  * ──────────────────────────────────────────────────────────────── */
 
-function Hero() {
+function HeroSlider({
+  productCount,
+  brandCount,
+  slides,
+  config,
+}: {
+  productCount: number
+  brandCount: number
+  slides: { src: string; alt: string }[]
+  config?: HeroConfig | null
+}) {
+  const t = useTranslations('showcase.hero')
+  const [idx, setIdx] = useState(0)
+  const real = slides.length > 0 ? slides : [{ src: '', alt: '' }]
+  useEffect(() => {
+    if (real.length <= 1) return
+    const id = setInterval(() => setIdx((v) => (v + 1) % real.length), 4500)
+    return () => clearInterval(id)
+  }, [real.length])
+
+  const title1 = config?.title1 ?? t('title1')
+  const title2 = config?.title2 ?? t('title2')
+  const primaryLabel = config?.primaryLabel ?? t('ctaCatalog')
+  const primaryHref = config?.primaryHref ?? '#products'
+  const secondaryLabel = config?.secondaryLabel ?? t('ctaStory')
+  const secondaryHref = config?.secondaryHref ?? '#about'
+
+  return (
+    <section className="hero" id="top">
+      <div className="wrap hero-grid">
+        <div className="hero-text">
+          <span className="kicker" style={{ marginBottom: 24 }}>
+            {config?.kicker ?? t('kicker')}
+          </span>
+          <h1 className="h-mega">
+            {title1}
+            <br />
+            <span className="serif-i" style={{ color: 'var(--cyan)' }}>
+              {title2}
+            </span>
+          </h1>
+          <p className="sub">
+            {config?.subtitle
+              ? config.subtitle
+              : t.rich('sub', {
+                  count: productCount,
+                  strong: (chunks: ReactNode) => (
+                    <strong style={{ color: 'var(--text)' }}>{chunks}</strong>
+                  ),
+                })}
+          </p>
+          <div className="cta">
+            <a className="btn btn-primary btn-lg" href={primaryHref}>
+              <span className="shimmer" />
+              {primaryLabel}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </a>
+            <a className="btn btn-ghost btn-lg" href={secondaryHref}>
+              {secondaryLabel}
+            </a>
+          </div>
+
+          <div className="hero-stats">
+            <div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: years in business}}'}</span></div>
+              <div className="l">{t('stats.presence')}</div>
+            </div>
+            <div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: brand count}}'}</span></div>
+              <div className="l">{t('stats.partners')}</div>
+            </div>
+            <div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: wilaya coverage}}'}</span></div>
+              <div className="l">{t('stats.wilayas')}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-slider" aria-roledescription="carousel">
+          {real.map((sl, i) => (
+            <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
+              {sl.src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={sl.src} alt={sl.alt} loading={i === 0 ? 'eager' : 'lazy'} />
+              ) : null}
+            </div>
+          ))}
+          <div className="hero-slider-veil" />
+          {real.length > 1 && (
+            <div className="hero-slider-dots">
+              {real.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={i === idx ? 'is-active' : ''}
+                  onClick={() => setIdx(i)}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Hero({
+  productCount,
+  brandCount,
+}: {
+  productCount: number
+  brandCount: number
+}) {
   const t = useTranslations('showcase.hero')
   const stageRef = useRef<HTMLDivElement | null>(null)
   const stackRef = useRef<HTMLDivElement | null>(null)
@@ -443,7 +447,7 @@ function Hero() {
           </h1>
           <p className="sub">
             {t.rich('sub', {
-              count: PRODUCTS.length,
+              count: productCount,
               strong: (chunks: ReactNode) => (
                 <strong style={{ color: 'var(--text)' }}>{chunks}</strong>
               ),
@@ -464,24 +468,15 @@ function Hero() {
 
           <div className="hero-stats">
             <div>
-              <div className="v">
-                <Counter to={20} suffix="+" />
-                <span className="accent"> {t('stats.yearsSuffix')}</span>
-              </div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: years in business}}'}</span></div>
               <div className="l">{t('stats.presence')}</div>
             </div>
             <div>
-              <div className="v">
-                <Counter to={BRANDS.length} />
-                <span className="accent"> {t('stats.brandsSuffix')}</span>
-              </div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: brand count}}'}</span></div>
               <div className="l">{t('stats.partners')}</div>
             </div>
             <div>
-              <div className="v">
-                <Counter to={58} />
-                <span className="accent"> {t('stats.wilayasSuffix')}</span>
-              </div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: wilaya coverage}}'}</span></div>
               <div className="l">{t('stats.wilayas')}</div>
             </div>
           </div>
@@ -746,7 +741,7 @@ function Hero() {
 
           <span className="float-chip fc-1">
             <span className="dot" />
-            {t('chips.brands', { count: BRANDS.length })}
+            {t('chips.brands', { count: brandCount })}
           </span>
           <span className="float-chip fc-2">
             <span className="dot steel" />
@@ -858,54 +853,60 @@ function CatIcon({ kind, size = 26 }: { kind: IconKind; size?: number }) {
  * Categories section
  * ──────────────────────────────────────────────────────────────── */
 
-function CategoriesSection({ onSelect }: { onSelect: (cat: IconKind) => void }) {
+function CategoriesSection({ categories }: { categories: HomeCategory[] }) {
   const t = useTranslations('showcase.categories')
+  const tCar = useTranslations('showcase.catalog')
   const ref = useFade<HTMLDivElement>()
   return (
     <section id="categories" className="sec">
       <div ref={ref} className="wrap fade">
         <div className="sec-head">
           <div>
-            <span className="kicker" style={{ marginBottom: 12 }}>
-              {t('kicker', { count: CATEGORIES.length })}
-            </span>
+            <Editable as="span" id="home.categories.kicker" className="kicker" style={{ marginBottom: 12 }} label="Sur-titre — Catégories">
+              {t('kicker', { count: categories.length })}
+            </Editable>
             <h2 className="h-big">
-              {t('title1')}
+              <Editable id="home.categories.title1" label="Titre — Catégories">{t('title1')}</Editable>
               <br />
               <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-                {t('title2')}
+                <Editable id="home.categories.title2" label="Titre (accent) — Catégories">{t('title2')}</Editable>
               </span>
             </h2>
-            <p className="sub">{t('sub')}</p>
+            <p className="sub"><Editable id="home.categories.sub" label="Sous-titre — Catégories">{t('sub')}</Editable></p>
           </div>
+          <EditableLink
+            id="home.categories.viewAll"
+            label={t('viewAll')}
+            href="/categories"
+            className="btn btn-ghost btn-sm"
+            editLabel="Bouton — Voir catégories"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </EditableLink>
         </div>
 
-        <div className="cat-grid">
-          {CATEGORIES.map((c, i) => (
-            <a
-              key={c.id}
-              href="#products"
+        <div className="cat-lane">
+          <Carousel variant="chips" prevLabel={tCar('prevAria')} nextLabel={tCar('nextAria')}>
+          {categories.map((c, i) => (
+            <Link
+              key={c.slug}
+              href={`/categories/${c.slug}`}
               className="cat"
               style={{ animationDelay: `${i * 60}ms` }}
-              onClick={(e) => {
-                e.preventDefault()
-                onSelect(c.id)
-                document
-                  .getElementById('products')
-                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }}
             >
               <div className="ix">
                 {String(i + 1).padStart(2, '0')} /{' '}
-                {String(CATEGORIES.length).padStart(2, '0')}
+                {String(categories.length).padStart(2, '0')}
               </div>
               <div className="ic">
                 <CatIcon kind={c.icon} size={26} />
               </div>
               <div style={{ marginTop: 'auto' }}>
-                <div className="name">{t(`items.${c.id}`)}</div>
+                <div className="name">{c.name}</div>
                 <div className="count">
-                  {t('countLabel', { count: COUNT_BY_CAT[c.id] || 0 })}
+                  {t('countLabel', { count: c.count })}
                 </div>
               </div>
               <span className="arr">
@@ -913,8 +914,9 @@ function CategoriesSection({ onSelect }: { onSelect: (cat: IconKind) => void }) 
                   <path d="M7 17L17 7M9 7h8v8" />
                 </svg>
               </span>
-            </a>
+            </Link>
           ))}
+          </Carousel>
         </div>
       </div>
     </section>
@@ -925,47 +927,56 @@ function CategoriesSection({ onSelect }: { onSelect: (cat: IconKind) => void }) 
  * Brands section
  * ──────────────────────────────────────────────────────────────── */
 
-function BrandsSection() {
+function BrandsSection({ brands }: { brands: HomeBrand[] }) {
   const t = useTranslations('showcase.brands')
+  const tCat = useTranslations('showcase.categories')
+  const tCar = useTranslations('showcase.catalog')
   const ref = useFade<HTMLDivElement>()
   return (
     <section id="brands" className="sec" style={{ paddingTop: 0 }}>
       <div ref={ref} className="wrap fade">
         <div className="sec-head">
           <div>
-            <span className="kicker" style={{ marginBottom: 12 }}>
+            <Editable as="span" id="home.brands.kicker" className="kicker" style={{ marginBottom: 12 }} label="Sur-titre — Marques">
               {t('kicker')}
-            </span>
+            </Editable>
             <h2 className="h-big">
-              {t('title1', { count: BRANDS.length })}
+              <Editable id="home.brands.title1" label="Titre — Marques">{t('title1', { count: brands.length })}</Editable>
               <br />
               <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-                {t('title2')}
+                <Editable id="home.brands.title2" label="Titre (accent) — Marques">{t('title2')}</Editable>
               </span>
             </h2>
-            <p className="sub">{t('sub')}</p>
+            <p className="sub"><Editable id="home.brands.sub" label="Sous-titre — Marques">{t('sub')}</Editable></p>
           </div>
-          <a className="btn btn-ghost btn-sm" href="#products">
-            {t('cta')}
+          <EditableLink
+            id="home.brands.viewAll"
+            label={t('viewAll')}
+            href="/brands"
+            className="btn btn-ghost btn-sm"
+            editLabel="Bouton — Voir marques"
+          >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
               <path d="M5 12h14M13 5l7 7-7 7" />
             </svg>
-          </a>
+          </EditableLink>
         </div>
 
-        <div className="brand-grid">
-          {BRANDS.map((b, i) => (
-            <a
-              key={b.id}
+        <div className="brand-lane">
+          <Carousel variant="chips" prevLabel={tCar('prevAria')} nextLabel={tCar('nextAria')}>
+          {brands.map((b, i) => (
+            <Link
+              key={b.slug}
               className="brand"
               style={{ animationDelay: `${i * 50}ms` }}
-              href="#products"
+              href={`/brands/${b.slug}`}
             >
               <div className="ix">{String(i + 1).padStart(2, '0')}</div>
               <div className="logo">{b.name}</div>
-              <div className="cats">{t(`items.${b.id}`)}</div>
-            </a>
+              <div className="cats">{tCat('countLabel', { count: b.count })}</div>
+            </Link>
           ))}
+          </Carousel>
         </div>
       </div>
     </section>
@@ -976,379 +987,39 @@ function BrandsSection() {
  * Device illustrations for product cards
  * ──────────────────────────────────────────────────────────────── */
 
-function DeviceArt({ kind }: { kind: DeviceKind }) {
-  switch (kind) {
-    case 'desktop':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="36" y="22" width="80" height="120" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="44" y="32" width="64" height="6" rx="1" fill="#7ce0c3" opacity="0.5" />
-          <rect x="44" y="46" width="40" height="3" rx="1" fill="white" opacity="0.4" />
-          <rect x="44" y="56" width="50" height="3" rx="1" fill="white" opacity="0.3" />
-          <circle cx="106" cy="124" r="3" fill="#7ce0c3" />
-          <rect x="44" y="100" width="64" height="20" rx="2" fill="#7ce0c3" opacity="0.15" />
-          <rect x="124" y="32" width="60" height="100" rx="4" fill="#13151b" stroke="#3a708a" strokeOpacity="0.3" />
-          <rect x="130" y="40" width="48" height="60" rx="2" fill="#0d0e12" />
-          <text x="154" y="74" fill="#7ce0c3" fontFamily="JetBrains Mono" fontSize="6" letterSpacing="1.5" textAnchor="middle">D-TECH</text>
-          <path d="M120 138 H188 L182 152 H126 Z" fill="#262932" />
-          <path d="M30 138 H120 L114 152 H36 Z" fill="#262932" />
-          <ellipse cx="100" cy="170" rx="80" ry="4" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'desktop-mini':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="56" y="60" width="88" height="60" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <circle cx="68" cy="72" r="2" fill="#7ce0c3" />
-          <text x="100" y="96" fill="#7ce0c3" fontFamily="JetBrains Mono" fontSize="9" letterSpacing="2" textAnchor="middle">MINI</text>
-          <rect x="64" y="104" width="72" height="4" rx="2" fill="white" opacity="0.3" />
-          <rect x="56" y="120" width="88" height="2" fill="#0d0e12" />
-          <ellipse cx="100" cy="142" rx="60" ry="3" fill="rgba(124,224,195,0.18)" />
-        </svg>
-      )
-    case 'laptop':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="22" y="46" width="156" height="100" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="30" y="54" width="140" height="84" rx="3" fill="#0d0e12" />
-          <text x="100" y="92" fill="white" fontFamily="Inter" fontSize="13" fontWeight="700" textAnchor="middle">D-Tech</text>
-          <text x="100" y="106" fill="rgba(184,239,220,0.7)" fontFamily="JetBrains Mono" fontSize="7" letterSpacing="1.5" textAnchor="middle">LAPTOP</text>
-          <rect x="62" y="116" width="76" height="14" rx="3" fill="rgba(124,224,195,0.18)" />
-          <path d="M8 146 H192 L182 162 H18 Z" fill="#262932" />
-          <rect x="88" y="146" width="24" height="3" rx="1.5" fill="#0d0e12" />
-          <ellipse cx="100" cy="172" rx="84" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'aio':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="14" y="30" width="172" height="116" rx="8" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="22" y="38" width="156" height="100" rx="4" fill="#0d0e12" />
-          <text x="100" y="78" fill="white" fontFamily="Inter" fontSize="14" fontWeight="700" textAnchor="middle">ThinkCentre</text>
-          <text x="100" y="94" fill="rgba(184,239,220,0.7)" fontFamily="JetBrains Mono" fontSize="7" letterSpacing="1.5" textAnchor="middle">ALL-IN-ONE</text>
-          <rect x="48" y="106" width="104" height="20" rx="3" fill="rgba(124,224,195,0.15)" />
-          <rect x="58" y="113" width="58" height="3" rx="1.5" fill="white" opacity="0.6" />
-          <rect x="58" y="120" width="40" height="3" rx="1.5" fill="white" opacity="0.4" />
-          <rect x="86" y="148" width="28" height="6" rx="3" fill="#262932" />
-          <path d="M70 154 H130 L122 168 H78 Z" fill="#262932" />
-          <ellipse cx="100" cy="180" rx="46" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'tablet':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="48" y="16" width="104" height="168" rx="12" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="56" y="24" width="88" height="152" rx="6" fill="#0d0e12" />
-          <text x="100" y="58" fill="white" fontFamily="Inter" fontSize="14" fontWeight="700" textAnchor="middle">D-Tab</text>
-          <text x="100" y="74" fill="rgba(184,239,220,0.7)" fontFamily="JetBrains Mono" fontSize="8" letterSpacing="1.5" textAnchor="middle">2K · OCTA</text>
-          <rect x="64" y="88" width="72" height="36" rx="4" fill="rgba(124,224,195,0.18)" />
-          <rect x="70" y="98" width="30" height="3" rx="1.5" fill="#7ce0c3" />
-          <rect x="70" y="106" width="44" height="3" rx="1.5" fill="white" opacity="0.5" />
-          <rect x="70" y="114" width="36" height="3" rx="1.5" fill="white" opacity="0.5" />
-          <rect x="64" y="134" width="20" height="20" rx="3" fill="rgba(255,255,255,0.08)" />
-          <rect x="88" y="134" width="20" height="20" rx="3" fill="#7ce0c3" opacity="0.6" />
-          <rect x="112" y="134" width="24" height="20" rx="3" fill="rgba(255,255,255,0.08)" />
-          <ellipse cx="100" cy="194" rx="46" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'phone':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="68" y="12" width="64" height="172" rx="14" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="74" y="18" width="52" height="160" rx="9" fill="#0d0e12" />
-          <rect x="92" y="20" width="16" height="3" rx="1.5" fill="#0d0e12" />
-          <text x="100" y="42" fill="white" fontFamily="Inter" fontSize="11" fontWeight="700" textAnchor="middle">14:32</text>
-          <rect x="80" y="56" width="40" height="22" rx="5" fill="#7ce0c3" opacity="0.85" />
-          <rect x="80" y="84" width="18" height="20" rx="4" fill="rgba(255,255,255,0.08)" />
-          <rect x="102" y="84" width="18" height="20" rx="4" fill="rgba(255,255,255,0.08)" />
-          <rect x="80" y="110" width="40" height="20" rx="4" fill="rgba(124,224,195,0.18)" />
-          <rect x="80" y="136" width="40" height="14" rx="3" fill="rgba(255,255,255,0.06)" />
-          <ellipse cx="100" cy="192" rx="34" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'feature':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="78" y="10" width="44" height="180" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="84" y="16" width="32" height="38" rx="2" fill="#0d0e12" />
-          <text x="100" y="32" fill="#7ce0c3" fontFamily="JetBrains Mono" fontSize="5" letterSpacing="1.5" textAnchor="middle">D-TECH</text>
-          <text x="100" y="46" fill="white" fontFamily="Inter" fontSize="9" fontWeight="700" textAnchor="middle">14:32</text>
-          <circle cx="100" cy="68" r="5" fill="#181b22" />
-          <circle cx="100" cy="68" r="2" fill="#7ce0c3" />
-          <g fill="#181b22">
-            <rect x="84" y="80" width="9" height="8" rx="1.5" />
-            <rect x="95" y="80" width="9" height="8" rx="1.5" />
-            <rect x="106" y="80" width="9" height="8" rx="1.5" />
-            <rect x="84" y="92" width="9" height="8" rx="1.5" />
-            <rect x="95" y="92" width="9" height="8" rx="1.5" />
-            <rect x="106" y="92" width="9" height="8" rx="1.5" />
-            <rect x="84" y="104" width="9" height="8" rx="1.5" />
-            <rect x="95" y="104" width="9" height="8" rx="1.5" />
-            <rect x="106" y="104" width="9" height="8" rx="1.5" />
-            <rect x="84" y="116" width="9" height="8" rx="1.5" />
-            <rect x="95" y="116" width="9" height="8" rx="1.5" />
-            <rect x="106" y="116" width="9" height="8" rx="1.5" />
-          </g>
-          <ellipse cx="100" cy="196" rx="26" ry="2.5" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'printer-laser':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="36" y="56" width="128" height="86" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="44" y="62" width="112" height="22" rx="3" fill="#0d0e12" />
-          <rect x="48" y="68" width="42" height="3" rx="1.5" fill="#7ce0c3" />
-          <rect x="48" y="76" width="28" height="3" rx="1.5" fill="white" opacity="0.4" />
-          <rect x="140" y="70" width="12" height="8" rx="2" fill="rgba(124,224,195,0.5)" />
-          <rect x="56" y="92" width="88" height="36" rx="3" fill="#262932" />
-          <line x1="56" y1="106" x2="144" y2="106" stroke="#0d0e12" strokeWidth="0.8" />
-          <line x1="56" y1="118" x2="144" y2="118" stroke="#0d0e12" strokeWidth="0.8" />
-          <rect x="48" y="38" width="104" height="22" rx="2" fill="rgba(184,239,220,0.06)" stroke="rgba(184,239,220,0.18)" />
-          <ellipse cx="100" cy="158" rx="68" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'printer-ink':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="32" y="64" width="136" height="80" rx="8" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="42" y="72" width="116" height="20" rx="3" fill="#0d0e12" />
-          <text x="100" y="86" fill="#7ce0c3" fontFamily="JetBrains Mono" fontSize="9" letterSpacing="2" textAnchor="middle">D-TECH</text>
-          <rect x="50" y="100" width="100" height="32" rx="3" fill="#13151b" />
-          <g fill="#7ce0c3">
-            <rect x="54" y="106" width="12" height="20" rx="2" opacity="0.85" />
-            <rect x="68" y="106" width="12" height="20" rx="2" opacity="0.6" fill="#FF6B9D" />
-            <rect x="82" y="106" width="12" height="20" rx="2" opacity="0.7" fill="#FFD23F" />
-            <rect x="96" y="106" width="12" height="20" rx="2" opacity="0.85" fill="white" />
-          </g>
-          <rect x="62" y="40" width="76" height="28" rx="2" fill="rgba(184,239,220,0.06)" stroke="rgba(184,239,220,0.18)" />
-          <ellipse cx="100" cy="160" rx="72" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'copier':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="34" y="36" width="132" height="36" rx="4" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="42" y="44" width="116" height="20" rx="2" fill="#0d0e12" />
-          <text x="100" y="58" fill="#7ce0c3" fontFamily="JetBrains Mono" fontSize="9" letterSpacing="2" textAnchor="middle">imageRUNNER</text>
-          <rect x="40" y="76" width="120" height="60" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="48" y="84" width="50" height="20" rx="3" fill="#0d0e12" />
-          <rect x="54" y="92" width="36" height="3" rx="1.5" fill="white" opacity="0.4" />
-          <rect x="54" y="100" width="24" height="3" rx="1.5" fill="white" opacity="0.4" />
-          <rect x="108" y="84" width="44" height="20" rx="3" fill="#7ce0c3" opacity="0.85" />
-          <rect x="48" y="112" width="104" height="20" rx="3" fill="#262932" />
-          <line x1="48" y1="122" x2="152" y2="122" stroke="#0d0e12" />
-          <rect x="58" y="140" width="84" height="20" rx="2" fill="rgba(184,239,220,0.08)" />
-          <ellipse cx="100" cy="174" rx="78" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'scanner':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="32" y="76" width="136" height="56" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="40" y="82" width="120" height="38" rx="3" fill="#0d0e12" />
-          <line x1="48" y1="100" x2="152" y2="100" stroke="#7ce0c3" strokeWidth="2" strokeDasharray="3 3" opacity="0.7" />
-          <rect x="32" y="64" width="136" height="14" rx="2" fill="#262932" />
-          <ellipse cx="100" cy="148" rx="76" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'router':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="40" y="92" width="120" height="36" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <line x1="56" y1="62" x2="60" y2="92" stroke="#262932" strokeWidth="3" strokeLinecap="round" />
-          <line x1="80" y1="56" x2="80" y2="92" stroke="#262932" strokeWidth="3" strokeLinecap="round" />
-          <line x1="120" y1="56" x2="120" y2="92" stroke="#262932" strokeWidth="3" strokeLinecap="round" />
-          <line x1="144" y1="62" x2="140" y2="92" stroke="#262932" strokeWidth="3" strokeLinecap="round" />
-          <g fill="#7ce0c3">
-            <circle cx="60" cy="110" r="3" />
-            <circle cx="80" cy="110" r="3" opacity="0.6" />
-            <circle cx="100" cy="110" r="3" />
-            <circle cx="120" cy="110" r="3" opacity="0.6" />
-          </g>
-          <text x="100" y="124" fill="white" fontFamily="Inter" fontSize="8" fontWeight="700" textAnchor="middle">TP-LINK</text>
-          <ellipse cx="100" cy="142" rx="70" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'mesh':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <ellipse cx="60" cy="148" rx="22" ry="10" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <ellipse cx="60" cy="138" rx="22" ry="10" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.4" />
-          <ellipse cx="100" cy="120" rx="26" ry="12" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.5" />
-          <ellipse cx="100" cy="108" rx="26" ry="12" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.6" />
-          <ellipse cx="140" cy="148" rx="22" ry="10" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <ellipse cx="140" cy="138" rx="22" ry="10" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.4" />
-          <circle cx="60" cy="138" r="2.5" fill="#7ce0c3" />
-          <circle cx="100" cy="108" r="2.5" fill="#7ce0c3" />
-          <circle cx="140" cy="138" r="2.5" fill="#7ce0c3" />
-          <path d="M68 130 Q80 116 100 110" stroke="#7ce0c3" strokeWidth="1" strokeDasharray="2 3" fill="none" opacity="0.6" />
-          <path d="M132 130 Q120 116 100 110" stroke="#7ce0c3" strokeWidth="1" strokeDasharray="2 3" fill="none" opacity="0.6" />
-          <text x="100" y="180" fill="rgba(184,239,220,0.7)" fontFamily="JetBrains Mono" fontSize="9" letterSpacing="2" textAnchor="middle">DECO</text>
-        </svg>
-      )
-    case 'switch':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="20" y="80" width="160" height="44" rx="4" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <g fill="#0d0e12" stroke="#262932">
-            <rect x="32" y="92" width="14" height="14" rx="1.5" />
-            <rect x="50" y="92" width="14" height="14" rx="1.5" />
-            <rect x="68" y="92" width="14" height="14" rx="1.5" />
-            <rect x="86" y="92" width="14" height="14" rx="1.5" />
-            <rect x="106" y="92" width="14" height="14" rx="1.5" />
-            <rect x="124" y="92" width="14" height="14" rx="1.5" />
-            <rect x="142" y="92" width="14" height="14" rx="1.5" />
-            <rect x="160" y="92" width="12" height="14" rx="1.5" />
-          </g>
-          <g fill="#7ce0c3">
-            <circle cx="32" cy="116" r="1.5" />
-            <circle cx="50" cy="116" r="1.5" opacity="0.5" />
-            <circle cx="68" cy="116" r="1.5" />
-            <circle cx="86" cy="116" r="1.5" opacity="0.5" />
-          </g>
-          <ellipse cx="100" cy="138" rx="78" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'ap':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <circle cx="100" cy="110" r="50" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <circle cx="100" cy="110" r="36" fill="#13151b" />
-          <circle cx="100" cy="110" r="4" fill="#7ce0c3" />
-          <g stroke="#7ce0c3" strokeOpacity="0.4" fill="none">
-            <circle cx="100" cy="110" r="14" />
-            <circle cx="100" cy="110" r="24" />
-          </g>
-          <text x="100" y="170" fill="rgba(184,239,220,0.7)" fontFamily="JetBrains Mono" fontSize="8" letterSpacing="2" textAnchor="middle">ACCESS POINT</text>
-        </svg>
-      )
-    case 'wifi-usb':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="60" y="86" width="84" height="32" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="30" y="96" width="32" height="12" rx="2" fill="#262932" />
-          <rect x="32" y="98" width="28" height="8" rx="1" fill="#0d0e12" />
-          <rect x="138" y="78" width="14" height="48" rx="2" fill="#262932" />
-          <g stroke="#7ce0c3" strokeOpacity="0.5" fill="none">
-            <path d="M150 70 Q166 80 152 100" />
-            <path d="M154 64 Q172 78 158 102" />
-          </g>
-          <ellipse cx="100" cy="134" rx="60" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'wifi-pci':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="30" y="80" width="120" height="60" rx="3" fill="#13151b" stroke="#262932" />
-          <g fill="#7ce0c3">
-            <rect x="38" y="92" width="10" height="14" rx="1" />
-            <rect x="52" y="92" width="10" height="14" rx="1" opacity="0.7" />
-            <rect x="38" y="112" width="24" height="6" />
-            <rect x="80" y="92" width="24" height="20" rx="2" />
-          </g>
-          <rect x="118" y="92" width="28" height="22" rx="2" fill="#262932" />
-          <line x1="30" y1="140" x2="150" y2="140" stroke="#7ce0c3" strokeWidth="2" />
-          <g stroke="#262932" strokeWidth="2" strokeLinecap="round">
-            <line x1="160" y1="78" x2="170" y2="60" />
-            <line x1="172" y1="86" x2="184" y2="74" />
-          </g>
-          <circle cx="170" cy="60" r="3" fill="#7ce0c3" />
-          <circle cx="184" cy="74" r="3" fill="#7ce0c3" opacity="0.7" />
-        </svg>
-      )
-    case 'psu':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="40" y="60" width="120" height="80" rx="4" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <circle cx="100" cy="100" r="26" fill="#0d0e12" stroke="#262932" />
-          <g stroke="#7ce0c3" strokeWidth="2" strokeLinecap="round">
-            <line x1="100" y1="78" x2="100" y2="100" />
-            <line x1="100" y1="100" x2="118" y2="92" />
-            <line x1="100" y1="100" x2="82" y2="108" />
-            <line x1="100" y1="100" x2="114" y2="118" />
-          </g>
-          <circle cx="100" cy="100" r="3" fill="#7ce0c3" />
-          <text x="56" y="76" fill="#7ce0c3" fontFamily="JetBrains Mono" fontSize="6" letterSpacing="2">TUF GAMING</text>
-          <ellipse cx="100" cy="156" rx="64" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'case':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <rect x="60" y="32" width="80" height="140" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <rect x="68" y="40" width="64" height="100" rx="3" fill="#0d0e12" />
-          <g fill="#7ce0c3">
-            <rect x="76" y="50" width="48" height="6" rx="1" opacity="0.6" />
-            <rect x="76" y="62" width="48" height="6" rx="1" opacity="0.5" fill="#3a708a" />
-            <rect x="76" y="74" width="48" height="6" rx="1" opacity="0.4" fill="#FF6B9D" />
-            <rect x="76" y="88" width="30" height="20" rx="2" opacity="0.85" />
-          </g>
-          <circle cx="124" cy="98" r="6" fill="rgba(124,224,195,0.4)" />
-          <g fill="#262932">
-            <rect x="68" y="146" width="64" height="6" rx="1" />
-            <rect x="68" y="156" width="64" height="6" rx="1" />
-          </g>
-          <ellipse cx="100" cy="184" rx="44" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'headset':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <path d="M50 110 Q50 60 100 60 Q150 60 150 110" stroke="#262932" strokeWidth="4" fill="none" />
-          <path d="M50 110 Q50 60 100 60 Q150 60 150 110" stroke="#7ce0c3" strokeWidth="1.5" fill="none" strokeDasharray="2 3" opacity="0.5" />
-          <rect x="36" y="104" width="22" height="44" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.4" />
-          <rect x="142" y="104" width="22" height="44" rx="6" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.4" />
-          <circle cx="47" cy="126" r="6" fill="#7ce0c3" opacity="0.7" />
-          <circle cx="153" cy="126" r="6" fill="#7ce0c3" opacity="0.7" />
-          <path d="M58 130 Q70 156 92 158" stroke="#262932" strokeWidth="2.5" fill="none" />
-          <ellipse cx="100" cy="180" rx="60" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-    case 'mouse':
-      return (
-        <svg viewBox="0 0 200 200" fill="none">
-          <path d="M 100 50 C 130 50, 144 84, 144 118 C 144 152, 124 168, 100 168 C 76 168, 56 152, 56 118 C 56 84, 70 50, 100 50 Z" fill="#181b22" stroke="#7ce0c3" strokeOpacity="0.3" />
-          <line x1="100" y1="52" x2="100" y2="108" stroke="#262932" />
-          <rect x="96" y="84" width="8" height="16" rx="3" fill="#7ce0c3" opacity="0.85" />
-          <g fill="#7ce0c3">
-            <circle cx="100" cy="120" r="2" />
-            <circle cx="100" cy="130" r="1.5" opacity="0.6" />
-          </g>
-          <ellipse cx="100" cy="180" rx="40" ry="3" fill="rgba(124,224,195,0.2)" />
-        </svg>
-      )
-  }
-}
-
 /* ─────────────────────────────────────────────────────────────────
  * Catalog (filterable + paginated)
  * ──────────────────────────────────────────────────────────────── */
 
-const PER_PAGE = 8
+const PER_PAGE = 12
 
 function CatalogSection({
   activeCat,
   setActiveCat,
-  onAdd,
+  products,
+  categories,
+  brandCount,
 }: {
-  activeCat: IconKind | 'all'
-  setActiveCat: (c: IconKind | 'all') => void
-  onAdd: (id: string) => void
+  activeCat: string | 'all'
+  setActiveCat: (c: string | 'all') => void
+  products: HomeProduct[]
+  categories: HomeCategory[]
+  brandCount: number
 }) {
   const t = useTranslations('showcase.catalog')
-  const tCat = useTranslations('showcase.categories')
   const ref = useFade<HTMLDivElement>()
   const [page, setPage] = useState(1)
 
   const filtered = useMemo(
     () =>
       activeCat === 'all'
-        ? PRODUCTS
-        : PRODUCTS.filter((p) => p.cat === activeCat),
-    [activeCat]
+        ? products
+        : products.filter((p) => p.categorySlug === activeCat),
+    [activeCat, products]
   )
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset pagination when the filter changes
     setPage(1)
   }, [activeCat])
 
@@ -1380,48 +1051,54 @@ function CatalogSection({
       <div ref={ref} className="wrap fade">
         <div className="sec-head">
           <div>
-            <span className="kicker" style={{ marginBottom: 12 }}>
+            <Editable as="span" id="home.catalog.kicker" className="kicker" style={{ marginBottom: 12 }} label="Sur-titre — Catalogue">
               {t('kicker', {
-                products: PRODUCTS.length,
-                categories: CATEGORIES.length,
-                brands: BRANDS.length,
+                products: products.length,
+                categories: categories.length,
+                brands: brandCount,
               })}
-            </span>
+            </Editable>
             <h2 className="h-big">
-              {t('title1')}
+              <Editable id="home.catalog.title1" label="Titre — Catalogue">{t('title1')}</Editable>
               <br />
               <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-                {t('title2')}
+                <Editable id="home.catalog.title2" label="Titre (accent) — Catalogue">{t('title2')}</Editable>
               </span>
             </h2>
-            <p className="sub">{t('sub')}</p>
+            <p className="sub"><Editable id="home.catalog.sub" label="Sous-titre — Catalogue">{t('sub')}</Editable></p>
           </div>
           <span className="kicker mono" style={{ color: 'var(--mute)' }}>
             {t('results', { count: filtered.length })}
           </span>
         </div>
 
-        <div className="cat-filters" style={{ marginBottom: 28 }}>
-          <button
-            type="button"
-            className={`cat-chip ${activeCat === 'all' ? 'on' : ''}`}
-            onClick={() => setActiveCat('all')}
+        <div style={{ marginBottom: 28 }}>
+          <Carousel
+            variant="chips"
+            prevLabel={t('prevAria')}
+            nextLabel={t('nextAria')}
           >
-            {t('all')}
-            <span className="ct">{PRODUCTS.length}</span>
-          </button>
-          {CATEGORIES.map((c) => (
             <button
               type="button"
-              key={c.id}
-              className={`cat-chip ${activeCat === c.id ? 'on' : ''}`}
-              onClick={() => setActiveCat(c.id)}
+              className={`cat-chip ${activeCat === 'all' ? 'on' : ''}`}
+              onClick={() => setActiveCat('all')}
             >
-              <CatIcon kind={c.icon} size={14} />
-              {tCat(`items.${c.id}`)}
-              <span className="ct">{COUNT_BY_CAT[c.id] || 0}</span>
+              {t('all')}
+              <span className="ct">{products.length}</span>
             </button>
-          ))}
+            {categories.map((c) => (
+              <button
+                type="button"
+                key={c.slug}
+                className={`cat-chip ${activeCat === c.slug ? 'on' : ''}`}
+                onClick={() => setActiveCat(c.slug)}
+              >
+                <CatIcon kind={c.icon} size={14} />
+                {c.name}
+                <span className="ct">{c.count}</span>
+              </button>
+            ))}
+          </Carousel>
         </div>
 
         <div className="page-meta">
@@ -1449,10 +1126,9 @@ function CatalogSection({
         <div className="prod-grid" style={{ marginTop: 18 }}>
           {pageItems.map((p, i) => (
             <ProductCard
-              key={p.id}
+              key={p.slug}
               product={p}
-              animationDelay={(i % 8) * 40}
-              onAdd={onAdd}
+              animationDelay={(i % 12) * 40}
             />
           ))}
         </div>
@@ -1511,42 +1187,79 @@ function CatalogSection({
 function ProductCard({
   product,
   animationDelay,
-  onAdd,
 }: {
-  product: ProductDef
+  product: HomeProduct
   animationDelay: number
-  onAdd: (id: string) => void
 }) {
   const t = useTranslations('showcase.catalog')
-  const tCat = useTranslations('showcase.categories')
+  const add = useCart((st) => st.add)
+  const openCart = useCart((st) => st.setOpen)
+  const [added, setAdded] = useState(false)
+  const rating = seededRating(product.slug)
+  const onAdd = () => {
+    add({
+      slug: product.slug,
+      name: product.name,
+      brand: product.brandName,
+      image: product.cardImagePath,
+    })
+    setAdded(true)
+    window.setTimeout(() => {
+      setAdded(false)
+      openCart(true)
+    }, 650)
+  }
   return (
-    <article className="prod" style={{ animationDelay: `${animationDelay}ms` }}>
+    <article
+      className="prod"
+      style={{ animationDelay: `${animationDelay}ms`, position: 'relative' }}
+    >
+      <Link
+        href={`/products/${product.slug}`}
+        aria-label={product.name}
+        style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+      />
       <div className="canvas">
-        <span className="brand-tag">{product.brand}</span>
-        {product.badge && <span className="badge">{product.badge}</span>}
-        <DeviceArt kind={product.img} />
-        <button
-          type="button"
-          className="add"
-          aria-label={t('addAria')}
-          onClick={() => onAdd(product.id)}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M5 12h14M12 5v14" />
-          </svg>
-        </button>
+        <Image
+          src={product.cardImagePath}
+          alt={product.name}
+          fill
+          sizes="(min-width: 1024px) 300px, 50vw"
+          style={{ objectFit: 'cover' }}
+        />
+        <span className="brand-tag" style={{ zIndex: 2 }}>{product.brandName}</span>
+        {product.featured && <span className="badge" style={{ zIndex: 2 }}>★</span>}
       </div>
       <div className="info">
-        <span className="cat-lbl">{tCat(`items.${product.cat}`)}</span>
+        <span className="cat-lbl">{product.categoryName}</span>
         <span className="name">{product.name}</span>
-        <span className="specs">{product.spec}</span>
+        <span className="specs" dir="ltr">{product.cardSpec}</span>
         <div className="price-row">
-          <span className="price">
-            {product.price}
-            <span className="da"> {t('currency')}</span>
-          </span>
+          <Stars value={rating.avg} count={rating.count} />
           <span className="stock">{t('inStock')}</span>
         </div>
+        <button
+          type="button"
+          className={`cart-btn ${added ? 'added' : ''}`}
+          aria-label={t('addAria')}
+          onClick={onAdd}
+        >
+          {added ? (
+            <>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 13l5 5L20 6" />
+              </svg>
+              {t('added')}
+            </>
+          ) : (
+            <>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M5 7h14l-1.4 11a2 2 0 01-2 1.8H8.4a2 2 0 01-2-1.8L5 7zM9 7V5a3 3 0 016 0v2" />
+              </svg>
+              {t('addToCart')}
+            </>
+          )}
+        </button>
       </div>
     </article>
   )
@@ -1556,7 +1269,13 @@ function ProductCard({
  * About + timeline
  * ──────────────────────────────────────────────────────────────── */
 
-function AboutSection() {
+function AboutSection({
+  productCount,
+  brandCount,
+}: {
+  productCount: number
+  brandCount: number
+}) {
   const t = useTranslations('showcase.about')
   const ref = useFade<HTMLDivElement>()
   const strong = (chunks: ReactNode) => <strong>{chunks}</strong>
@@ -1564,19 +1283,19 @@ function AboutSection() {
     <section id="about" className="sec">
       <div ref={ref} className="wrap fade about-grid">
         <div className="about-text">
-          <span className="kicker" style={{ marginBottom: 14 }}>
+          <Editable as="span" id="home.about.kicker" className="kicker" style={{ marginBottom: 14 }} label="Sur-titre — À propos">
             {t('kicker')}
-          </span>
+          </Editable>
           <h2 className="h-big">
-            {t('title1')}
+            <Editable id="home.about.title1" label="Titre — À propos">{t('title1')}</Editable>
             <br />
             <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-              {t('title2')}
+              <Editable id="home.about.title2" label="Titre (accent) — À propos">{t('title2')}</Editable>
             </span>{' '}
-            {t('title3')}
+            <Editable id="home.about.title3" label="Titre (fin) — À propos">{t('title3')}</Editable>
           </h2>
-          <p>{t.rich('p1', { strong })}</p>
-          <p>{t.rich('p2', { strong })}</p>
+          <Editable as="p" id="home.about.p1" label="Paragraphe 1 — À propos">{t.rich('p1', { strong })}</Editable>
+          <Editable as="p" id="home.about.p2" label="Paragraphe 2 — À propos">{t.rich('p2', { strong })}</Editable>
 
           <div className="about-stats">
             <div className="about-stat">
@@ -1588,22 +1307,19 @@ function AboutSection() {
               <div className="l">{t('stats.founded')}</div>
             </div>
             <div className="about-stat">
-              <div className="v">
-                <Counter to={30000} />
-                <span className="accent">+</span>
-              </div>
+              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: clients served}}'}</span></div>
               <div className="l">{t('stats.clients')}</div>
             </div>
             <div className="about-stat">
               <div className="v">
-                <Counter to={BRANDS.length} />
+                <Counter to={brandCount} />
                 <span className="accent"> {t('stats.brandsSuffix')}</span>
               </div>
               <div className="l">{t('stats.partners')}</div>
             </div>
             <div className="about-stat">
               <div className="v">
-                <Counter to={PRODUCTS.length} />
+                <Counter to={productCount} />
                 <span className="accent"> {t('stats.skuSuffix')}</span>
               </div>
               <div className="l">{t('stats.sku')}</div>
@@ -1619,7 +1335,7 @@ function AboutSection() {
             <TLItem year="2022" title={t('timeline.t4Title')} desc={t('timeline.t4Desc')} />
             <TLItem
               year="2026"
-              title={t('timeline.t5Title', { count: PRODUCTS.length })}
+              title={t('timeline.t5Title', { count: productCount })}
               desc={t('timeline.t5Desc')}
             />
           </div>
@@ -1720,17 +1436,17 @@ function ContactSection() {
       <div ref={ref} className="wrap fade">
         <div className="sec-head">
           <div>
-            <span className="kicker" style={{ marginBottom: 12 }}>
+            <Editable as="span" id="home.contact.kicker" className="kicker" style={{ marginBottom: 12 }} label="Sur-titre — Contact">
               {t('kicker')}
-            </span>
+            </Editable>
             <h2 className="h-big">
-              {t('title1')}
+              <Editable id="home.contact.title1" label="Titre — Contact">{t('title1')}</Editable>
               <br />
               <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-                {t('title2')}
+                <Editable id="home.contact.title2" label="Titre (accent) — Contact">{t('title2')}</Editable>
               </span>
             </h2>
-            <p className="sub">{t('sub')}</p>
+            <p className="sub"><Editable id="home.contact.sub" label="Sous-titre — Contact">{t('sub')}</Editable></p>
           </div>
         </div>
 
@@ -2088,9 +1804,10 @@ function ContactPanel({
  * Footer
  * ──────────────────────────────────────────────────────────────── */
 
-function Footer({ onSelectCat }: { onSelectCat: (c: IconKind) => void }) {
+function Footer({ onSelectCat }: { onSelectCat: (c: string | 'all') => void }) {
   const t = useTranslations('showcase.footer')
-  const filterTo = (cat: IconKind) => () => {
+  const tShowroom = useTranslations('showroom.footer')
+  const filterTo = (cat: string) => () => {
     onSelectCat(cat)
     document
       .getElementById('products')
@@ -2102,7 +1819,7 @@ function Footer({ onSelectCat }: { onSelectCat: (c: IconKind) => void }) {
         <div className="ft-grid">
           <div className="ft-brand">
             <Logo />
-            <p>{t('blurb')}</p>
+            <Editable as="p" id="home.footer.blurb" label="Texte du pied de page">{t('blurb')}</Editable>
             <div className="ft-socials">
               <a className="icn" aria-label="Facebook" href="https://www.facebook.com/DtechDZ/" target="_blank" rel="noopener noreferrer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -2126,20 +1843,20 @@ function Footer({ onSelectCat }: { onSelectCat: (c: IconKind) => void }) {
           <FootCol
             title={t('cols.catalog.title')}
             links={[
-              { label: t('cols.catalog.l1'), onClick: filterTo('desktop') },
-              { label: t('cols.catalog.l2'), onClick: filterTo('laptop') },
-              { label: t('cols.catalog.l3'), onClick: filterTo('aio') },
-              { label: t('cols.catalog.l4'), onClick: filterTo('tablet') },
-              { label: t('cols.catalog.l5'), onClick: filterTo('print') },
+              { label: tShowroom('allProducts'), internal: '/products' },
+              { label: t('cols.catalog.l1'), onClick: filterTo('desktops') },
+              { label: t('cols.catalog.l2'), onClick: filterTo('laptops') },
+              { label: t('cols.catalog.l3'), onClick: filterTo('all-in-one') },
+              { label: t('cols.catalog.l5'), onClick: filterTo('printers') },
             ]}
           />
           <FootCol
             title={t('cols.brands.title')}
             links={[
-              { label: t('cols.brands.l1'), href: '#brands' },
-              { label: t('cols.brands.l2'), href: '#brands' },
-              { label: t('cols.brands.l3'), href: '#brands' },
-              { label: t('cols.brands.l4'), href: '#brands' },
+              { label: t('cols.brands.l1'), internal: '/brands' },
+              { label: t('cols.brands.l2'), internal: '/brands/asus' },
+              { label: t('cols.brands.l3'), internal: '/brands/tp-link' },
+              { label: t('cols.brands.l4'), internal: '/brands/epson' },
             ]}
           />
           <FootCol
@@ -2166,7 +1883,7 @@ function Footer({ onSelectCat }: { onSelectCat: (c: IconKind) => void }) {
           />
         </div>
         <div className="ft-bottom">
-          <span>{t('copyright')}</span>
+          <Editable as="span" id="home.footer.copyright" label="Copyright">{t('copyright')}</Editable>
           <span style={{ display: 'inline-flex', gap: 20 }}>
             <Link href="/legal#mentions">{t('legal')}</Link>
             <Link href="/legal#cgv">{t('terms')}</Link>
@@ -2182,6 +1899,8 @@ function Footer({ onSelectCat }: { onSelectCat: (c: IconKind) => void }) {
 interface FootLink {
   label: string
   href?: string
+  /** locale-aware route (rendered with the i18n <Link>) */
+  internal?: string
   onClick?: () => void
   external?: boolean
 }
@@ -2193,7 +1912,9 @@ function FootCol({ title, links }: { title: string; links: FootLink[] }) {
       <ul>
         {links.map((l) => (
           <li key={l.label}>
-            {l.onClick ? (
+            {l.internal ? (
+              <Link href={l.internal}>{l.label}</Link>
+            ) : l.onClick ? (
               <a
                 href="#products"
                 onClick={(e) => {
@@ -2217,150 +1938,5 @@ function FootCol({ title, links }: { title: string; links: FootLink[] }) {
         ))}
       </ul>
     </div>
-  )
-}
-
-/* ─────────────────────────────────────────────────────────────────
- * Quote drawer ("cart") — quote-request list, persisted locally
- * ──────────────────────────────────────────────────────────────── */
-
-function QuoteDrawer({
-  open,
-  onClose,
-  quote,
-  setQty,
-  onClear,
-}: {
-  open: boolean
-  onClose: () => void
-  quote: Quote
-  setQty: (id: string, qty: number) => void
-  onClear: () => void
-}) {
-  const t = useTranslations('showcase.quote')
-  const locale = useLocale()
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-
-  const items = PRODUCTS.filter((p) => quote[p.id])
-  const count = items.reduce((a, p) => a + (quote[p.id] || 0), 0)
-  const total = items.reduce(
-    (a, p) => a + parsePrice(p.price) * (quote[p.id] || 0),
-    0
-  )
-  const numberLocale =
-    locale === 'fr' ? 'fr-FR' : locale === 'ar' ? 'ar-DZ' : 'en-US'
-
-  const mailHref = () => {
-    const lines = items.map(
-      (p) => `${quote[p.id]}× ${p.name} (${p.spec}) — ${p.price} DA`
-    )
-    const body = `${t('mailIntro')}\n\n${lines.join('\n')}\n\nTotal: ${total.toLocaleString(numberLocale)} DA`
-    return `mailto:commercial@dtech.dz?subject=${encodeURIComponent(t('mailSubject'))}&body=${encodeURIComponent(body)}`
-  }
-
-  return (
-    <>
-      <div
-        className={`quote-overlay ${open ? 'open' : ''}`}
-        onClick={onClose}
-        aria-hidden
-      />
-      <aside
-        className={`quote-drawer ${open ? 'open' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('title')}
-      >
-        <div className="qd-head">
-          <span className="qd-title">{t('title')}</span>
-          {count > 0 && (
-            <span className="qd-count mono">{t('count', { count })}</span>
-          )}
-          <button
-            type="button"
-            className="icn"
-            aria-label={t('closeAria')}
-            onClick={onClose}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-        </div>
-
-        {items.length === 0 ? (
-          <p className="qd-empty">{t('empty')}</p>
-        ) : (
-          <>
-            <div className="qd-items">
-              {items.map((p) => (
-                <div className="qd-item" key={p.id}>
-                  <div className="qd-item-info">
-                    <span className="qd-item-name">{p.name}</span>
-                    <span className="qd-item-spec">{p.spec}</span>
-                    <span className="qd-item-price mono">
-                      {p.price} <small>DA</small>
-                    </span>
-                  </div>
-                  <div className="qd-item-qty">
-                    <button
-                      type="button"
-                      aria-label={t('lessAria')}
-                      onClick={() => setQty(p.id, (quote[p.id] || 0) - 1)}
-                    >
-                      −
-                    </button>
-                    <span className="mono">{quote[p.id]}</span>
-                    <button
-                      type="button"
-                      aria-label={t('moreAria')}
-                      onClick={() => setQty(p.id, (quote[p.id] || 0) + 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="qd-remove"
-                    aria-label={t('removeAria', { name: p.name })}
-                    onClick={() => setQty(p.id, 0)}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="qd-total">
-              <span>{t('total')}</span>
-              <span className="mono">
-                {total.toLocaleString(numberLocale)} <small>DA</small>
-              </span>
-            </div>
-            <p className="qd-note">{t('note')}</p>
-
-            <div className="qd-actions">
-              <a className="btn btn-primary" href={mailHref()}>
-                <span className="shimmer" />
-                {t('send')}
-              </a>
-              <button type="button" className="btn btn-ghost" onClick={onClear}>
-                {t('clear')}
-              </button>
-            </div>
-          </>
-        )}
-      </aside>
-    </>
   )
 }

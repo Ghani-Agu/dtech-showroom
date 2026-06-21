@@ -1,6 +1,7 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { SQL } from 'drizzle-orm'
+import { ImageOff, Languages } from 'lucide-react'
 import {
   and,
   asc,
@@ -13,7 +14,7 @@ import {
 } from 'drizzle-orm'
 import { Package, Plus, Upload } from 'lucide-react'
 import { Button } from '@/components/admin/ui/Button'
-import { Card } from '@/components/admin/ui/Card'
+import { GlassCard } from '@/components/admin/GlassCard'
 import { EmptyState } from '@/components/admin/ui/EmptyState'
 import { Input } from '@/components/admin/ui/Input'
 import { ProductListRow } from '@/components/admin/products/ProductListRow'
@@ -21,7 +22,7 @@ import { db } from '@/db/client'
 import { brands, categories, products } from '@/db/schema'
 
 export const metadata: Metadata = {
-  title: 'Products — Dtech Admin',
+  title: 'Produits · Dtech Admin',
   robots: { index: false, follow: false },
 }
 
@@ -29,11 +30,13 @@ const PAGE_SIZE = 25
 
 type FilterState = 'active' | 'archived' | 'all'
 type TierFilter = 'all' | 'hero' | 'featured' | 'longtail'
+type FlagFilter = '' | 'sans-photo' | 'sans-fr'
 
 interface PageProps {
   searchParams: Promise<{
     state?: FilterState
     tier?: TierFilter
+    flag?: string
     brand?: string
     category?: string
     q?: string
@@ -55,7 +58,8 @@ async function getProducts(
   brandSlug: string,
   categorySlug: string,
   query: string,
-  page: number
+  page: number,
+  flag: FlagFilter = ''
 ) {
   const offset = (page - 1) * PAGE_SIZE
 
@@ -65,6 +69,18 @@ async function getProducts(
   if (state === 'archived') conditions.push(isNotNull(products.archivedAt))
 
   if (tier !== 'all') conditions.push(eq(products.tier, tier))
+
+  if (flag === 'sans-photo') {
+    const cond = or(
+      isNull(products.cardImagePath),
+      eq(products.cardImagePath, '')
+    )
+    if (cond) conditions.push(cond)
+  }
+  if (flag === 'sans-fr') {
+    const cond = or(isNull(products.nameFr), eq(products.nameFr, ''))
+    if (cond) conditions.push(cond)
+  }
 
   if (brandSlug) {
     const brand = await db
@@ -166,49 +182,100 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
   const categorySlug = params.category ?? ''
   const query = params.q ?? ''
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
+  const flag: FlagFilter =
+    params.flag === 'sans-photo' || params.flag === 'sans-fr'
+      ? params.flag
+      : ''
 
-  const [{ rows, total }, filterOptions] = await Promise.all([
-    getProducts(state, tier, brandSlug, categorySlug, query, page),
+  const [{ rows, total }, filterOptions, noPhotoRow, noFrRow] = await Promise.all([
+    getProducts(state, tier, brandSlug, categorySlug, query, page, flag),
     getFilterOptions(),
+    db
+      .select({ n: count() })
+      .from(products)
+      .where(
+        and(
+          isNull(products.archivedAt),
+          or(isNull(products.cardImagePath), eq(products.cardImagePath, ''))
+        )
+      ),
+    db
+      .select({ n: count() })
+      .from(products)
+      .where(
+        and(
+          isNull(products.archivedAt),
+          or(isNull(products.nameFr), eq(products.nameFr, ''))
+        )
+      ),
   ])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const noPhotoCount = noPhotoRow[0]?.n ?? 0
+  const noFrCount = noFrRow[0]?.n ?? 0
 
   const tierFilters: Array<{ value: TierFilter; label: string }> = [
-    { value: 'all', label: 'All tiers' },
-    { value: 'hero', label: 'Hero' },
-    { value: 'featured', label: 'Featured' },
-    { value: 'longtail', label: 'Long-tail' },
+    { value: 'all', label: 'Toutes les mises en scène' },
+    { value: 'hero', label: 'Vitrine' },
+    { value: 'featured', label: 'Vedette' },
+    { value: 'longtail', label: 'Standard' },
   ]
 
   const stateFilters: Array<{ value: FilterState; label: string }> = [
-    { value: 'active', label: 'Active' },
-    { value: 'archived', label: 'Archived' },
-    { value: 'all', label: 'All' },
+    { value: 'active', label: 'En ligne' },
+    { value: 'archived', label: 'Masqués' },
+    { value: 'all', label: 'Tous' },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-            Products
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+            Produits
           </p>
-          <h1 className="font-display text-3xl tracking-tight text-text-primary">
-            Catalog<span className="text-accent">.</span>
+          <h1 className="font-display text-3xl tracking-tight text-white">
+            Catalogue<span className="text-[var(--admin-cyan)]">.</span>
           </h1>
+          {/* health shortcuts — click to filter */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Link
+              href={buildHref({ flag: flag === 'sans-photo' ? undefined : 'sans-photo' })}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-body text-[12px] font-semibold transition-transform hover:-translate-y-px"
+              style={{
+                borderColor: flag === 'sans-photo' ? 'var(--c-orange)' : 'color-mix(in oklab, var(--c-orange) 35%, transparent)',
+                color: 'var(--c-orange)',
+                background: flag === 'sans-photo' ? 'color-mix(in oklab, var(--c-orange) 18%, transparent)' : 'color-mix(in oklab, var(--c-orange) 7%, transparent)',
+              }}
+            >
+              <ImageOff size={12} />
+              {noPhotoCount} sans photo
+            </Link>
+            <Link
+              href={buildHref({ flag: flag === 'sans-fr' ? undefined : 'sans-fr' })}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-body text-[12px] font-semibold transition-transform hover:-translate-y-px"
+              style={{
+                borderColor: flag === 'sans-fr' ? 'var(--c-violet)' : 'color-mix(in oklab, var(--c-violet) 35%, transparent)',
+                color: 'var(--c-violet)',
+                background: flag === 'sans-fr' ? 'color-mix(in oklab, var(--c-violet) 18%, transparent)' : 'color-mix(in oklab, var(--c-violet) 7%, transparent)',
+              }}
+            >
+              <Languages size={12} />
+              {noFrCount} sans traduction FR
+            </Link>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/admin/products/import">
             <Button variant="secondary">
               <Upload size={16} />
-              Import
+              Importer
             </Button>
           </Link>
           <Link href="/admin/products/new">
             <Button variant="primary">
               <Plus size={16} />
-              New product
+              Nouveau produit
             </Button>
           </Link>
         </div>
@@ -216,8 +283,8 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
-            State:
+          <span className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+            État :
           </span>
           {stateFilters.map((f) => {
             const isActive = state === f.value
@@ -233,8 +300,8 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
                 })}
                 className={
                   isActive
-                    ? 'inline-flex items-center rounded-full bg-surface-overlay px-2.5 py-1 font-body text-xs font-medium text-text-primary'
-                    : 'inline-flex items-center rounded-full px-2.5 py-1 font-body text-xs text-text-secondary transition-colors hover:text-text-primary'
+                    ? 'inline-flex items-center rounded-full bg-[var(--admin-cyan)]/15 border border-cyan-400/30 px-2.5 py-1 font-body text-xs font-medium text-[var(--admin-cyan)]'
+                    : 'inline-flex items-center rounded-full bg-white/[0.03] border border-white/[0.08] px-2.5 py-1 font-body text-xs text-[var(--admin-text-secondary)] transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50'
                 }
               >
                 {f.label}
@@ -242,8 +309,8 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
             )
           })}
 
-          <span className="ml-4 font-mono text-xs uppercase tracking-wider text-text-muted">
-            Tier:
+          <span className="ml-4 font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+            Mise en scène :
           </span>
           {tierFilters.map((f) => {
             const isActive = tier === f.value
@@ -259,8 +326,8 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
                 })}
                 className={
                   isActive
-                    ? 'inline-flex items-center rounded-full bg-surface-overlay px-2.5 py-1 font-body text-xs font-medium text-text-primary'
-                    : 'inline-flex items-center rounded-full px-2.5 py-1 font-body text-xs text-text-secondary transition-colors hover:text-text-primary'
+                    ? 'inline-flex items-center rounded-full bg-[var(--admin-cyan)]/15 border border-cyan-400/30 px-2.5 py-1 font-body text-xs font-medium text-[var(--admin-cyan)]'
+                    : 'inline-flex items-center rounded-full bg-white/[0.03] border border-white/[0.08] px-2.5 py-1 font-body text-xs text-[var(--admin-text-secondary)] transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50'
                 }
               >
                 {f.label}
@@ -282,15 +349,15 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
           )}
 
           <div className="min-w-[180px]">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-text-muted">
-              Brand
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+              Marque
             </label>
             <select
               name="brand"
               defaultValue={brandSlug}
-              className="w-full rounded-md bg-surface-elevated px-3 py-2 font-body text-sm text-text-primary outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-md bg-white/[0.03] border border-white/[0.08] px-3 py-2 font-body text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus:border-cyan-400/50"
             >
-              <option value="">All brands</option>
+              <option value="">Toutes les marques</option>
               {filterOptions.brands.map((b) => (
                 <option key={b.slug} value={b.slug}>
                   {b.name}
@@ -300,15 +367,15 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
           </div>
 
           <div className="min-w-[180px]">
-            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-text-muted">
-              Category
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+              Catégorie
             </label>
             <select
               name="category"
               defaultValue={categorySlug}
-              className="w-full rounded-md bg-surface-elevated px-3 py-2 font-body text-sm text-text-primary outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-md bg-white/[0.03] border border-white/[0.08] px-3 py-2 font-body text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus:border-cyan-400/50"
             >
-              <option value="">All categories</option>
+              <option value="">Toutes les catégories</option>
               {filterOptions.categories.map((c) => (
                 <option key={c.slug} value={c.slug}>
                   {c.name}
@@ -321,35 +388,33 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
             <Input
               type="search"
               name="q"
-              label="Search"
-              placeholder="Name, slug, tagline, keywords..."
+              label="Recherche"
+              placeholder="Nom, slug, mots-clés…"
               defaultValue={query}
             />
           </div>
 
-          <Button type="submit" variant="secondary">
-            Filter
-          </Button>
+          <Button type="submit" variant="secondary">Filtrer</Button>
         </form>
       </div>
 
       {rows.length === 0 ? (
-        <Card>
+        <GlassCard>
           <EmptyState
             icon={Package}
-            title="No products match the current filters."
-            description="Adjust the filters above, or add a new product."
-            action={{ label: 'Add the first product', href: '/admin/products/new' }}
+            title="Aucun produit ne correspond aux filtres."
+            description="Modifiez les filtres ci-dessus ou ajoutez un produit."
+            action={{ label: 'Ajouter un produit', href: '/admin/products/new' }}
           />
-        </Card>
+        </GlassCard>
       ) : (
-        <Card>
-          <ul className="divide-y divide-surface-overlay">
+        <GlassCard padded={false} className="overflow-hidden">
+          <ul>
             {rows.map((p) => (
               <ProductListRow key={p.id} product={p} />
             ))}
           </ul>
-        </Card>
+        </GlassCard>
       )}
 
       {totalPages > 1 && (
@@ -357,9 +422,8 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
           aria-label="Pagination"
           className="flex items-center justify-between"
         >
-          <p className="font-body text-sm text-text-muted">
-            Showing {(page - 1) * PAGE_SIZE + 1}–
-            {Math.min(page * PAGE_SIZE, total)} of {total}
+          <p className="font-body text-sm text-[var(--admin-text-tertiary)]">
+            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} sur {total}
           </p>
           <div className="flex items-center gap-2">
             {page > 1 && (
@@ -372,12 +436,12 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
                   q: query || undefined,
                   page: String(page - 1),
                 })}
-                className="font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="font-body text-sm text-[var(--admin-text-secondary)] transition-colors hover:text-white"
               >
-                ← Previous
+                Précédent
               </Link>
             )}
-            <span className="font-mono text-sm text-text-muted">
+            <span className="font-mono text-sm text-[var(--admin-text-tertiary)]">
               {page} / {totalPages}
             </span>
             {page < totalPages && (
@@ -390,9 +454,9 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
                   q: query || undefined,
                   page: String(page + 1),
                 })}
-                className="font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+                className="font-body text-sm text-[var(--admin-text-secondary)] transition-colors hover:text-white"
               >
-                Next →
+                Suivant
               </Link>
             )}
           </div>

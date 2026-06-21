@@ -22,12 +22,12 @@ export function EmptyState({
     <div className="px-6 py-16 text-center">
       <Icon
         size={40}
-        className="mx-auto mb-4 text-text-muted"
+        className="mx-auto mb-4 text-[var(--admin-text-tertiary)]"
         strokeWidth={1.5}
       />
-      <p className="font-body text-base text-text-primary">{title}</p>
+      <p className="font-body text-base text-white">{title}</p>
       {description && (
-        <p className="mx-auto mt-2 max-w-md font-body text-sm text-text-muted">
+        <p className="mx-auto mt-2 max-w-md font-body text-sm text-[var(--admin-text-secondary)]">
           {description}
         </p>
       )}

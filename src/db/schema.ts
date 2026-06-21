@@ -9,10 +9,38 @@ import {
   jsonb,
   pgEnum,
   index,
+  customType,
 } from 'drizzle-orm/pg-core'
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
 
 export const tierEnum = pgEnum('tier', ['hero', 'featured', 'longtail'])
+
+/** Raw bytes column (Postgres bytea) — used for DB-hosted images. */
+const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return 'bytea'
+  },
+})
+
+/**
+ * DB-hosted images — the zero-config alternative to R2. Uploaded admin
+ * images land here and are served by /api/images/[...key] with immutable
+ * caching. Keys mirror the R2 layout: products/<slug>/card-<hash>.webp
+ */
+export const imageBlobs = pgTable(
+  'image_blobs',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    key: text('key').notNull().unique(),
+    contentType: text('content_type').notNull(),
+    data: bytea('data').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index('image_blobs_key_idx').on(t.key)]
+)
+
 export const inquiryStatusEnum = pgEnum('inquiry_status', [
   'new',
   'contacted',
@@ -257,6 +285,11 @@ export const users = pgTable(
     image: text('image'),
     role: userRoleEnum('role').notNull().default('staff'),
 
+    /** Admin sections a staff member can manage (null = staff defaults).
+     *  Admins always have full access. Keys: products, categories, brands,
+     *  inquiries, users, settings. */
+    permissions: jsonb('permissions').$type<string[]>(),
+
     // Phase 7e — admin user management
     deactivatedAt: timestamp('deactivated_at'),
     lastLoginAt: timestamp('last_login_at'),
@@ -319,3 +352,157 @@ export type InquiryStatusHistory = InferSelectModel<typeof inquiryStatusHistory>
 export type InsertInquiryStatusHistory = InferInsertModel<
   typeof inquiryStatusHistory
 >
+
+/**
+ * Visual editor pages. `key` is a logical page id ('home' = the public
+ * homepage). `draft` is the admin's autosaved work-in-progress; `published`
+ * is what visitors see. Created idempotently in ensure-schema.ts.
+ */
+export const sitePages = pgTable('site_pages', {
+  key: text('key').primaryKey(),
+  draft: jsonb('draft'),
+  published: jsonb('published'),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+})
+
+export type SitePageRow = InferSelectModel<typeof sitePages>
+
+/* ─────────────────────────────────────────────────────────────────
+ * NEWSLETTER — subscribers, campaigns, per-recipient sends
+ *
+ * Subscribers go through a double-opt-in: a row is inserted with
+ * status='pending' and a confirm_token; a click on the confirm link
+ * flips it to 'subscribed'. Each row also gets a permanent
+ * unsubscribe_token, used by the one-click unsubscribe link embedded
+ * in every campaign mail. Tokens are random 32-byte URL-safe strings.
+ * ─────────────────────────────────────────────────────────────── */
+
+export const subscriberStatusEnum = pgEnum('subscriber_status', [
+  'pending',
+  'subscribed',
+  'unsubscribed',
+  'bounced',
+])
+
+export const subscribers = pgTable(
+  'subscribers',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    email: text('email').notNull().unique(),
+    locale: text('locale').notNull().default('fr'),
+    status: subscriberStatusEnum('status').notNull().default('pending'),
+    /** Single-use confirmation token (cleared once consumed). */
+    confirmToken: text('confirm_token'),
+    /** Permanent token for the unsubscribe link in every email. */
+    unsubscribeToken: text('unsubscribe_token').notNull(),
+    /** Free-form provenance label — 'footer', 'inline-cta', 'admin-import'… */
+    source: text('source'),
+    /** SHA-256 of the submitter IP — cheap abuse signal without storing PII. */
+    ipHash: text('ip_hash'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+    unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('subscribers_status_idx').on(table.status),
+    index('subscribers_created_at_idx').on(table.createdAt.desc()),
+    index('subscribers_unsubscribe_token_idx').on(table.unsubscribeToken),
+  ]
+)
+
+export const campaignStatusEnum = pgEnum('campaign_status', [
+  'draft',
+  'scheduled',
+  'sending',
+  'sent',
+  'failed',
+])
+
+export const campaigns = pgTable(
+  'campaigns',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    subject: text('subject').notNull(),
+    /** Short summary shown after the subject in most mail clients. */
+    preheader: text('preheader'),
+    bodyHtml: text('body_html').notNull().default(''),
+    bodyText: text('body_text').notNull().default(''),
+    /** Audience selector — for now: 'all'. Future: category id, language… */
+    audience: text('audience').notNull().default('all'),
+    status: campaignStatusEnum('status').notNull().default('draft'),
+    scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    sentCount: integer('sent_count').notNull().default(0),
+    openCount: integer('open_count').notNull().default(0),
+    clickCount: integer('click_count').notNull().default(0),
+    createdBy: uuid('created_by'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('campaigns_status_idx').on(table.status),
+    index('campaigns_created_at_idx').on(table.createdAt.desc()),
+  ]
+)
+
+/**
+ * One row per (campaign × subscriber). Lets the open/click endpoints
+ * mark a single recipient without writing a counter on the campaign row
+ * directly, and gives us per-send tracking for future segmentation.
+ */
+export const campaignSends = pgTable(
+  'campaign_sends',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaigns.id, { onDelete: 'cascade' }),
+    subscriberId: uuid('subscriber_id')
+      .notNull()
+      .references(() => subscribers.id, { onDelete: 'cascade' }),
+    sentAt: timestamp('sent_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    openedAt: timestamp('opened_at', { withTimezone: true }),
+    clickedAt: timestamp('clicked_at', { withTimezone: true }),
+    unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+    error: text('error'),
+  },
+  (table) => [
+    index('campaign_sends_campaign_id_idx').on(table.campaignId),
+    index('campaign_sends_subscriber_id_idx').on(table.subscriberId),
+  ]
+)
+
+export const campaignSendsRelations = relations(campaignSends, ({ one }) => ({
+  campaign: one(campaigns, {
+    fields: [campaignSends.campaignId],
+    references: [campaigns.id],
+  }),
+  subscriber: one(subscribers, {
+    fields: [campaignSends.subscriberId],
+    references: [subscribers.id],
+  }),
+}))
+
+export type Subscriber = InferSelectModel<typeof subscribers>
+export type NewSubscriber = InferInsertModel<typeof subscribers>
+export type SubscriberStatus =
+  (typeof subscriberStatusEnum.enumValues)[number]
+
+export type Campaign = InferSelectModel<typeof campaigns>
+export type NewCampaign = InferInsertModel<typeof campaigns>
+export type CampaignStatus =
+  (typeof campaignStatusEnum.enumValues)[number]
+
+export type CampaignSend = InferSelectModel<typeof campaignSends>
+export type NewCampaignSend = InferInsertModel<typeof campaignSends>

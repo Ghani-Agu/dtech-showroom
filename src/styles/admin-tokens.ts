@@ -3,9 +3,10 @@
  * tokens with admin-tuned values (warmer surfaces, larger spacing,
  * friendlier typography rhythm).
  *
- * The admin shares ALL color tokens with the customer site (brand
- * consistency). What differs: spacing scale, type scale, motion
- * timing, and a few admin-only surface variants.
+ * Per brand v2 §12: admin and public are siblings, not twins. They
+ * share the dark base canvas and continuous ambient motion; admin
+ * keeps its glassmorphism + multi-color accents. This module exposes
+ * the v2 brand tokens to admin code that wants programmatic access.
  */
 
 import { brand } from './brand-tokens'

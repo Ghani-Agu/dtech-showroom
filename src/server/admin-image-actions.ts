@@ -1,22 +1,27 @@
 'use server'
 
 import { headers } from 'next/headers'
+import { eq, like } from 'drizzle-orm'
+import { db } from '@/db/client'
+import { imageBlobs } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { requireSection } from '@/lib/auth-helpers'
+import type { SectionKey } from '@/lib/permissions'
 import {
   processVariant,
   validateImage,
   type ImageVariant,
 } from '@/lib/image-processing'
 import {
+  R2_CONFIGURED,
   deleteFromR2,
   extractKeyFromUrl,
   generateHash,
   uploadToR2,
 } from '@/lib/r2'
-import {
-  ENTITY_PREFIX,
-  type EntityType,
-} from '@/lib/admin-image-entity'
+import { ENTITY_PREFIX, type EntityType } from '@/lib/admin-image-entity'
+
+const DB_IMAGE_PREFIX = '/api/images/'
 
 async function requireSession() {
   const session = await auth.api
@@ -38,6 +43,12 @@ interface UploadResult {
   height: number
 }
 
+/**
+ * Uploads an entity image. When Cloudflare R2 is configured the image is
+ * pushed there (webp + avif); otherwise it is stored in Postgres
+ * (image_blobs, webp only) and served from /api/images — zero external
+ * config needed.
+ */
 export async function uploadEntityImage(
   entityType: EntityType,
   entitySlug: string,
@@ -47,42 +58,70 @@ export async function uploadEntityImage(
   { ok: true; result: UploadResult } | { ok: false; error: string }
 > {
   try {
-    await requireSession()
+    const sectionMap: Record<EntityType, SectionKey> = {
+      product: 'products',
+      brand: 'brands',
+      category: 'categories',
+    }
+    await requireSection(sectionMap[entityType])
 
     const file = formData.get('file')
     if (!file || !(file instanceof File)) {
-      return { ok: false, error: 'No file provided' }
+      return { ok: false, error: 'Aucun fichier reçu' }
     }
 
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entitySlug)) {
-      return { ok: false, error: `Invalid ${entityType} slug` }
+      return { ok: false, error: 'Slug invalide' }
     }
 
     const arrayBuffer = await file.arrayBuffer()
     const sourceBuffer = Buffer.from(arrayBuffer)
 
     const meta = await validateImage(sourceBuffer)
-
-    const [webpBuffer, avifBuffer] = await Promise.all([
-      processVariant(sourceBuffer, variant, 'webp'),
-      processVariant(sourceBuffer, variant, 'avif'),
-    ])
-
     const hash = generateHash(file.name)
     const prefix = ENTITY_PREFIX[entityType]
-    const webpKey = `${prefix}/${entitySlug}/${variant}-${hash}.webp`
-    const avifKey = `${prefix}/${entitySlug}/${variant}-${hash}.avif`
 
-    const [webpResult, avifResult] = await Promise.all([
-      uploadToR2(webpKey, webpBuffer, 'image/webp'),
-      uploadToR2(avifKey, avifBuffer, 'image/avif'),
-    ])
+    if (R2_CONFIGURED) {
+      const [webpBuffer, avifBuffer] = await Promise.all([
+        processVariant(sourceBuffer, variant, 'webp'),
+        processVariant(sourceBuffer, variant, 'avif'),
+      ])
+      const webpKey = `${prefix}/${entitySlug}/${variant}-${hash}.webp`
+      const avifKey = `${prefix}/${entitySlug}/${variant}-${hash}.avif`
+      const [webpResult, avifResult] = await Promise.all([
+        uploadToR2(webpKey, webpBuffer, 'image/webp'),
+        uploadToR2(avifKey, avifBuffer, 'image/avif'),
+      ])
+      return {
+        ok: true,
+        result: {
+          url: webpResult.url,
+          urlAvif: avifResult.url,
+          variant,
+          width: meta.width,
+          height: meta.height,
+        },
+      }
+    }
 
+    // ── DB storage (default) ──
+    const webpBuffer = await processVariant(sourceBuffer, variant, 'webp')
+    const key = `${prefix}/${entitySlug}/${variant}-${hash}.webp`
+
+    await db
+      .insert(imageBlobs)
+      .values({ key, contentType: 'image/webp', data: webpBuffer })
+      .onConflictDoUpdate({
+        target: imageBlobs.key,
+        set: { contentType: 'image/webp', data: webpBuffer },
+      })
+
+    const url = `${DB_IMAGE_PREFIX}${key}`
     return {
       ok: true,
       result: {
-        url: webpResult.url,
-        urlAvif: avifResult.url,
+        url,
+        urlAvif: url,
         variant,
         width: meta.width,
         height: meta.height,
@@ -92,7 +131,7 @@ export async function uploadEntityImage(
     console.error('[upload] Failed:', err)
     return {
       ok: false,
-      error: err instanceof Error ? err.message : 'Upload failed',
+      error: err instanceof Error ? err.message : "Échec de l'envoi",
     }
   }
 }
@@ -112,9 +151,16 @@ export async function deleteEntityImage(
   try {
     await requireSession()
 
+    // DB-hosted image
+    if (imageUrl.startsWith(DB_IMAGE_PREFIX)) {
+      const key = imageUrl.slice(DB_IMAGE_PREFIX.length)
+      await db.delete(imageBlobs).where(eq(imageBlobs.key, key))
+      return { ok: true }
+    }
+
     const key = extractKeyFromUrl(imageUrl)
     if (!key) {
-      return { ok: false, error: 'Invalid image URL' }
+      return { ok: false, error: 'URL d’image invalide' }
     }
 
     await deleteFromR2(key)
@@ -136,9 +182,19 @@ export async function deleteEntityImage(
     console.error('[delete] Failed:', err)
     return {
       ok: false,
-      error: err instanceof Error ? err.message : 'Delete failed',
+      error: err instanceof Error ? err.message : 'Échec de la suppression',
     }
   }
+}
+
+/** Removes every DB-hosted image stored under an entity's key prefix. */
+export async function deleteEntityImagesBySlug(
+  entityType: EntityType,
+  entitySlug: string
+): Promise<void> {
+  await requireSession()
+  const prefix = `${ENTITY_PREFIX[entityType]}/${entitySlug}/%`
+  await db.delete(imageBlobs).where(like(imageBlobs.key, prefix))
 }
 
 /** @deprecated Use deleteEntityImage instead */

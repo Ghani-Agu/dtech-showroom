@@ -31,13 +31,13 @@ export default function ForgotPasswordForm() {
     return (
       <div className="space-y-6 text-center">
         <p className="font-body text-lg text-text-secondary">
-          If an account exists for that email, a reset link has been sent.
+          Si un compte existe pour cet e-mail, un lien de réinitialisation a été envoyé.
         </p>
         <Link
           href="/login"
           className="inline-block font-body text-base text-text-primary underline decoration-text-muted underline-offset-4 transition-colors hover:decoration-accent"
         >
-          ← Back to sign in
+          ← Retour à la connexion
         </Link>
       </div>
     )
@@ -50,7 +50,7 @@ export default function ForgotPasswordForm() {
           htmlFor="email"
           className="block font-body text-sm font-medium text-text-secondary"
         >
-          Email
+          E-mail
         </label>
         <input
           type="email"
@@ -69,7 +69,7 @@ export default function ForgotPasswordForm() {
         disabled={isPending}
         className="w-full rounded-md bg-surface-elevated px-6 py-3 font-body text-base font-medium text-text-primary transition hover:bg-surface-overlay disabled:opacity-50"
       >
-        {isPending ? 'Sending…' : 'Send reset link →'}
+        {isPending ? 'Envoi…' : 'Envoyer le lien →'}
       </button>
 
       <div className="pt-2 text-center">
@@ -77,7 +77,7 @@ export default function ForgotPasswordForm() {
           href="/login"
           className="font-body text-sm text-text-muted underline decoration-text-muted underline-offset-2 hover:text-text-secondary hover:decoration-accent"
         >
-          ← Back to sign in
+          ← Retour à la connexion
         </Link>
       </div>
     </form>

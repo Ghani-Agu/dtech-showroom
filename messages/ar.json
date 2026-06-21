@@ -24,7 +24,8 @@
     "search": "بحث",
     "about": "من نحن",
     "contactDtech": "اتصل بديتك",
-    "viewSite": "عرض الموقع"
+    "viewSite": "عرض الموقع",
+    "inquiry": "طلب معلومات"
   },
   "home": {
     "eyebrow": "ديتك الجزائر · تأسست 2006",
@@ -238,13 +239,18 @@
     "pageTitle": "العلامات",
     "indexHeading": "العلامات التي نوزعها",
     "indexSubtitle": "خمسة خطوط اختيرت لجودة الصنع وحقوق التوزيع وعمق التشكيلة.",
-    "viewProducts": "عرض المنتجات"
+    "viewProducts": "عرض المنتجات",
+    "featured": "مميّز · {brand}",
+    "allProducts": "جميع منتجات {brand} · {count}",
+    "noProducts": "لا توجد منتجات {brand} في الكتالوج بعد."
   },
   "categories": {
     "pageTitle": "الفئات",
     "indexHeading": "مصنّفة حسب الحاجة",
     "indexSubtitle": "تصفح الكتالوج حسب ما تبحث عنه.",
-    "viewCategory": "عرض الفئة"
+    "viewCategory": "عرض الفئة",
+    "allProducts": "كل {category} · {count}",
+    "noProducts": "لا توجد منتجات في {category} بعد."
   },
   "products": {
     "pageTitle": "المنتجات",
@@ -252,7 +258,57 @@
     "inquireButton": "استفسر عن هذا المنتج",
     "relatedProducts": "منتجات ذات صلة",
     "viewProduct": "عرض المنتج",
-    "notAvailable": "غير متوفر"
+    "notAvailable": "غير متوفر",
+    "interested": "مهتم؟",
+    "discussTitle": "تحدث معنا",
+    "discussBody": "أرسل لنا رسالة قصيرة حول كيفية استخدامك لـ {product}. سيرد عليك فريق Dtech خلال يوم عمل واحد مع التوفر وخيارات الإعداد وعرض السعر.",
+    "indexHeading": "الكتالوج الكامل",
+    "indexSubtitle": "كل المنتجات التي نوزعها حالياً في مكان واحد. صفِّ حسب العلامة أو الفئة واسألنا عن أي شيء.",
+    "countLabel": "{count} منتجاً",
+    "specLabels": {
+      "ANC": "إلغاء الضوضاء",
+      "Antennas": "الهوائيات",
+      "Bands": "النطاقات",
+      "Battery": "البطارية",
+      "Buttons": "الأزرار",
+      "Cable": "الكابل",
+      "Camera": "الكاميرا",
+      "Capacity": "السعة",
+      "Chip": "الشريحة",
+      "Connectivity": "الاتصال",
+      "Cooling": "التبريد",
+      "Coverage": "التغطية",
+      "DPI": "DPI",
+      "Display": "الشاشة",
+      "Frame": "الهيكل",
+      "Functions": "الوظائف",
+      "Graphics": "الرسوميات",
+      "Housing": "الغلاف",
+      "Indicator": "المؤشر",
+      "Input": "الإدخال",
+      "Interface": "الواجهة",
+      "Jacket": "الغلاف الخارجي",
+      "Keycaps": "أغطية المفاتيح",
+      "Length": "الطول",
+      "Memory": "الذاكرة",
+      "Microphone": "الميكروفون",
+      "Output": "الإخراج",
+      "Port": "المنفذ",
+      "Ports": "المنافذ",
+      "Power": "الطاقة",
+      "Processor": "المعالج",
+      "Rating": "التصنيف",
+      "Security": "الأمان",
+      "Standard": "المعيار",
+      "Storage": "التخزين",
+      "Stylus": "القلم",
+      "Switches": "المفاتيح",
+      "Switching": "التبديل",
+      "Technology": "التقنية",
+      "Throughput": "معدل النقل",
+      "Type": "النوع",
+      "Weight": "الوزن"
+    }
   },
   "search": {
     "pageTitle": "بحث",
@@ -287,7 +343,8 @@
       "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
       "messageTooShort": "يجب أن تتكون الرسالة من 10 أحرف على الأقل",
       "submitFailed": "تعذر إرسال الاستفسار. يرجى المحاولة مجددًا."
-    }
+    },
+    "rateLimited": "طلبات كثيرة جداً من هذا العنوان. حاول مجدداً بعد ساعة أو راسلنا مباشرة على contact@dtech.dz."
   },
   "about": {
     "pageTitle": "من نحن",
@@ -313,7 +370,14 @@
     "wordmark": "DTECH",
     "tagline": "عتاد، باختيار هادئ.",
     "copyright": "© {year} ديتك الجزائر. جميع الحقوق محفوظة.",
-    "established": "تأسست 2006 · الجزائر العاصمة"
+    "established": "تأسست 2006 · الجزائر العاصمة",
+    "legalNotice": "إشعار قانوني",
+    "terms": "شروط البيع",
+    "privacy": "الخصوصية",
+    "commercial": "المبيعات",
+    "sav": "خدمة ما بعد البيع",
+    "addressLine1": "حي 05 جويلية 1962",
+    "addressLine2": "باب الزوار، الجزائر العاصمة"
   },
   "notFound": {
     "title": "غير موجود",
@@ -347,7 +411,10 @@
       "cartAria": "السلة",
       "themeAria": "تبديل الوضع",
       "langAria": "تغيير اللغة",
-      "arSoon": "العربية"
+      "arSoon": "العربية",
+      "searchPlaceholder": "ابحث عن منتج…",
+      "searchNoResults": "لا توجد نتائج",
+      "searchSeeAll": "عرض كل النتائج"
     },
     "logo": {
       "tagline": "الجزائر · 2026"
@@ -417,7 +484,8 @@
         "network": "شبكات",
         "parts": "مكوّنات",
         "gaming": "ألعاب"
-      }
+      },
+      "viewAll": "كل الفئات"
     },
     "brands": {
       "kicker": "علامات موزّعة رسميًا",
@@ -433,7 +501,8 @@
         "tplink": "موجهات ومبدلات ونقاط وصول",
         "canon": "طابعات وماسحات وناسخات",
         "epson": "طابعات وناسخات"
-      }
+      },
+      "viewAll": "كل العلامات التجارية"
     },
     "catalog": {
       "kicker": "{products} منتجًا · {categories} فئات · {brands} علامات",
@@ -451,7 +520,9 @@
       "pageAria": "صفحة {n}",
       "inStock": "متوفّر",
       "currency": "دج",
-      "addAria": "إضافة"
+      "addAria": "إضافة",
+      "addToCart": "أضف إلى السلة",
+      "added": "تمت الإضافة"
     },
     "about": {
       "kicker": "من نحن · دي-تك الجزائر",
@@ -621,5 +692,120 @@
     "privacyTitle": "الخصوصية",
     "privacyBody": "تُستعمل المعلومات المرسلة عبر نماذجنا (الاسم، البريد، الهاتف) لمعالجة طلباتكم فقط ولا تُشارك مع أي طرف ثالث. للأسئلة أو طلبات الحذف: contact@dtech.dz.",
     "back": "العودة إلى الرئيسية"
+  },
+  "showroom": {
+    "nav": {
+      "home": "الرئيسية",
+      "catalog": "الكتالوج",
+      "categories": "الفئات",
+      "brands": "العلامات",
+      "about": "من نحن",
+      "search": "بحث",
+      "cart": "السلة",
+      "menu": "القائمة",
+      "close": "إغلاق"
+    },
+    "footer": {
+      "blurb": "الموزع الرسمي لـ HP وDell وLenovo وASUS وTP-Link وCanon وEpson في الجزائر منذ 2006. ‏393 منتجاً، تسليم في 58 ولاية.",
+      "allProducts": "كل المنتجات",
+      "service": "الخدمات",
+      "contact": "اتصل بنا"
+    },
+    "cart": {
+      "title": "سلتي",
+      "count": "{count} عنصر",
+      "empty": "سلتك فارغة. تصفح الكتالوج وأضف منتجات.",
+      "add": "أضف إلى السلة",
+      "close": "إغلاق",
+      "less": "تقليل الكمية",
+      "more": "زيادة الكمية",
+      "remove": "إزالة {name}",
+      "clear": "إفراغ السلة",
+      "orderWhatsApp": "اطلب عبر واتساب",
+      "note": "لا دفع إلكتروني — أرسل سلتك عبر واتساب ويؤكد فريقنا التجاري التوفر والسعر.",
+      "waIntro": "مرحباً D-Tech! أود طلب:"
+    },
+    "filters": {
+      "all": "الكل",
+      "searchPlaceholder": "تصفية هذه المنتجات…",
+      "results": "{count} منتج",
+      "sort": "ترتيب",
+      "sortAz": "الاسم أ–ي",
+      "sortZa": "الاسم ي–أ",
+      "sortFeatured": "المميز أولاً",
+      "noResults": "لا توجد منتجات مطابقة لهذه التصفية.",
+      "reset": "إعادة تعيين",
+      "prev": "تمرير للخلف",
+      "next": "تمرير للأمام",
+      "page": "صفحة {n}",
+      "prevPage": "الصفحة السابقة",
+      "nextPage": "الصفحة التالية",
+      "brandsLabel": "العلامات",
+      "categoriesLabel": "الفئات"
+    },
+    "product": {
+      "addToCart": "أضف إلى السلة",
+      "orderWhatsApp": "اطلب عبر واتساب",
+      "waProduct": "مرحباً D-Tech! أنا مهتم بـ:",
+      "similar": "منتجات مشابهة",
+      "inquire": "اطرح سؤالاً",
+      "backCatalog": "الكتالوج الكامل",
+      "brandLabel": "العلامة",
+      "categoryLabel": "الفئة",
+      "availability": "متوفر · تسليم 58 ولاية",
+      "added": "أُضيف إلى السلة"
+    },
+    "reviews": {
+      "title": "آراء العملاء",
+      "basedOn": "بناءً على {count} تقييم",
+      "write": "اكتب تقييماً",
+      "name": "اسمك",
+      "namePlaceholder": "مثال: ياسين ب.",
+      "comment": "رأيك",
+      "commentPlaceholder": "شارك تجربتك مع هذا المنتج…",
+      "rating": "تقييمك",
+      "submit": "نشر التقييم",
+      "thanks": "شكراً! حُفظ تقييمك على هذا الجهاز وسيُنشر مع التحديث القادم للموقع.",
+      "mine": "تقييمك",
+      "empty": "لا توجد تقييمات بعد — كن الأول."
+    },
+    "categoriesPage": {
+      "kicker": "{count} فئة",
+      "title1": "الكتالوج،",
+      "title2": "حسب الفئة.",
+      "sub": "من الحواسيب المحمولة إلى الأحبار — كل عائلات كتالوج D-Tech.",
+      "explore": "استكشف",
+      "products": "{count} منتج"
+    },
+    "brandsPage": {
+      "kicker": "{count} علامة",
+      "title1": "العلامات التي",
+      "title2": "نوزعها.",
+      "sub": "توزيع رسمي وضمان محلي وخدمة ما بعد البيع.",
+      "explore": "عرض المنتجات"
+    },
+    "productsPage": {
+      "kicker": "{count} منتج · {cats} فئة · {brands} علامة",
+      "title1": "الكتالوج",
+      "title2": "الكامل.",
+      "sub": "صفِّ حسب الفئة أو العلامة، رتّب، واطلب مباشرة عبر واتساب."
+    }
+  },
+  "newsletter": {
+    "headline": "ابقَ على اطلاع.",
+    "lede": "اشترك في نشرة D-Tech — منتجات جديدة وعروض وتحديثات مباشرة إلى بريدك.",
+    "emailPlaceholder": "بريدك@example.com",
+    "submit": "اشترك",
+    "consent": "بالاشتراك، توافق على تلقي رسائل من D-Tech. يمكنك إلغاء الاشتراك بنقرة واحدة في أي وقت.",
+    "successPending": "افحص صندوق الوارد — وصلتك رسالة تأكيد.",
+    "successAlready": "أنت مشترك بالفعل — شكرًا!",
+    "successResent": "تم إعادة إرسال رابط التأكيد. افحص صندوق الوارد.",
+    "errInvalid": "بريد إلكتروني غير صالح.",
+    "errRateLimited": "محاولات كثيرة. أعد المحاولة بعد ساعة.",
+    "errGeneric": "حدث خطأ ما. أعد المحاولة.",
+    "confirmedTitle": "تم تأكيد الاشتراك.",
+    "alreadyTitle": "أنت مشترك مسبقًا.",
+    "invalidTitle": "رابط غير صالح أو منتهي.",
+    "errorTitle": "خطأ تقني."
   }
 }

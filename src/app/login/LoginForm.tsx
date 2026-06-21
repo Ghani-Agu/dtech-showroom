@@ -54,7 +54,7 @@ function LoginFormInner() {
         callbackURL: redirectTo,
       })
     } catch {
-      setError('Google sign-in failed. Try email and password instead.')
+      setError('Échec de la connexion Google. Essayez avec votre e-mail et votre mot de passe.')
       setIsGooglePending(false)
     }
   }
@@ -73,7 +73,7 @@ function LoginFormInner() {
     if (result.error) {
       setError(
         result.error.message ??
-          'Sign-in failed. Check your email and password.'
+          'Échec de la connexion. Vérifiez votre e-mail et votre mot de passe.'
       )
       setIsPending(false)
       return
@@ -84,32 +84,25 @@ function LoginFormInner() {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       <button
         type="button"
         onClick={handleGoogleSignIn}
         disabled={isGooglePending}
-        className="flex w-full items-center justify-center gap-3 rounded-md border border-surface-overlay bg-surface-elevated px-4 py-2.5 font-body text-sm font-medium text-text-primary transition-colors hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
+        className="lg-google"
       >
         <GoogleIcon />
-        {isGooglePending ? 'Redirecting…' : 'Continue with Google'}
+        {isGooglePending ? 'Redirection…' : 'Continuer avec Google'}
       </button>
 
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-surface-overlay" />
-        <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
-          or
-        </span>
-        <div className="h-px flex-1 bg-surface-overlay" />
+      <div className="lg-divider">
+        <span>ou</span>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <div className="space-y-2">
-        <label
-          htmlFor="email"
-          className="block font-body text-sm font-medium text-text-secondary"
-        >
-          Email
+      <form onSubmit={handleSubmit} noValidate>
+      <div className="lg-field">
+        <label htmlFor="email" className="lg-label">
+          E-mail
         </label>
         <input
           type="email"
@@ -119,24 +112,21 @@ function LoginFormInner() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md bg-surface-elevated px-4 py-3 font-body text-base text-text-primary outline-none transition placeholder:text-text-muted focus:ring-1 focus:ring-accent"
-          placeholder="you@d-techalgerie.com"
+          className="lg-input"
+          placeholder="vous@d-techalgerie.com"
         />
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label
-            htmlFor="password"
-            className="block font-body text-sm font-medium text-text-secondary"
-          >
-            Password
+      <div className="lg-field">
+        <div className="lg-row">
+          <label htmlFor="password" className="lg-label">
+            Mot de passe
           </label>
           <Link
             href="/forgot-password"
-            className="font-body text-sm text-text-muted underline decoration-text-muted underline-offset-2 transition-colors hover:text-text-secondary hover:decoration-accent"
+            className="lg-link"
           >
-            Forgot?
+            Mot de passe oublié ?
           </Link>
         </div>
         <input
@@ -148,22 +138,19 @@ function LoginFormInner() {
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md bg-surface-elevated px-4 py-3 font-body text-base text-text-primary outline-none transition placeholder:text-text-muted focus:ring-1 focus:ring-accent"
+          className="lg-input"
         />
       </div>
 
       {error ? (
-        <p role="alert" className="font-body text-sm text-semantic-error">
+        <p role="alert" className="lg-error">
           {error}
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full rounded-md bg-surface-elevated px-6 py-3 font-body text-base font-medium text-text-primary transition hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isPending ? 'Signing in…' : 'Sign in →'}
+      <button type="submit" disabled={isPending} className="lg-submit">
+        <span className="shine" aria-hidden="true" />
+        {isPending ? 'Connexion…' : 'Se connecter →'}
       </button>
       </form>
     </div>

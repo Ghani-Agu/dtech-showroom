@@ -6,7 +6,6 @@ import { db } from '@/db/client'
 import { sessions, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { requireAdmin } from '@/lib/auth-helpers'
-import { generateHash } from '@/lib/r2'
 import {
   userCreateSchema,
   userUpdateSchema,
@@ -39,34 +38,25 @@ export async function createUser(values: UserCreateValues) {
     }
   }
 
-  const tempPassword = generateHash('temp') + generateHash('pw') + 'A1!'
-
   try {
+    // The admin chooses the password — the employee signs in right away
+    // with email + password (or "Continuer avec Google" on the same Gmail).
     await auth.api.signUpEmail({
       body: {
         email: parsed.data.email,
-        password: tempPassword,
+        password: parsed.data.password,
         name: parsed.data.name,
       },
     })
 
-    if (parsed.data.role !== 'staff') {
-      await db
-        .update(users)
-        .set({ role: parsed.data.role })
-        .where(eq(users.email, parsed.data.email))
-    }
-
-    await auth.api
-      .requestPasswordReset({
-        body: {
-          email: parsed.data.email,
-          redirectTo: '/reset-password',
-        },
+    await db
+      .update(users)
+      .set({
+        role: parsed.data.role,
+        permissions:
+          parsed.data.role === 'admin' ? null : parsed.data.permissions,
       })
-      .catch((err) => {
-        console.error('[user-create] Failed to send reset email:', err)
-      })
+      .where(eq(users.email, parsed.data.email))
 
     revalidatePath('/admin/users')
 
@@ -75,7 +65,7 @@ export async function createUser(values: UserCreateValues) {
     console.error('[user-create] Failed:', err)
     return {
       ok: false as const,
-      errors: { _form: ['Failed to create user'] },
+      errors: { _form: ["Échec de la création du compte"] },
     }
   }
 }
@@ -106,6 +96,8 @@ export async function updateUser(
     .set({
       name: parsed.data.name,
       role: parsed.data.role,
+      permissions:
+        parsed.data.role === 'admin' ? null : parsed.data.permissions,
       updatedAt: new Date(),
     })
     .where(eq(users.id, userId))

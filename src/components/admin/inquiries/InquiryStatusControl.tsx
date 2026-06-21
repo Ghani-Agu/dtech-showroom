@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { updateInquiryStatus } from '@/server/admin-inquiry-actions'
@@ -11,10 +11,10 @@ interface InquiryStatusControlProps {
 }
 
 const statuses = [
-  { value: 'new', label: 'New' },
-  { value: 'contacted', label: 'Contacted' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'spam', label: 'Spam' },
+  { value: 'new', label: 'Nouvelle' },
+  { value: 'contacted', label: 'Contactée' },
+  { value: 'closed', label: 'Clôturée' },
+  { value: 'spam', label: 'Indésirable' },
 ] as const
 
 type Status = (typeof statuses)[number]['value']
@@ -38,17 +38,19 @@ export function InquiryStatusControl({
       if (!result.ok) {
         setStatus(previous)
         toast.error(
-          'error' in result ? result.error : 'Failed to update status'
+          'error' in result ? result.error : 'Échec de la mise à jour du statut'
         )
         return
       }
 
-      toast.success(`Marked as ${newStatus}`)
+      toast.success(
+        `Marquée comme ${{ new: 'nouvelle', contacted: 'contactée', closed: 'clôturée', spam: 'indésirable' }[newStatus]}`
+      )
     })
   }
 
   return (
-    <div role="radiogroup" aria-label="Inquiry status" className="space-y-2">
+    <div role="radiogroup" aria-label="Statut de la demande" className="space-y-2">
       {statuses.map((s) => (
         <button
           key={s.value}
@@ -61,14 +63,14 @@ export function InquiryStatusControl({
             'flex w-full items-center justify-between rounded-md px-4 py-2.5 font-body text-sm transition-colors',
             'disabled:cursor-not-allowed disabled:opacity-50',
             status === s.value
-              ? 'bg-surface-overlay text-text-primary ring-1 ring-accent'
-              : 'bg-transparent text-text-secondary hover:bg-surface-elevated hover:text-text-primary'
+              ? 'bg-white/[0.06] text-white ring-1 ring-cyan-400/50'
+              : 'bg-transparent text-[var(--admin-text-secondary)] hover:bg-white/[0.04] hover:text-white'
           )}
         >
           <span>{s.label}</span>
           {status === s.value && (
-            <span className="font-mono text-xs uppercase tracking-wider text-accent">
-              Current
+            <span className="font-mono text-xs uppercase tracking-wider text-[var(--admin-cyan)]">
+              Actuel
             </span>
           )}
         </button>

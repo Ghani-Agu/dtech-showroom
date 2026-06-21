@@ -24,7 +24,8 @@
     "search": "Rechercher",
     "about": "À propos",
     "contactDtech": "Contacter Dtech",
-    "viewSite": "Voir le site"
+    "viewSite": "Voir le site",
+    "inquiry": "Demande d'information"
   },
   "home": {
     "eyebrow": "DTECH ALGÉRIE · DEPUIS 2006",
@@ -238,13 +239,18 @@
     "pageTitle": "Marques",
     "indexHeading": "Les marques que nous distribuons",
     "indexSubtitle": "Cinq lignes sélectionnées pour leur qualité de fabrication, leurs droits de distribution, et la profondeur de leur gamme.",
-    "viewProducts": "Voir les produits"
+    "viewProducts": "Voir les produits",
+    "featured": "En vedette · {brand}",
+    "allProducts": "Tous les produits {brand} · {count}",
+    "noProducts": "Aucun produit {brand} au catalogue pour le moment."
   },
   "categories": {
     "pageTitle": "Catégories",
     "indexHeading": "Triées par usage",
     "indexSubtitle": "Parcourez le catalogue selon ce que vous recherchez.",
-    "viewCategory": "Voir la catégorie"
+    "viewCategory": "Voir la catégorie",
+    "allProducts": "Toute la catégorie {category} · {count}",
+    "noProducts": "Aucun produit dans {category} pour le moment."
   },
   "products": {
     "pageTitle": "Produits",
@@ -252,7 +258,57 @@
     "inquireButton": "Demander des informations",
     "relatedProducts": "Produits associés",
     "viewProduct": "Voir le produit",
-    "notAvailable": "Non disponible"
+    "notAvailable": "Non disponible",
+    "interested": "Intéressé ?",
+    "discussTitle": "Parlons-en ensemble",
+    "discussBody": "Écrivez-nous un mot sur l'usage que vous prévoyez du {product}. Dtech vous répond sous un jour ouvrable avec la disponibilité, les options de configuration et un devis.",
+    "indexHeading": "Le catalogue complet",
+    "indexSubtitle": "Tous les produits que nous distribuons actuellement, au même endroit. Filtrez par marque ou catégorie, et posez-nous vos questions.",
+    "countLabel": "{count} produits",
+    "specLabels": {
+      "ANC": "ANC",
+      "Antennas": "Antennes",
+      "Bands": "Bandes",
+      "Battery": "Batterie",
+      "Buttons": "Boutons",
+      "Cable": "Câble",
+      "Camera": "Caméra",
+      "Capacity": "Capacité",
+      "Chip": "Puce",
+      "Connectivity": "Connectivité",
+      "Cooling": "Refroidissement",
+      "Coverage": "Couverture",
+      "DPI": "DPI",
+      "Display": "Écran",
+      "Frame": "Châssis",
+      "Functions": "Fonctions",
+      "Graphics": "Carte graphique",
+      "Housing": "Boîtier",
+      "Indicator": "Indicateur",
+      "Input": "Entrée",
+      "Interface": "Interface",
+      "Jacket": "Gaine",
+      "Keycaps": "Touches",
+      "Length": "Longueur",
+      "Memory": "Mémoire",
+      "Microphone": "Microphone",
+      "Output": "Sortie",
+      "Port": "Port",
+      "Ports": "Ports",
+      "Power": "Puissance",
+      "Processor": "Processeur",
+      "Rating": "Certification",
+      "Security": "Sécurité",
+      "Standard": "Norme",
+      "Storage": "Stockage",
+      "Stylus": "Stylet",
+      "Switches": "Switchs",
+      "Switching": "Commutation",
+      "Technology": "Technologie",
+      "Throughput": "Débit",
+      "Type": "Type",
+      "Weight": "Poids"
+    }
   },
   "search": {
     "pageTitle": "Recherche",
@@ -287,7 +343,8 @@
       "invalidEmail": "Veuillez saisir une adresse e-mail valide",
       "messageTooShort": "Le message doit contenir au moins 10 caractères",
       "submitFailed": "Impossible d'envoyer la demande. Veuillez réessayer."
-    }
+    },
+    "rateLimited": "Trop de demandes depuis cette adresse. Réessayez dans une heure, ou écrivez-nous directement à contact@dtech.dz."
   },
   "about": {
     "pageTitle": "À propos",
@@ -313,7 +370,14 @@
     "wordmark": "DTECH",
     "tagline": "Le matériel. Présenté avec soin.",
     "copyright": "© {year} Dtech Algérie. Tous droits réservés.",
-    "established": "Depuis 2006 · Alger"
+    "established": "Depuis 2006 · Alger",
+    "legalNotice": "Mentions légales",
+    "terms": "CGV",
+    "privacy": "Confidentialité",
+    "commercial": "Commercial",
+    "sav": "SAV",
+    "addressLine1": "Cité 05 Juillet 1962",
+    "addressLine2": "Bab Ezzouar, Alger"
   },
   "notFound": {
     "title": "Introuvable",
@@ -347,7 +411,10 @@
       "cartAria": "Panier",
       "themeAria": "Basculer le thème",
       "langAria": "Changer de langue",
-      "arSoon": "Arabe — bientôt disponible"
+      "arSoon": "Arabe — bientôt disponible",
+      "searchPlaceholder": "Rechercher un produit…",
+      "searchNoResults": "Aucun résultat",
+      "searchSeeAll": "Voir tous les résultats"
     },
     "logo": {
       "tagline": "Algérie · 2026"
@@ -417,7 +484,8 @@
         "network": "Réseau",
         "parts": "Composants",
         "gaming": "Gaming"
-      }
+      },
+      "viewAll": "Toutes les catégories"
     },
     "brands": {
       "kicker": "Marques officiellement distribuées",
@@ -433,7 +501,8 @@
         "tplink": "Routers, switches, AP",
         "canon": "Printers, scanners, copiers",
         "epson": "Printers, copiers"
-      }
+      },
+      "viewAll": "Toutes les marques"
     },
     "catalog": {
       "kicker": "{products} produits · {categories} catégories · {brands} marques",
@@ -451,7 +520,9 @@
       "pageAria": "Page {n}",
       "inStock": "En stock",
       "currency": "DA",
-      "addAria": "Ajouter"
+      "addAria": "Ajouter",
+      "addToCart": "Ajouter au panier",
+      "added": "Ajouté"
     },
     "about": {
       "kicker": "À propos · D-Tech Algérie",
@@ -621,5 +692,120 @@
     "privacyTitle": "Confidentialité",
     "privacyBody": "Les informations transmises via nos formulaires (nom, e-mail, téléphone) servent uniquement à traiter vos demandes et ne sont jamais cédées à des tiers. Pour toute question ou demande de suppression : contact@dtech.dz.",
     "back": "Retour à l'accueil"
+  },
+  "showroom": {
+    "nav": {
+      "home": "Accueil",
+      "catalog": "Catalogue",
+      "categories": "Catégories",
+      "brands": "Marques",
+      "about": "À propos",
+      "search": "Rechercher",
+      "cart": "Panier",
+      "menu": "Menu",
+      "close": "Fermer"
+    },
+    "footer": {
+      "blurb": "Distributeur officiel HP, Dell, Lenovo, ASUS, TP-Link, Canon et Epson en Algérie depuis 2006. 393 produits, livrés dans les 58 wilayas.",
+      "allProducts": "Tous les produits",
+      "service": "Service",
+      "contact": "Contact"
+    },
+    "cart": {
+      "title": "Mon panier",
+      "count": "{count} article(s)",
+      "empty": "Votre panier est vide. Parcourez le catalogue et ajoutez des produits.",
+      "add": "Ajouter au panier",
+      "close": "Fermer",
+      "less": "Diminuer la quantité",
+      "more": "Augmenter la quantité",
+      "remove": "Retirer {name}",
+      "clear": "Vider le panier",
+      "orderWhatsApp": "Commander via WhatsApp",
+      "note": "Pas de paiement en ligne — envoyez votre panier sur WhatsApp et notre équipe commerciale confirme disponibilité et prix.",
+      "waIntro": "Bonjour D-Tech ! Je souhaite commander :"
+    },
+    "filters": {
+      "all": "Tout",
+      "searchPlaceholder": "Filtrer ces produits…",
+      "results": "{count} produit(s)",
+      "sort": "Trier",
+      "sortAz": "Nom A–Z",
+      "sortZa": "Nom Z–A",
+      "sortFeatured": "En vedette d’abord",
+      "noResults": "Aucun produit ne correspond à ces filtres.",
+      "reset": "Réinitialiser les filtres",
+      "prev": "Défiler en arrière",
+      "next": "Défiler en avant",
+      "page": "Page {n}",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "brandsLabel": "Marques",
+      "categoriesLabel": "Catégories"
+    },
+    "product": {
+      "addToCart": "Ajouter au panier",
+      "orderWhatsApp": "Commander via WhatsApp",
+      "waProduct": "Bonjour D-Tech ! Ce produit m’intéresse :",
+      "similar": "Produits similaires",
+      "inquire": "Poser une question",
+      "backCatalog": "Catalogue complet",
+      "brandLabel": "Marque",
+      "categoryLabel": "Catégorie",
+      "availability": "En stock · livraison 58 wilayas",
+      "added": "Ajouté au panier"
+    },
+    "reviews": {
+      "title": "Avis clients",
+      "basedOn": "Basé sur {count} avis",
+      "write": "Écrire un avis",
+      "name": "Votre nom",
+      "namePlaceholder": "ex. Yacine B.",
+      "comment": "Votre avis",
+      "commentPlaceholder": "Partagez votre expérience avec ce produit…",
+      "rating": "Votre note",
+      "submit": "Publier l’avis",
+      "thanks": "Merci ! Votre avis est enregistré sur cet appareil et sera publié à la prochaine mise à jour du site.",
+      "mine": "Votre avis",
+      "empty": "Pas encore d’avis — soyez le premier."
+    },
+    "categoriesPage": {
+      "kicker": "{count} catégories",
+      "title1": "Le catalogue,",
+      "title2": "par catégorie.",
+      "sub": "Du laptop au toner — toutes les familles du catalogue D-Tech.",
+      "explore": "Explorer",
+      "products": "{count} produits"
+    },
+    "brandsPage": {
+      "kicker": "{count} marques",
+      "title1": "Les marques que",
+      "title2": "nous distribuons.",
+      "sub": "Distribution officielle, garantie locale et SAV qualifié.",
+      "explore": "Voir les produits"
+    },
+    "productsPage": {
+      "kicker": "{count} produits · {cats} catégories · {brands} marques",
+      "title1": "Le catalogue",
+      "title2": "complet.",
+      "sub": "Filtrez par catégorie ou marque, triez, et commandez directement sur WhatsApp."
+    }
+  },
+  "newsletter": {
+    "headline": "Restez au courant.",
+    "lede": "Inscrivez-vous à la newsletter D-Tech — nouveautés, offres et annonces, directement dans votre boîte mail.",
+    "emailPlaceholder": "votre@email.com",
+    "submit": "S’inscrire",
+    "consent": "En vous inscrivant, vous acceptez de recevoir des e-mails de D-Tech. Désabonnement en un clic à tout moment.",
+    "successPending": "Vérifiez votre boîte mail — un message de confirmation vient d’arriver.",
+    "successAlready": "Vous êtes déjà inscrit·e — merci !",
+    "successResent": "Lien de confirmation renvoyé. Vérifiez votre boîte mail.",
+    "errInvalid": "Adresse e-mail invalide.",
+    "errRateLimited": "Trop de tentatives. Réessayez dans une heure.",
+    "errGeneric": "Une erreur s’est produite. Réessayez.",
+    "confirmedTitle": "Inscription confirmée.",
+    "alreadyTitle": "Déjà inscrit·e.",
+    "invalidTitle": "Lien invalide ou expiré.",
+    "errorTitle": "Erreur technique."
   }
 }

@@ -1,20 +1,23 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
+import { imgOr } from '@/lib/img'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { Container } from '@/components/ui/Container'
-import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
-import { Heading } from '@/components/ui/Heading'
-import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
-import { InquiryButton } from '@/components/ui/InquiryButton'
-import { ProductStage } from '@/components/product/ProductStage'
-import { ProductSpecs } from '@/components/product/ProductSpecs'
-import { ProductInquiryBlock } from '@/components/product/ProductInquiryBlock'
-import { ProductGrid } from '@/components/catalog/ProductGrid'
+import { Link } from '@/i18n/routing'
+import { Carousel } from '@/components/showroom/Carousel'
+import { ProductActions } from '@/components/showroom/ProductActions'
+import { ReviewsSection } from '@/components/showroom/ReviewsSection'
+import { ShowroomCard } from '@/components/showroom/ShowroomCard'
+import { toExplorerProducts } from '@/lib/showroom-data'
 import { type Locale } from '@/i18n/config'
 import {
   getProductBySlug,
-  getRelatedProducts,
+  getProductsByCategory,
 } from '@/server/queries'
+import { getPublishedPage } from '@/server/editor-page-data'
+import { PublishedPage } from '@/components/admin/editor/PublishedPage'
+import { buildProductData } from '@/server/template-data'
+import type { PageDoc } from '@/components/admin/editor/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,98 +30,164 @@ export async function generateMetadata({
 }: ProductPageProps): Promise<Metadata> {
   const { locale, productSlug } = await params
   const product = await getProductBySlug(productSlug, locale as Locale)
-  if (!product) return { title: 'Product not found' }
-  return {
-    title: `${product.name} — ${product.brand.name}`,
-    description: product.tagline,
-  }
+  if (!product) notFound()
+  return { title: product.name, description: product.tagline }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { productSlug } = await params
   const locale = (await getLocale()) as Locale
-  const t = await getTranslations('products')
-  const tNav = await getTranslations('navigation')
+  const t = await getTranslations('showroom')
 
   const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
 
-  const related = await getRelatedProducts(
-    product.id,
-    product.brandId,
-    3,
-    locale
-  )
-  const paragraphs = product.description.split(/\n\n+/)
+  // A published "Modèle · Produit" overrides the default layout, filled with
+  // this product's live data.
+  const tmpl = await getPublishedPage('tmpl:product')
+  if (tmpl) {
+    const relatedRaw = (
+      await getProductsByCategory(product.category.slug, locale)
+    ).filter((rp) => rp.slug !== product.slug)
+    return (
+      <PublishedPage
+        doc={tmpl as unknown as PageDoc}
+        data={buildProductData(product, relatedRaw.slice(0, 12))}
+      />
+    )
+  }
+
+  const similar = toExplorerProducts(
+    await getProductsByCategory(product.category.slug, locale)
+  ).filter((p) => p.slug !== product.slug)
+
+  const paragraphs = product.description.split('\n\n')
 
   return (
-    <section className="py-12 md:py-16">
-      <Container>
-        <div className="space-y-12">
-          <Breadcrumbs
-            items={[
-              { label: tNav('home'), href: '/' },
-              { label: tNav('brands'), href: '/brands' },
-              { label: product.brand.name, href: `/brands/${product.brand.slug}` },
-              { label: product.name },
-            ]}
+    <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
+      <nav className="sr-crumbs sr-in" style={{ marginBottom: 20 }}>
+        <Link href="/">{t('nav.home')}</Link>
+        <span className="sep">/</span>
+        <Link href="/products">{t('nav.catalog')}</Link>
+        <span className="sep">/</span>
+        <Link href={`/categories/${product.category.slug}`}>
+          {product.category.name}
+        </Link>
+        <span className="sep">/</span>
+        <span className="cur">{product.name}</span>
+      </nav>
+
+      <div
+        className="sr-in"
+        style={{
+          display: 'grid',
+          gap: 34,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          alignItems: 'start',
+        }}
+      >
+        {/* image */}
+        <div
+          style={{
+            position: 'relative',
+            borderRadius: 22,
+            overflow: 'hidden',
+            border: '1px solid var(--sr-line)',
+            aspectRatio: '4 / 3',
+            background: '#0a1322',
+          }}
+        >
+          <Image
+            src={imgOr(product.heroImagePath ?? product.cardImagePath)}
+            alt={product.name}
+            fill
+            sizes="(min-width: 1024px) 600px, 100vw"
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </div>
+
+        {/* info */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <span className="sr-kicker">
+            <Link
+              href={`/brands/${product.brand.slug}`}
+              style={{ color: 'inherit', textDecoration: 'none' }}
+            >
+              {product.brand.name}
+            </Link>
+            {' · '}
+            <Link
+              href={`/categories/${product.category.slug}`}
+              style={{ color: 'inherit', textDecoration: 'none' }}
+            >
+              {product.category.name}
+            </Link>
+          </span>
+          <h1 className="sr-h1" style={{ fontSize: 'clamp(26px, 3.4vw, 42px)' }}>
+            {product.name}
+            <span className="acc">.</span>
+          </h1>
+          <p className="sr-sub" style={{ fontSize: 17 }}>{product.tagline}</p>
+          <span
+            className="sr-mono"
+            style={{ color: 'var(--sr-cyan)', display: 'inline-flex', alignItems: 'center', gap: 7 }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <path d="M5 13l5 5L20 6" />
+            </svg>
+            {t('product.availability')}
+          </span>
+
+          <ProductActions
+            slug={product.slug}
+            name={product.name}
+            brand={product.brand.name}
+            image={imgOr(product.cardImagePath)}
           />
 
-          {/* Stage */}
-          <ProductStage product={product} />
-
-          {/* Header */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div className="max-w-3xl space-y-4">
-              <EyebrowLabel>
-                {product.brand.name.toUpperCase()} · {product.category.name.toUpperCase()}
-              </EyebrowLabel>
-              <Heading as="h1" size="xl">
-                {product.name}
-              </Heading>
-              <p className="font-display text-2xl text-text-secondary md:text-3xl">
-                {product.tagline}
-              </p>
-            </div>
-            <div className="lg:pb-2">
-              <InquiryButton href={`/inquiry/${product.slug}`}>
-                {t('inquireButton')}
-              </InquiryButton>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="max-w-3xl space-y-6">
+          <div style={{ borderTop: '1px solid var(--sr-line)', paddingTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {paragraphs.map((p, i) => (
-              <p key={i} className="font-body text-lg leading-relaxed text-text-secondary">
+              <p key={i} className="sr-sub" style={{ maxWidth: 'none' }}>
                 {p}
               </p>
             ))}
           </div>
 
-          {/* Specs */}
-          <div className="space-y-6">
-            <EyebrowLabel>{t('specifications').toUpperCase()}</EyebrowLabel>
-            <ProductSpecs specs={product.specs} />
-          </div>
-
-          {/* Inquiry block */}
-          <ProductInquiryBlock
-            productSlug={product.slug}
-            productName={product.name}
-          />
-
-          {/* Related */}
-          {related.length > 0 ? (
-            <div className="space-y-8">
-              <EyebrowLabel>
-                {t('relatedProducts').toUpperCase()}
-              </EyebrowLabel>
-              <ProductGrid products={related} />
-            </div>
-          ) : null}
+          <Link
+            href={`/inquiry/${product.slug}`}
+            className="sr-btn sr-btn-ghost"
+            style={{ alignSelf: 'flex-start' }}
+          >
+            {t('product.inquire')} →
+          </Link>
         </div>
-      </Container>
+      </div>
+
+      <ReviewsSection slug={product.slug} />
+
+      {similar.length > 0 ? (
+        <section style={{ marginTop: 60 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
+            <h2 className="sr-h2">
+              {t('product.similar')}
+              <span className="acc">.</span>
+            </h2>
+            <Link
+              href={`/categories/${product.category.slug}`}
+              className="sr-mono"
+              style={{ color: 'var(--sr-cyan)', textDecoration: 'none' }}
+            >
+              {t('product.backCatalog')} →
+            </Link>
+          </div>
+          <Carousel prevLabel={t('filters.prev')} nextLabel={t('filters.next')}>
+            {similar.slice(0, 12).map((p, i) => (
+              <ShowroomCard key={p.slug} product={p} index={i} />
+            ))}
+          </Carousel>
+        </section>
+      ) : null}
     </section>
   )
 }

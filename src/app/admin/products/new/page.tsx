@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { asc } from 'drizzle-orm'
 import { ProductForm } from '@/components/admin/products/ProductForm'
 import { db } from '@/db/client'
 import { brands, categories } from '@/db/schema'
 
 export const metadata: Metadata = {
-  title: 'New product — Dtech Admin',
+  title: 'Nouveau produit · Dtech Admin',
   robots: { index: false, follow: false },
 }
 
@@ -22,13 +22,13 @@ export default async function NewProductPage() {
   ])
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="max-w-[1200px] space-y-6">
       <div>
-        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-          Products / New
+        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+          Produits / Nouveau
         </p>
-        <h1 className="font-display text-3xl tracking-tight text-text-primary">
-          New product<span className="text-accent">.</span>
+        <h1 className="font-display text-3xl tracking-tight text-white">
+          Nouveau produit<span className="text-[var(--admin-cyan)]">.</span>
         </h1>
       </div>
 

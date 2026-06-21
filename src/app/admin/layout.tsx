@@ -1,15 +1,29 @@
+import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 import { Toaster } from 'sonner'
-import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
-import { AdminHeader } from '@/components/admin/AdminHeader'
+import { AmbientBackground } from '@/components/admin/AmbientBackground'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminTopbar } from '@/components/admin/AdminTopbar'
 import { CommandPaletteProvider } from '@/components/admin/CommandPaletteProvider'
-import { db } from '@/db/client'
-import { users } from '@/db/schema'
 import { auth } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth-helpers'
+import { allowedSections } from '@/lib/permissions'
 
+export const metadata: Metadata = {
+  title: 'Admin · Dtech',
+  robots: { index: false, follow: false },
+}
+
+/**
+ * Admin shell — applies `.admin-shell` so the glass tokens / keyframes
+ * defined in globals.css are scoped here only, never leaking into the
+ * public catalog.
+ *
+ * Authentication: the existing better-auth session guard is preserved.
+ * The spec's "do not add authentication" is interpreted as "do not add
+ * new auth"; removing the existing guard would expose admin endpoints.
+ */
 export default async function AdminLayout({
   children,
 }: {
@@ -23,42 +37,35 @@ export default async function AdminLayout({
     redirect('/login?redirect=/admin')
   }
 
-  const userRow = await db
-    .select({ role: users.role })
-    .from(users)
-    .where(eq(users.id, session.user.id))
-    .limit(1)
-    .then((rows) => rows[0])
-    .catch(() => null)
-
-  const userRole = userRow?.role ?? 'staff'
+  const sessionUser = await getSessionUser()
+  const allowed = sessionUser ? allowedSections(sessionUser) : []
 
   return (
-    <CommandPaletteProvider>
-      <div className="flex min-h-screen bg-surface-base">
-        <AdminSidebar userRole={userRole} />
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          <AdminHeader />
-          <AdminBreadcrumb />
-
-          <main className="flex-1 overflow-y-auto px-8 py-8">
-            {children}
-          </main>
+    <div
+      className="admin-shell relative min-h-screen text-white"
+      style={{ background: 'var(--admin-canvas)' }}
+    >
+      <AmbientBackground />
+      <CommandPaletteProvider>
+        <div className="relative z-10 flex min-h-screen">
+          <AdminSidebar allowed={allowed} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <AdminTopbar userName={session.user?.name ?? undefined} />
+            <main className="flex-1 px-8 pb-10 pt-6">{children}</main>
+          </div>
         </div>
-
-        <Toaster
-          position="bottom-right"
-          theme="dark"
-          toastOptions={{
-            style: {
-              background: 'var(--color-surface-elevated)',
-              color: 'var(--color-text-primary)',
-              border: '1px solid var(--color-surface-overlay)',
-            },
-          }}
-        />
-      </div>
-    </CommandPaletteProvider>
+      </CommandPaletteProvider>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: 'var(--admin-glass-bg)',
+            color: 'var(--admin-text-primary)',
+            border: '1px solid var(--admin-glass-border-strong)',
+            backdropFilter: 'blur(12px)',
+          },
+        }}
+      />
+    </div>
   )
 }

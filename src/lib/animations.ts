@@ -1,12 +1,21 @@
 /**
  * Canonical motion module for Dtech Showroom.
- * All motion in the project must consume these tokens.
- * Spring physics is banned per v2 brand spec §5.2.
+ *
+ * All motion in the project must consume these tokens. Per brand v2 §7
+ * the motion language is "continuous, layered, responsive" — atmospheric
+ * background motion is always on (long cycles), interactions respond
+ * within 150–300ms (damped), and choreographed reveals stagger between
+ * siblings.
+ *
+ * v2 §7 ALLOWS spring physics; the prior "spring physics is banned"
+ * directive came from an intermediate spec that v2 supersedes.
  */
 
 import type { Variants } from 'framer-motion'
 
+// =====================================================================
 // Easing curves as cubic-bezier tuples (Framer-compatible)
+// =====================================================================
 export const easing = {
   out: [0.22, 1, 0.36, 1],
   outExpo: [0.16, 1, 0.30, 1],
@@ -14,25 +23,45 @@ export const easing = {
   in: [0.50, 0, 0.75, 0],
 } as const
 
+// =====================================================================
 // Durations in seconds (Framer-native)
+//
+// v2 §7 additions: `instant` for micro-feedback, `ambient` and
+// `ambientLong` for background drift cycles. Existing keys preserved.
+// =====================================================================
 export const duration = {
-  fast: 0.15,
-  base: 0.28,
-  slow: 0.56,
-  cinematic: 1.1,
-  hero: 2.2,
+  instant: 0.1,       // v2: micro-interactions (key press feedback)
+  fast: 0.15,         // hovers, focus rings
+  base: 0.28,         // standard transitions
+  slow: 0.56,         // page section reveals
+  cinematic: 1.1,     // hero entrances
+  hero: 2.2,          // legacy alias; prefer `cinematic`
+  ambient: 8.0,       // v2: short atmospheric drift cycle
+  ambientLong: 30.0,  // v2: long atmospheric drift cycle
 } as const
 
-// Stagger timings in seconds
+// =====================================================================
+// Stagger timings in seconds — v2 §7 calls for 50–100ms between siblings.
+// =====================================================================
 export const stagger = {
   sibling: 0.06,
   row: 0.12,
 } as const
 
-// Canonical Framer Motion variants.
-// Each variant has 'hidden' and 'visible' states.
-// Variants are designed to be composable with whileInView or
+// =====================================================================
+// Spring physics token — v2 §7. Soft overshoot only, never cartoon
+// bounce (anti-pattern called out in §7 principle 4).
+// =====================================================================
+export const spring = {
+  type: 'spring' as const,
+  stiffness: 100,
+  damping: 20,
+} as const
+
+// =====================================================================
+// Canonical Framer Motion variants. Composable with whileInView or
 // animate prop drivers.
+// =====================================================================
 
 export const fadeRise: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -80,7 +109,9 @@ export const cinematicReveal: Variants = {
   },
 }
 
+// =====================================================================
 // GSAP easing strings — pass directly to gsap.to() / gsap.from() ease prop.
+// =====================================================================
 export const gsapEasing = {
   out: 'cubic-bezier(0.22, 1, 0.36, 1)',
   outExpo: 'cubic-bezier(0.16, 1, 0.30, 1)',

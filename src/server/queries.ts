@@ -200,6 +200,21 @@ export async function getProductsByCategory(
   return rows.map((p) => localizeProduct(p, locale))
 }
 
+export async function getAllProducts(
+  locale: Locale = defaultLocale
+): Promise<ProductWithRelations[]> {
+  const rows = await safe(
+    () =>
+      db.query.products.findMany({
+        where: isNull(products.archivedAt),
+        with: { brand: true, category: true },
+        orderBy: [asc(products.sortOrder), asc(products.name)],
+      }),
+    [] as ProductWithRelations[]
+  )
+  return rows.map((p) => localizeProduct(p, locale))
+}
+
 export async function getFeaturedProducts(
   limit = 8,
   locale: Locale = defaultLocale

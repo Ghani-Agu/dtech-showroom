@@ -12,11 +12,11 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-md transition-colors',
-        variant === 'default' && 'bg-surface-elevated',
-        variant === 'subtle' && 'bg-surface-base',
-        variant === 'outline' &&
-          'border border-surface-overlay bg-transparent',
+        // All variants render as glass now — "subtle" and "outline" map to
+        // the same surface; the variant prop is preserved for API stability.
+        'glass-surface',
+        variant === 'subtle' && 'bg-white/[0.02]',
+        variant === 'outline' && 'bg-transparent',
         className
       )}
       {...props}
@@ -30,10 +30,7 @@ export function CardHeader({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        'border-b border-surface-overlay px-6 py-4',
-        className
-      )}
+      className={cn('border-b border-white/[0.06] px-6 py-4', className)}
       {...props}
     />
   )
@@ -45,7 +42,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn('font-display text-lg text-text-primary', className)}
+      className={cn('font-display text-lg text-white', className)}
       {...props}
     />
   )
@@ -58,7 +55,7 @@ export function CardDescription({
   return (
     <p
       className={cn(
-        'mt-1 font-body text-sm text-text-secondary',
+        'mt-1 font-body text-sm text-[var(--admin-text-secondary)]',
         className
       )}
       {...props}
@@ -80,7 +77,7 @@ export function CardFooter({
   return (
     <div
       className={cn(
-        'flex items-center justify-end gap-3 border-t border-surface-overlay px-6 py-4',
+        'flex items-center justify-end gap-3 border-t border-white/[0.06] px-6 py-4',
         className
       )}
       {...props}

@@ -45,6 +45,14 @@ export default function RootLayout({
         suppressHydrationWarning
         className="bg-surface-base font-body text-text-primary antialiased"
       >
+        {/* pre-paint theme bootstrap — keeps the light/white mode applied
+            on every page without a flash (toggle lives in SiteNav) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('nl-theme')==='light')document.body.dataset.homeTheme='light'}catch(e){}try{if(localStorage.getItem('admin-theme')==='light')document.documentElement.dataset.adminTheme='light'}catch(e){}",
+          }}
+        />
         {children}
         <Analytics />
         <SpeedInsights />

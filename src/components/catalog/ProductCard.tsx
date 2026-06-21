@@ -45,7 +45,10 @@ export function ProductCard({
         <p className="font-body text-sm text-text-secondary">
           {product.brand.name}
         </p>
-        <p className="font-mono text-xs text-text-muted">{product.cardSpec}</p>
+        {/* Latin technical spec — keep LTR even in RTL locales */}
+        <p dir="ltr" className="text-start font-mono text-xs text-text-muted">
+          {product.cardSpec}
+        </p>
       </div>
     </Link>
   )

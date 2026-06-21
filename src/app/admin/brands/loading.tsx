@@ -1,4 +1,4 @@
-import { Card } from '@/components/admin/ui/Card'
+﻿import { Card } from '@/components/admin/ui/Card'
 import { Skeleton } from '@/components/admin/ui/Skeleton'
 
 export default function BrandsLoading() {
@@ -13,7 +13,7 @@ export default function BrandsLoading() {
       </div>
 
       <Card>
-        <ul className="divide-y divide-surface-overlay">
+        <ul className="divide-y divide-white/[0.06]">
           {Array.from({ length: 4 }).map((_, i) => (
             <li key={i} className="flex items-center gap-4 px-6 py-4">
               <Skeleton className="h-12 w-12 rounded" />

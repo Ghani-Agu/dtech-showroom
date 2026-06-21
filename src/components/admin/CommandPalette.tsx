@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   MailQuestion,
   Package,
+  Paintbrush,
   Plus,
   Search,
   Tag,
@@ -42,64 +43,72 @@ export function CommandPalette({
   const items: CommandItem[] = [
     {
       id: 'nav-dashboard',
-      label: 'Dashboard',
-      description: 'Overview of inquiries and catalog',
+      label: 'Tableau de bord',
+      description: 'Vue d’ensemble des demandes et du catalogue',
       icon: LayoutDashboard,
       action: () => router.push('/admin'),
       keywords: ['home', 'overview'],
     },
     {
       id: 'nav-products',
-      label: 'Products',
-      description: 'Manage the product catalog',
+      label: 'Produits',
+      description: 'Gérer le catalogue de produits',
       icon: Package,
       action: () => router.push('/admin/products'),
     },
     {
       id: 'action-new-product',
-      label: 'New product',
-      description: 'Create a new product',
+      label: 'Nouveau produit',
+      description: 'Créer un nouveau produit',
       icon: Plus,
       action: () => router.push('/admin/products/new'),
       keywords: ['create', 'add'],
     },
     {
       id: 'action-import',
-      label: 'Import products',
-      description: 'Bulk import from CSV or XLSX',
+      label: 'Importer des produits',
+      description: 'Importation en masse depuis CSV ou XLSX',
       icon: Upload,
       action: () => router.push('/admin/products/import'),
       keywords: ['csv', 'xlsx', 'bulk', 'upload'],
     },
     {
       id: 'nav-inquiries',
-      label: 'Inquiries',
-      description: 'Customer inquiries and messages',
+      label: 'Demandes',
+      description: 'Demandes et messages des clients',
       icon: MailQuestion,
       action: () => router.push('/admin/inquiries'),
       keywords: ['messages', 'contact', 'leads'],
     },
     {
       id: 'nav-brands',
-      label: 'Brands',
-      description: 'Manage brand information',
+      label: 'Marques',
+      description: 'Gérer les informations des marques',
       icon: Tag,
       action: () => router.push('/admin/brands'),
     },
     {
       id: 'nav-categories',
-      label: 'Categories',
-      description: 'Manage product categories',
+      label: 'Catégories',
+      description: 'Gérer les catégories de produits',
       icon: FolderOpen,
       action: () => router.push('/admin/categories'),
     },
     {
       id: 'nav-users',
-      label: 'Users',
-      description: 'Manage admin and staff users',
+      label: 'Utilisateurs',
+      description: 'Gérer les comptes admin et équipe',
       icon: Users,
       keywords: ['staff', 'team', 'admin'],
       action: () => router.push('/admin/users'),
+    },
+    {
+      id: 'nav-editor',
+      label: 'Éditeur web',
+      description: 'Composer les pages du site (nouvel onglet)',
+      icon: Paintbrush,
+      keywords: ['editor', 'builder', 'pages', 'design', 'drag', 'blocs'],
+      action: () => window.open('/editor', '_blank', 'noopener,noreferrer'),
     },
   ]
 
@@ -153,14 +162,14 @@ export function CommandPalette({
       className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-32"
       onClick={() => onOpenChange(false)}
     >
-      <div className="absolute inset-0 bg-surface-base/80 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[var(--admin-canvas)]/80 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-xl overflow-hidden rounded-lg border border-surface-overlay bg-surface-elevated shadow-2xl"
+        className="relative w-full max-w-xl overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 border-b border-surface-overlay px-4 py-3">
-          <Search size={18} className="flex-shrink-0 text-text-muted" />
+        <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3">
+          <Search size={18} className="flex-shrink-0 text-[var(--admin-text-tertiary)]" />
           <input
             ref={inputRef}
             type="text"
@@ -169,14 +178,14 @@ export function CommandPalette({
               setQuery(e.target.value)
               setSelectedIndex(0)
             }}
-            placeholder="Search admin..."
-            className="flex-1 bg-transparent font-body text-base text-text-primary outline-none placeholder:text-text-muted"
+            placeholder="Rechercher dans l'admin…"
+            className="flex-1 bg-transparent font-body text-base text-white outline-none placeholder:text-[var(--admin-text-tertiary)]"
           />
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="p-1 text-text-muted transition-colors hover:text-text-primary"
-            aria-label="Close"
+            className="p-1 text-[var(--admin-text-tertiary)] transition-colors hover:text-white"
+            aria-label="Fermer"
           >
             <X size={16} />
           </button>
@@ -184,8 +193,8 @@ export function CommandPalette({
 
         <ul className="max-h-[400px] overflow-y-auto">
           {filtered.length === 0 ? (
-            <li className="px-4 py-8 text-center font-body text-sm text-text-muted">
-              No matches for &quot;{query}&quot;
+            <li className="px-4 py-8 text-center font-body text-sm text-[var(--admin-text-tertiary)]">
+              Aucun résultat pour « {query} »
             </li>
           ) : (
             filtered.map((item, idx) => {
@@ -203,22 +212,22 @@ export function CommandPalette({
                     className={cn(
                       'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
                       isSelected
-                        ? 'bg-surface-overlay'
-                        : 'hover:bg-surface-overlay/50'
+                        ? 'bg-white/[0.06]'
+                        : 'hover:bg-white/[0.04]'
                     )}
                   >
                     <Icon
                       size={16}
                       className={cn(
-                        isSelected ? 'text-accent' : 'text-text-muted'
+                        isSelected ? 'text-[var(--admin-cyan)]' : 'text-[var(--admin-text-tertiary)]'
                       )}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="font-body text-sm text-text-primary">
+                      <p className="font-body text-sm text-white">
                         {item.label}
                       </p>
                       {item.description && (
-                        <p className="truncate font-body text-xs text-text-muted">
+                        <p className="truncate font-body text-xs text-[var(--admin-text-tertiary)]">
                           {item.description}
                         </p>
                       )}
@@ -230,9 +239,9 @@ export function CommandPalette({
           )}
         </ul>
 
-        <div className="flex items-center justify-between border-t border-surface-overlay px-4 py-2 text-text-muted">
+        <div className="flex items-center justify-between border-t border-white/[0.08] px-4 py-2 text-[var(--admin-text-tertiary)]">
           <p className="font-mono text-xs">
-            ↑↓ navigate · ↵ select · esc close
+            ↑↓ naviguer · ↵ sélectionner · échap fermer
           </p>
         </div>
       </div>

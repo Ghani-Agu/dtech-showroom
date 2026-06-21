@@ -1,4 +1,4 @@
-import { Input } from '@/components/admin/ui/Input'
+﻿import { Input } from '@/components/admin/ui/Input'
 import { Textarea } from '@/components/admin/ui/Textarea'
 
 interface BilingualFieldProps {
@@ -34,12 +34,12 @@ export function BilingualField({
   return (
     <div className="space-y-2">
       <div>
-        <label className="block font-body text-sm font-medium text-text-secondary">
+        <label className="block font-body text-sm font-medium text-[var(--admin-text-secondary)]">
           {label}
-          {required && <span className="ml-1 text-accent">*</span>}
+          {required && <span className="ml-1 text-[var(--admin-cyan)]">*</span>}
         </label>
         {description && (
-          <p className="mt-1 font-body text-xs text-text-muted">
+          <p className="mt-1 font-body text-xs text-[var(--admin-text-tertiary)]">
             {description}
           </p>
         )}
@@ -47,9 +47,9 @@ export function BilingualField({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="space-y-1">
-          <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
+          <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
             English{' '}
-            {required && <span className="text-accent">(required)</span>}
+            {required && <span className="text-[var(--admin-cyan)]">(required)</span>}
           </p>
           {type === 'input' ? (
             <Input
@@ -70,8 +70,8 @@ export function BilingualField({
         </div>
 
         <div className="space-y-1">
-          <p className="font-mono text-xs uppercase tracking-wider text-text-muted">
-            Français <span className="text-text-muted">(optional)</span>
+          <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+            FranÃ§ais <span className="text-[var(--admin-text-tertiary)]">(optional)</span>
           </p>
           {type === 'input' ? (
             <Input

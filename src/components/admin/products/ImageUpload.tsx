@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
@@ -44,12 +44,12 @@ export function ImageUpload({
     const file = files[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file')
+      toast.error('Veuillez choisir un fichier image')
       return
     }
 
     if (!entitySlug) {
-      toast.error('Save the slug first before uploading images')
+      toast.error("Enregistrez d'abord le produit avant d'ajouter des photos")
       return
     }
 
@@ -70,7 +70,7 @@ export function ImageUpload({
       }
 
       onChange(result.result.url)
-      toast.success(`${variant} image uploaded`)
+      toast.success('Photo ajoutée')
     })
   }
 
@@ -87,7 +87,7 @@ export function ImageUpload({
       }
 
       onChange('')
-      toast.success('Image deleted')
+      toast.success('Photo supprimée')
     })
   }
 
@@ -115,11 +115,11 @@ export function ImageUpload({
   return (
     <div className="space-y-2">
       <div>
-        <label className="block font-body text-sm font-medium text-text-secondary">
+        <label className="block font-body text-sm font-medium text-[var(--admin-text-secondary)]">
           {label}
         </label>
         {description && (
-          <p className="mt-1 font-body text-xs text-text-muted">
+          <p className="mt-1 font-body text-xs text-[var(--admin-text-tertiary)]">
             {description}
           </p>
         )}
@@ -129,7 +129,7 @@ export function ImageUpload({
         <div className="group relative">
           <div
             className={cn(
-              'relative overflow-hidden rounded-md bg-surface-elevated',
+              'relative overflow-hidden rounded-md bg-white/[0.04]',
               variant === 'hero'
                 ? 'aspect-[16/9]'
                 : variant === 'logo'
@@ -150,16 +150,16 @@ export function ImageUpload({
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={isPending}
-              className="rounded-md bg-surface-base/90 px-3 py-1.5 font-body text-xs text-text-primary backdrop-blur transition-colors hover:bg-surface-base"
+              className="rounded-md bg-[var(--admin-canvas)]/90 px-3 py-1.5 font-body text-xs text-white backdrop-blur transition-colors hover:bg-[var(--admin-canvas)]"
             >
-              Replace
+              Remplacer
             </button>
             <button
               type="button"
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded-md bg-semantic-error/90 p-1.5 text-white backdrop-blur transition-colors hover:bg-semantic-error"
-              aria-label="Delete image"
+              className="rounded-md bg-rose-500/90 p-1.5 text-white backdrop-blur transition-colors hover:bg-rose-500"
+              aria-label="Supprimer la photo"
             >
               {isDeleting ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -183,37 +183,37 @@ export function ImageUpload({
                 ? 'aspect-square'
                 : 'aspect-[4/3]',
             isDragging
-              ? 'border-accent bg-accent/5'
-              : 'border-surface-overlay bg-surface-elevated hover:border-text-muted',
+              ? 'border-cyan-400/30 bg-[var(--admin-cyan)]/5'
+              : 'border-white/[0.08] bg-white/[0.04] hover:border-text-muted',
             isPending && 'cursor-not-allowed opacity-50'
           )}
         >
           {isUploading ? (
             <>
-              <Loader2 size={32} className="animate-spin text-accent" />
-              <p className="font-body text-sm text-text-secondary">
-                Processing image...
+              <Loader2 size={32} className="animate-spin text-[var(--admin-cyan)]" />
+              <p className="font-body text-sm text-[var(--admin-text-secondary)]">
+                Optimisation de la photo…
               </p>
-              <p className="font-mono text-xs text-text-muted">
+              <p className="font-mono text-xs text-[var(--admin-text-tertiary)]">
                 Generating WebP + AVIF variants
               </p>
             </>
           ) : (
             <>
-              <Upload size={32} className="text-text-muted" />
+              <Upload size={32} className="text-[var(--admin-text-tertiary)]" />
               <div className="text-center">
-                <p className="font-body text-sm text-text-primary">
-                  Drag image here, or click to browse
+                <p className="font-body text-sm text-white">
+                  Glissez une photo ici, ou cliquez pour parcourir
                 </p>
-                <p className="mt-1 font-mono text-xs text-text-muted">
+                <p className="mt-1 font-mono text-xs text-[var(--admin-text-tertiary)]">
                   {variant === 'hero'
-                    ? '2400×1350'
+                    ? '2400Ã—1350'
                     : variant === 'card'
-                      ? '800×600'
+                      ? '800Ã—600'
                       : variant === 'logo'
-                        ? '600×600'
-                        : '1600×1200'}{' '}
-                  · WebP + AVIF
+                        ? '600Ã—600'
+                        : '1600Ã—1200'}{' '}
+                  Â· WebP + AVIF
                 </p>
               </div>
             </>

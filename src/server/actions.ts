@@ -4,11 +4,13 @@ import { z } from 'zod'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { getTranslations } from 'next-intl/server'
 import { and, eq, isNull } from 'drizzle-orm'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { db } from '@/db/client'
 import { inquiries, products } from '@/db/schema'
+import { defaultLocale, isValidLocale, type Locale } from '@/i18n/config'
 
 const inquirySchema = z.object({
   productSlug: z.string().min(1),
@@ -18,6 +20,13 @@ const inquirySchema = z.object({
   company: z.string().max(120).optional().or(z.literal('')),
   message: z.string().min(10).max(5000),
 })
+
+// The form posts its locale so redirects and error messages stay in the
+// visitor's language (server actions don't run through the i18n proxy).
+function formLocale(formData: FormData): Locale {
+  const raw = formData.get('locale')
+  return typeof raw === 'string' && isValidLocale(raw) ? raw : defaultLocale
+}
 
 export type InquiryActionResult =
   | { ok: true }
@@ -45,7 +54,7 @@ export async function submitInquiry(
   if (typeof honeypot === 'string' && honeypot.length > 0) {
     const slug = formData.get('productSlug')
     redirect(
-      '/inquiry/sent' +
+      `/${formLocale(formData)}/inquiry/sent` +
         (typeof slug === 'string' && slug.length > 0
           ? `?from=${encodeURIComponent(slug)}`
           : '')
@@ -63,12 +72,14 @@ export async function submitInquiry(
 
     const { success } = await ratelimit.limit(ip)
     if (!success) {
+      const t = await getTranslations({
+        locale: formLocale(formData),
+        namespace: 'inquiry',
+      })
       return {
         ok: false,
         errors: {
-          _form: [
-            'Too many inquiries from this address. Please try again in an hour, or email contact@d-techalgerie.com directly.',
-          ],
+          _form: [t('rateLimited')],
         },
       }
     }
@@ -111,5 +122,8 @@ export async function submitInquiry(
   })
 
   revalidatePath('/admin/inquiries')
-  redirect('/inquiry/sent?from=' + encodeURIComponent(product.slug))
+  redirect(
+    `/${formLocale(formData)}/inquiry/sent?from=` +
+      encodeURIComponent(product.slug)
+  )
 }

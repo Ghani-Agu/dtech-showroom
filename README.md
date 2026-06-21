@@ -1,147 +1,59 @@
-# Dtech Showroom
+# D-Tech Web-Editor Claude Kit
 
-Cinematic 3D showroom for Dtech Algérie's product catalog.
+A lean agent team + skills + a master prompt, built to stop the two-week loop on
+the D-Tech Studio web editor and get the editor↔live-site link working and the
+sections/components/themes/hover-cards to a high bar.
 
-- **Path:** D — The Catalog as Cinematic Showroom
-- **Phase:** 6 — Authentication (better-auth + Resend)
-- **Stack:** Next.js 16 · TypeScript strict · Tailwind v4 · React Three Fiber · Framer Motion · GSAP · Lenis · Drizzle · Postgres
+## The core idea
+The loop wasn't a "not enough agents" problem — it was a **verification** problem.
+The agent edited blind (stale sandbox files + logged-out editor), so it could never
+confirm a change reached the real site. This kit fixes that:
+**skill teaches the how · hook enforces the rule · subagent isolates the work**,
+all built around one gate — *seen live on the real route = done; nothing else.*
 
-## Development
-
-```bash
-pnpm install
-pnpm dev
+## What's inside
+```
+.claude/
+  CLAUDE.md                      # always-loaded project context + the prime directive
+  agents/
+    lead-orchestrator.md         # the conductor (main session)
+    explorer-analyst.md          # read-only: maps code & reproduces bugs BEFORE edits
+    builder.md                   # implements ONE atomic change
+    verifier.md                  # proves it live (build + login + publish + screenshot)
+    design-reviewer.md           # judges visual quality + hover-cards
+  skills/
+    verify-live/                 # the mandatory live-verification gate
+    no-loop-protocol/            # atomic changes, checkpoints, two-strike stop
+    editor-architecture/         # how the editor↔live link is wired
+    section-component-design/    # the "so good, so simple" bar + hover-card spec
+    theme-system/                # the 8 themes + how theming reaches the live site
+  hooks/
+    README.md                    # optional deterministic enforcement of the gate
+MASTER_PROMPT.md                 # paste this to start a work session
 ```
 
-Open http://localhost:3000
+## Install (3 steps)
+1. Copy the `.claude/` folder into the root of your dtech-showroom repo. Commit it.
+2. Open `.claude/CLAUDE.md` and fill every `__FILL__`:
+   - repo path, dev command, build command,
+   - **how the agent logs into `/editor`** (most important — without it, it can't
+     verify and will loop),
+   - 2–3 design reference sites you want to benchmark against.
+   Then do the same `__FILL__` swaps in the skill/agent bodies (`__BUILD_CMD__`,
+   `__DEV_CMD__`, `__LOGIN_METHOD__`, `linear.app, framer.com, stripe.com`).
+3. Open Claude Code / Cowork on the repo and paste `MASTER_PROMPT.md`. It starts at
+   Phase 0 (make verification possible) — let it.
 
-## Database Setup
+## The team (why these five, not nine)
+Current docs put the sweet spot at 3–5 subagents; beyond that you spend more time
+merging summaries than you save, and context fragments — which *causes* loops.
+Themes and components aren't separate agents because they're **how-knowledge** →
+skills the builder and reviewer both load. Supervisor/problem-solver/tester aren't
+separate agents because they're the lead's job, the build-loop itself, and the
+verifier respectively.
 
-This project uses Postgres via Drizzle ORM. To run locally:
-
-1. Create a Postgres database. Easiest options:
-   - Neon (https://neon.tech) — free tier, copy connection string
-   - Supabase (https://supabase.com) — free tier, copy connection string
-   - Railway (https://railway.app) — free tier with $5 credit
-   - Local Postgres if you prefer
-
-2. Create `.env.local` in the project root:
-
-   ```
-   DATABASE_URL="postgresql://user:password@host:5432/database"
-   ```
-
-3. Push schema to your database:
-
-   ```bash
-   pnpm db:push
-   ```
-
-4. Seed with demo data:
-
-   ```bash
-   pnpm db:seed
-   ```
-
-5. Optionally open Drizzle Studio:
-
-   ```bash
-   pnpm db:studio
-   ```
-
-### Rate Limiting Setup (Production)
-
-Inquiry form submission is rate-limited via Upstash Redis (3 submissions per IP per hour). For development this is optional; submissions go through without checking. For production:
-
-1. Sign up at https://upstash.com (free tier covers ~10k/day)
-2. Create a Redis database (any region)
-3. Copy REST URL and REST TOKEN
-4. Add to `.env.local`:
-
-   ```
-   UPSTASH_REDIS_REST_URL="https://your-instance.upstash.io"
-   UPSTASH_REDIS_REST_TOKEN="your-token-here"
-   ```
-
-Also add `NEXT_PUBLIC_SITE_URL` so sitemap, robots, and OG images use the right absolute base.
-
-## Authentication Setup (Phase 6)
-
-The admin panel at `/admin/*` is protected by better-auth (email + password). Routes are blocked by `src/middleware.ts`; unauthenticated requests redirect to `/login?redirect=…`.
-
-### Initial setup
-
-1. Generate a secret:
-
-   ```bash
-   openssl rand -base64 32
-   ```
-
-   Set as `BETTER_AUTH_SECRET` in `.env.local`.
-
-2. Sign up for Resend (https://resend.com), create an API key, add to `.env.local` as `RESEND_API_KEY`. Password reset emails won't send without it.
-
-3. Apply the schema migration (creates `users`, `sessions`, `accounts`, `verifications`):
-
-   ```bash
-   pnpm db:push
-   ```
-
-4. Set initial admin credentials in `.env.local`:
-
-   ```
-   INITIAL_ADMIN_EMAIL=admin@d-techalgerie.com
-   INITIAL_ADMIN_NAME=Dtech Admin
-   INITIAL_ADMIN_PASSWORD=<min 8 chars>
-   ```
-
-5. Run the admin seed:
-
-   ```bash
-   pnpm db:seed-admin
-   ```
-
-6. Visit http://localhost:3000/login and sign in. Change the password from the admin UI when it lands in Phase 7.
-
-### Production notes
-
-- `RESEND_FROM_EMAIL` must be on a domain verified in Resend
-- `BETTER_AUTH_URL` must match the production URL
-- Never commit `BETTER_AUTH_SECRET` or `INITIAL_ADMIN_PASSWORD` to git
-- `.env.local` is gitignored; `.env.example` documents the full env surface
-
-## Adding Real Assets
-
-Asset folders are scaffolded under `public/images/` and `public/models/`. Drop real assets at the paths defined in seed data. Placeholders render automatically while assets are missing.
-
-Expected asset paths (examples):
-
-```
-public/images/products/hp-omen-16-i9-rtx-4070/card.webp
-public/images/products/hp-omen-16-i9-rtx-4070/hero.webp
-public/images/brands/hp/hero.webp
-public/images/brands/hp/logo.svg
-public/images/categories/laptops/hero.webp
-public/models/hp-omen-16-i9-rtx-4070.glb   (Phase 5+)
-```
-
-The catalog seed assumes:
-- Every product has `card.webp` and `hero.webp` under `public/images/products/[slug]/`
-- Hero and featured tiers reference a `.glb` model under `public/models/`
-- Longtail products carry four photography stills as `photo-1.webp` … `photo-4.webp`
-
-Generic SVG placeholders live in `public/images/placeholders/` and serve as the visual fallback for any missing path via `SmartImage`.
-
-## Scripts
-
-- `pnpm dev` — Dev server
-- `pnpm build` — Production build
-- `pnpm db:generate` — Generate Drizzle migrations from `src/db/schema.ts`
-- `pnpm db:push` — Sync schema to DB
-- `pnpm db:seed` — Seed demo data (30 products across 5 brands and 6 categories)
-- `pnpm db:seed-admin` — Create initial admin user from `INITIAL_ADMIN_*` env vars (Phase 6)
-- `pnpm db:studio` — Open Drizzle Studio
-
-## Status
-
-Phase 6 complete. The customer-facing site is production-ready (5a–5c: real-photo tier stages, shader hero, scroll choreography). Authentication is in: `/login`, `/forgot-password`, `/reset-password`, and `/admin/*` are middleware-protected by better-auth. The actual admin tool UI arrives in Phase 7.
+## One honest expectation
+No kit makes the model "never make a mistake." This one makes it **catch its own
+mistakes inside one iteration and revert instead of piling on** — which is what
+actually ends a loop. Phase 0 is non-negotiable: if the agent can't build, log in,
+and load the live site, fix that before anything else.

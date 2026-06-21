@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
@@ -24,10 +24,10 @@ export async function generateMetadata({
     .then((rows) => rows[0])
     .catch(() => null)
 
-  if (!brand) return { title: 'Brand not found' }
+  if (!brand) return { title: 'Marque introuvable' }
 
   return {
-    title: `Edit ${brand.name} — Dtech Admin`,
+    title: `Modifier ${brand.name} · Dtech Admin`,
     robots: { index: false, follow: false },
   }
 }
@@ -49,23 +49,23 @@ export default async function EditBrandPage({ params }: PageProps) {
     <div className="max-w-5xl space-y-6">
       <Link
         href="/admin/brands"
-        className="inline-flex items-center gap-2 font-body text-sm text-text-secondary transition-colors hover:text-text-primary"
+        className="inline-flex items-center gap-2 font-body text-sm text-[var(--admin-text-secondary)] transition-colors hover:text-white"
       >
         <ArrowLeft size={14} />
-        All brands
+        Toutes les marques
       </Link>
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-text-muted">
-            Brands / Edit
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+            Marques / Modifier
           </p>
-          <h1 className="font-display text-3xl tracking-tight text-text-primary">
+          <h1 className="font-display text-3xl tracking-tight text-white">
             {brand.name}
           </h1>
           <div className="mt-3 flex items-center gap-2">
             <Badge variant="neutral">/{brand.slug}</Badge>
-            {brand.archivedAt && <Badge variant="warning">Archived</Badge>}
+            {brand.archivedAt && <Badge variant="warning">Masquée</Badge>}
           </div>
         </div>
       </div>

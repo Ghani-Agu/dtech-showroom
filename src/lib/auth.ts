@@ -90,6 +90,15 @@ export const auth = betterAuth({
     },
   },
 
+  // An employee created with email+password can also sign in with
+  // "Continuer avec Google" using the same Gmail — the accounts link.
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['google'],
+    },
+  },
+
   databaseHooks: {
     user: {
       create: {

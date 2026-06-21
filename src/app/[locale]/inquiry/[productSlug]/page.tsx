@@ -22,7 +22,7 @@ export async function generateMetadata({
   const { locale, productSlug } = await params
   const t = await getTranslations('inquiry')
   const product = await getProductBySlug(productSlug, locale as Locale)
-  if (!product) return { title: t('pageTitle') }
+  if (!product) notFound()
   return {
     title: `${t('heading')} ${product.name}`,
     description: t('subheading'),

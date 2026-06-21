@@ -14,56 +14,57 @@ const statusVariant = {
 }
 
 const statusLabel = {
-  new: 'New',
-  contacted: 'Contacted',
-  closed: 'Closed',
-  spam: 'Spam',
+  new: 'Nouvelle',
+  contacted: 'Contactée',
+  closed: 'Clôturée',
+  spam: 'Indésirable',
 }
 
 export function InquiryListRow({ inquiry }: InquiryListRowProps) {
   const submittedAt = new Date(inquiry.submittedAt)
   return (
-    <li>
-      <Link
-        href={`/admin/inquiries/${inquiry.id}`}
-        className="block px-6 py-4 transition-colors hover:bg-surface-overlay/40"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center gap-3">
-              <p className="truncate font-body text-base font-medium text-text-primary">
-                {inquiry.fullName}
-              </p>
-              <Badge variant={statusVariant[inquiry.status]}>
-                {statusLabel[inquiry.status]}
-              </Badge>
-            </div>
-            <p className="truncate font-body text-sm text-text-secondary">
-              {inquiry.email}
-              {inquiry.company && (
-                <span className="text-text-muted"> · {inquiry.company}</span>
-              )}
+    <Link
+      href={`/admin/inquiries/${inquiry.id}`}
+      className="block px-6 py-4 transition-[transform,background-color] duration-200 ease-[var(--admin-ease)] hover:translate-x-1 hover:bg-[var(--admin-cyan)]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-3">
+            <p className="truncate font-body text-base font-medium text-white">
+              {inquiry.fullName}
             </p>
-            <p className="mt-1 truncate font-body text-sm text-text-muted">
-              About{' '}
-              <span className="text-text-secondary">
-                {inquiry.productName}
-              </span>
-            </p>
+            <Badge variant={statusVariant[inquiry.status]}>
+              {statusLabel[inquiry.status]}
+            </Badge>
           </div>
-          <time
-            dateTime={submittedAt.toISOString()}
-            className="mt-1 whitespace-nowrap font-mono text-xs text-text-muted"
-          >
-            {new Intl.DateTimeFormat('en-US', {
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-            }).format(submittedAt)}
-          </time>
+          <p className="truncate font-body text-sm text-[var(--admin-text-secondary)]">
+            {inquiry.email}
+            {inquiry.company && (
+              <span className="text-[var(--admin-text-tertiary)]">
+                {' '}
+                · {inquiry.company}
+              </span>
+            )}
+          </p>
+          <p className="mt-1 truncate font-body text-sm text-[var(--admin-text-tertiary)]">
+            Concerne{' '}
+            <span className="text-[var(--admin-text-secondary)]">
+              {inquiry.productName}
+            </span>
+          </p>
         </div>
-      </Link>
-    </li>
+        <time
+          dateTime={submittedAt.toISOString()}
+          className="mt-1 whitespace-nowrap font-mono text-xs text-[var(--admin-text-tertiary)]"
+        >
+          {new Intl.DateTimeFormat('fr-FR', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          }).format(submittedAt)}
+        </time>
+      </div>
+    </Link>
   )
 }

@@ -2,18 +2,22 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { Logo } from '@/components/brand/Logo'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
-
-const legalLinks = [
-  { href: '#', label: 'Terms' },
-  { href: '#', label: 'Privacy' },
-]
+import { NewsletterSignup } from '@/components/forms/NewsletterSignup'
 
 export async function SiteFooter() {
   const t = await getTranslations('navigation')
   const tFooter = await getTranslations('footer')
   const tCommon = await getTranslations('common')
+  const tProducts = await getTranslations('products')
+
+  const legalLinks = [
+    { href: '/legal#mentions', label: tFooter('legalNotice') },
+    { href: '/legal#cgv', label: tFooter('terms') },
+    { href: '/legal#privacy', label: tFooter('privacy') },
+  ]
 
   const catalogLinks = [
+    { href: '/products', label: tProducts('pageTitle') },
     { href: '/categories', label: t('categories') },
     { href: '/brands', label: t('brands') },
     { href: '/search', label: tCommon('search') },
@@ -30,6 +34,14 @@ export async function SiteFooter() {
       className="mt-24 border-t border-surface-elevated bg-surface-base"
     >
       <div className="mx-auto w-full max-w-[80rem] px-6 py-16 md:px-12 lg:px-16">
+        {/* Newsletter — full-width strip above the link columns. Mobile-first:
+            stacks naturally, keeps the input full-width with a thumb-friendly
+            CTA. Matches the footer's surface tokens so it reads as integrated,
+            not bolted on. */}
+        <div className="mb-14 rounded-2xl border border-surface-elevated bg-surface-base-plus/40 px-5 py-7 md:px-8 md:py-9">
+          <NewsletterSignup variant="inline" source="footer" />
+        </div>
+
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
             <div className="flex items-center" data-scroll-wordmark>
@@ -89,12 +101,34 @@ export async function SiteFooter() {
           <div className="space-y-4">
             <EyebrowLabel>{t('contactDtech').toUpperCase()}</EyebrowLabel>
             <ul className="space-y-2 font-body text-sm text-text-secondary">
-              <li>contact@d-techalgerie.com</li>
-              <li>+213 0 00 00 00 00</li>
               <li>
-                Dtech Algérie
+                <a
+                  href="mailto:contact@dtech.dz"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  contact@dtech.dz
+                </a>
+              </li>
+              <li>
+                <a
+                  href="tel:+213560990506"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  {tFooter('commercial')} · 0560 99 05 06
+                </a>
+              </li>
+              <li>
+                <a
+                  href="tel:+213561616911"
+                  className="transition-colors hover:text-text-primary"
+                >
+                  {tFooter('sav')} · 0561 616 911
+                </a>
+              </li>
+              <li>
+                {tFooter('addressLine1')}
                 <br />
-                Alger, Algeria
+                {tFooter('addressLine2')}
               </li>
             </ul>
           </div>

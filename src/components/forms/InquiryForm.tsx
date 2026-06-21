@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { submitInquiry, type InquiryActionResult } from '@/server/actions'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
 import { cn } from '@/lib/utils'
@@ -27,6 +27,7 @@ function Submit() {
 
 export function InquiryForm({ productSlug }: InquiryFormProps) {
   const t = useTranslations('inquiry')
+  const locale = useLocale()
   const [state, formAction] = useActionState<InquiryActionResult, FormData>(
     submitInquiry,
     null
@@ -41,6 +42,7 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="productSlug" value={productSlug} />
+      <input type="hidden" name="locale" value={locale} />
 
       {/* Honeypot — off-screen field for bots. Real users can't see or
           reach it (tabIndex -1, aria-hidden, autoComplete off). If anything

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ForgotPasswordForm from './ForgotPasswordForm'
 
 export const metadata: Metadata = {
-  title: 'Reset password — Dtech',
+  title: 'Réinitialiser le mot de passe — Dtech',
   robots: { index: false, follow: false },
 }
 
@@ -15,10 +15,10 @@ export default function ForgotPasswordPage() {
             Dtech Algérie · Admin
           </p>
           <h1 className="font-display text-4xl tracking-tight text-text-primary">
-            Reset password<span className="text-accent">.</span>
+            Réinitialisation<span className="text-accent">.</span>
           </h1>
           <p className="mt-4 font-body text-base text-text-secondary">
-            Enter your email. We&apos;ll send you a reset link.
+            Saisissez votre e-mail. Nous vous enverrons un lien de réinitialisation.
           </p>
         </header>
 

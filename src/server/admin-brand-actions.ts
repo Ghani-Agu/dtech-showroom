@@ -1,10 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { db } from '@/db/client'
-import { brands } from '@/db/schema'
-import { requireSession } from '@/lib/auth-helpers'
+import { brands, products } from '@/db/schema'
+import { requireSection } from '@/lib/auth-helpers'
 import {
   brandFormSchema,
   type BrandFormValues,
@@ -24,7 +24,7 @@ function normalize(values: BrandFormValues) {
 }
 
 export async function createBrand(values: BrandFormValues) {
-  await requireSession()
+  await requireSection('brands')
 
   const parsed = brandFormSchema.safeParse(values)
   if (!parsed.success) {
@@ -68,7 +68,7 @@ export async function updateBrand(
   brandId: string,
   values: BrandFormValues
 ) {
-  await requireSession()
+  await requireSection('brands')
 
   const parsed = brandFormSchema.safeParse(values)
   if (!parsed.success) {
@@ -107,7 +107,7 @@ export async function updateBrand(
 }
 
 export async function archiveBrand(brandId: string) {
-  await requireSession()
+  await requireSection('brands')
 
   await db
     .update(brands)
@@ -121,7 +121,7 @@ export async function archiveBrand(brandId: string) {
 }
 
 export async function restoreBrand(brandId: string) {
-  await requireSession()
+  await requireSection('brands')
 
   await db
     .update(brands)
@@ -130,6 +130,35 @@ export async function restoreBrand(brandId: string) {
 
   revalidatePath('/admin/brands')
   revalidatePath('/brands')
+
+  return { ok: true as const }
+}
+
+/**
+ * Permanently removes a brand — only allowed when no product uses it,
+ * so the catalog can never break.
+ */
+export async function deleteBrandPermanently(brandId: string) {
+  await requireSection('brands')
+
+  const used = await db
+    .select({ n: count() })
+    .from(products)
+    .where(eq(products.brandId, brandId))
+    .then((rows) => rows[0]?.n ?? 0)
+
+  if (used > 0) {
+    return {
+      ok: false as const,
+      error: `Impossible de supprimer : ${used} produit(s) utilisent cette marque. Déplacez-les ou supprimez-les d'abord.`,
+    }
+  }
+
+  await db.delete(brands).where(eq(brands.id, brandId))
+
+  revalidatePath('/admin/brands')
+  revalidatePath('/brands')
+  revalidatePath('/')
 
   return { ok: true as const }
 }

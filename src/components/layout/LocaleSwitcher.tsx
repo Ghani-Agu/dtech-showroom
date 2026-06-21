@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { usePathname, useRouter } from '@/i18n/routing'
 import { localeNames, locales, type Locale } from '@/i18n/config'
 
@@ -9,13 +10,18 @@ export function LocaleSwitcher() {
   const locale = useLocale() as Locale
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
   function switchTo(newLocale: Locale) {
     if (newLocale === locale) return
 
+    // Keep query params (e.g. /search?q=…) when switching language.
+    const qs = searchParams.toString()
+    const target = qs ? `${pathname}?${qs}` : pathname
+
     startTransition(() => {
-      router.replace(pathname, { locale: newLocale })
+      router.replace(target, { locale: newLocale })
     })
   }
 

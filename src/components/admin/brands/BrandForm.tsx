@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -17,6 +17,7 @@ import { Input } from '@/components/admin/ui/Input'
 import {
   archiveBrand,
   createBrand,
+  deleteBrandPermanently,
   restoreBrand,
   updateBrand,
 } from '@/server/admin-brand-actions'
@@ -59,6 +60,8 @@ export function BrandForm({
     initialValues ?? defaultValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
+  // two-step confirmation for the permanent delete button
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   useKeyboardShortcut({
@@ -91,11 +94,11 @@ export function BrandForm({
 
       if (!result.ok) {
         setErrors(result.errors ?? {})
-        toast.error('Please fix the errors below.')
+        toast.error('Veuillez corriger les erreurs ci-dessous.')
         return
       }
 
-      toast.success(mode === 'create' ? 'Brand created' : 'Brand updated')
+      toast.success(mode === 'create' ? 'Marque créée' : 'Marque mise à jour')
 
       if (mode === 'create' && 'id' in result) {
         router.push(`/admin/brands/${result.id}/edit`)
@@ -109,7 +112,7 @@ export function BrandForm({
     if (!brandId) return
     if (
       !confirm(
-        'Archive this brand? It will be hidden from the public site.'
+        'Masquer cette marque ? Elle ne sera plus visible sur le site public.'
       )
     )
       return
@@ -117,10 +120,10 @@ export function BrandForm({
     startTransition(async () => {
       const result = await archiveBrand(brandId)
       if (result.ok) {
-        toast.success('Brand archived')
+        toast.success('Marque masquée')
         router.refresh()
       } else {
-        toast.error('Failed to archive')
+        toast.error('Échec du masquage')
       }
     })
   }
@@ -131,10 +134,29 @@ export function BrandForm({
     startTransition(async () => {
       const result = await restoreBrand(brandId)
       if (result.ok) {
-        toast.success('Brand restored')
+        toast.success('Marque remise en ligne')
         router.refresh()
       } else {
-        toast.error('Failed to restore')
+        toast.error('Échec de la remise en ligne')
+      }
+    })
+  }
+
+  function handleDelete() {
+    if (!brandId) return
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      window.setTimeout(() => setConfirmDelete(false), 4000)
+      return
+    }
+    startTransition(async () => {
+      const result = await deleteBrandPermanently(brandId)
+      if (result.ok) {
+        toast.success('Supprimé définitivement')
+        router.push('/admin/brands')
+        router.refresh()
+      } else {
+        toast.error('error' in result ? result.error : 'Échec de la suppression')
       }
     })
   }
@@ -147,15 +169,15 @@ export function BrandForm({
     >
       <Card>
         <CardHeader>
-          <CardTitle>Identity</CardTitle>
+          <CardTitle>Identité</CardTitle>
           <CardDescription>
-            URL slug used in /brands/[slug].
+            L'adresse URL utilisée dans /brands/[slug].
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            label="URL slug"
-            description="Lowercase, hyphens only. Example: hp"
+            label="Adresse URL (slug)"
+            description="Minuscules et tirets uniquement. Exemple : hp"
             value={values.slug}
             onChange={(e) => update('slug', e.target.value)}
             error={errors.slug?.[0]}
@@ -166,15 +188,15 @@ export function BrandForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Content</CardTitle>
+          <CardTitle>Contenu</CardTitle>
           <CardDescription>
-            English is canonical. French is optional — falls back to English
-            when empty.
+            L'anglais est la version de référence. Le français est
+            facultatif — l'anglais est utilisé si vide.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <BilingualField
-            label="Name"
+            label="Nom"
             required
             enValue={values.name}
             frValue={values.nameFr}
@@ -186,8 +208,8 @@ export function BrandForm({
           />
 
           <BilingualField
-            label="Statement"
-            description="One-line brand statement shown on the brand landing page."
+            label="Signature"
+            description="Phrase d’accroche affichée sur la page de la marque."
             enValue={values.statement}
             frValue={values.statementFr}
             onEnChange={(v) => update('statement', v)}
@@ -197,7 +219,7 @@ export function BrandForm({
 
           <BilingualField
             label="Description"
-            description="Editorial description shown on the brand landing page."
+            description="Description éditoriale affichée sur la page de la marque."
             enValue={values.description}
             frValue={values.descriptionFr}
             onEnChange={(v) => update('description', v)}
@@ -207,8 +229,8 @@ export function BrandForm({
           />
 
           <BilingualField
-            label="Search keywords"
-            description="Space-separated keywords for search matching. Not shown to customers."
+            label="Mots-clés de recherche"
+            description="Mots-clés séparés par des espaces pour la recherche. Invisibles pour les clients."
             enValue={values.searchKeywords}
             frValue={values.searchKeywordsFr}
             onEnChange={(v) => update('searchKeywords', v)}
@@ -220,12 +242,12 @@ export function BrandForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Display</CardTitle>
+          <CardTitle>Affichage</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            label="Sort order"
-            description="Lower numbers appear first. Default 100."
+            label="Ordre de tri"
+            description="Les nombres les plus bas apparaissent en premier. 100 par défaut."
             type="number"
             min={0}
             max={9999}
@@ -242,14 +264,14 @@ export function BrandForm({
           <CardTitle>Images</CardTitle>
           <CardDescription>
             {!values.slug
-              ? 'Save the brand first to enable image uploads.'
-              : 'Drag and drop images, or click to browse.'}
+              ? 'Enregistrez d’abord la marque pour activer l’envoi d’images.'
+              : 'Glissez-déposez les images, ou cliquez pour parcourir.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <ImageUpload
             label="Logo"
-            description="Square logo, transparent background recommended. 600×600."
+            description="Logo carré, fond transparent recommandé. 600×600."
             variant="logo"
             entityType="brand"
             entitySlug={values.slug}
@@ -258,8 +280,8 @@ export function BrandForm({
           />
 
           <ImageUpload
-            label="Hero image"
-            description="16:9 hero shown on the brand landing page."
+            label="Image principale"
+            description="Image 16:9 affichée en haut de la page de la marque."
             variant="hero"
             entityType="brand"
             entitySlug={values.slug}
@@ -269,7 +291,7 @@ export function BrandForm({
         </CardContent>
       </Card>
 
-      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-surface-overlay bg-surface-base/95 backdrop-blur">
+      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-white/[0.08] bg-[var(--admin-canvas)]/90 backdrop-blur">
         <div className="flex max-w-5xl items-center justify-between gap-3 px-8 py-4">
           <div>
             {mode === 'edit' && !isArchived && (
@@ -279,7 +301,7 @@ export function BrandForm({
                 onClick={handleArchive}
                 disabled={isPending}
               >
-                Archive brand
+                Masquer du site
               </Button>
             )}
             {mode === 'edit' && isArchived && (
@@ -289,7 +311,19 @@ export function BrandForm({
                 onClick={handleRestore}
                 disabled={isPending}
               >
-                Restore brand
+                Remettre en ligne
+              </Button>
+            )}
+            {mode === 'edit' && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isPending}
+              >
+                {confirmDelete
+                  ? 'Cliquez pour confirmer la suppression'
+                  : 'Supprimer définitivement'}
               </Button>
             )}
           </div>
@@ -299,10 +333,10 @@ export function BrandForm({
               variant="ghost"
               onClick={() => router.push('/admin/brands')}
             >
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" variant="primary" loading={isPending}>
-              {mode === 'create' ? 'Create brand' : 'Save changes'}
+              {mode === 'create' ? 'Créer la marque' : 'Enregistrer'}
             </Button>
           </div>
         </div>

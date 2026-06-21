@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
@@ -42,20 +42,20 @@ export function SpecsEditor({ value, onChange }: SpecsEditorProps) {
           {entries.map(([key, val]) => (
             <li key={key} className="flex items-center gap-2">
               <div className="grid flex-1 grid-cols-1 gap-2 md:grid-cols-2">
-                <div className="rounded-md bg-surface-elevated px-3 py-2 font-mono text-sm text-text-secondary">
+                <div className="rounded-md bg-white/[0.04] px-3 py-2 font-mono text-sm text-[var(--admin-text-secondary)]">
                   {key}
                 </div>
                 <input
                   type="text"
                   value={typeof val === 'string' ? val : JSON.stringify(val)}
                   onChange={(e) => updateSpec(key, e.target.value)}
-                  className="rounded-md bg-surface-elevated px-3 py-2 font-body text-sm text-text-primary outline-none focus:ring-1 focus:ring-accent"
+                  className="rounded-md bg-white/[0.04] px-3 py-2 font-body text-sm text-white outline-none focus:ring-1 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => removeSpec(key)}
-                className="p-2 text-text-muted transition-colors hover:text-semantic-error"
+                className="p-2 text-[var(--admin-text-tertiary)] transition-colors hover:text-rose-300"
                 aria-label={`Remove ${key}`}
               >
                 <X size={16} />
@@ -65,15 +65,15 @@ export function SpecsEditor({ value, onChange }: SpecsEditorProps) {
         </ul>
       )}
 
-      <div className="flex items-center gap-2 border-t border-surface-overlay pt-3">
+      <div className="flex items-center gap-2 border-t border-white/[0.08] pt-3">
         <div className="grid flex-1 grid-cols-1 gap-2 md:grid-cols-2">
           <Input
-            placeholder="Spec name (e.g., CPU)"
+            placeholder="Caractéristique (ex. : Processeur)"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
           />
           <Input
-            placeholder="Value (e.g., Intel i9-13900HX)"
+            placeholder="Valeur (ex. : Intel i9-13900HX)"
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
             onKeyDown={(e) => {
@@ -96,7 +96,7 @@ export function SpecsEditor({ value, onChange }: SpecsEditorProps) {
       </div>
 
       {entries.length === 0 && (
-        <p className="font-body text-sm text-text-muted">
+        <p className="font-body text-sm text-[var(--admin-text-tertiary)]">
           No specs yet. Add the first spec above.
         </p>
       )}

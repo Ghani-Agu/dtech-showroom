@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -17,6 +17,7 @@ import { Input } from '@/components/admin/ui/Input'
 import {
   archiveCategory,
   createCategory,
+  deleteCategoryPermanently,
   restoreCategory,
   updateCategory,
 } from '@/server/admin-category-actions'
@@ -56,6 +57,8 @@ export function CategoryForm({
     initialValues ?? defaultValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
+  // two-step confirmation for the permanent delete button
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   useKeyboardShortcut({
@@ -88,12 +91,12 @@ export function CategoryForm({
 
       if (!result.ok) {
         setErrors(result.errors ?? {})
-        toast.error('Please fix the errors below.')
+        toast.error('Veuillez corriger les erreurs ci-dessous.')
         return
       }
 
       toast.success(
-        mode === 'create' ? 'Category created' : 'Category updated'
+        mode === 'create' ? 'Catégorie créée' : 'Catégorie mise à jour'
       )
 
       if (mode === 'create' && 'id' in result) {
@@ -108,7 +111,7 @@ export function CategoryForm({
     if (!categoryId) return
     if (
       !confirm(
-        'Archive this category? It will be hidden from the public site.'
+        'Masquer cette catégorie ? Elle ne sera plus visible sur le site public.'
       )
     )
       return
@@ -116,10 +119,10 @@ export function CategoryForm({
     startTransition(async () => {
       const result = await archiveCategory(categoryId)
       if (result.ok) {
-        toast.success('Category archived')
+        toast.success('Catégorie masquée')
         router.refresh()
       } else {
-        toast.error('Failed to archive')
+        toast.error('Échec du masquage')
       }
     })
   }
@@ -130,10 +133,29 @@ export function CategoryForm({
     startTransition(async () => {
       const result = await restoreCategory(categoryId)
       if (result.ok) {
-        toast.success('Category restored')
+        toast.success('Catégorie remise en ligne')
         router.refresh()
       } else {
-        toast.error('Failed to restore')
+        toast.error('Échec de la remise en ligne')
+      }
+    })
+  }
+
+  function handleDelete() {
+    if (!categoryId) return
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      window.setTimeout(() => setConfirmDelete(false), 4000)
+      return
+    }
+    startTransition(async () => {
+      const result = await deleteCategoryPermanently(categoryId)
+      if (result.ok) {
+        toast.success('Supprimé définitivement')
+        router.push('/admin/categories')
+        router.refresh()
+      } else {
+        toast.error('error' in result ? result.error : 'Échec de la suppression')
       }
     })
   }
@@ -146,15 +168,15 @@ export function CategoryForm({
     >
       <Card>
         <CardHeader>
-          <CardTitle>Identity</CardTitle>
+          <CardTitle>Identité</CardTitle>
           <CardDescription>
-            URL slug used in /categories/[slug].
+            L'adresse URL utilisée dans /categories/[slug].
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            label="URL slug"
-            description="Lowercase, hyphens only. Example: laptops"
+            label="Adresse URL (slug)"
+            description="Minuscules et tirets uniquement. Exemple : laptops"
             value={values.slug}
             onChange={(e) => update('slug', e.target.value)}
             error={errors.slug?.[0]}
@@ -165,15 +187,15 @@ export function CategoryForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Content</CardTitle>
+          <CardTitle>Contenu</CardTitle>
           <CardDescription>
-            English is canonical. French is optional — falls back to English
-            when empty.
+            L'anglais est la version de référence. Le français est
+            facultatif — l'anglais est utilisé si vide.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <BilingualField
-            label="Name"
+            label="Nom"
             required
             enValue={values.name}
             frValue={values.nameFr}
@@ -186,7 +208,7 @@ export function CategoryForm({
 
           <BilingualField
             label="Description"
-            description="Editorial description shown on the category landing page."
+            description="Description éditoriale affichée sur la page de la catégorie."
             enValue={values.description}
             frValue={values.descriptionFr}
             onEnChange={(v) => update('description', v)}
@@ -196,8 +218,8 @@ export function CategoryForm({
           />
 
           <BilingualField
-            label="Search keywords"
-            description="Space-separated keywords for search matching. Not shown to customers."
+            label="Mots-clés de recherche"
+            description="Mots-clés séparés par des espaces pour la recherche. Invisibles pour les clients."
             enValue={values.searchKeywords}
             frValue={values.searchKeywordsFr}
             onEnChange={(v) => update('searchKeywords', v)}
@@ -209,12 +231,12 @@ export function CategoryForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Display</CardTitle>
+          <CardTitle>Affichage</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            label="Sort order"
-            description="Lower numbers appear first. Default 100."
+            label="Ordre de tri"
+            description="Les nombres les plus bas apparaissent en premier. 100 par défaut."
             type="number"
             min={0}
             max={9999}
@@ -231,14 +253,14 @@ export function CategoryForm({
           <CardTitle>Images</CardTitle>
           <CardDescription>
             {!values.slug
-              ? 'Save the category first to enable image uploads.'
-              : 'Drag and drop the hero image, or click to browse.'}
+              ? 'Enregistrez d’abord la catégorie pour activer l’envoi d’images.'
+              : 'Glissez-déposez l’image principale, ou cliquez pour parcourir.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ImageUpload
-            label="Hero image"
-            description="16:9 hero shown on the category landing page."
+            label="Image principale"
+            description="Image 16:9 affichée en haut de la page de la catégorie."
             variant="hero"
             entityType="category"
             entitySlug={values.slug}
@@ -248,7 +270,7 @@ export function CategoryForm({
         </CardContent>
       </Card>
 
-      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-surface-overlay bg-surface-base/95 backdrop-blur">
+      <div className="fixed bottom-0 left-60 right-0 z-10 border-t border-white/[0.08] bg-[var(--admin-canvas)]/90 backdrop-blur">
         <div className="flex max-w-5xl items-center justify-between gap-3 px-8 py-4">
           <div>
             {mode === 'edit' && !isArchived && (
@@ -258,7 +280,7 @@ export function CategoryForm({
                 onClick={handleArchive}
                 disabled={isPending}
               >
-                Archive category
+                Masquer du site
               </Button>
             )}
             {mode === 'edit' && isArchived && (
@@ -268,7 +290,19 @@ export function CategoryForm({
                 onClick={handleRestore}
                 disabled={isPending}
               >
-                Restore category
+                Remettre en ligne
+              </Button>
+            )}
+            {mode === 'edit' && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isPending}
+              >
+                {confirmDelete
+                  ? 'Cliquez pour confirmer la suppression'
+                  : 'Supprimer définitivement'}
               </Button>
             )}
           </div>
@@ -278,10 +312,10 @@ export function CategoryForm({
               variant="ghost"
               onClick={() => router.push('/admin/categories')}
             >
-              Cancel
+              Annuler
             </Button>
             <Button type="submit" variant="primary" loading={isPending}>
-              {mode === 'create' ? 'Create category' : 'Save changes'}
+              {mode === 'create' ? 'Créer la catégorie' : 'Enregistrer'}
             </Button>
           </div>
         </div>

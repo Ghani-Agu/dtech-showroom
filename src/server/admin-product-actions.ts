@@ -1,30 +1,19 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
-import { eq } from 'drizzle-orm'
+import { eq, like } from 'drizzle-orm'
 import { db } from '@/db/client'
-import { products } from '@/db/schema'
-import { auth } from '@/lib/auth'
+import { imageBlobs, products } from '@/db/schema'
+import { requireSection } from '@/lib/auth-helpers'
 import {
   productFormSchema,
   type ProductFormValues,
 } from '@/lib/validations/product'
 
-async function requireSession() {
-  const session = await auth.api
-    .getSession({ headers: await headers() })
-    .catch(() => null)
 
-  if (!session) {
-    throw new Error('Unauthorized')
-  }
-
-  return session.user
-}
 
 export async function createProduct(values: ProductFormValues) {
-  await requireSession()
+  await requireSection('products')
 
   const parsed = productFormSchema.safeParse(values)
   if (!parsed.success) {
@@ -84,7 +73,7 @@ export async function updateProduct(
   productId: string,
   values: ProductFormValues
 ) {
-  await requireSession()
+  await requireSection('products')
 
   const parsed = productFormSchema.safeParse(values)
   if (!parsed.success) {
@@ -134,7 +123,7 @@ export async function updateProduct(
 }
 
 export async function archiveProduct(productId: string) {
-  await requireSession()
+  await requireSection('products')
 
   const product = await db
     .select({ slug: products.slug })
@@ -163,7 +152,7 @@ export async function archiveProduct(productId: string) {
 }
 
 export async function restoreProduct(productId: string) {
-  await requireSession()
+  await requireSection('products')
 
   await db
     .update(products)
@@ -172,6 +161,39 @@ export async function restoreProduct(productId: string) {
 
   revalidatePath('/admin/products')
   revalidatePath('/admin')
+
+  return { ok: true as const }
+}
+
+/**
+ * Permanently removes a product and its DB-hosted images. Irreversible —
+ * the UI requires an explicit confirmation before calling this.
+ */
+export async function deleteProductPermanently(productId: string) {
+  await requireSection('products')
+
+  const product = await db
+    .select({ slug: products.slug })
+    .from(products)
+    .where(eq(products.id, productId))
+    .limit(1)
+    .then((rows) => rows[0])
+
+  if (!product) {
+    return { ok: false as const, error: 'Produit introuvable' }
+  }
+
+  await db.delete(products).where(eq(products.id, productId))
+  await db
+    .delete(imageBlobs)
+    .where(like(imageBlobs.key, `products/${product.slug}/%`))
+    .catch(() => {
+      /* images are best-effort */
+    })
+
+  revalidatePath('/admin/products')
+  revalidatePath('/admin')
+  revalidatePath('/')
 
   return { ok: true as const }
 }
