@@ -126,6 +126,9 @@ function coerceContent(src: unknown): EditData {
     customSections: Array.isArray((o as { customSections?: unknown }).customSections)
       ? ((o as { customSections: EditData['customSections'] }).customSections)
       : [],
+    sectionBlocks: ((o as { sectionBlocks?: unknown }).sectionBlocks && typeof (o as { sectionBlocks?: unknown }).sectionBlocks === 'object')
+      ? ((o as { sectionBlocks: EditData['sectionBlocks'] }).sectionBlocks)
+      : {},
     theme: typeof (o as { theme?: unknown }).theme === 'string' ? ((o as { theme: string }).theme) : undefined,
   }
 }

@@ -857,6 +857,7 @@ function LiveEditor({
   const [sectionBg, setSectionBg] = useState<Record<string, string>>(initialContent?.sectionBg ?? {})
   const [sectionStyles, setSectionStyles] = useState<Record<string, SectionStyle>>(initialContent?.sectionStyles ?? {})
   const [customSections, setCustomSections] = useState<CustomSection[]>(initialContent?.customSections ?? [])
+  const [sectionBlocks, setSectionBlocks] = useState<Record<string, PresetBlock[]>>(initialContent?.sectionBlocks ?? {})
   const [selSection, setSelSection] = useState<{ id: string; isCustom: boolean; layout: Layout } | null>(null)
   const [uploadingImg, setUploadingImg] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
@@ -865,8 +866,8 @@ function LiveEditor({
   // The site theme is set on /editor/themes; the editor just preserves it
   // through saves/publishes so other edits don't wipe it.
   const themeRef = useRef<string | undefined>(initialContent?.theme)
-  const dataRef = useRef<EditData>({ overrides, styles, sections, sectionBg, sectionStyles, customSections, theme: themeRef.current })
-  dataRef.current = { overrides, styles, sections, sectionBg, sectionStyles, customSections, theme: themeRef.current }
+  const dataRef = useRef<EditData>({ overrides, styles, sections, sectionBg, sectionStyles, customSections, sectionBlocks, theme: themeRef.current })
+  dataRef.current = { overrides, styles, sections, sectionBg, sectionStyles, customSections, sectionBlocks, theme: themeRef.current }
   const [sel, setSel] = useState<{ id: string; editType: string; value: string; label: string } | null>(null)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -884,6 +885,7 @@ function LiveEditor({
       sectionBg: { ...dataRef.current.sectionBg },
       sectionStyles: { ...dataRef.current.sectionStyles },
       customSections: [...dataRef.current.customSections],
+      sectionBlocks: { ...dataRef.current.sectionBlocks },
       theme: themeRef.current,
     }
   }
@@ -935,6 +937,21 @@ function LiveEditor({
       sectionBg: dataRef.current.sectionBg,
       sectionStyles: dataRef.current.sectionStyles,
       customSections: dataRef.current.customSections,
+      sectionBlocks: dataRef.current.sectionBlocks ?? {},
+    })
+  // Post a snapshot built from explicit values merged over the current data.
+  // Used by inserts that may run from a native message handler (drag-drop),
+  // where React's async render flush would race a dataRef-based snapshot.
+  const postSnapshotFrom = (over: Partial<EditData>) =>
+    post({
+      type: 'snapshot',
+      overrides: over.overrides ?? dataRef.current.overrides,
+      styles: over.styles ?? dataRef.current.styles,
+      sections: over.sections ?? dataRef.current.sections,
+      sectionBg: over.sectionBg ?? dataRef.current.sectionBg,
+      sectionStyles: over.sectionStyles ?? dataRef.current.sectionStyles,
+      customSections: over.customSections ?? dataRef.current.customSections,
+      sectionBlocks: over.sectionBlocks ?? dataRef.current.sectionBlocks ?? {},
     })
 
   useEffect(() => {
@@ -958,9 +975,16 @@ function LiveEditor({
       } else if (d.type === 'customSections' && Array.isArray(d.customSections)) {
         setCustomSections(d.customSections as CustomSection[])
         scheduleSave()
+      } else if (d.type === 'sectionBlocks' && d.sectionBlocks && typeof d.sectionBlocks === 'object') {
+        setSectionBlocks(d.sectionBlocks as Record<string, PresetBlock[]>)
+        scheduleSave()
       } else if (d.type === 'libInsertAt' && typeof d.index === 'number') {
-        const ld = libDragRef.current
-        if (ld && ld.kind === 'section') addSection(ld.presetId, d.index as number)
+        // Payload travels in the message itself. By the time this round-trips
+        // back from the iframe, the native dragend has already reset the drag
+        // state/ref (libDragRef.current = libDrag, now null), so we must NOT
+        // depend on libDragRef here — that was the drop-does-nothing bug.
+        if (typeof d.presetId === 'string') addSection(d.presetId as string, d.index as number)
+        else if (typeof d.blockKind === 'string') addBlockSection(d.blockKind as BlockKind, d.index as number)
         setLibDrag(null)
       } else if (d.type === 'reorder' && Array.isArray(d.order)) {
         setSections((s) => ({ ...s, order: d.order as string[] }))
@@ -1041,8 +1065,8 @@ function LiveEditor({
     try {
       const r = await resetContent(pageKey)
       if (r.ok) {
-        const empty: EditData = { overrides: {}, styles: {}, sections: { order: [], hidden: [] }, sectionBg: {}, sectionStyles: {}, customSections: [] }
-        setOverrides({}); setStyles({}); setSections({ order: [], hidden: [] }); setSectionBg({}); setSectionStyles({}); setCustomSections([])
+        const empty: EditData = { overrides: {}, styles: {}, sections: { order: [], hidden: [] }, sectionBg: {}, sectionStyles: {}, customSections: [], sectionBlocks: {} }
+        setOverrides({}); setStyles({}); setSections({ order: [], hidden: [] }); setSectionBg({}); setSectionStyles({}); setCustomSections([]); setSectionBlocks({})
         setSel(null); setSelSection(null)
         pastRef.current = []; futureRef.current = []
         dataRef.current = empty
@@ -1145,14 +1169,43 @@ function LiveEditor({
     const insertAt = typeof atIndex === 'number' && atIndex >= 0 && atIndex <= curOrder.length ? atIndex : curOrder.length
     const nextOrder = [...curOrder]
     nextOrder.splice(insertAt, 0, id)
-    setCustomSections((cs) => [...cs, { id, type: presetId, layout, blocks }])
+    const newCustom = { id, type: presetId, layout, blocks }
+    const nextCustoms = [...dataRef.current.customSections, newCustom]
+    const nextSections = { ...dataRef.current.sections, order: nextOrder }
+    setCustomSections((cs) => [...cs, newCustom])
     setSections((sx) => ({ ...sx, order: nextOrder }))
     setAddOpen(false)
-    setTimeout(() => {
-      postSnapshot()
-      scheduleSave()
-    }, 0)
+    // Post from freshly-computed values (not the async-synced dataRef): this is
+    // also invoked from the drag-drop message handler, where React's render
+    // flush races setTimeout and would otherwise post a stale snapshot — the
+    // canvas-shows-nothing bug.
+    postSnapshotFrom({ customSections: nextCustoms, sections: nextSections })
+    scheduleSave()
     toast.success('Section ajoutée')
+  }
+
+  // Create a new custom section seeded with a single block of `kind`, inserted
+  // at `atIndex`. Used when a component is dragged from the palette and dropped
+  // on the canvas outside any existing block-container section.
+  function addBlockSection(kind: BlockKind, atIndex?: number) {
+    const id = `custom:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`
+    const blocks: PresetBlock[] = [{ id: 'b' + Math.random().toString(36).slice(2, 8), kind }]
+    const real = isHome ? ['hero', 'categories', 'catalog', 'brands', 'about', 'contact'] : []
+    const curCustoms = dataRef.current.customSections.map((c) => c.id)
+    const present = [...real, ...curCustoms]
+    const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
+    const curOrder = [...savedOrd, ...present.filter((x) => !savedOrd.includes(x))]
+    const insertAt = typeof atIndex === 'number' && atIndex >= 0 && atIndex <= curOrder.length ? atIndex : curOrder.length
+    const nextOrder = [...curOrder]
+    nextOrder.splice(insertAt, 0, id)
+    const newCustom = { id, type: kind, layout: 'stack' as Layout, blocks }
+    const nextCustoms = [...dataRef.current.customSections, newCustom]
+    const nextSections = { ...dataRef.current.sections, order: nextOrder }
+    setCustomSections((cs) => [...cs, newCustom])
+    setSections((sx) => ({ ...sx, order: nextOrder }))
+    postSnapshotFrom({ customSections: nextCustoms, sections: nextSections })
+    scheduleSave()
+    toast.success('Bloc ajouté')
   }
 
   const curStyle: StylePatch = sel ? styles[sel.id] || {} : {}
@@ -1457,7 +1510,7 @@ function LiveEditor({
                 e.preventDefault()
                 const fr = iframeRef.current?.getBoundingClientRect()
                 const y = fr ? (e.clientY - fr.top) / (zoom / 100) : 0
-                post({ type: 'libDrop', mode: libDrag.kind, kind: libDrag.kind === 'component' ? libDrag.blockKind : undefined, y })
+                post({ type: 'libDrop', mode: libDrag.kind, kind: libDrag.kind === 'component' ? libDrag.blockKind : undefined, presetId: libDrag.kind === 'section' ? libDrag.presetId : undefined, y })
                 if (libDrag.kind === 'component') setLibDrag(null)
               }}
             >
@@ -1605,6 +1658,19 @@ function LiveEditor({
                 <span>Majuscules</span>
                 <button className={`we-live-toggle ${curStyle.textTransform === 'uppercase' ? 'is-on' : ''}`} onClick={() => editStyle({ textTransform: curStyle.textTransform === 'uppercase' ? undefined : 'uppercase' })}>ABC</button>
               </div>
+              <div className="we-live-srow">
+                <span>Interligne</span>
+                <input type="number" step="0.1" className="we-live-num" placeholder="auto" value={curStyle.lineHeight ?? ''} onChange={(e) => editStyle({ lineHeight: e.target.value ? Number(e.target.value) : undefined })} />
+              </div>
+              <div className="we-live-srow">
+                <span>Italique</span>
+                <button className={`we-live-toggle ${curStyle.fontStyle === 'italic' ? 'is-on' : ''}`} onClick={() => editStyle({ fontStyle: curStyle.fontStyle === 'italic' ? undefined : 'italic' })} style={{ fontStyle: 'italic' }}>I</button>
+              </div>
+              <div className="we-live-srow">
+                <span>Arrondi</span>
+                <input type="number" className="we-live-num" placeholder="0" value={curStyle.radius ?? ''} onChange={(e) => editStyle({ radius: e.target.value ? Number(e.target.value) : undefined })} />
+                <span className="we-live-unit">px</span>
+              </div>
             </div>}
             <p className="we-live-phint">Modifié en direct. Cliquez « Publier » pour mettre en ligne.</p>
           </div>
@@ -1668,6 +1734,35 @@ function LiveEditor({
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="we-live-style">
+              <p className="we-live-flabel">Espacement & bordure</p>
+              <div className="we-live-srow">
+                <span>Marge côtés</span>
+                <input type="number" className="we-live-num" placeholder="auto" value={ss.padX ?? ''} onChange={(e) => applySectionStyle({ padX: e.target.value ? Number(e.target.value) : undefined })} />
+                <span className="we-live-unit">px</span>
+              </div>
+              <div className="we-live-srow">
+                <span>Hauteur min</span>
+                <input type="number" className="we-live-num" placeholder="auto" value={ss.minHeight ?? ''} onChange={(e) => applySectionStyle({ minHeight: e.target.value ? Number(e.target.value) : undefined })} />
+                <span className="we-live-unit">px</span>
+              </div>
+              <div className="we-live-srow">
+                <span>Arrondi</span>
+                <input type="number" className="we-live-num" placeholder="0" value={ss.radius ?? ''} onChange={(e) => applySectionStyle({ radius: e.target.value ? Number(e.target.value) : undefined })} />
+                <span className="we-live-unit">px</span>
+              </div>
+              <div className="we-live-srow">
+                <span>Bordure</span>
+                <input type="number" className="we-live-num" placeholder="0" value={ss.borderWidth ?? ''} onChange={(e) => applySectionStyle({ borderWidth: e.target.value ? Number(e.target.value) : undefined })} />
+                <input type="color" className="we-live-color" value={ss.borderColor || '#333333'} onChange={(e) => applySectionStyle({ borderColor: e.target.value })} />
+                {ss.borderWidth ? <button className="we-live-clear" onClick={() => applySectionStyle({ borderWidth: undefined })} title="Réinitialiser">×</button> : null}
+              </div>
+              <div className="we-live-srow">
+                <span>Ombre</span>
+                <button className={`we-live-toggle ${ss.shadow ? 'is-on' : ''}`} onClick={() => applySectionStyle({ shadow: ss.shadow ? undefined : true })}>Ombre portée</button>
               </div>
             </div>
 

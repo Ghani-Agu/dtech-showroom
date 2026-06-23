@@ -122,6 +122,17 @@ export const SECTION_PRESETS: SectionPreset[] = [
   { id: 'columns', label: '2 colonnes', icon: '=', group: 'Mise en page', layout: 'cols2', blocks: ['richtext', 'richtext'], hint: 'Deux colonnes de texte côte à côte.' },
   { id: 'divider', label: 'Séparateur', icon: '_', group: 'Mise en page', layout: 'stack', blocks: ['divider'], hint: 'Un trait fin pour séparer deux sections.' },
   { id: 'spacer', label: 'Espace', icon: '=', group: 'Mise en page', layout: 'stack', blocks: ['spacer'], hint: 'Un espace vertical vide pour aérer la page.' },
+  // ── More ready-made layouts (reuse existing blocks) ──────────────────────
+  { id: 'features4', label: '4 atouts', icon: '*', group: 'Preuve sociale', layout: 'cols4', blocks: ['feature', 'feature', 'feature', 'feature'], hint: 'Quatre atouts sur une rangée pour les pages riches.' },
+  { id: 'statsTrio', label: '3 chiffres', icon: '9', group: 'Preuve sociale', layout: 'cols3', blocks: ['stat', 'stat', 'stat'], hint: 'Trois chiffres clés bien lisibles.' },
+  { id: 'logosGrid', label: 'Grille de logos', icon: 'L', group: 'Preuve sociale', layout: 'cols3', blocks: ['logo', 'logo', 'logo', 'logo', 'logo', 'logo'], hint: 'Une grille de six logos partenaires.' },
+  { id: 'testimonialsDuo', label: '2 témoignages', icon: 'C', group: 'Preuve sociale', layout: 'cols2', blocks: ['testimonial', 'testimonial'], hint: 'Deux avis clients côte à côte.' },
+  { id: 'teamWide', label: 'Équipe (4)', icon: 'U', group: 'Preuve sociale', layout: 'cols4', blocks: ['team', 'team', 'team', 'team'], hint: 'Quatre membres d’équipe sur une rangée.' },
+  { id: 'pricingDuo', label: '2 tarifs', icon: '$', group: 'Offres', layout: 'cols2', blocks: ['priceCard', 'priceCard'], hint: 'Deux offres comparées.' },
+  { id: 'steps4', label: '4 étapes', icon: '1', group: 'Offres', layout: 'cols4', blocks: ['step', 'step', 'step', 'step'], hint: 'Un parcours en quatre étapes.' },
+  { id: 'iconList', label: 'Points clés', icon: 'i', group: 'Contenu', layout: 'stack', blocks: ['iconText', 'iconText', 'iconText'], hint: 'Une liste de points clés avec icônes.' },
+  { id: 'galleryWide', label: 'Galerie (4)', icon: 'I', group: 'Média', layout: 'cols4', blocks: ['image', 'image', 'image', 'image'], hint: 'Quatre images sur une rangée.' },
+  { id: 'ctaBanner', label: 'Bandeau CTA', icon: '>', group: 'Action', layout: 'center', blocks: ['eyebrow', 'heading', 'text', 'button'], hint: 'Un bandeau d’appel à l’action complet.' },
 ]
 
 export function presetById(id: string): SectionPreset | undefined {

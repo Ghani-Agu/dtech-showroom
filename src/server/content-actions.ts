@@ -24,6 +24,9 @@ export interface StylePatch {
   textAlign?: 'left' | 'center' | 'right'
   letterSpacing?: number
   textTransform?: 'none' | 'uppercase'
+  fontStyle?: 'normal' | 'italic'
+  lineHeight?: number
+  radius?: number
   background?: string
   paddingY?: number
   paddingX?: number
@@ -39,6 +42,12 @@ export interface SectionStyle {
   textColor?: string
   padTop?: number
   padBottom?: number
+  padX?: number
+  minHeight?: number
+  radius?: number
+  borderWidth?: number
+  borderColor?: string
+  shadow?: boolean
   maxWidth?: number
   align?: 'left' | 'center' | 'right'
 }
@@ -62,6 +71,8 @@ export interface EditData {
   sectionBg: Record<string, string>
   sectionStyles: Record<string, SectionStyle>
   customSections: CustomSection[]
+  /** Extra blocks appended into a section (real coded sections included), keyed by section id. */
+  sectionBlocks?: Record<string, EditBlock[]>
   theme?: string
 }
 
@@ -92,6 +103,9 @@ function sanitizeStyles(input: unknown): Record<string, StylePatch> {
     if (o.textAlign === 'left' || o.textAlign === 'center' || o.textAlign === 'right') p.textAlign = o.textAlign
     if (typeof o.letterSpacing === 'number') p.letterSpacing = o.letterSpacing
     if (o.textTransform === 'none' || o.textTransform === 'uppercase') p.textTransform = o.textTransform
+    if (o.fontStyle === 'normal' || o.fontStyle === 'italic') p.fontStyle = o.fontStyle
+    if (typeof o.lineHeight === 'number' && o.lineHeight >= 0.5 && o.lineHeight < 4) p.lineHeight = o.lineHeight
+    if (typeof o.radius === 'number' && o.radius >= 0 && o.radius < 400) p.radius = o.radius
     if (typeof o.paddingY === 'number' && o.paddingY >= 0 && o.paddingY < 600) p.paddingY = o.paddingY
     if (typeof o.paddingX === 'number' && o.paddingX >= 0 && o.paddingX < 600) p.paddingX = o.paddingX
     if (Object.keys(p).length) out[k] = p
@@ -122,6 +136,12 @@ function sanitizeSectionStyles(input: unknown): Record<string, SectionStyle> {
     if (typeof o.padBottom === 'number' && o.padBottom >= 0 && o.padBottom < 600) p.padBottom = o.padBottom
     if (typeof o.maxWidth === 'number' && o.maxWidth >= 200 && o.maxWidth < 2400) p.maxWidth = o.maxWidth
     if (typeof o.align === 'string' && ALIGNS.has(o.align)) p.align = o.align as SectionStyle['align']
+    if (typeof o.padX === 'number' && o.padX >= 0 && o.padX < 600) p.padX = o.padX
+    if (typeof o.minHeight === 'number' && o.minHeight >= 0 && o.minHeight < 4000) p.minHeight = o.minHeight
+    if (typeof o.radius === 'number' && o.radius >= 0 && o.radius < 400) p.radius = o.radius
+    if (typeof o.borderWidth === 'number' && o.borderWidth >= 0 && o.borderWidth < 60) p.borderWidth = o.borderWidth
+    if (typeof o.borderColor === 'string') p.borderColor = o.borderColor.slice(0, 64)
+    if (typeof o.shadow === 'boolean') p.shadow = o.shadow
     if (Object.keys(p).length) out[k] = p
   }
   return out
@@ -139,6 +159,17 @@ function sanitizeBlocks(input: unknown): EditBlock[] {
     )
     .map((b) => ({ id: String(b.id).slice(0, 80), kind: String(b.kind).slice(0, 40) }))
     .slice(0, 60)
+}
+
+function sanitizeSectionBlocks(input: unknown): Record<string, EditBlock[]> {
+  if (!input || typeof input !== 'object') return {}
+  const out: Record<string, EditBlock[]> = {}
+  for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
+    if (typeof k !== 'string' || k.length >= 200) continue
+    const blocks = sanitizeBlocks(v)
+    if (blocks.length) out[k] = blocks
+  }
+  return out
 }
 
 function sanitizeCustomSections(input: unknown): CustomSection[] {
@@ -170,6 +201,7 @@ function sanitize(input: unknown): EditData {
     sectionBg: sanitizeOverrides(o.sectionBg),
     sectionStyles: sanitizeSectionStyles(o.sectionStyles),
     customSections: sanitizeCustomSections(o.customSections),
+    sectionBlocks: sanitizeSectionBlocks(o.sectionBlocks),
   }
   if (typeof o.theme === 'string' && o.theme.length < 40) out.theme = o.theme
   return out

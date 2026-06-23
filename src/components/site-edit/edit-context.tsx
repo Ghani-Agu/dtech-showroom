@@ -25,6 +25,9 @@ export interface StylePatch {
   textAlign?: 'left' | 'center' | 'right'
   letterSpacing?: number
   textTransform?: 'none' | 'uppercase'
+  fontStyle?: 'normal' | 'italic'
+  lineHeight?: number
+  radius?: number
   background?: string
   paddingY?: number
   paddingX?: number
@@ -35,6 +38,12 @@ export interface SectionStyle {
   textColor?: string
   padTop?: number
   padBottom?: number
+  padX?: number
+  minHeight?: number
+  radius?: number
+  borderWidth?: number
+  borderColor?: string
+  shadow?: boolean
   maxWidth?: number
   align?: 'left' | 'center' | 'right'
 }
@@ -58,6 +67,7 @@ export interface EditData {
   sectionBg: Record<string, string>
   sectionStyles: Record<string, SectionStyle>
   customSections: CustomSection[]
+  sectionBlocks?: Record<string, EditBlock[]>
   theme?: string
 }
 
@@ -73,6 +83,7 @@ interface EditCtx {
   sectionBg: Record<string, string>
   sectionStyles: Record<string, SectionStyle>
   customSections: CustomSection[]
+  sectionBlocks: Record<string, EditBlock[]>
   editMode: boolean
   reorderSections: (order: string[]) => void
   toggleSectionHidden: (id: string) => void
@@ -97,6 +108,7 @@ const Ctx = createContext<EditCtx>({
   sectionBg: {},
   sectionStyles: {},
   customSections: [],
+  sectionBlocks: {},
   editMode: false,
   reorderSections: noop,
   toggleSectionHidden: noop,
@@ -127,6 +139,9 @@ function styleToCss(p?: StylePatch): React.CSSProperties {
   if (p.textAlign) css.textAlign = p.textAlign
   if (typeof p.letterSpacing === 'number') css.letterSpacing = p.letterSpacing
   if (p.textTransform) css.textTransform = p.textTransform
+  if (p.fontStyle) css.fontStyle = p.fontStyle
+  if (typeof p.lineHeight === 'number') css.lineHeight = p.lineHeight
+  if (typeof p.radius === 'number') css.borderRadius = p.radius
   if (typeof p.paddingY === 'number' || typeof p.paddingX === 'number') {
     css.padding = `${p.paddingY ?? 0}px ${p.paddingX ?? 0}px`
   }
@@ -152,6 +167,7 @@ export function EditProvider({
     initial?.sectionStyles ?? {}
   )
   const [customSections, setCustomSections] = useState<CustomSection[]>(initial?.customSections ?? [])
+  const [sectionBlocks, setSectionBlocks] = useState<Record<string, EditBlock[]>>(initial?.sectionBlocks ?? {})
   const [editMode, setEditMode] = useState(false)
   const [blockDrop, setBlockDropState] = useState<BlockDrop | null>(null)
   const [libIndex, setLibIndex] = useState<number | null>(null)
@@ -165,6 +181,8 @@ export function EditProvider({
   sectionStylesRef.current = sectionStyles
   const customRef = useRef(customSections)
   customRef.current = customSections
+  const sectionBlocksRef = useRef(sectionBlocks)
+  sectionBlocksRef.current = sectionBlocks
   const blockDragRef = useRef<{ secId: string; blockId: string } | null>(null)
   const blockDropRef = useRef<BlockDrop | null>(null)
   blockDropRef.current = blockDrop
@@ -207,22 +225,38 @@ export function EditProvider({
   function deleteSection(id: string) {
     send({ type: 'deleteSection', id })
   }
+  function syncSectionBlocks(next: Record<string, EditBlock[]>) {
+    setSectionBlocks(next)
+    send({ type: 'sectionBlocks', sectionBlocks: next })
+  }
   function addBlock(secId: string, kind: BlockKind, index?: number) {
-    const next = customRef.current.map((c) => {
-      if (c.id !== secId) return c
-      const blocks = [...(c.blocks || [])]
-      const blk: EditBlock = { id: uid(), kind }
-      if (typeof index === 'number' && index >= 0 && index <= blocks.length) blocks.splice(index, 0, blk)
-      else blocks.push(blk)
-      return { ...c, blocks }
-    })
-    syncCustom(next)
+    const blk: EditBlock = { id: uid(), kind }
+    if (secId.startsWith('custom:')) {
+      const next = customRef.current.map((c) => {
+        if (c.id !== secId) return c
+        const blocks = [...(c.blocks || [])]
+        if (typeof index === 'number' && index >= 0 && index <= blocks.length) blocks.splice(index, 0, blk)
+        else blocks.push(blk)
+        return { ...c, blocks }
+      })
+      syncCustom(next)
+    } else {
+      const cur = [...(sectionBlocksRef.current[secId] || [])]
+      if (typeof index === 'number' && index >= 0 && index <= cur.length) cur.splice(index, 0, blk)
+      else cur.push(blk)
+      syncSectionBlocks({ ...sectionBlocksRef.current, [secId]: cur })
+    }
   }
   function deleteBlock(secId: string, blockId: string) {
-    const next = customRef.current.map((c) =>
-      c.id === secId ? { ...c, blocks: (c.blocks || []).filter((b) => b.id !== blockId) } : c
-    )
-    syncCustom(next)
+    if (secId.startsWith('custom:')) {
+      const next = customRef.current.map((c) =>
+        c.id === secId ? { ...c, blocks: (c.blocks || []).filter((b) => b.id !== blockId) } : c
+      )
+      syncCustom(next)
+    } else {
+      const cur = (sectionBlocksRef.current[secId] || []).filter((b) => b.id !== blockId)
+      syncSectionBlocks({ ...sectionBlocksRef.current, [secId]: cur })
+    }
   }
   function beginBlockDrag(secId: string, blockId: string) {
     blockDragRef.current = { secId, blockId }
@@ -238,18 +272,34 @@ export function EditProvider({
     setBlockDropState(null)
     if (!from || !to) return
     if (from.secId === to.secId && from.blockId === to.beforeId) return
-    const list = customRef.current.map((c) => ({ ...c, blocks: [...(c.blocks || [])] }))
-    const src = list.find((c) => c.id === from.secId)
-    const dst = list.find((c) => c.id === to.secId)
-    if (!src || !dst) return
-    const fi = src.blocks.findIndex((b) => b.id === from.blockId)
+    // Working copies of BOTH stores so a block can move between a real coded
+    // section (sectionBlocks) and a custom section (customSections), or within.
+    const customCopy = customRef.current.map((c) => ({ ...c, blocks: [...(c.blocks || [])] }))
+    const secCopy: Record<string, EditBlock[]> = {}
+    for (const [k, v] of Object.entries(sectionBlocksRef.current)) secCopy[k] = [...v]
+    const readArr = (id: string): EditBlock[] | null => {
+      if (id.startsWith('custom:')) {
+        const c = customCopy.find((x) => x.id === id)
+        return c ? c.blocks : null
+      }
+      let arr = secCopy[id]
+      if (!arr) { arr = []; secCopy[id] = arr }
+      return arr
+    }
+    const srcArr = readArr(from.secId)
+    if (!srcArr) return
+    const fi = srcArr.findIndex((b) => b.id === from.blockId)
     if (fi < 0) return
-    const [moved] = src.blocks.splice(fi, 1)
+    const moved = srcArr[fi]
     if (!moved) return
-    let ti = to.beforeId ? dst.blocks.findIndex((b) => b.id === to.beforeId) : dst.blocks.length
-    if (ti < 0) ti = dst.blocks.length
-    dst.blocks.splice(ti, 0, moved)
-    syncCustom(list)
+    srcArr.splice(fi, 1)
+    const dstArr = readArr(to.secId)
+    if (!dstArr) return
+    let ti = to.beforeId ? dstArr.findIndex((b) => b.id === to.beforeId) : dstArr.length
+    if (ti < 0) ti = dstArr.length
+    dstArr.splice(ti, 0, moved)
+    syncCustom(customCopy)
+    syncSectionBlocks(secCopy)
   }
 
   useEffect(() => {
@@ -282,7 +332,8 @@ export function EditProvider({
       for (const el of els) {
         const r = el.getBoundingClientRect()
         const id = el.dataset.sectionId || ''
-        if (id.startsWith('custom:') && y >= r.top && y <= r.bottom) return id
+        // any section under the cursor (real or custom) is a valid component target
+        if (id && y >= r.top && y <= r.bottom) return id
       }
       return null
     }
@@ -297,6 +348,7 @@ export function EditProvider({
         if (d.sectionBg) setSectionBg({ ...(d.sectionBg as Record<string, string>) })
         if (d.sectionStyles) setSectionStyles({ ...(d.sectionStyles as Record<string, SectionStyle>) })
         if (d.customSections) setCustomSections([...(d.customSections as CustomSection[])])
+        if (d.sectionBlocks) setSectionBlocks({ ...(d.sectionBlocks as Record<string, EditBlock[]>) })
       } else if (d.type === 'sectionBg' && typeof d.id === 'string') {
         setSectionBg((m) => {
           const next = { ...m }
@@ -335,9 +387,17 @@ export function EditProvider({
       } else if (d.type === 'libDrop') {
         if (d.mode === 'component') {
           const sec = customSecForY(d.y as number) || libHoverSecRef.current
-          if (sec) addBlock(sec, d.kind as BlockKind)
+          if (sec) {
+            addBlock(sec, d.kind as BlockKind)
+          } else {
+            // Dropped a component outside any block-container section: ask the
+            // parent to create a new custom section seeded with this block.
+            send({ type: 'libInsertAt', index: libIndexRef.current ?? sectionEls().length, blockKind: d.kind })
+          }
         } else {
-          send({ type: 'libInsertAt', index: libIndexRef.current ?? sectionEls().length })
+          // Carry presetId in the message: by the time the parent handles this,
+          // the native dragend has cleared its drag ref, so it cannot read it.
+          send({ type: 'libInsertAt', index: libIndexRef.current ?? sectionEls().length, presetId: d.presetId })
         }
         setLibIndex(null)
         setLibHoverSec(null)
@@ -361,19 +421,36 @@ export function EditProvider({
     }
     function onClick(e: MouseEvent) {
       const el = findEditable(e.target)
-      if (!el) return
-      e.preventDefault()
-      e.stopPropagation()
-      document.querySelectorAll('.dtx-sel').forEach((n) => n.classList.remove('dtx-sel'))
-      el.classList.add('dtx-sel')
-      const id = el.dataset.editId as string
-      send({
-        type: 'select',
-        id,
-        editType: el.dataset.editType || 'text',
-        value: el.dataset.editValue ?? el.textContent ?? '',
-        label: el.dataset.editLabel || '',
-      })
+      if (el) {
+        e.preventDefault()
+        e.stopPropagation()
+        document.querySelectorAll('.dtx-sel').forEach((n) => n.classList.remove('dtx-sel'))
+        el.classList.add('dtx-sel')
+        const id = el.dataset.editId as string
+        send({
+          type: 'select',
+          id,
+          editType: el.dataset.editType || 'text',
+          value: el.dataset.editValue ?? el.textContent ?? '',
+          label: el.dataset.editLabel || '',
+        })
+        return
+      }
+      // No editable element hit -> select the containing section, so clicking a
+      // section's background (including the Hero, which has no inline-editable
+      // text) opens its settings without needing the Layers panel. Real
+      // controls and the section's own edit chrome keep their own handlers.
+      const tgt = e.target as HTMLElement | null
+      if (tgt && tgt.closest('a, button, input, textarea, select, label')) return
+      const sec = tgt ? (tgt.closest('.dtx-section') as HTMLElement | null) : null
+      const sid = sec?.dataset.sectionId
+      if (sid) {
+        e.preventDefault()
+        e.stopPropagation()
+        document.querySelectorAll('.dtx-sel').forEach((n) => n.classList.remove('dtx-sel'))
+        sec?.classList.add('dtx-sel')
+        selectSection(sid)
+      }
     }
     document.addEventListener('mouseover', onOver, true)
     document.addEventListener('click', onClick, true)
@@ -400,6 +477,7 @@ export function EditProvider({
         sectionBg,
         sectionStyles,
         customSections,
+        sectionBlocks,
         editMode,
         reorderSections,
         toggleSectionHidden,
@@ -722,48 +800,36 @@ const COMP_BTNS: { kind: BlockKind; label: string; icon: string }[] = [
   { kind: 'divider', label: 'Separateur', icon: '_' },
 ]
 
-/** A user-added section from the library: a block container. */
-function CustomSection({ section }: { section: CustomSection }) {
+/** Shared block container: a list of blocks with drag/drop/add. Used by custom
+ *  sections AND as an in-section appendix on the real coded sections. */
+function BlockGrid({ secId, blocks, layout, inset }: { secId: string; blocks: EditBlock[]; layout: Layout; inset?: boolean }) {
   const { editMode, addBlock, deleteBlock, beginBlockDrag, setBlockDrop, commitBlockDrop, blockDrop, libHoverSec } =
     useContext(Ctx)
-  const blocks = section.blocks || []
-  const layout = section.layout || 'stack'
   const [adderOpen, setAdderOpen] = useState(false)
-  const isLibHover = libHoverSec === section.id
+  const isLibHover = libHoverSec === secId
 
   const inner = blocks.map((b) => {
-    const node = <Block secId={section.id} block={b} />
+    const node = <Block secId={secId} block={b} />
     if (!editMode) return <div key={b.id} className="dtx-bw">{node}</div>
-    const showLine = blockDrop && blockDrop.secId === section.id && blockDrop.beforeId === b.id
+    const showLine = blockDrop && blockDrop.secId === secId && blockDrop.beforeId === b.id
     return (
       <div
         key={b.id}
         className={`dtx-bw dtx-bw-edit ${showLine ? 'dtx-bw-dropbefore' : ''}`}
         data-block-id={b.id}
-        onDragOver={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setBlockDrop({ secId: section.id, beforeId: b.id })
-        }}
-        onDrop={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          commitBlockDrop()
-        }}
+        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setBlockDrop({ secId, beforeId: b.id }) }}
+        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); commitBlockDrop() }}
       >
         <span className="dtx-bw-bar">
           <span
             className="dtx-bw-drag"
             draggable
-            onDragStart={(e) => {
-              e.stopPropagation()
-              beginBlockDrag(section.id, b.id)
-            }}
+            onDragStart={(e) => { e.stopPropagation(); beginBlockDrag(secId, b.id) }}
             title="Glisser pour deplacer (entre sections aussi)"
           >
             ::
           </span>
-          <button type="button" className="dtx-bw-del" title="Supprimer le composant" onClick={() => deleteBlock(section.id, b.id)}>
+          <button type="button" className="dtx-bw-del" title="Supprimer le composant" onClick={() => deleteBlock(secId, b.id)}>
             &times;
           </button>
         </span>
@@ -774,8 +840,8 @@ function CustomSection({ section }: { section: CustomSection }) {
 
   return (
     <section
-      className={`dtx-cs dtx-cs-${layout} ${isLibHover ? 'dtx-cs-libhover' : ''}`}
-      onDragOver={editMode ? (e) => { e.preventDefault(); setBlockDrop({ secId: section.id, beforeId: null }) } : undefined}
+      className={`dtx-cs dtx-cs-${layout} ${isLibHover ? 'dtx-cs-libhover' : ''} ${inset ? 'dtx-cs-inset' : ''}`}
+      onDragOver={editMode ? (e) => { e.preventDefault(); setBlockDrop({ secId, beforeId: null }) } : undefined}
       onDrop={editMode ? (e) => { e.preventDefault(); commitBlockDrop() } : undefined}
     >
       <div className="dtx-cs-wrap">
@@ -783,8 +849,8 @@ function CustomSection({ section }: { section: CustomSection }) {
           {inner}
           {editMode && (
             <div
-              className={`dtx-cs-endzone ${blockDrop && blockDrop.secId === section.id && blockDrop.beforeId === null ? 'dtx-bw-dropbefore' : ''}`}
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setBlockDrop({ secId: section.id, beforeId: null }) }}
+              className={`dtx-cs-endzone ${blockDrop && blockDrop.secId === secId && blockDrop.beforeId === null ? 'dtx-bw-dropbefore' : ''}`}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setBlockDrop({ secId, beforeId: null }) }}
               onDrop={(e) => { e.preventDefault(); e.stopPropagation(); commitBlockDrop() }}
             />
           )}
@@ -797,7 +863,7 @@ function CustomSection({ section }: { section: CustomSection }) {
             {adderOpen && (
               <div className="dtx-cs-addmenu">
                 {COMP_BTNS.map((c) => (
-                  <button key={c.kind} type="button" onClick={() => { addBlock(section.id, c.kind); setAdderOpen(false) }}>
+                  <button key={c.kind} type="button" onClick={() => { addBlock(secId, c.kind); setAdderOpen(false) }}>
                     <b>{c.icon}</b> {c.label}
                   </button>
                 ))}
@@ -808,6 +874,11 @@ function CustomSection({ section }: { section: CustomSection }) {
       </div>
     </section>
   )
+}
+
+/** A user-added section from the library: a block container. */
+function CustomSection({ section }: { section: CustomSection }) {
+  return <BlockGrid secId={section.id} blocks={section.blocks || []} layout={section.layout || 'stack'} />
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -826,6 +897,11 @@ function sectionWrapStyle(s?: SectionStyle): React.CSSProperties {
   if (s.textColor) css.color = s.textColor
   if (typeof s.padTop === 'number') css.paddingTop = s.padTop
   if (typeof s.padBottom === 'number') css.paddingBottom = s.padBottom
+  if (typeof s.padX === 'number') css.paddingInline = s.padX
+  if (typeof s.minHeight === 'number') css.minHeight = s.minHeight
+  if (typeof s.radius === 'number') css.borderRadius = s.radius
+  if (typeof s.borderWidth === 'number') css.border = `${s.borderWidth}px solid ${s.borderColor || 'currentColor'}`
+  if (s.shadow) css.boxShadow = '0 18px 50px rgba(0,0,0,0.18)'
   if (s.align) css.textAlign = s.align
   return css
 }
@@ -842,6 +918,7 @@ export function SectionList({
     sectionBg,
     sectionStyles,
     customSections,
+    sectionBlocks,
     editMode,
     reorderSections,
     toggleSectionHidden,
@@ -884,6 +961,17 @@ export function SectionList({
         const maxW = sStyle?.maxWidth
         let body: React.ReactNode = inner
         if (maxW) body = <div style={{ maxWidth: maxW, marginInline: 'auto' }}>{inner}</div>
+        if (!isCustom) {
+          const extra = sectionBlocks[id] || []
+          if (editMode || extra.length > 0) {
+            body = (
+              <>
+                {body}
+                <BlockGrid secId={id} blocks={extra} layout="stack" inset />
+              </>
+            )
+          }
+        }
         const hasWrap = Object.keys(wrapStyle).length > 0 || !!bg
         const content = hasWrap ? (
           <div
@@ -939,6 +1027,8 @@ function BuilderStyles() {
   return (
     <style>{`
       .dtx-cs { padding: 64px 0; }
+      .dtx-cs-inset { padding: 0 0 40px; }
+      html.dtx-edit .dtx-cs-inset { padding-top: 8px; }
       .dtx-cs-wrap { width: min(1120px, 92vw); margin-inline: auto; }
       .dtx-cs-grid { display: grid; gap: 24px; }
       .dtx-cs-grid-stack { grid-template-columns: 1fr; }
@@ -1049,6 +1139,10 @@ function EditChrome() {
       html.dtx-edit .dtx-cs-addmenu button { cursor: pointer; text-align: start; background: transparent; border: 0; color: #cdeee2; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; }
       html.dtx-edit .dtx-cs-addmenu button:hover { background: rgba(205,238,226,.1); }
       html.dtx-edit .dtx-cs-addmenu button b { display: inline-block; width: 18px; opacity: .7; }
+      html.dtx-edit .dtx-cs-inset > .dtx-cs-wrap { border-top: 1px dashed rgba(20,184,138,0.28); padding-top: 18px; margin-top: 8px; }
+      html.dtx-edit .dtx-cs-inset .dtx-cs-add::before { content: "Composants de cette section"; display: block; font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: rgba(120,224,195,.75); margin-bottom: 8px; }
+      html.dtx-edit .dtx-section:hover { outline-color: rgba(20,184,138,0.55); }
+      html.dtx-edit .dtx-section.dtx-sel { outline: 2px solid #14b88a; outline-offset: -2px; }
       @media (prefers-reduced-motion: reduce) { html.dtx-edit * { scroll-behavior: auto !important; } }
     `}</style>
   )
