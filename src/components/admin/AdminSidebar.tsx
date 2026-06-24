@@ -4,9 +4,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  BookOpen,
   ExternalLink,
   FolderKanban,
+  Images,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -100,18 +100,18 @@ const PRIMARY_NAV: NavItem[] = [
     color: 'var(--c-emerald)',
   },
   {
-    href: '/editor/themes',
-    label: 'Thèmes',
-    desc: 'Habiller la boutique',
-    icon: Palette,
+    href: '/editor/hero',
+    label: 'Slider Hero',
+    desc: 'Images du slider d’accueil',
+    icon: Images,
     color: 'var(--c-mint)',
   },
   {
-    href: '/editor/guide',
-    label: 'Catalogue & guide',
-    desc: 'Apprendre l’éditeur',
-    icon: BookOpen,
-    color: 'var(--c-blue)',
+    href: '/admin/apparence',
+    label: 'Apparence',
+    desc: 'Design du site (actuel / nouveau)',
+    icon: Palette,
+    color: 'var(--c-violet)',
   },
 ]
 
@@ -123,6 +123,7 @@ const NAV_SECTION: Record<string, string> = {
   '/admin/users': 'users',
   '/admin/subscribers': 'newsletter',
   '/admin/campaigns': 'newsletter',
+  '/admin/apparence': 'editor',
   // Editor surfaces map to the "editor" permission key (defaults to allowed
   // when no list is passed — see filter logic below).
   '/editor': 'editor',

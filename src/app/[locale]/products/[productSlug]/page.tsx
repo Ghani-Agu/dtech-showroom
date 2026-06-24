@@ -14,10 +14,13 @@ import {
   getProductBySlug,
   getProductsByCategory,
 } from '@/server/queries'
-import { getPublishedPage } from '@/server/editor-page-data'
+import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { buildProductData } from '@/server/template-data'
 import type { PageDoc } from '@/components/admin/editor/types'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandProductDetail } from '@/components/brand/BrandProductDetail'
+import { toBrandProducts } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +44,32 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
+
+  // New "dtech Brand" design — brand-styled product page, same data.
+  const design = await getPublishedDesign()
+  if (design === 'brand') {
+    const similarRaw = (
+      await getProductsByCategory(product.category.slug, locale)
+    ).filter((p) => p.slug !== product.slug)
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandProductDetail
+          product={{
+            slug: product.slug,
+            name: product.name,
+            brandName: product.brand.name,
+            brandSlug: product.brand.slug,
+            catName: product.category.name,
+            catSlug: product.category.slug,
+            tagline: product.tagline ?? '',
+            description: product.description ?? '',
+            image: imgOr(product.heroImagePath ?? product.cardImagePath),
+          }}
+          similar={toBrandProducts(similarRaw)}
+        />
+      </BrandPageShell>
+    )
+  }
 
   // A published "Modèle · Produit" overrides the default layout, filled with
   // this product's live data.

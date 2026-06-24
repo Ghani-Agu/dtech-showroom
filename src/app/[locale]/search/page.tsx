@@ -7,6 +7,10 @@ import { toExplorerProducts } from '@/lib/showroom-data'
 import { type Locale } from '@/i18n/config'
 import { searchProducts } from '@/server/queries'
 import { Suspense } from 'react'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandGridPage } from '@/components/brand/BrandCollections'
+import { toBrandProducts } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,11 +29,23 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const tShowroom = await getTranslations('showroom')
   const { q } = await searchParams
   const query = (q ?? '').trim()
+  const rawResults = query.length >= 2 ? await searchProducts(query, locale) : []
 
-  const results =
-    query.length >= 2
-      ? toExplorerProducts(await searchProducts(query, locale))
-      : []
+  // New "dtech Brand" design — brand-styled search results.
+  if ((await getPublishedDesign()) === 'brand') {
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandGridPage
+          eyebrow={t('pageTitle')}
+          title={query ? `« ${query} »` : t('pageTitle')}
+          products={toBrandProducts(rawResults)}
+          emptyLabel={query ? t('noResults') : t('placeholder')}
+        />
+      </BrandPageShell>
+    )
+  }
+
+  const results = toExplorerProducts(rawResults)
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 34, paddingBottom: 60 }}>

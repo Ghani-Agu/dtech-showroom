@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
-import { getPublishedPage, getPublishedContent } from '@/server/editor-page-data'
+import { getPublishedPage, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandAbout } from '@/components/brand/BrandSections'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { EditProvider, Editable } from '@/components/site-edit/edit-context'
 import type { PageDoc } from '@/components/admin/editor/types'
@@ -20,6 +22,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
+  // New "dtech Brand" design — brand-styled about section.
+  if ((await getPublishedDesign()) === 'brand') {
+    const locale = await getLocale()
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandAbout />
+      </BrandPageShell>
+    )
+  }
+
   const tmpl = await getPublishedPage('page:about')
   if (tmpl) return <PublishedPage doc={tmpl as unknown as PageDoc} />
 

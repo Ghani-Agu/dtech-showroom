@@ -4,6 +4,10 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { type Locale } from '@/i18n/config'
 import { getAllCategories, getAllProducts } from '@/server/queries'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandCategories } from '@/components/brand/BrandCollections'
+import { toBrandCategories } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +23,20 @@ export default async function CategoriesPage() {
     getAllCategories(locale),
     getAllProducts(locale),
   ])
+
+  // New "dtech Brand" design — brand-styled category cards.
+  if ((await getPublishedDesign()) === 'brand') {
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandCategories
+          eyebrow={`${t('title1')} ${t('title2')}`}
+          title={`${t('title1')} ${t('title2')}`}
+          categories={toBrandCategories(categories, products)}
+        />
+      </BrandPageShell>
+    )
+  }
+
   const counts = new Map<string, number>()
   for (const p of products)
     counts.set(p.category.slug, (counts.get(p.category.slug) ?? 0) + 1)

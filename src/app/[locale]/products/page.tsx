@@ -6,7 +6,11 @@ import {
   toExplorerProducts,
 } from '@/lib/showroom-data'
 import { type Locale } from '@/i18n/config'
-import { getAllProducts } from '@/server/queries'
+import { getAllProducts, getAllCategories } from '@/server/queries'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandShop } from '@/components/brand/BrandSections'
+import { toBrandProducts, toBrandCategories } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,9 +24,26 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ProductsPage() {
   const locale = (await getLocale()) as Locale
-  const t = await getTranslations('showroom.productsPage')
+  const [design, productsRaw] = await Promise.all([
+    getPublishedDesign(),
+    getAllProducts(locale),
+  ])
 
-  const products = toExplorerProducts(await getAllProducts(locale))
+  // New "dtech Brand" design — same catalogue, brand-styled grid.
+  if (design === 'brand') {
+    const categoriesRaw = await getAllCategories(locale)
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandShop
+          products={toBrandProducts(productsRaw)}
+          categories={toBrandCategories(categoriesRaw, productsRaw)}
+        />
+      </BrandPageShell>
+    )
+  }
+
+  const t = await getTranslations('showroom.productsPage')
+  const products = toExplorerProducts(productsRaw)
   const brands = facetFromProducts(products, 'brand')
   const categories = facetFromProducts(products, 'category')
 

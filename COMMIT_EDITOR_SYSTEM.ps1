@@ -42,6 +42,7 @@ $paths = @(
     'src/server/hero-actions.ts',
     # Editor UI (admin) + routes
     'src/components/admin/editor',
+    'src/components/admin/AdminSidebar.tsx',
     'src/app/admin/editor',
     'src/app/editor',
     # Hero slider + config consumed by the home page

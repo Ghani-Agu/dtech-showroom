@@ -10,8 +10,12 @@ import {
   type HeroConfig,
 } from '@/components/home/hero-config'
 import type { EditData } from '@/components/site-edit/edit-context'
+import { coerceDesign, type DesignId } from '@/lib/site-design'
 
 const HOME = 'home'
+
+/** Reserved row that stores which storefront design is active. */
+export const DESIGN_KEY = 'site:design'
 /** Reserved row that stores the list of user-created custom pages. */
 export const MANIFEST_KEY = '__pages__'
 
@@ -151,6 +155,33 @@ export async function getSiteTheme(): Promise<string> {
     return t && typeof t === 'string' ? t : 'nightline'
   } catch {
     return 'nightline'
+  }
+}
+
+/**
+ * Which storefront design is LIVE for visitors ('classic' | 'brand').
+ * Both designs share the same data/backend — only the interface differs.
+ * Falls back to the current design until a choice is published.
+ */
+export async function getPublishedDesign(): Promise<DesignId> {
+  try {
+    const row = await getSitePageRow(DESIGN_KEY)
+    return coerceDesign(row?.published)
+  } catch {
+    return coerceDesign(undefined)
+  }
+}
+
+/**
+ * The staged design choice the admin is previewing (draft). Falls back to the
+ * published value, then to the current design.
+ */
+export async function getDraftDesign(): Promise<DesignId> {
+  try {
+    const row = await getSitePageRow(DESIGN_KEY)
+    return coerceDesign(row?.draft ?? row?.published)
+  } catch {
+    return coerceDesign(undefined)
   }
 }
 

@@ -10,10 +10,13 @@ import {
 } from '@/lib/showroom-data'
 import { type Locale } from '@/i18n/config'
 import { getCategoryBySlug, getProductsByCategory } from '@/server/queries'
-import { getPublishedPage } from '@/server/editor-page-data'
+import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { buildCategoryData } from '@/server/template-data'
 import type { PageDoc } from '@/components/admin/editor/types'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandGridPage } from '@/components/brand/BrandCollections'
+import { toBrandProducts } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +42,20 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   if (!category) notFound()
 
   const rawProducts = await getProductsByCategory(categorySlug, locale)
+
+  // New "dtech Brand" design — brand-styled product grid for this category.
+  if ((await getPublishedDesign()) === 'brand') {
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandGridPage
+          eyebrow={t('nav.categories')}
+          title={category.name}
+          sub={category.description ?? undefined}
+          products={toBrandProducts(rawProducts)}
+        />
+      </BrandPageShell>
+    )
+  }
 
   const tmpl = await getPublishedPage('tmpl:category')
   if (tmpl) {

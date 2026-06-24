@@ -9,6 +9,10 @@ import { SmartImage } from '@/components/ui/SmartImage'
 import { InquiryForm } from '@/components/forms/InquiryForm'
 import { type Locale } from '@/i18n/config'
 import { getProductBySlug } from '@/server/queries'
+import { imgOr } from '@/lib/img'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandInquiry } from '@/components/brand/BrandInquiry'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +41,25 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
 
   const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
+
+  // New "dtech Brand" design — brand-styled quote form (same submitInquiry action).
+  if ((await getPublishedDesign()) === 'brand') {
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandInquiry
+          product={{
+            slug: product.slug,
+            name: product.name,
+            brandName: product.brand.name,
+            brandSlug: product.brand.slug,
+            catName: product.category.name,
+            image: imgOr(product.cardImagePath),
+            spec: product.cardSpec ?? '',
+          }}
+        />
+      </BrandPageShell>
+    )
+  }
 
   return (
     <section className="py-16 md:py-24">

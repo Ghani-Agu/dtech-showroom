@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { ScrollProvider } from '@/components/layout/ScrollProvider'
 import { ShowroomShell } from '@/components/showroom/ShowroomShell'
 import { SiteTheme } from '@/components/site-theme'
-import { getSiteTheme } from '@/server/editor-page-data'
+import { getSiteTheme, getPublishedDesign } from '@/server/editor-page-data'
 import { locales, isValidLocale } from '@/i18n/config'
 
 interface LocaleLayoutProps {
@@ -26,7 +26,11 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale)
 
-  const [messages, siteTheme] = await Promise.all([getMessages(), getSiteTheme()])
+  const [messages, siteTheme, design] = await Promise.all([
+    getMessages(),
+    getSiteTheme(),
+    getPublishedDesign(),
+  ])
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
@@ -42,8 +46,9 @@ export default async function LocaleLayout({
           className="flex min-h-screen flex-col"
           lang={locale}
           dir={locale === 'ar' ? 'rtl' : 'ltr'}
+          data-design={design}
         >
-          <ShowroomShell>{children}</ShowroomShell>
+          <ShowroomShell design={design}>{children}</ShowroomShell>
         </div>
       </ScrollProvider>
     </NextIntlClientProvider>

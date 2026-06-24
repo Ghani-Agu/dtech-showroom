@@ -13,10 +13,12 @@ import {
   getAllCategories,
   getAllProducts,
 } from '@/server/queries'
-import { getPublishedHome, getHomeHero, getPublishedContent } from '@/server/editor-page-data'
+import { getPublishedHome, getHomeHero, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { buildHomeData } from '@/server/template-data'
 import type { PageDoc } from '@/components/admin/editor/types'
+import { BrandHome } from '@/components/brand/BrandHome'
+import { buildBrandData } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,8 +48,9 @@ const CATEGORY_ICON: Record<string, IconKind> = {
 
 export default async function HomePage() {
   const locale = (await getLocale()) as Locale
-  const [publishedHome, heroConfig, contentOverrides, productsRaw, categoriesRaw, brandsRaw] =
+  const [design, publishedHome, heroConfig, contentOverrides, productsRaw, categoriesRaw, brandsRaw] =
     await Promise.all([
+      getPublishedDesign(),
       getPublishedHome(),
       getHomeHero(),
       getPublishedContent('home'),
@@ -55,6 +58,24 @@ export default async function HomePage() {
       getAllCategories(locale),
       getAllBrands(locale),
     ])
+
+  // Per-category / per-brand product counts (shared by both designs).
+  const countByCat = new Map<string, number>()
+  const countByBrand = new Map<string, number>()
+  for (const p of productsRaw) {
+    countByCat.set(p.category.slug, (countByCat.get(p.category.slug) ?? 0) + 1)
+    countByBrand.set(p.brand.slug, (countByBrand.get(p.brand.slug) ?? 0) + 1)
+  }
+
+  // ── New "dtech Brand" design — same catalogue, different interface. ──
+  if (design === 'brand') {
+    return (
+      <BrandHome
+        locale={locale}
+        data={buildBrandData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
+      />
+    )
+  }
 
   // A published visual-editor design overrides the default homepage — filled
   // with the real catalog so the rails/grid show live products.
@@ -77,13 +98,6 @@ export default async function HomePage() {
     cardImagePath: imgOr(p.cardImagePath),
     featured: p.featured,
   }))
-
-  const countByCat = new Map<string, number>()
-  const countByBrand = new Map<string, number>()
-  for (const p of productsRaw) {
-    countByCat.set(p.category.slug, (countByCat.get(p.category.slug) ?? 0) + 1)
-    countByBrand.set(p.brand.slug, (countByBrand.get(p.brand.slug) ?? 0) + 1)
-  }
 
   const categories: HomeCategory[] = categoriesRaw.map((c) => ({
     slug: c.slug,

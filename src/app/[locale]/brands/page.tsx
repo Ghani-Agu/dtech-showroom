@@ -4,6 +4,10 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { type Locale } from '@/i18n/config'
 import { getAllBrands, getAllProducts } from '@/server/queries'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { BrandBrands } from '@/components/brand/BrandSections'
+import { toBrandBrands } from '@/server/brand-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +24,16 @@ export default async function BrandsPage() {
     getAllBrands(locale),
     getAllProducts(locale),
   ])
+
+  // New "dtech Brand" design — same brands, brand-styled grid.
+  if ((await getPublishedDesign()) === 'brand') {
+    return (
+      <BrandPageShell locale={locale}>
+        <BrandBrands brands={toBrandBrands(brands, products)} />
+      </BrandPageShell>
+    )
+  }
+
   const counts = new Map<string, number>()
   for (const p of products)
     counts.set(p.brand.slug, (counts.get(p.brand.slug) ?? 0) + 1)
