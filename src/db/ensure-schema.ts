@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
 import { db } from './client'
 import photoCarouselMap from './photo-carousel-map.json'
+import productSpecsMap from './product-specs.json'
 
 /**
  * Idempotent schema bootstrap — runs once per server start (see
@@ -44,6 +45,16 @@ export async function ensureSchema(): Promise<void> {
       FROM jsonb_each(${JSON.stringify(photoCarouselMap)}::jsonb) AS j(key, value)
       WHERE p."slug" = j.key
         AND p."photo_carousel_paths" = '[]'::jsonb
+    `)
+
+    // One-shot data fill: derived fiche technique (only rows whose specs are
+    // still empty — never overwrites manual edits).
+    await db.execute(sql`
+      UPDATE "products" AS p
+      SET "specs" = j.value
+      FROM jsonb_each(${JSON.stringify(productSpecsMap)}::jsonb) AS j(key, value)
+      WHERE p."slug" = j.key
+        AND p."specs" = '{}'::jsonb
     `)
 
     // ── Newsletter ── (subscribers / campaigns / campaign_sends)

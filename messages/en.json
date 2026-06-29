@@ -266,6 +266,12 @@
     "indexSubtitle": "Every product we currently distribute, in one place. Filter by brand or category, and ask us about anything.",
     "countLabel": "{count} products",
     "specLabels": {
+      "System": "System",
+      "Format": "Format",
+      "Resolution": "Resolution",
+      "Refresh": "Refresh rate",
+      "Panel": "Panel",
+      "Color": "Color",
       "ANC": "ANC",
       "Antennas": "Antennas",
       "Bands": "Bands",

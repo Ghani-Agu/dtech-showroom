@@ -266,6 +266,12 @@
     "indexSubtitle": "Tous les produits que nous distribuons actuellement, au même endroit. Filtrez par marque ou catégorie, et posez-nous vos questions.",
     "countLabel": "{count} produits",
     "specLabels": {
+      "System": "Système",
+      "Format": "Format",
+      "Resolution": "Résolution",
+      "Refresh": "Fréquence",
+      "Panel": "Dalle",
+      "Color": "Couleur",
       "ANC": "ANC",
       "Antennas": "Antennes",
       "Bands": "Bandes",
