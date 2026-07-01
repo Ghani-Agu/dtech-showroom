@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@/i18n/routing'
 import { useBrand } from './brand-context'
+import { SpecsToggle } from '@/components/product/SpecsToggle'
 import { fmtNum } from './brand-i18n'
 import {
   Arrow,
@@ -202,6 +203,7 @@ export function ProductCard({ p }: { p: BrandProduct }) {
           </Link>
         </div>
       </div>
+      <SpecsToggle specs={p.specs} tone="light" />
     </article>
   )
 }

@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/routing'
 import { SmartImage } from '@/components/ui/SmartImage'
 import { cn } from '@/lib/utils'
+import { SpecsToggle } from '@/components/product/SpecsToggle'
 import type { ProductWithRelations } from '@/db/schema'
 
 interface ProductCardProps {
@@ -21,7 +22,7 @@ export function ProductCard({
       href={`/products/${product.slug}`}
       data-scroll-featured={rest['data-scroll-featured']}
       className={cn(
-        'group block rounded-md border border-transparent bg-surface-elevated transition-all duration-300 hover:-translate-y-1 hover:border-text-muted/20',
+        'group relative block rounded-md border border-transparent bg-surface-elevated transition-all duration-300 hover:-translate-y-1 hover:border-text-muted/20',
         className
       )}
     >
@@ -50,6 +51,7 @@ export function ProductCard({
           {product.cardSpec}
         </p>
       </div>
+      <SpecsToggle specs={product.specs} tone="dark" />
     </Link>
   )
 }

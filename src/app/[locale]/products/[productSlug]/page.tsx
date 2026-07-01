@@ -41,6 +41,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { productSlug } = await params
   const locale = (await getLocale()) as Locale
   const t = await getTranslations('showroom')
+  const tSpec = await getTranslations('products.specLabels')
 
   const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
@@ -64,6 +65,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             tagline: product.tagline ?? '',
             description: product.description ?? '',
             image: imgOr(product.heroImagePath ?? product.cardImagePath),
+            specs: product.specs,
+            images: (product.photoCarouselPaths ?? []).map(imgOr),
           }}
           similar={toBrandProducts(similarRaw)}
         />
@@ -91,6 +94,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   ).filter((p) => p.slug !== product.slug)
 
   const paragraphs = product.description.split('\n\n')
+  const specsEntries = Object.entries(product.specs ?? {})
+  const galleryImages = product.photoCarouselPaths ?? []
+  const specsTitle =
+    locale === 'ar' ? 'المواصفات التقنية' : locale === 'en' ? 'Specifications' : 'Fiche technique'
+  const imagesTitle = locale === 'ar' ? 'الصور' : 'Images' 
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
@@ -193,7 +201,70 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      <ReviewsSection slug={product.slug} />
+      {specsEntries.length > 0 ? (
+        <section style={{ marginTop: 52 }}>
+          <h2 className="sr-h2" style={{ marginBottom: 18 }}>
+            {specsTitle}
+            <span className="acc">.</span>
+          </h2>
+          <div style={{ border: '1px solid var(--sr-line)', borderRadius: 18, overflow: 'hidden' }}>
+            {specsEntries.map(([key, value], i) => (
+              <div
+                key={key}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(140px, 220px) 1fr',
+                  gap: 16,
+                  padding: '14px 20px',
+                  borderTop: i === 0 ? 'none' : '1px solid var(--sr-line)',
+                }}
+              >
+                <span
+                  className="sr-mono"
+                  style={{ color: 'var(--sr-mute)', textTransform: 'uppercase', fontSize: 13, letterSpacing: '.04em' }}
+                >
+                  {tSpec(key)}
+                </span>
+                <span className="sr-mono" style={{ color: 'var(--sr-text)' }} dir="ltr">
+                  {Array.isArray(value) ? value.join(', ') : String(value)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {galleryImages.length > 0 ? (
+        <section style={{ marginTop: 52 }}>
+          <h2 className="sr-h2" style={{ marginBottom: 18 }}>
+            {imagesTitle}
+            <span className="acc">.</span>
+          </h2>
+          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {galleryImages.map((src, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'relative',
+                  aspectRatio: '4 / 3',
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  border: '1px solid var(--sr-line)',
+                  background: '#fff',
+                }}
+              >
+                <Image
+                  src={imgOr(src)}
+                  alt={`${product.name} ${i + 1}`}
+                  fill
+                  sizes="(min-width: 1024px) 300px, 45vw"
+                  style={{ objectFit: 'contain' }}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {similar.length > 0 ? (
         <section style={{ marginTop: 60 }}>
@@ -217,6 +288,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </Carousel>
         </section>
       ) : null}
+
+      <ReviewsSection slug={product.slug} />
     </section>
   )
 }

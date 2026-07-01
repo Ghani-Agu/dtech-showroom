@@ -7,6 +7,7 @@ import { Link } from '@/i18n/routing'
 import { useCart } from '@/lib/cart'
 import { seededRating } from '@/lib/reviews'
 import { Stars } from './Stars'
+import { SpecsToggle } from '@/components/product/SpecsToggle'
 
 export interface ShowroomProduct {
   slug: string
@@ -15,6 +16,7 @@ export interface ShowroomProduct {
   categoryName: string
   cardSpec: string
   cardImagePath: string
+  specs?: Record<string, string | number | string[]>
 }
 
 export function ShowroomCard({
@@ -36,7 +38,7 @@ export function ShowroomCard({
   return (
     <article
       className="sr-card"
-      style={{ animationDelay: `${Math.min(index, 11) * 45}ms` }}
+      style={{ animationDelay: `${Math.min(index, 11) * 45}ms`, position: 'relative' }}
     >
       <Link
         href={`/products/${product.slug}`}
@@ -95,6 +97,7 @@ export function ShowroomCard({
           )}
         </button>
       </div>
+      <SpecsToggle specs={product.specs} tone="dark" />
     </article>
   )
 }

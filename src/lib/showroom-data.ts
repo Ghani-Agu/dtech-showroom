@@ -17,6 +17,7 @@ export function toExplorerProducts(
     categoryName: p.category.name,
     cardSpec: p.cardSpec,
     cardImagePath: imgOr(p.cardImagePath),
+    specs: p.specs,
     featured: p.featured,
   }))
 }

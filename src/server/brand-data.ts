@@ -53,6 +53,7 @@ export function toBrandProducts(raw: ProductsRaw): BrandProduct[] {
     catName: p.category.name,
     spec: p.cardSpec ?? '',
     img: imgOr(p.cardImagePath),
+    specs: p.specs,
     featured: p.featured,
   }))
 }

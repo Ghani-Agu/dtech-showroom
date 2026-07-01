@@ -19,6 +19,8 @@ export interface BrandProduct {
   spec: string
   /** Resolved product image URL, or null when none. */
   img: string | null
+  /** Derived technical specs for the + panel. */
+  specs?: Record<string, string | number | string[]>
   featured: boolean
 }
 
