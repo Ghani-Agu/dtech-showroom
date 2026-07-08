@@ -24,6 +24,11 @@ export default async function LoginPage() {
     redirect('/admin')
   }
 
+  // Dev-only skip-login (testing phase) — mirrors /api/dev-login gating.
+  const showDevSkip =
+    process.env.NODE_ENV !== 'production' ||
+    process.env.ALLOW_DEV_LOGIN === '1'
+
   const dust = [
     { l: 6, d: 11, dl: 0 }, { l: 16, d: 14, dl: -3 }, { l: 27, d: 10, dl: -6 },
     { l: 38, d: 16, dl: -2 }, { l: 49, d: 12, dl: -8 }, { l: 58, d: 15, dl: -4 },
@@ -85,6 +90,16 @@ export default async function LoginPage() {
           </header>
 
           <LoginForm />
+
+          {showDevSkip ? (
+            <a
+              href="/api/dev-login?redirect=/admin"
+              className="lg-dev-skip"
+              title="Crée une session admin de test — visible uniquement en développement"
+            >
+              ⚡ Passer la connexion (mode test) →
+            </a>
+          ) : null}
         </div>
         <p className="lg-foot">D-Tech Algérie · depuis 2006</p>
       </div>

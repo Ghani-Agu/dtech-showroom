@@ -24,8 +24,8 @@ export function BrandHome({ locale, data }: { locale: string; data: BrandData })
     <BrandPageShell locale={locale}>
       <BrandHero heroImages={data.heroImages} productCount={data.products.length} />
       <BrandShop products={data.products} categories={data.categories} />
-      <BrandBrands brands={data.brands} />
       <BrandServices />
+      <BrandBrands brands={data.brands} />
       <BrandAbout />
       <BrandContact />
     </BrandPageShell>

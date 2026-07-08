@@ -685,6 +685,16 @@
       "note": "Prix indicatifs TTC. Le devis final est confirmé par notre équipe commerciale.",
       "mailSubject": "Demande de devis — D-Tech Algérie",
       "mailIntro": "Bonjour, je souhaite un devis pour les produits suivants :"
+    },
+    "services": {
+      "s1t": "Livraison rapide",
+      "s1d": "Livrés en 48 h dans les 58 wilayas.",
+      "s2t": "Garantie 2 ans",
+      "s2d": "Matériel neuf et garanti, factures à l’appui.",
+      "s3t": "SAV dédié",
+      "s3d": "Support et réparation par notre équipe technique.",
+      "s4t": "Partenaires officiels",
+      "s4d": "HP, Dell, Lenovo, ASUS, Canon, Epson, TP-Link."
     }
   },
   "legal": {

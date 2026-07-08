@@ -97,6 +97,7 @@ export default async function HomePage() {
     cardSpec: p.cardSpec,
     cardImagePath: imgOr(p.cardImagePath),
     featured: p.featured,
+    specs: p.specs,
   }))
 
   const categories: HomeCategory[] = categoriesRaw.map((c) => ({

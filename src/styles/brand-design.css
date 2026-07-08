@@ -58,7 +58,7 @@
   font-family: var(--text);
   background: var(--bg); color: var(--ink);
   line-height: 1.55; -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility; overflow-x: hidden;
+  text-rendering: optimizeLegibility; overflow-x: clip; /* clip keeps position:sticky alive */
   transition: background .35s ease, color .35s ease;
 }
 .brand-root a { color: inherit; text-decoration: none; }
@@ -723,3 +723,165 @@
 .brand-root .bform-field input:focus, .brand-root .bform-field textarea:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px color-mix(in srgb, var(--teal) 18%, transparent); }
 .brand-root .bform-field textarea { resize:vertical; }
 .brand-root .bform-err { color:#e0413a; font-size:13.5px; font-weight:600; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Shared showroom components on the Brand skin — reviews, cart
+   drawer, carousels/chip lanes, stars, specs "+". The components
+   read --sr-* tokens; map them to the brand palette so they follow
+   the Brand light/dark theme automatically.
+   ═══════════════════════════════════════════════════════════════ */
+.brand-root {
+  --sr-bg0: var(--bg);
+  --sr-bg1: var(--bg);
+  --sr-bg2: var(--surface);
+  --sr-cyan: var(--teal);
+  --sr-ice: var(--teal-deep);
+  --sr-text: var(--ink);
+  --sr-muted: var(--mute);
+  --sr-line: var(--line);
+  --sr-line2: var(--line-2);
+  --sr-glass: var(--surface);
+}
+
+/* ── reviews ── */
+.brand-root .sr-kicker { color: var(--teal-deep); font-family: var(--text); font-weight: 800; }
+.brand-root .sr-kicker::before { background: var(--teal); box-shadow: none; }
+.brand-root .sr-review {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r, 14px); box-shadow: var(--card-sh);
+}
+.brand-root .sr-input, .brand-root .sr-textarea {
+  background: var(--surface); border: 1px solid var(--line);
+  color: var(--ink); border-radius: 10px;
+}
+.brand-root .sr-input:focus, .brand-root .sr-textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 16%, transparent);
+}
+.brand-root .sr-btn-primary {
+  background: var(--teal); color: #fff; border-radius: var(--pill);
+  box-shadow: 0 8px 20px rgba(10,128,140,.28);
+}
+.brand-root .sr-btn-primary:hover {
+  box-shadow: 0 12px 28px rgba(10,128,140,.36); transform: translateY(-2px);
+}
+.brand-root .sr-review .avatar { background: var(--tint); color: var(--teal-deep); }
+.brand-root .sr-empty { border: 1px dashed var(--line-2); border-radius: var(--r, 14px); color: var(--mute); }
+.brand-root .sr-mono { color: var(--mute); }
+
+/* ── cart drawer ── */
+.brand-root .sr-overlay { background: rgba(14,38,42,0.38); }
+.brand-root .sr-drawer {
+  background: var(--bg); color: var(--ink);
+  border-inline-start: 1px solid var(--line);
+  box-shadow: 0 0 60px rgba(16,60,66,0.22);
+}
+.brand-root .sr-icn { background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.brand-root .sr-icn:hover { border-color: var(--teal); color: var(--teal-deep); }
+.brand-root .sr-qty { border: 1px solid var(--line); border-radius: 999px; }
+.brand-root .sr-qty button { color: var(--ink); }
+.brand-root .sr-cart-item .thumb { background: #fff; border: 1px solid var(--line); }
+.brand-root .sr-btn-ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--pill); }
+.brand-root .sr-btn-ghost:hover { border-color: var(--teal); background: var(--tint); }
+.brand-root .sr-btn-wa { border-radius: var(--pill); }
+
+/* ── carousels & chip lanes (arrows) ── */
+.brand-root .sr-arrow {
+  background: var(--bg); border: 1px solid var(--line);
+  color: var(--ink); box-shadow: var(--card-sh);
+}
+.brand-root .sr-arrow:hover { border-color: var(--teal); color: var(--teal-deep); }
+.brand-root .filters-lane { display: block; }
+.brand-root .sr-chiprow .lane { gap: 9px; padding: 4px 2px; }
+.brand-root .sr-chiprow .chip { flex: 0 0 auto; white-space: nowrap; }
+.brand-root .sr-carousel .lane { gap: 14px; padding: 4px 2px 16px; }
+.brand-root .sr-carousel .lane > * { flex: 0 0 256px; }
+.brand-root .pdp-similar .prod { height: 100%; }
+
+/* ── stars on product cards ── */
+.brand-root .prod .rating-row { display: flex; align-items: center; margin-top: 2px; position: relative; z-index: 2; }
+.brand-root .sr-stars .val, .brand-root .sr-stars .ct { font-family: var(--text); color: var(--mute); }
+
+/* ── card cart button "added" state ── */
+.brand-root .cart-btn.added { background: #1fab5a; }
+
+/* ── header cart count badge ── */
+.brand-root .icn.cart-icn { position: relative; }
+.brand-root .cart-count {
+  position: absolute; top: 1px; inset-inline-end: 1px;
+  min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
+  background: var(--yellow); color: #1a1205;
+  font-size: 10px; font-weight: 800; line-height: 1;
+  display: grid; place-items: center; border: 2px solid var(--bg);
+}
+
+/* ── product page add-to-cart ── */
+.brand-root .pdp-cart {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 20px; border-radius: var(--pill);
+  border: 2px solid var(--teal); color: var(--teal-deep);
+  font-family: var(--text); font-weight: 800; font-size: 13.5px;
+  background: none; transition: background .15s, color .15s, transform .15s;
+}
+.brand-root .pdp-cart:hover { background: var(--tint); transform: translateY(-1px); }
+.brand-root .pdp-cart.added { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+/* ── header live search ── */
+.brand-root .bs { position: relative; display: flex; align-items: center; gap: 4px; }
+.brand-root .bs-input {
+  width: 0; opacity: 0; padding: 0; border: 1px solid transparent;
+  border-radius: var(--pill); background: var(--surface); color: var(--ink);
+  font-family: inherit; font-size: 13.5px; outline: none;
+  transition: width .25s ease, opacity .2s ease, padding .25s ease, border-color .2s;
+}
+.brand-root .bs.open .bs-input {
+  width: min(230px, 34vw); opacity: 1; padding: 9px 14px; border-color: var(--line);
+}
+.brand-root .bs-input:focus { border-color: var(--teal); }
+.brand-root .bs-input::placeholder { color: var(--mute); }
+.brand-root .bs-pop {
+  position: absolute; top: calc(100% + 12px); inset-inline-end: 0; z-index: 80;
+  width: min(360px, 92vw); max-height: 60vh; overflow-y: auto;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 24px 60px -18px rgba(16, 60, 66, 0.3);
+  padding: 6px;
+}
+.brand-root .bs-empty { padding: 18px 14px; text-align: center; color: var(--mute); font-size: 13px; }
+.brand-root .bs-hit {
+  display: flex; align-items: center; gap: 11px;
+  padding: 8px 9px; border-radius: 11px;
+  transition: background .15s;
+}
+.brand-root .bs-hit:hover { background: var(--tint); }
+.brand-root .bs-hit img {
+  width: 42px; height: 42px; flex-shrink: 0; object-fit: contain;
+  background: #fff; border: 1px solid var(--line); border-radius: 9px;
+}
+.brand-root .bs-hit .tx { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.brand-root .bs-hit .nm {
+  font-weight: 700; font-size: 13px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.brand-root .bs-hit .sub { font-size: 11px; color: var(--mute); }
+.brand-root .bs-all {
+  width: 100%; padding: 10px; margin-top: 2px;
+  border-radius: 11px; background: var(--surface);
+  color: var(--teal-deep); font-weight: 800; font-size: 12.5px;
+  transition: background .15s;
+}
+.brand-root .bs-all:hover { background: var(--tint); }
+@media (max-width: 700px) {
+  .brand-root .bs.open .bs-input {
+    position: fixed; top: 12px; inset-inline-start: 14px; inset-inline-end: 64px;
+    width: auto; z-index: 90; background: var(--bg); border-color: var(--line);
+  }
+  .brand-root .bs-pop { position: fixed; top: 58px; inset-inline: 14px; width: auto; }
+}
+
+/* ── sticky shop filter chips ── */
+.brand-root .filters-lane {
+  position: sticky; top: 66px; z-index: 30;
+  padding: 8px 2px; border-radius: 14px;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px);
+}

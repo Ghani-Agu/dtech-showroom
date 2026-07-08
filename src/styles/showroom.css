@@ -542,3 +542,163 @@ body[data-home-theme='light'] .sr-root .sr-cartbtn.added { background: var(--sr-
 [lang='fr'] .sr-h1 { font-size: clamp(28px, 3.6vw, 44px); }
 [lang='fr'] .sr-h2 { font-size: clamp(21px, 2.4vw, 28px); }
 [lang='fr'] .sr-sub { font-size: 15px; }
+
+/* ─── card action row: add-to-cart + WhatsApp mini button ────── */
+.sr-cardactions { display: flex; gap: 8px; align-items: stretch; margin-top: 10px; position: relative; z-index: 2; }
+.sr-cardactions .sr-cartbtn { flex: 1; margin-top: 0; width: auto; min-width: 0; }
+.sr-wamini {
+  flex-shrink: 0; width: 42px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: rgba(37,211,102,0.12);
+  border: 1px solid rgba(37,211,102,0.4);
+  color: #25d366;
+  transition: background .2s, color .2s, transform .15s, box-shadow .25s;
+}
+.sr-wamini:hover { background: #25d366; color: #ffffff; transform: translateY(-1px); box-shadow: 0 0 20px rgba(37,211,102,0.35); }
+body[data-home-theme='light'] .sr-root .sr-wamini {
+  background: rgba(29,168,81,0.09); border-color: rgba(29,168,81,0.4); color: #1da851;
+}
+body[data-home-theme='light'] .sr-root .sr-wamini:hover { background: #1da851; color: #ffffff; }
+
+/* ─── product gallery: main image + thumbnails (both designs) ── */
+.pg-root { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pg-main {
+  position: relative; aspect-ratio: 4 / 3;
+  border-radius: 22px; overflow: hidden;
+  border: 1px solid var(--sr-line);
+  background: var(--sr-bg2, #0a1322);
+}
+.pg-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  inset-inline-start: 10px; z-index: 2;
+  width: 38px; height: 38px; border-radius: 999px;
+  display: grid; place-items: center; cursor: pointer;
+  background: color-mix(in srgb, var(--sr-bg0, #04060c) 55%, transparent);
+  border: 1px solid var(--sr-line); color: var(--sr-text);
+  backdrop-filter: blur(6px);
+  transition: border-color .2s, background .2s, opacity .2s;
+}
+.pg-arrow.next { inset-inline-start: auto; inset-inline-end: 10px; }
+.pg-arrow:hover { border-color: var(--sr-cyan); }
+[dir='rtl'] .pg-arrow svg { transform: scaleX(-1); }
+.pg-count {
+  position: absolute; bottom: 10px; inset-inline-end: 12px; z-index: 2;
+  font-family: var(--font-geist-mono), monospace; font-size: 11px;
+  letter-spacing: 0.06em; color: var(--sr-text);
+  background: color-mix(in srgb, var(--sr-bg0, #04060c) 58%, transparent);
+  border: 1px solid var(--sr-line);
+  padding: 3px 9px; border-radius: 999px; backdrop-filter: blur(6px);
+}
+.pg-thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 2px; scrollbar-width: none; }
+.pg-thumbs::-webkit-scrollbar { display: none; }
+.pg-thumb {
+  position: relative; flex: 0 0 auto;
+  width: 82px; aspect-ratio: 4 / 3;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--sr-line); background: #ffffff;
+  cursor: pointer; opacity: 0.7; padding: 0;
+  transition: opacity .2s, border-color .2s, box-shadow .2s;
+}
+.pg-thumb:hover { opacity: 1; }
+.pg-thumb.on { border-color: var(--sr-cyan); box-shadow: 0 0 0 1px var(--sr-cyan); opacity: 1; }
+/* brand skin: match its rounded cards */
+.brand-root .pg-main { border-radius: var(--r-lg, 18px); box-shadow: var(--card-sh); }
+.brand-root .pg-arrow { background: color-mix(in srgb, #ffffff 72%, transparent); color: var(--ink); }
+.brand-root .pg-count { background: color-mix(in srgb, #ffffff 75%, transparent); color: var(--ink); font-family: var(--text); font-weight: 700; }
+
+/* ─── floating cart bubble ────────────────────────────────────── */
+.sr-fab {
+  position: fixed; bottom: 18px; inset-inline-end: 18px; z-index: 56;
+  width: 54px; height: 54px; border-radius: 999px;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--sr-cyan); color: #04110c; border: none;
+  box-shadow: 0 12px 30px -8px color-mix(in srgb, var(--sr-cyan) 65%, transparent);
+  animation: srFabIn .25s ease;
+  transition: transform .15s;
+}
+.sr-fab:hover { transform: translateY(-2px) scale(1.04); }
+.sr-fab .ct {
+  position: absolute; top: -4px; inset-inline-end: -4px;
+  min-width: 21px; height: 21px; padding: 0 5px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--sr-text); color: var(--sr-bg0, #04060c);
+  font-size: 11px; font-weight: 800; line-height: 1;
+  border: 2px solid var(--sr-bg0, #04060c);
+}
+@keyframes srFabIn { from { opacity: 0; transform: translateY(10px) scale(.9); } }
+.brand-root .sr-fab { color: #ffffff; box-shadow: 0 12px 30px -8px rgba(10,128,140,.55); }
+.brand-root .sr-fab .ct { background: var(--yellow, #f5b40e); color: #1a1205; border-color: var(--bg); }
+
+/* ─── sticky buy bar on product pages ─────────────────────────── */
+.sr-buybar {
+  position: fixed; bottom: 14px; inset-inline: 0; z-index: 55;
+  margin-inline: auto;
+  width: min(720px, calc(100% - 20px));
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--sr-bg1, #071120) 86%, transparent);
+  border: 1px solid var(--sr-line);
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px);
+  animation: srBarIn .28s ease;
+}
+@keyframes srBarIn { from { opacity: 0; transform: translateY(14px); } }
+.sr-buybar .thumb {
+  position: relative; flex-shrink: 0; width: 44px; height: 44px;
+  border-radius: 11px; overflow: hidden; background: #fff;
+  border: 1px solid var(--sr-line);
+}
+.sr-buybar .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sr-buybar .br {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sr-muted);
+}
+.sr-buybar .nm {
+  font-size: 13px; font-weight: 650; color: var(--sr-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sr-buybar .wa {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: rgba(37, 211, 102, 0.14); border: 1px solid rgba(37, 211, 102, 0.4);
+  color: #25d366; transition: background .2s, color .2s;
+}
+.sr-buybar .wa:hover { background: #25d366; color: #fff; }
+.sr-buybar .add {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--sr-cyan); color: #04110c;
+  font-size: 12.5px; font-weight: 700; font-family: inherit;
+  transition: transform .15s, box-shadow .2s;
+}
+.sr-buybar .add:hover { box-shadow: 0 0 22px color-mix(in srgb, var(--sr-cyan) 45%, transparent); transform: translateY(-1px); }
+.sr-buybar .add.on { background: #1fab5a; color: #fff; }
+.brand-root .sr-buybar { background: color-mix(in srgb, #ffffff 92%, transparent); box-shadow: 0 18px 50px -14px rgba(16, 60, 66, 0.35); }
+.brand-root .sr-buybar .add { color: #ffffff; }
+@media (max-width: 560px) {
+  .sr-buybar .br { display: none; }
+  .sr-buybar .add { padding: 11px 13px; }
+}
+
+/* ─── design-conflict guard ───────────────────────────────────
+   When a page renders its own Brand chrome (.brand-root) inside the
+   shell, hide the shell's classic chrome + background + cart copies.
+   Heals the stale-layout mismatch after a design switch. */
+.sr-classic-chrome { display: contents; }
+.sr-root:has(.brand-root) > .sr-classic-chrome,
+.sr-root:has(.brand-root) > .sr-bg,
+.sr-root:has(.brand-root) > .sr-grid-bg,
+.sr-root:has(.brand-root) > .sr-fab,
+.sr-root:has(.brand-root) > .sr-overlay,
+.sr-root:has(.brand-root) > .sr-drawer {
+  display: none;
+}
+.sr-root:has(.brand-root) { background: none; }
+
+/* ─── cards adapt to the picture (never crop the product) ────── */
+.sr-card .imgbox { background: #ffffff; }
+.sr-card .imgbox img { object-fit: contain !important; padding: 12px; }
+.pg-main { background: #ffffff; }
+.pg-main > img { object-fit: contain !important; padding: 14px; }
+.pg-thumb img { object-fit: contain !important; padding: 4px; }

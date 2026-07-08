@@ -685,6 +685,16 @@
       "note": "Indicative prices incl. tax. Final quote confirmed by our sales team.",
       "mailSubject": "Quote request — D-Tech Algeria",
       "mailIntro": "Hello, I would like a quote for the following products:"
+    },
+    "services": {
+      "s1t": "Fast delivery",
+      "s1d": "Delivered within 48h across all 58 wilayas.",
+      "s2t": "2-year warranty",
+      "s2d": "New, warrantied hardware with invoices.",
+      "s3t": "Dedicated after-sales",
+      "s3d": "Support and repairs by our technical team.",
+      "s4t": "Official partners",
+      "s4d": "HP, Dell, Lenovo, ASUS, Canon, Epson, TP-Link."
     }
   },
   "legal": {

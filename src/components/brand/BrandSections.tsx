@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { useBrand } from './brand-context'
 import { SpecsToggle } from '@/components/product/SpecsToggle'
@@ -29,6 +30,10 @@ import {
   GridCatIcon,
 } from './brand-icons'
 import { BRAND_WHATSAPP, type BrandProduct, type BrandCategory, type BrandBrandItem } from './brand-types'
+import { useCart } from '@/lib/cart'
+import { seededRating } from '@/lib/reviews'
+import { Stars } from '@/components/showroom/Stars'
+import { Carousel } from '@/components/showroom/Carousel'
 
 /* ---------- helpers ---------- */
 
@@ -102,7 +107,14 @@ function HeroSlider({ images }: { images: string[] }) {
       {slides.map((src, idx) => (
         <div key={idx} className={`hs-slide ${idx === i ? 'on' : ''}`}>
           {src ? (
-            <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Image
+              src={src}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 640px, 100vw"
+              priority={idx === 0}
+              style={{ objectFit: 'cover' }}
+            />
           ) : (
             <div
               style={{
@@ -179,13 +191,31 @@ export function BrandHero({ heroImages, productCount }: { heroImages: string[]; 
 
 export function ProductCard({ p }: { p: BrandProduct }) {
   const { t } = useBrand()
+  const add = useCart((s) => s.add)
+  const openCart = useCart((s) => s.setOpen)
+  const [added, setAdded] = useState(false)
+  const rating = seededRating(p.slug)
   const waText = encodeURIComponent(`${t('card.waMsg')} ${p.name}`)
+  const onAdd = () => {
+    add({ slug: p.slug, name: p.name, brand: p.brand, image: p.img ?? '' })
+    setAdded(true)
+    window.setTimeout(() => {
+      setAdded(false)
+      openCart(true)
+    }, 650)
+  }
   return (
     <article className="prod">
       <Link href={`/products/${p.slug}`} className="canvas" aria-label={p.name}>
         <span className="stock-tag">{t('catalog.stock')}</span>
         {p.img ? (
-          <img src={p.img} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <Image
+            src={p.img}
+            alt={p.name}
+            fill
+            sizes="(min-width: 1024px) 280px, 50vw"
+            style={{ objectFit: 'contain', padding: 18 }}
+          />
         ) : (
           <span style={{ color: 'var(--mute)' }}><GridCatIcon kind={p.cat} size={72} /></span>
         )}
@@ -194,16 +224,31 @@ export function ProductCard({ p }: { p: BrandProduct }) {
         <span className="cl">{p.brand} · {p.catName}</span>
         <Link href={`/products/${p.slug}`} className="nm">{p.name}</Link>
         <span className="sp">{p.spec}</span>
+        <div className="rating-row">
+          <Stars value={rating.avg} count={rating.count} tone="light" />
+        </div>
+        <SpecsToggle specs={p.specs} tone="light" variant="inline" />
         <div className="foot">
           <a className="wa-btn" href={`https://wa.me/${BRAND_WHATSAPP}?text=${waText}`} target="_blank" rel="noopener noreferrer">
             <WhatsAppIcon />{t('card.order')}
           </a>
-          <Link className="cart-btn" href={`/products/${p.slug}`} aria-label={t('card.cart')} title={t('card.cart')}>
-            <CartIcon2 />
-          </Link>
+          <button
+            type="button"
+            className={`cart-btn ${added ? 'added' : ''}`}
+            aria-label={t('card.cart')}
+            title={t('card.cart')}
+            onClick={onAdd}
+          >
+            {added ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 13l5 5L20 6" />
+              </svg>
+            ) : (
+              <CartIcon2 />
+            )}
+          </button>
         </div>
       </div>
-      <SpecsToggle specs={p.specs} tone="light" />
     </article>
   )
 }
@@ -250,13 +295,15 @@ export function BrandShop({ products, categories }: { products: BrandProduct[]; 
             <span className="meta">{filtered.length} {t('catalog.resultsWord')}</span>
           </div>
 
-          <div className="filters">
-            <button className={`chip ${activeCat === 'all' ? 'on' : ''}`} onClick={() => setActiveCat('all')}>{t('catalog.all')}</button>
-            {categories.map((c) => (
-              <button key={c.id} className={`chip ${activeCat === c.id ? 'on' : ''}`} onClick={() => setActiveCat(c.id)}>
-                {c.name}<span className="ct">{c.count}</span>
-              </button>
-            ))}
+          <div className="filters filters-lane">
+            <Carousel variant="chips" prevLabel={t('catalog.prev')} nextLabel={t('catalog.next')}>
+              <button className={`chip ${activeCat === 'all' ? 'on' : ''}`} onClick={() => setActiveCat('all')}>{t('catalog.all')}</button>
+              {categories.map((c) => (
+                <button key={c.id} className={`chip ${activeCat === c.id ? 'on' : ''}`} onClick={() => setActiveCat(c.id)}>
+                  {c.name}<span className="ct">{c.count}</span>
+                </button>
+              ))}
+            </Carousel>
           </div>
 
           <div className="prod-grid">

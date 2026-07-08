@@ -26,12 +26,21 @@ const TONES = {
   },
 } as const
 
+/**
+ * "+" technical-specs feature on product cards.
+ * - variant="inline": a full-width row button meant to sit between the short
+ *   description and the card's action button(s).
+ * - variant="corner": legacy floating button at the top corner of the card.
+ * Either way the panel opens as an overlay covering the card.
+ */
 export function SpecsToggle({
   specs,
   tone = 'dark',
+  variant = 'corner',
 }: {
   specs?: Record<string, SpecValue> | null
   tone?: 'dark' | 'light'
+  variant?: 'corner' | 'inline'
 }) {
   const [open, setOpen] = useState(false)
   const tSpec = useTranslations('products.specLabels')
@@ -46,37 +55,74 @@ export function SpecsToggle({
         ? 'Technical specifications'
         : 'Caractéristiques techniques'
 
+  const openPanel = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setOpen(true)
+  }
+
   return (
     <>
-      <button
-        type="button"
-        aria-label={title}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setOpen(true)
-        }}
-        style={{
-          position: 'absolute',
-          top: 10,
-          insetInlineEnd: 10,
-          zIndex: 5,
-          width: 30,
-          height: 30,
-          borderRadius: 999,
-          display: 'grid',
-          placeItems: 'center',
-          cursor: 'pointer',
-          background: c.btnBg,
-          border: '1px solid ' + c.line,
-          color: c.text,
-          backdropFilter: 'blur(4px)',
-        }}
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
+      {variant === 'inline' ? (
+        <button
+          type="button"
+          aria-label={title}
+          onClick={openPanel}
+          style={{
+            position: 'relative',
+            zIndex: 5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+            width: '100%',
+            marginTop: 8,
+            padding: '7px 12px',
+            borderRadius: 999,
+            background: c.btnBg,
+            border: '1px solid ' + c.line,
+            color: c.muted,
+            fontSize: 12,
+            fontWeight: 600,
+            fontFamily: 'inherit',
+            cursor: 'pointer',
+            textAlign: 'start',
+          }}
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {title}
+          </span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2.6" strokeLinecap="round" style={{ flexShrink: 0 }}>
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label={title}
+          onClick={openPanel}
+          style={{
+            position: 'absolute',
+            top: 10,
+            insetInlineEnd: 10,
+            zIndex: 5,
+            width: 30,
+            height: 30,
+            borderRadius: 999,
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            background: c.btnBg,
+            border: '1px solid ' + c.line,
+            color: c.text,
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      )}
 
       {open && (
         <div

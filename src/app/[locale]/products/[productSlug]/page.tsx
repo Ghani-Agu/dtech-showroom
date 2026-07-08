@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { imgOr } from '@/lib/img'
+import { ProductGallery } from '@/components/product/ProductGallery'
+import { StickyBuyBar } from '@/components/product/StickyBuyBar'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
@@ -64,7 +65,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             catSlug: product.category.slug,
             tagline: product.tagline ?? '',
             description: product.description ?? '',
-            image: imgOr(product.heroImagePath ?? product.cardImagePath),
+            image: imgOr(product.cardImagePath),
             specs: product.specs,
             images: (product.photoCarouselPaths ?? []).map(imgOr),
           }}
@@ -98,7 +99,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const galleryImages = product.photoCarouselPaths ?? []
   const specsTitle =
     locale === 'ar' ? 'المواصفات التقنية' : locale === 'en' ? 'Specifications' : 'Fiche technique'
-  const imagesTitle = locale === 'ar' ? 'الصور' : 'Images' 
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
@@ -123,26 +123,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
           alignItems: 'start',
         }}
       >
-        {/* image */}
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: 22,
-            overflow: 'hidden',
-            border: '1px solid var(--sr-line)',
-            aspectRatio: '4 / 3',
-            background: '#0a1322',
-          }}
-        >
-          <Image
-            src={imgOr(product.heroImagePath ?? product.cardImagePath)}
-            alt={product.name}
-            fill
-            sizes="(min-width: 1024px) 600px, 100vw"
-            style={{ objectFit: 'cover' }}
-            priority
-          />
-        </div>
+        {/* image + gallery thumbnails */}
+        <ProductGallery
+          images={[imgOr(product.cardImagePath), ...galleryImages.map(imgOr)]}
+          alt={product.name}
+        />
 
         {/* info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -234,38 +219,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
       ) : null}
 
-      {galleryImages.length > 0 ? (
-        <section style={{ marginTop: 52 }}>
-          <h2 className="sr-h2" style={{ marginBottom: 18 }}>
-            {imagesTitle}
-            <span className="acc">.</span>
-          </h2>
-          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
-            {galleryImages.map((src, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'relative',
-                  aspectRatio: '4 / 3',
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  border: '1px solid var(--sr-line)',
-                  background: '#fff',
-                }}
-              >
-                <Image
-                  src={imgOr(src)}
-                  alt={`${product.name} ${i + 1}`}
-                  fill
-                  sizes="(min-width: 1024px) 300px, 45vw"
-                  style={{ objectFit: 'contain' }}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
       {similar.length > 0 ? (
         <section style={{ marginTop: 60 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
@@ -290,6 +243,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ) : null}
 
       <ReviewsSection slug={product.slug} />
+
+      <StickyBuyBar
+        slug={product.slug}
+        name={product.name}
+        brand={product.brand.name}
+        image={imgOr(product.cardImagePath)}
+      />
     </section>
   )
 }

@@ -6,12 +6,17 @@
  * the same brand tokens/classes (.pdp-* in brand-design.css).
  */
 
+import { useState } from 'react'
 import { Link } from '@/i18n/routing'
 import { useBrand } from './brand-context'
 import { useTranslations } from 'next-intl'
 import { ReviewsSection } from '@/components/showroom/ReviewsSection'
+import { ProductGallery } from '@/components/product/ProductGallery'
+import { StickyBuyBar } from '@/components/product/StickyBuyBar'
+import { Carousel } from '@/components/showroom/Carousel'
+import { useCart } from '@/lib/cart'
 import { ProductCard } from './BrandSections'
-import { WhatsAppIcon, Arrow } from './brand-icons'
+import { WhatsAppIcon, Arrow, CartIcon2 } from './brand-icons'
 import { BRAND_WHATSAPP, type BrandProduct } from './brand-types'
 import type { BrandLang } from './brand-i18n'
 
@@ -40,6 +45,16 @@ const INQUIRE_LABEL: Record<BrandLang, string> = {
   en: 'Request a quote',
   ar: 'اطلب عرض سعر',
 }
+const CART_LABEL: Record<BrandLang, string> = {
+  fr: 'Ajouter au panier',
+  en: 'Add to cart',
+  ar: 'أضف إلى السلة',
+}
+const ADDED_LABEL: Record<BrandLang, string> = {
+  fr: 'Ajouté au panier',
+  en: 'Added to cart',
+  ar: 'أُضيف إلى السلة',
+}
 
 export function BrandProductDetail({
   product,
@@ -50,8 +65,25 @@ export function BrandProductDetail({
 }) {
   const { t, lang } = useBrand()
   const tSpec = useTranslations('products.specLabels')
+  const add = useCart((s) => s.add)
+  const openCart = useCart((s) => s.setOpen)
+  const [added, setAdded] = useState(false)
   const paragraphs = product.description ? product.description.split('\n\n') : []
   const waText = encodeURIComponent(`${t('card.waMsg')} ${product.name}`)
+
+  const onAdd = () => {
+    add({
+      slug: product.slug,
+      name: product.name,
+      brand: product.brandName,
+      image: product.image,
+    })
+    setAdded(true)
+    window.setTimeout(() => {
+      setAdded(false)
+      openCart(true)
+    }, 650)
+  }
 
   return (
     <section className="pdp">
@@ -67,10 +99,10 @@ export function BrandProductDetail({
         </nav>
 
         <div className="pdp-grid">
-          <div className="pdp-canvas">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={product.image} alt={product.name} />
-          </div>
+          <ProductGallery
+            images={[product.image, ...(product.images ?? [])]}
+            alt={product.name}
+          />
 
           <div className="pdp-info">
             <span className="pdp-eyebrow">
@@ -92,6 +124,20 @@ export function BrandProductDetail({
                 <WhatsAppIcon s={19} />
                 {t('card.order')}
               </a>
+              <button
+                type="button"
+                className={`pdp-cart ${added ? 'added' : ''}`}
+                onClick={onAdd}
+              >
+                {added ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 13l5 5L20 6" />
+                  </svg>
+                ) : (
+                  <CartIcon2 />
+                )}
+                {added ? ADDED_LABEL[lang] : CART_LABEL[lang]}
+              </button>
               <Link className="btn btn-line" href={`/inquiry/${product.slug}`}>
                 {INQUIRE_LABEL[lang]}
                 <Arrow s={13} />
@@ -137,35 +183,25 @@ export function BrandProductDetail({
           </div>
         )}
 
-        {product.images && product.images.length > 0 && (
-          <div className="pdp-images" style={{ marginTop: 44 }}>
-            <h2 className="h-sec">{lang === 'ar' ? 'الصور' : 'Images'}</h2>
-            <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-              {product.images.map((src, i) => (
-                <div
-                  key={i}
-                  style={{ aspectRatio: '4 / 3', borderRadius: 'var(--r, 14px)', overflow: 'hidden', border: '1px solid var(--line)', background: '#fff' }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt={`${product.name} ${i + 1}`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {similar.length > 0 && (
           <div className="pdp-similar">
             <h2 className="h-sec">{SIMILAR_LABEL[lang]}</h2>
-            <div className="prod-grid">
-              {similar.slice(0, 8).map((p) => (
+            <Carousel prevLabel={t('catalog.prev')} nextLabel={t('catalog.next')}>
+              {similar.slice(0, 12).map((p) => (
                 <ProductCard key={p.slug} p={p} />
               ))}
-            </div>
+            </Carousel>
           </div>
         )}
 
         <ReviewsSection slug={product.slug} />
+
+        <StickyBuyBar
+          slug={product.slug}
+          name={product.name}
+          brand={product.brandName}
+          image={product.image}
+        />
       </div>
     </section>
   )

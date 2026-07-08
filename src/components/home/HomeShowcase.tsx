@@ -27,8 +27,10 @@ import { Link } from '@/i18n/routing'
 import './home-showcase.css'
 
 import Image from 'next/image'
-import { useCart } from '@/lib/cart'
+import { useCart, WHATSAPP_NUMBER } from '@/lib/cart'
+import { SpecsToggle } from '@/components/product/SpecsToggle'
 import { CartDrawer } from '@/components/showroom/CartDrawer'
+import { FloatingCart } from '@/components/showroom/FloatingCart'
 import { seededRating } from '@/lib/reviews'
 import { Stars } from '@/components/showroom/Stars'
 import { Carousel } from '@/components/showroom/Carousel'
@@ -55,6 +57,7 @@ export interface HomeProduct {
   cardSpec: string
   cardImagePath: string
   featured: boolean
+  specs?: Record<string, string | number | string[]>
 }
 
 export interface HomeCategory {
@@ -88,18 +91,10 @@ export function HomeShowcase({
 }) {
   const [activeCat, setActiveCat] = useState<string | 'all'>('all')
 
-  // Slides for the image-slider hero. Curated via the admin "featured" flag:
-  // featured products lead; otherwise fall back to the first products in stock.
-  const heroSource = (() => {
-    const feat = products.filter((p) => p.featured && p.cardImagePath)
-    const pool = feat.length >= 2 ? feat : products.filter((p) => p.cardImagePath)
-    return pool.slice(0, 6)
-  })()
-  const fallbackSlides = heroSource.map((p) => ({ src: p.cardImagePath, alt: p.name }))
-  const heroSlides =
-    heroConfig?.slides && heroConfig.slides.length > 0
-      ? heroConfig.slides
-      : fallbackSlides
+  // Hero slides come ONLY from the images uploaded in the admin interface
+  // (Slider Hero / éditeur — same source as the Brand design). When nothing
+  // has been uploaded yet, the slider shows a branded D-Tech panel.
+  const heroSlides = heroConfig?.slides ?? []
 
   useEffect(() => {
     document.body.dataset.homeChrome = 'showcase'
@@ -121,19 +116,16 @@ export function HomeShowcase({
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
         <SectionList
-          defaultOrder={['hero', 'categories', 'catalog', 'brands', 'about', 'contact']}
+          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']}
           nodes={{
-            hero:
-              heroSlides.length > 0 ? (
-                <HeroSlider
-                  productCount={products.length}
-                  brandCount={brands.length}
-                  slides={heroSlides}
-                  config={heroConfig}
-                />
-              ) : (
-                <Hero productCount={products.length} brandCount={brands.length} />
-              ),
+            hero: (
+              <HeroSlider
+                productCount={products.length}
+                brandCount={brands.length}
+                slides={heroSlides}
+                config={heroConfig}
+              />
+            ),
             categories: <CategoriesSection categories={categories} />,
             catalog: (
               <CatalogSection
@@ -144,6 +136,7 @@ export function HomeShowcase({
                 brandCount={brands.length}
               />
             ),
+            services: <ServicesStrip />,
             brands: <BrandsSection brands={brands} />,
             about: <AboutSection productCount={products.length} brandCount={brands.length} />,
             contact: <ContactSection />,
@@ -152,6 +145,7 @@ export function HomeShowcase({
       </div>
       <Footer onSelectCat={setActiveCat} />
       <CartDrawer />
+      <FloatingCart />
     </div>
     </EditProvider>
   )
@@ -333,9 +327,22 @@ function HeroSlider({
           {real.map((sl, i) => (
             <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
               {sl.src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={sl.src} alt={sl.alt} loading={i === 0 ? 'eager' : 'lazy'} />
-              ) : null}
+                <Image
+                  src={sl.src}
+                  alt={sl.alt}
+                  fill
+                  sizes="(min-width: 1024px) 720px, 100vw"
+                  priority={i === 0}
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <div className="hero-slide-brand" aria-hidden>
+                  <span className="hsb-mark">
+                    D-Tech<span className="dot">.</span>
+                  </span>
+                  <span className="hsb-tag">Algérie · Digital Technologie</span>
+                </div>
+              )}
             </div>
           ))}
           <div className="hero-slider-veil" />
@@ -353,410 +360,6 @@ function HeroSlider({
             </div>
           )}
         </div>
-      </div>
-    </section>
-  )
-}
-
-function Hero({
-  productCount,
-  brandCount,
-}: {
-  productCount: number
-  brandCount: number
-}) {
-  const t = useTranslations('showcase.hero')
-  const stageRef = useRef<HTMLDivElement | null>(null)
-  const stackRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const stage = stageRef.current
-    const stack = stackRef.current
-    if (!stage || !stack) return
-
-    let raf = 0
-    const target = { rx: 0, ry: 0 }
-    const cur = { rx: 0, ry: 0 }
-    const start = performance.now()
-
-    const onMove = (e: MouseEvent) => {
-      const r = stage.getBoundingClientRect()
-      const nx = (e.clientX - (r.left + r.width / 2)) / r.width
-      const ny = (e.clientY - (r.top + r.height / 2)) / r.height
-      target.ry = nx * 16
-      target.rx = -ny * 10
-    }
-    const onLeave = () => {
-      target.rx = 0
-      target.ry = 0
-    }
-    stage.addEventListener('mousemove', onMove)
-    stage.addEventListener('mouseleave', onLeave)
-
-    const tick = (t: number) => {
-      const elapsed = (t - start) / 1000
-      const autoRY = Math.sin(elapsed * 0.32) * 5
-      const autoRX = Math.sin(elapsed * 0.24 + 1) * 2
-      const autoRZ = Math.sin(elapsed * 0.18) * 1.5
-      cur.rx += (target.rx - cur.rx) * 0.06
-      cur.ry += (target.ry - cur.ry) * 0.06
-      const rx = autoRX + cur.rx - 6
-      const ry = autoRY + cur.ry - 18
-      stack.style.setProperty('--rx', `${rx}deg`)
-      stack.style.setProperty('--ry', `${ry}deg`)
-      stack.style.setProperty('--rz', `${autoRZ}deg`)
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-
-    return () => {
-      cancelAnimationFrame(raf)
-      stage.removeEventListener('mousemove', onMove)
-      stage.removeEventListener('mouseleave', onLeave)
-    }
-  }, [])
-
-  const particles = [
-    { l: 8, t: 90, d: 9, dl: 0 },
-    { l: 88, t: 80, d: 11, dl: -2 },
-    { l: 22, t: 95, d: 7, dl: -4 },
-    { l: 72, t: 88, d: 10, dl: -1.5 },
-    { l: 14, t: 70, d: 12, dl: -6 },
-    { l: 92, t: 60, d: 8, dl: -3 },
-    { l: 50, t: 95, d: 11, dl: -5 },
-    { l: 38, t: 88, d: 9, dl: -2.5 },
-    { l: 64, t: 84, d: 13, dl: -7 },
-    { l: 6, t: 50, d: 10, dl: -4.5 },
-    { l: 96, t: 40, d: 12, dl: -2 },
-    { l: 78, t: 96, d: 8, dl: -3.5 },
-  ]
-
-  return (
-    <section className="hero" id="top">
-      <div className="wrap hero-grid">
-        <div className="hero-text">
-          <span className="kicker" style={{ marginBottom: 24 }}>
-            {t('kicker')}
-          </span>
-          <h1 className="h-mega">
-            {t('title1')}
-            <br />
-            <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-              {t('title2')}
-            </span>
-          </h1>
-          <p className="sub">
-            {t.rich('sub', {
-              count: productCount,
-              strong: (chunks: ReactNode) => (
-                <strong style={{ color: 'var(--text)' }}>{chunks}</strong>
-              ),
-            })}
-          </p>
-          <div className="cta">
-            <a className="btn btn-primary btn-lg" href="#products">
-              <span className="shimmer" />
-              {t('ctaCatalog')}
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M13 5l7 7-7 7" />
-              </svg>
-            </a>
-            <a className="btn btn-ghost btn-lg" href="#about">
-              {t('ctaStory')}
-            </a>
-          </div>
-
-          <div className="hero-stats">
-            <div>
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: years in business}}'}</span></div>
-              <div className="l">{t('stats.presence')}</div>
-            </div>
-            <div>
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: brand count}}'}</span></div>
-              <div className="l">{t('stats.partners')}</div>
-            </div>
-            <div>
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: wilaya coverage}}'}</span></div>
-              <div className="l">{t('stats.wilayas')}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="hero-stage" ref={stageRef}>
-          <div className="halo-mint" />
-          <div className="halo-steel" />
-
-          {/* orbital rings removed by request — CSS rules kept in the
-              generated stylesheet for easy reinstatement */}
-
-          <div className="stack-glow" />
-          <div className="stack-glow steel" />
-
-          <div className="dust">
-            {particles.map((p, i) => (
-              <span
-                key={i}
-                style={{
-                  left: `${p.l}%`,
-                  top: `${p.t}%`,
-                  animationDuration: `${p.d}s`,
-                  animationDelay: `${p.dl}s`,
-                }}
-              />
-            ))}
-          </div>
-
-          <svg className="conn-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <line x1="6" y1="10" x2="48" y2="50" />
-            <line x1="98" y1="52" x2="56" y2="50" />
-            <line x1="36" y1="96" x2="48" y2="56" />
-            <circle cx="48" cy="50" r="0.6" />
-          </svg>
-
-          <div className="hero-stack" ref={stackRef}>
-            {/* Card 1 — customer satisfaction */}
-            <div className="glass-card gc-1">
-              <div className="gc-head">
-                <span>{t('cards.satisfaction.head')}</span>
-                <span>
-                  <span className="led" /> {t('cards.satisfaction.verified')}
-                </span>
-              </div>
-              <div className="gc-body" style={{ gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                  <div
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 700,
-                      fontSize: 34,
-                      color: 'var(--text)',
-                      letterSpacing: '-0.03em',
-                      lineHeight: 1,
-                    }}
-                  >
-                    4,9
-                    <span style={{ fontSize: 16, color: 'var(--mute)', fontWeight: 500 }}>
-                      {' '}
-                      {t('cards.satisfaction.outOf')}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 2 }}>
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <svg
-                        key={i}
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="var(--cyan)"
-                        style={{ filter: 'drop-shadow(0 0 4px rgba(124,224,195,0.5))' }}
-                      >
-                        <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-                <div className="gc-sub">{t('cards.satisfaction.reviews')}</div>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 5,
-                    marginTop: 8,
-                  }}
-                >
-                  {[
-                    { l: t('cards.satisfaction.advice'), v: 96 },
-                    { l: t('cards.satisfaction.delivery'), v: 94 },
-                    { l: t('cards.satisfaction.support'), v: 98 },
-                  ].map((r) => (
-                    <div
-                      key={r.l}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        fontFamily: 'JetBrains Mono, monospace',
-                        fontSize: 10,
-                        letterSpacing: '0.04em',
-                      }}
-                    >
-                      <span style={{ width: 50, color: 'var(--mute)', textTransform: 'uppercase' }}>
-                        {r.l}
-                      </span>
-                      <span
-                        style={{
-                          flex: 1,
-                          height: 3,
-                          background: 'rgba(255,255,255,0.06)',
-                          borderRadius: 2,
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <span
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            width: `${r.v}%`,
-                            background:
-                              'linear-gradient(90deg, var(--blue-2), var(--cyan))',
-                            boxShadow: '0 0 6px rgba(124,224,195,0.6)',
-                            borderRadius: 2,
-                          }}
-                        />
-                      </span>
-                      <span style={{ width: 24, color: 'var(--text)', textAlign: 'right' }}>
-                        {r.v}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2 — Algeria coverage */}
-            <div className="glass-card gc-2">
-              <div className="gc-head">
-                <span>{t('cards.coverage.head')}</span>
-                <span>
-                  <span className="led" /> {t('cards.coverage.led')}
-                </span>
-              </div>
-              <div className="gc-body">
-                <div className="gc-title" style={{ fontSize: 17 }}>
-                  {t('cards.coverage.title')}
-                </div>
-                <div className="gc-sub">{t('cards.coverage.sub')}</div>
-              </div>
-              <div style={{ position: 'relative', marginTop: 10, height: 110, zIndex: 2 }}>
-                <svg viewBox="0 0 220 110" style={{ width: '100%', height: '100%' }}>
-                  <path
-                    d="M 30 18 L 78 12 L 130 16 L 170 14 L 198 22 L 204 38 L 192 58 L 200 78 L 178 96 L 140 100 L 92 96 L 52 92 L 30 76 L 24 52 Z"
-                    fill="rgba(255,255,255,0.04)"
-                    stroke="rgba(124,224,195,0.3)"
-                    strokeWidth="0.8"
-                  />
-                  {[
-                    [62, 30], [88, 26], [120, 28], [148, 30], [176, 36],
-                    [50, 48], [78, 50], [104, 52], [136, 54], [168, 56], [188, 60],
-                    [60, 72], [92, 76], [124, 78], [156, 80],
-                    [82, 90], [120, 92], [148, 92],
-                  ].map(([x, y], i) => (
-                    <circle
-                      key={i}
-                      cx={x}
-                      cy={y}
-                      r="1.5"
-                      fill="rgba(124,224,195,0.85)"
-                      style={{ filter: 'drop-shadow(0 0 3px rgba(124,224,195,0.7))' }}
-                    />
-                  ))}
-                  <circle
-                    cx="104"
-                    cy="26"
-                    r="3.5"
-                    fill="var(--cyan)"
-                    style={{ filter: 'drop-shadow(0 0 6px var(--cyan))' }}
-                  />
-                  <text
-                    x="111"
-                    y="22"
-                    fill="var(--text)"
-                    fontFamily="JetBrains Mono"
-                    fontSize="6.5"
-                    letterSpacing="1.5"
-                  >
-                    {t('cards.coverage.capital')}
-                  </text>
-                </svg>
-              </div>
-            </div>
-
-            {/* Card 3 — warranty */}
-            <div className="glass-card gc-3">
-              <div className="gc-head">
-                <span>{t('cards.warranty.head')}</span>
-                <span>
-                  <span className="led" /> {t('cards.warranty.certified')}
-                </span>
-              </div>
-              <div className="gc-body" style={{ gap: 6 }}>
-                <div className="gc-title" style={{ fontSize: 18 }}>
-                  {t.rich('cards.warranty.title', {
-                    accent: (chunks: ReactNode) => (
-                      <span style={{ color: 'var(--cyan)' }}>{chunks}</span>
-                    ),
-                  })}
-                </div>
-                <div className="gc-sub">{t('cards.warranty.sub')}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-                  {[
-                    t('cards.warranty.l1'),
-                    t('cards.warranty.l2'),
-                    t('cards.warranty.l3'),
-                  ].map((line) => (
-                    <div
-                      key={line}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 9,
-                        fontSize: 12,
-                        color: 'var(--text)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: 50,
-                          background: 'rgba(124,224,195,0.18)',
-                          border: '1px solid rgba(124,224,195,0.4)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <svg
-                          width="8"
-                          height="8"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="var(--cyan)"
-                          strokeWidth="3.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M5 13l5 5L20 7" />
-                        </svg>
-                      </span>
-                      <span>{line}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <span className="float-chip fc-1">
-            <span className="dot" />
-            {t('chips.brands', { count: brandCount })}
-          </span>
-          <span className="float-chip fc-2">
-            <span className="dot steel" />
-            {t('chips.wilayas')}
-          </span>
-          <span className="float-chip fc-3">
-            <span className="dot" />
-            {t('chips.warranty')}
-          </span>
-        </div>
-      </div>
-
-      <div className="scroll-cue">
-        <span>{t('scrollCue')}</span>
-        <span className="line" />
       </div>
     </section>
   )
@@ -1072,7 +675,7 @@ function CatalogSection({
           </span>
         </div>
 
-        <div style={{ marginBottom: 28 }}>
+        <div className="catalog-chips">
           <Carousel
             variant="chips"
             prevLabel={t('prevAria')}
@@ -1192,6 +795,7 @@ function ProductCard({
   animationDelay: number
 }) {
   const t = useTranslations('showcase.catalog')
+  const tProd = useTranslations('showroom.product')
   const add = useCart((st) => st.add)
   const openCart = useCart((st) => st.setOpen)
   const [added, setAdded] = useState(false)
@@ -1238,6 +842,8 @@ function ProductCard({
           <Stars value={rating.avg} count={rating.count} />
           <span className="stock">{t('inStock')}</span>
         </div>
+        <SpecsToggle specs={product.specs} tone="dark" variant="inline" />
+        <div className="card-actions">
         <button
           type="button"
           className={`cart-btn ${added ? 'added' : ''}`}
@@ -1260,8 +866,99 @@ function ProductCard({
             </>
           )}
         </button>
+        <a
+          className="wa-mini"
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`${tProd('waProduct')} ${product.name}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="WhatsApp"
+          title="WhatsApp"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.5 14.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07a8.2 8.2 0 01-2.4-1.49 9 9 0 01-1.66-2.07c-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.5 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.21 5.1 4.5.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.58-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.5h-.01a9.4 9.4 0 01-4.8-1.32l-.34-.2-3.56.93.95-3.47-.22-.36a9.42 9.42 0 1117.46-4.99 9.4 9.4 0 01-9.48 9.41zm8.03-17.43A11.32 11.32 0 0012.03.75C5.83.75.78 5.8.78 12a11.2 11.2 0 001.5 5.62L.69 23.25l5.77-1.51a11.27 11.27 0 005.57 1.47h.01c6.2 0 11.25-5.05 11.25-11.25 0-3.01-1.17-5.83-3.22-7.89z" />
+          </svg>
+        </a>
+        </div>
       </div>
     </article>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Services / trust strip
+ * ──────────────────────────────────────────────────────────────── */
+
+function ServicesStrip() {
+  const t = useTranslations('showcase.services')
+  const ref = useFade<HTMLDivElement>()
+  const iconProps: SVGProps<SVGSVGElement> = {
+    width: 20,
+    height: 20,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  }
+  const items = [
+    {
+      icon: (
+        <svg {...iconProps}>
+          <path d="M1 8h11v8H1zM12 10h4l3 3v3h-7z" />
+          <circle cx="5.5" cy="17.5" r="1.8" />
+          <circle cx="15.5" cy="17.5" r="1.8" />
+        </svg>
+      ),
+      tt: t('s1t'), ds: t('s1d'), idt: 'home.services.s1t', idd: 'home.services.s1d', lb: 'Livraison',
+    },
+    {
+      icon: (
+        <svg {...iconProps}>
+          <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      ),
+      tt: t('s2t'), ds: t('s2d'), idt: 'home.services.s2t', idd: 'home.services.s2d', lb: 'Garantie',
+    },
+    {
+      icon: (
+        <svg {...iconProps}>
+          <path d="M14.7 6.3a4.5 4.5 0 00-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 006-6L14 13l-3-3z" />
+        </svg>
+      ),
+      tt: t('s3t'), ds: t('s3d'), idt: 'home.services.s3t', idd: 'home.services.s3d', lb: 'SAV',
+    },
+    {
+      icon: (
+        <svg {...iconProps}>
+          <circle cx="12" cy="9" r="6" />
+          <path d="M9 14l-1.5 7L12 18.5 16.5 21 15 14M9.5 9l1.8 1.8L15 7.2" />
+        </svg>
+      ),
+      tt: t('s4t'), ds: t('s4d'), idt: 'home.services.s4t', idd: 'home.services.s4d', lb: 'Partenaires',
+    },
+  ]
+  return (
+    <section id="services" className="sec svc-sec">
+      <div ref={ref} className="wrap fade">
+        <div className="svc-grid">
+          {items.map((it) => (
+            <div className="svc" key={it.idt}>
+              <span className="ic">{it.icon}</span>
+              <div style={{ minWidth: 0 }}>
+                <Editable as="div" id={it.idt} className="tt" label={`Titre — ${it.lb}`}>
+                  {it.tt}
+                </Editable>
+                <Editable as="div" id={it.idd} className="ds" label={`Texte — ${it.lb}`}>
+                  {it.ds}
+                </Editable>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 

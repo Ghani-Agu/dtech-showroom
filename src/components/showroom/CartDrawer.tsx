@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { imgOr } from '@/lib/img'
 import { useCart, whatsappOrderUrl } from '@/lib/cart'
 
 export function CartDrawer() {
@@ -51,7 +52,7 @@ export function CartDrawer() {
             items.map((i) => (
               <div className="sr-cart-item" key={i.slug}>
                 <span className="thumb">
-                  <Image src={i.image} alt="" fill sizes="64px" style={{ objectFit: 'cover' }} />
+                  <Image src={imgOr(i.image)} alt="" fill sizes="64px" style={{ objectFit: 'cover' }} />
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="br">{i.brand}</div>

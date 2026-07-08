@@ -99,7 +99,7 @@ export function HeroEditor({
     }
   }
   async function doUnpublish() {
-    if (!confirm('Dépublier le hero ? La page d’accueil reprendra le slider par défaut (produits en vedette).')) return
+    if (!confirm('Dépublier le hero ? La page d’accueil reprendra le slider par défaut (panneau D-Tech).')) return
     setBusy(true)
     try {
       const r = await unpublishHero()
@@ -165,7 +165,7 @@ export function HeroEditor({
           <h2 className="he-h">Images du slider</h2>
           <p className="he-hint">
             Ajoutez vos visuels (format paysage 16:9 conseillé). Glissez l’ordre avec les flèches.
-            Si aucune image n’est ajoutée, la page d’accueil affiche automatiquement vos produits en vedette.
+            Si aucune image n’est ajoutée, le slider affiche un panneau D-Tech aux couleurs du site.
           </p>
 
           <button
@@ -189,7 +189,7 @@ export function HeroEditor({
 
           <div className="he-slides">
             {slides.length === 0 && (
-              <p className="he-empty">Aucune image — slider par défaut (produits en vedette).</p>
+              <p className="he-empty">Aucune image — le slider affiche le panneau D-Tech par défaut.</p>
             )}
             {slides.map((s, i) => (
               <div
@@ -247,7 +247,7 @@ export function HeroEditor({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview.src} alt={preview.alt} />
             ) : (
-              <div className="he-preview-empty">Vos produits en vedette s’afficheront ici</div>
+              <div className="he-preview-empty">Vos images du slider s’afficheront ici</div>
             )}
             <div className="he-preview-text">
               <span className="he-pv-kicker">{cfg.kicker || 'D-Tech Algérie · Depuis 2006'}</span>

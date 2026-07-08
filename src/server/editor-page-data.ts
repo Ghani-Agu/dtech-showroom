@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { sitePages, type SitePageRow } from '@/db/schema'
@@ -163,14 +164,14 @@ export async function getSiteTheme(): Promise<string> {
  * Both designs share the same data/backend — only the interface differs.
  * Falls back to the current design until a choice is published.
  */
-export async function getPublishedDesign(): Promise<DesignId> {
+export const getPublishedDesign = cache(async (): Promise<DesignId> => {
   try {
     const row = await getSitePageRow(DESIGN_KEY)
     return coerceDesign(row?.published)
   } catch {
     return coerceDesign(undefined)
   }
-}
+})
 
 /**
  * The staged design choice the admin is previewing (draft). Falls back to the
