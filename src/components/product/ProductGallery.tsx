@@ -27,14 +27,16 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
   const [idx, setIdx] = useState(0)
   if (list.length === 0) return null
   const active = Math.min(idx, list.length - 1)
+  const current = list[active]
+  if (current === undefined) return null
   const go = (d: number) => setIdx((p) => (p + d + list.length) % list.length)
 
   return (
     <div className="pg-root">
       <div className="pg-main">
         <Image
-          key={list[active]}
-          src={list[active]}
+          key={current}
+          src={current}
           alt={alt}
           fill
           sizes="(min-width: 1024px) 600px, 100vw"
