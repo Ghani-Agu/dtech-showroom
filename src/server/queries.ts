@@ -33,6 +33,12 @@ async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 // Swap EN fields with FR equivalents when locale is fr and FR field exists.
 // Keeps the return type the same so callers don't need to know about _fr columns.
 function localizeBrand(b: Brand, locale: Locale): Brand {
+  if (locale === 'ar')
+    return {
+      ...b,
+      statement: b.statementAr ?? b.statement,
+      description: b.descriptionAr ?? b.description,
+    }
   if (locale !== 'fr') return b
   return {
     ...b,
@@ -44,6 +50,12 @@ function localizeBrand(b: Brand, locale: Locale): Brand {
 }
 
 function localizeCategory(c: Category, locale: Locale): Category {
+  if (locale === 'ar')
+    return {
+      ...c,
+      name: c.nameAr ?? c.name,
+      description: c.descriptionAr ?? c.description,
+    }
   if (locale !== 'fr') return c
   return {
     ...c,
@@ -57,6 +69,15 @@ function localizeProduct(
   p: ProductWithRelations,
   locale: Locale
 ): ProductWithRelations {
+  if (locale === 'ar') {
+    return {
+      ...p,
+      tagline: p.taglineAr ?? p.tagline,
+      description: p.descriptionAr ?? p.description,
+      brand: localizeBrand(p.brand, locale),
+      category: localizeCategory(p.category, locale),
+    }
+  }
   if (locale !== 'fr') {
     return {
       ...p,

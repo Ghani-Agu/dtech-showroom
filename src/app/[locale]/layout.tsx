@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages, setRequestLocale } from 'next-intl/server'
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { ScrollProvider } from '@/components/layout/ScrollProvider'
 import { ShowroomShell } from '@/components/showroom/ShowroomShell'
@@ -31,6 +31,7 @@ export default async function LocaleLayout({
     getSiteTheme(),
     getPublishedDesign(),
   ])
+  const t = await getTranslations('common')
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
@@ -39,7 +40,7 @@ export default async function LocaleLayout({
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface-elevated focus:px-4 focus:py-2 focus:font-body focus:text-sm focus:text-text-primary"
       >
-        Skip to content
+        {t('skipToContent')}
       </a>
       <ScrollProvider>
         <div

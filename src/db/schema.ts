@@ -67,6 +67,10 @@ export const brands = pgTable(
     searchKeywords: text('search_keywords'),
     searchKeywordsFr: text('search_keywords_fr'),
 
+    // Arabic content (Phase 8 — AR catalogue)
+    statementAr: text('statement_ar'),
+    descriptionAr: text('description_ar'),
+
     // Soft delete (Phase 7e)
     archivedAt: timestamp('archived_at'),
 
@@ -91,6 +95,10 @@ export const categories = pgTable(
     descriptionFr: text('description_fr'),
     searchKeywords: text('search_keywords'),
     searchKeywordsFr: text('search_keywords_fr'),
+
+    // Arabic content (Phase 8 — AR catalogue)
+    nameAr: text('name_ar'),
+    descriptionAr: text('description_ar'),
 
     // Soft delete (Phase 7e)
     archivedAt: timestamp('archived_at'),
@@ -143,6 +151,10 @@ export const products = pgTable(
     descriptionFr: text('description_fr'),
     cardSpecFr: text('card_spec_fr'),
     searchKeywordsFr: text('search_keywords_fr'),
+
+    // Arabic content (Phase 8 — AR catalogue)
+    taglineAr: text('tagline_ar'),
+    descriptionAr: text('description_ar'),
 
     // SEO overrides (Phase 7c) — null falls back to name/tagline
     seoTitle: text('seo_title'),

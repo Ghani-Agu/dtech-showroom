@@ -543,7 +543,8 @@
         "brandsSuffix": "brands",
         "partners": "Official partners",
         "skuSuffix": "SKU",
-        "sku": "In active catalog"
+        "sku": "In active catalog",
+        "families": "Product families"
       },
       "timeline": {
         "t1Title": "Hardware Technology Services",

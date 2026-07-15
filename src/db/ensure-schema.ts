@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import { db } from './client'
 import photoCarouselMap from './photo-carousel-map.json'
 import productSpecsMap from './product-specs.json'
+import catalogueAr from './catalogue-ar.json'
 
 /**
  * Idempotent schema bootstrap — runs once per server start (see
@@ -122,7 +123,34 @@ export async function ensureSchema(): Promise<void> {
     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_campaign_id_idx" ON "campaign_sends" ("campaign_id")`)
     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_subscriber_id_idx" ON "campaign_sends" ("subscriber_id")`)
 
-    console.log('[db] Schéma vérifié — permissions + image_blobs + galeries photos + newsletter OK')
+    // ── Arabic catalogue (Phase 8) — additive AR columns + one-shot fill ──
+    await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "name_ar" text`)
+    await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "description_ar" text`)
+    await db.execute(sql`ALTER TABLE "brands" ADD COLUMN IF NOT EXISTS "statement_ar" text`)
+    await db.execute(sql`ALTER TABLE "brands" ADD COLUMN IF NOT EXISTS "description_ar" text`)
+    await db.execute(sql`ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "tagline_ar" text`)
+    await db.execute(sql`ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "description_ar" text`)
+    // One-shot fill: only rows whose AR is still null — never overwrites manual edits.
+    await db.execute(sql`
+      UPDATE "categories" AS c
+      SET "name_ar" = j.value->>'nameAr', "description_ar" = j.value->>'descriptionAr'
+      FROM jsonb_each(${JSON.stringify(catalogueAr.categories)}::jsonb) AS j(key, value)
+      WHERE c."slug" = j.key AND c."name_ar" IS NULL
+    `)
+    await db.execute(sql`
+      UPDATE "brands" AS b
+      SET "statement_ar" = j.value->>'statementAr', "description_ar" = j.value->>'descriptionAr'
+      FROM jsonb_each(${JSON.stringify(catalogueAr.brands)}::jsonb) AS j(key, value)
+      WHERE b."slug" = j.key AND b."statement_ar" IS NULL
+    `)
+    await db.execute(sql`
+      UPDATE "products" AS p
+      SET "tagline_ar" = j.value->>'taglineAr', "description_ar" = j.value->>'descriptionAr'
+      FROM jsonb_each(${JSON.stringify(catalogueAr.products)}::jsonb) AS j(key, value)
+      WHERE p."slug" = j.key AND p."tagline_ar" IS NULL
+    `)
+
+    console.log('[db] Schéma vérifié — permissions + image_blobs + galeries photos + newsletter + AR catalogue OK')
   } catch (err) {
     console.error('[db] ensure-schema failed (will retry next boot):', err)
   }

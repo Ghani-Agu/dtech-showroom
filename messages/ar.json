@@ -543,7 +543,8 @@
         "brandsSuffix": "علامات",
         "partners": "شركاء رسميون",
         "skuSuffix": "SKU",
-        "sku": "في الكتالوج النشط"
+        "sku": "في الكتالوج النشط",
+        "families": "عائلات المنتجات"
       },
       "timeline": {
         "t1Title": "Hardware Technology Services",

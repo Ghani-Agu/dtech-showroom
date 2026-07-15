@@ -138,7 +138,7 @@ export function HomeShowcase({
             ),
             services: <ServicesStrip />,
             brands: <BrandsSection brands={brands} />,
-            about: <AboutSection productCount={products.length} brandCount={brands.length} />,
+            about: <AboutSection productCount={products.length} brandCount={brands.length} categoryCount={categories.length} />,
             contact: <ContactSection />,
           }}
         />
@@ -309,15 +309,15 @@ function HeroSlider({
 
           <div className="hero-stats">
             <div>
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: years in business}}'}</span></div>
+              <div className="v"><Counter to={new Date().getFullYear() - 2006} /><span className="accent"> {t('stats.yearsSuffix')}</span></div>
               <div className="l">{t('stats.presence')}</div>
             </div>
             <div>
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: brand count}}'}</span></div>
+              <div className="v"><Counter to={brandCount} /><span className="accent"> {t('stats.brandsSuffix')}</span></div>
               <div className="l">{t('stats.partners')}</div>
             </div>
             <div>
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: wilaya coverage}}'}</span></div>
+              <div className="v"><Counter to={58} /><span className="accent"> {t('stats.wilayasSuffix')}</span></div>
               <div className="l">{t('stats.wilayas')}</div>
             </div>
           </div>
@@ -969,9 +969,11 @@ function ServicesStrip() {
 function AboutSection({
   productCount,
   brandCount,
+  categoryCount,
 }: {
   productCount: number
   brandCount: number
+  categoryCount: number
 }) {
   const t = useTranslations('showcase.about')
   const ref = useFade<HTMLDivElement>()
@@ -1004,8 +1006,12 @@ function AboutSection({
               <div className="l">{t('stats.founded')}</div>
             </div>
             <div className="about-stat">
-              <div className="v"><span style={{ fontSize: 13, fontWeight: 400, opacity: 0.55 }}>{'{{STAT: clients served}}'}</span></div>
-              <div className="l">{t('stats.clients')}</div>
+              <div className="v">
+                <span className="accent">
+                  <Counter to={categoryCount} />
+                </span>
+              </div>
+              <div className="l">{t('stats.families')}</div>
             </div>
             <div className="about-stat">
               <div className="v">
