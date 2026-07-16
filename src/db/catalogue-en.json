@@ -1,0 +1,1574 @@
+{
+  "laptop-lenovo-v15-g4": {
+    "tagline": "Reliable everyday performance, an understated, sturdy chassis, and excellent value for office work and management",
+    "description": "Professional 15.6\" laptop designed for SMBs: reliable everyday performance, an understated, sturdy chassis, and excellent value for office work and management."
+  },
+  "laptop-hp-probook-4-g1i-16-ai-profile-3": {
+    "tagline": "A large, comfortable screen, reinforced HP security, and power suited to demanding multitasking",
+    "description": "Next-generation professional HP ProBook 16\" laptop with built-in AI: a large, comfortable screen, reinforced HP security, and power suited to demanding multitasking."
+  },
+  "laptop-hp-elitebook-8-g1i-14": {
+    "tagline": "Slimness, lightness, and enterprise-grade security for executives and mobile professionals who make no compromise on quality",
+    "description": "Premium HP EliteBook 14\" ultraportable: slimness, lightness, and enterprise-grade security for executives and mobile professionals who make no compromise on quality."
+  },
+  "laptop-hp-probook-4-g1i-16-ai-profile-2": {
+    "tagline": "A generous format for productivity, solid battery life, and the proven ProBook reliability trusted in professional settings",
+    "description": "HP ProBook 16\" with AI features: a generous format for productivity, solid battery life, and the proven ProBook reliability trusted in professional settings."
+  },
+  "laptop-dell-vostro-3530": {
+    "tagline": "Recent Intel processors, essential built-in security, and Dell reliability at a controlled price",
+    "description": "Dell Vostro 3530 15.6\" laptop for SMBs: recent Intel processors, essential built-in security, and Dell reliability at a controlled price."
+  },
+  "laptop-hp-probook-460-16-inch-g11": {
+    "tagline": "A large, productive screen, Intel Core Ultra processors, HP Wolf security, and certified endurance for professionals on the move",
+    "description": "HP ProBook 460 G11 16\": a large, productive screen, Intel Core Ultra processors, HP Wolf security, and certified endurance for professionals on the move."
+  },
+  "laptop-lenovo-ideapad-slim-3": {
+    "tagline": "Thin, light, and versatile, it supports studies and office work with solid performance at a gentle price",
+    "description": "Lenovo IdeaPad Slim 3 15.6\" laptop: thin, light, and versatile, it supports studies and office work with solid performance at a gentle price."
+  },
+  "laptop-lenovo-loq-15": {
+    "tagline": "A dedicated GeForce RTX graphics card, a high-refresh screen, and effective cooling for serious gaming without breaking the budget",
+    "description": "Lenovo LOQ 15 gaming laptop: a dedicated GeForce RTX graphics card, a high-refresh screen, and effective cooling for serious gaming without breaking the budget."
+  },
+  "laptop-hp-probook-460-g11": {
+    "tagline": "Intel Core Ultra processors, enterprise security, and a large, comfortable screen for productive professionals",
+    "description": "HP ProBook 460 G11 16\": Intel Core Ultra processors, enterprise security, and a large, comfortable screen for productive professionals."
+  },
+  "laptop-hp-250-g10": {
+    "tagline": "The essentials of professional office work with a recent Intel processor, at a very accessible price",
+    "description": "HP 250 G10 15.6\" laptop: the essentials of professional office work with a recent Intel processor, at a very accessible price."
+  },
+  "laptop-hp-elitebook-840-g11": {
+    "tagline": "The benchmark business ultraportable, with Intel Core Ultra, HP Wolf security, and a premium aluminium finish",
+    "description": "HP EliteBook 840 G11 14\": the benchmark business ultraportable, with Intel Core Ultra, HP Wolf security, and a premium aluminium finish."
+  },
+  "laptop-hp-elitebook-660-g11": {
+    "tagline": "A large professional screen, Intel Core Ultra processors, and enterprise-grade protection at a controlled price",
+    "description": "HP EliteBook 660 G11 16\": a large professional screen, Intel Core Ultra processors, and enterprise-grade protection at a controlled price."
+  },
+  "laptop-dell-gaming-g15-5530": {
+    "tagline": "A 13th-gen Intel processor, GeForce RTX, and Alienware-inspired cooling for serious gaming at a contained price",
+    "description": "Dell G15 5530 gaming laptop: a 13th-gen Intel processor, GeForce RTX, and Alienware-inspired cooling for serious gaming at a contained price."
+  },
+  "laptop-lenovo-thinkbook-16-g7-iml": {
+    "tagline": "A large 16\" screen, Intel Core Ultra processors, and a modern professional design for ambitious SMBs",
+    "description": "Lenovo ThinkBook 16 G7: a large 16\" screen, Intel Core Ultra processors, and a modern professional design for ambitious SMBs."
+  },
+  "laptop-lenovo-thinkpad-e14-gen-6": {
+    "tagline": "The legendary ThinkPad ruggedness and keyboard, with modern performance at an accessible price",
+    "description": "Lenovo ThinkPad E14 Gen 6 14\": the legendary ThinkPad ruggedness and keyboard, with modern performance at an accessible price."
+  },
+  "laptop-lenovo-thinkpad-e16-gen-6": {
+    "tagline": "A large, productive screen and proven ThinkPad reliability for professionals who work relentlessly",
+    "description": "Lenovo ThinkPad E16 Gen 6 16\": a large, productive screen and proven ThinkPad reliability for professionals who work relentlessly."
+  },
+  "laptop-hp-15-fd0309nk": {
+    "tagline": "A recent Intel processor, a slim design, and solid battery life for study and everyday work",
+    "description": "HP 15.6\" Full HD laptop: a recent Intel processor, a slim design, and solid battery life for study and everyday work."
+  },
+  "laptop-hp-15-fd0046nk": {
+    "tagline": "A successful balance of performance, lightness, and price to support all your daily tasks",
+    "description": "HP 15.6\" laptop: a successful balance of performance, lightness, and price to support all your daily tasks."
+  },
+  "laptop-hp-15-fd0308nk": {
+    "tagline": "Reliable, elegant, and efficient — the versatile computer par excellence for home and office",
+    "description": "HP 15.6\" Full HD laptop: reliable, elegant, and efficient — the versatile computer par excellence for home and office."
+  },
+  "laptop-hp-15-fd0041nk": {
+    "tagline": "A comfortable screen, a modern Intel processor, and fast SSD storage for a smooth everyday experience",
+    "description": "HP 15.6\" laptop: a comfortable screen, a modern Intel processor, and fast SSD storage for a smooth everyday experience."
+  },
+  "laptop-hp-15-fd0021nk": {
+    "tagline": "The essentials done well — browsing, office work, and multimedia in an understated, light chassis",
+    "description": "HP 15.6\" laptop: the essentials done well — browsing, office work, and multimedia in an understated, light chassis."
+  },
+  "laptop-hp-elitebook-650-g10": {
+    "tagline": "A large professional screen, 13th-gen Intel processors, and HP Wolf security for demanding businesses",
+    "description": "HP EliteBook 650 G10 15.6\": a large professional screen, 13th-gen Intel processors, and HP Wolf security for demanding businesses."
+  },
+  "laptop-hp-omen-16": {
+    "tagline": "A GeForce RTX graphics card, a high-refresh screen, and OMEN Tempest cooling for uncompromising gaming performance",
+    "description": "HP OMEN 16 gaming laptop: a GeForce RTX graphics card, a high-refresh screen, and OMEN Tempest cooling for uncompromising gaming performance."
+  },
+  "laptop-hp-envy-x360-2-en-1": {
+    "tagline": "Laptop, tablet, or tent as you please, with a premium touchscreen and creative power",
+    "description": "HP ENVY x360 2-in-1 convertible: laptop, tablet, or tent as you please, with a premium touchscreen and creative power."
+  },
+  "laptop-hp-dragon-fly-g4-notebook": {
+    "tagline": "The exceptional ultraportable — under 1 kg, record battery life, and smart video conferencing for nomadic executives",
+    "description": "HP Dragonfly G4: the exceptional ultraportable — under 1 kg, record battery life, and smart video conferencing for nomadic executives."
+  },
+  "laptop-hp-probook-450-g10": {
+    "tagline": "The professional best-seller with 13th-gen Intel, HP Wolf security, and certified ruggedness",
+    "description": "HP ProBook 450 G10 15.6\": the professional best-seller with 13th-gen Intel, HP Wolf security, and certified ruggedness."
+  },
+  "laptop-dell-vostro-3520": {
+    "tagline": "Dell reliability, powerful Intel processors, and essential security for small businesses",
+    "description": "Dell Vostro 3520 15.6\" laptop: Dell reliability, powerful Intel processors, and essential security for small businesses."
+  },
+  "laptop-dell-xps-17-9720": {
+    "tagline": "The sumptuous 17\" InfinityEdge display and the power of a workstation in an exceptional aluminium chassis",
+    "description": "Dell XPS 17 9720: the sumptuous 17\" InfinityEdge display and the power of a workstation in an exceptional aluminium chassis."
+  },
+  "laptop-dell-latitude-5530": {
+    "tagline": "The complete business computer — advanced security, fleet management, and endurance for mobile professionals",
+    "description": "Dell Latitude 5530 15.6\": the complete business computer — advanced security, fleet management, and endurance for mobile professionals."
+  },
+  "laptop-dell-xps-13-9320": {
+    "tagline": "The iconic ultraportable — a superb InfinityEdge display, exemplary finish, and Intel power in just over a kilogram",
+    "description": "Dell XPS 13 9320: the iconic ultraportable — a superb InfinityEdge display, exemplary finish, and Intel power in just over a kilogram."
+  },
+  "desktop-dell-optiplex-7020-sff": {
+    "tagline": "OptiPlex power and reliability in a compact chassis, built for enterprise fleet management",
+    "description": "Dell OptiPlex 7020 Small Form Factor desktop: OptiPlex power and reliability in a compact chassis, built for enterprise fleet management."
+  },
+  "desktop-dell-optiplex-7020-mff": {
+    "tagline": "An ultra-compact professional PC that mounts behind a screen, ideal for offices where every centimetre counts",
+    "description": "Dell OptiPlex 7020 Micro Form Factor: an ultra-compact professional PC that mounts behind a screen, ideal for offices where every centimetre counts."
+  },
+  "desktop-dell-optiplex-7020-tower": {
+    "tagline": "Maximum expandability, professional performance, and easy maintenance for demanding businesses",
+    "description": "Dell OptiPlex 7020 tower: maximum expandability, professional performance, and easy maintenance for demanding businesses."
+  },
+  "desktop-hp-pro-tower-290-g9": {
+    "tagline": "A reliable, expandable workstation for business office work, easy to maintain and upgrade",
+    "description": "HP Pro Tower 290 G9 desktop: a reliable, expandable workstation for business office work, easy to maintain and upgrade."
+  },
+  "desktop-hp-pro-tower-400-g9": {
+    "tagline": "Power, HP security, and expandability in a reliable tower chassis, built for the everyday needs of the business",
+    "description": "HP Pro Tower 400 G9 desktop: power, HP security, and expandability in a reliable tower chassis, built for the everyday needs of the business."
+  },
+  "desktop-lenovo-neo-50t-g4": {
+    "tagline": "A reliable, expandable professional tower, ideal for equipping businesses for the long term",
+    "description": "Lenovo ThinkCentre Neo 50t Gen 4 desktop: a reliable, expandable professional tower, ideal for equipping businesses for the long term."
+  },
+  "desktop-hp-290-g9": {
+    "tagline": "The essentials of professional office work in a compact, reliable, and economical tower",
+    "description": "HP 290 G9 desktop: the essentials of professional office work in a compact, reliable, and economical tower."
+  },
+  "desktop-dell-optiplex-7020-mt": {
+    "tagline": "Professional performance, expandability, and ease of management for enterprise IT fleets",
+    "description": "Dell OptiPlex 7020 Mini Tower: professional performance, expandability, and ease of management for enterprise IT fleets."
+  },
+  "desktop-hp-pro-sff-290-g9": {
+    "tagline": "Professional performance in a compact format that fits anywhere",
+    "description": "HP Pro SFF 290 G9 desktop: professional performance in a compact format that fits anywhere."
+  },
+  "desktop-dell-vostro-3910": {
+    "tagline": "The SMB professional tower, with powerful Intel processors and proven Dell reliability",
+    "description": "Dell Vostro 3910 desktop: the SMB professional tower, with powerful Intel processors and proven Dell reliability."
+  },
+  "desktop-dell-optiplex-tower-7010": {
+    "tagline": "The benchmark professional tower — powerful, secure, and easy to administer at fleet scale",
+    "description": "Dell OptiPlex Tower 7010: the benchmark professional tower — powerful, secure, and easy to administer at fleet scale."
+  },
+  "desktop-lenovo-neo-50t-g3": {
+    "tagline": "A proven professional tower workstation, powerful and simple to maintain",
+    "description": "Lenovo ThinkCentre Neo 50t Gen 3 desktop: a proven professional tower workstation, powerful and simple to maintain."
+  },
+  "desktop-hp-290-mt-g9": {
+    "tagline": "The reliable, affordable office tower to equip your business efficiently",
+    "description": "HP 290 MT G9 desktop: the reliable, affordable office tower to equip your business efficiently."
+  },
+  "desktop-lenovo-v50t-g2": {
+    "tagline": "A reliable, affordable professional tower for SMB office work",
+    "description": "Lenovo V50t Gen 2 desktop: a reliable, affordable professional tower for SMB office work."
+  },
+  "all-in-one-hp-proone-240-g10": {
+    "tagline": "A complete workstation, easy to deploy and ideal for offices and reception areas",
+    "description": "Sleek, compact HP all-in-one that combines screen and computer in a single unit: a complete workstation, easy to deploy and ideal for offices and reception areas."
+  },
+  "all-in-one-lenovo-tc-neo-50a-24-gen-5": {
+    "tagline": "A 23.8\" Full HD screen, professional performance, and a minimal footprint for clean, modern offices",
+    "description": "Lenovo ThinkCentre Neo 50a 24 Gen 5 all-in-one: a 23.8\" Full HD screen, professional performance, and a minimal footprint for clean, modern offices."
+  },
+  "all-in-one-hp-27-cr1005nk": {
+    "tagline": "A large, elegant screen, balanced performance, and a minimal footprint for home and office alike",
+    "description": "HP 27\" Full HD all-in-one: a large, elegant screen, balanced performance, and a minimal footprint for home and office alike."
+  },
+  "all-in-one-hp-24-cr0065nk": {
+    "tagline": "A clean design, a built-in webcam, and enough power for all your everyday office work",
+    "description": "HP 23.8\" Full HD all-in-one: a clean design, a built-in webcam, and enough power for all your everyday office work."
+  },
+  "all-in-one-hp-24-cr0066nk": {
+    "tagline": "The home and business computer with no visible cables, easy to set up and pleasant to use",
+    "description": "HP 23.8\" all-in-one: the home and business computer with no visible cables, easy to set up and pleasant to use."
+  },
+  "all-in-one-hp-24-cr0067nk": {
+    "tagline": "A complete, modern workstation that frees up your desk, with HP reliability",
+    "description": "HP 23.8\" Full HD all-in-one: a complete, modern workstation that frees up your desk, with HP reliability."
+  },
+  "all-in-one-hp-24-cr0006nk": {
+    "tagline": "The essential setup for browsing, office work, and multimedia, in an elegant all-in-one format",
+    "description": "HP 23.8\" all-in-one: the essential setup for browsing, office work, and multimedia, in an elegant all-in-one format."
+  },
+  "all-in-one-hp-24-cr0010nk": {
+    "tagline": "Reliable everyday performance and a refined design to equip offices and homes",
+    "description": "HP 23.8\" Full HD all-in-one: reliable everyday performance and a refined design to equip offices and homes."
+  },
+  "all-in-one-lenovo-thinkcentre-neo-50a-24-gen-5": {
+    "tagline": "A complete, elegant workstation with a 23.8\" screen, designed for the modern business",
+    "description": "Lenovo ThinkCentre Neo 50a 24 Gen 5 all-in-one: a complete, elegant workstation with a 23.8\" screen, designed for the modern business."
+  },
+  "all-in-one-hp-24-cb1036nk": {
+    "tagline": "A modern design, a crisp screen, and smooth performance for a clutter-free all-in-one workstation",
+    "description": "HP 23.8\" Full HD all-in-one: a modern design, a crisp screen, and smooth performance for a clutter-free all-in-one workstation."
+  },
+  "all-in-one-hp-24-cb1035nk": {
+    "tagline": "Elegant and complete, it brings together everything you need to work and be entertained in a single device",
+    "description": "HP 23.8\" all-in-one: elegant and complete, it brings together everything you need to work and be entertained in a single device."
+  },
+  "all-in-one-hp-24-cb1032nk": {
+    "tagline": "The turnkey solution for a clean desk, with a built-in webcam and HP reliability",
+    "description": "HP 23.8\" Full HD all-in-one: the turnkey solution for a clean desk, with a built-in webcam and HP reliability."
+  },
+  "all-in-one-hp-24-cb1033nk": {
+    "tagline": "An elegant home and business computer, easy to set up and pleasant to use every day",
+    "description": "HP 23.8\" all-in-one: an elegant home and business computer, easy to set up and pleasant to use every day."
+  },
+  "all-in-one-hp-22-dd2270-6m897ea": {
+    "tagline": "Compact, elegant, and complete for everyday office work and multimedia",
+    "description": "HP 21.5\" Full HD all-in-one: compact, elegant, and complete for everyday office work and multimedia."
+  },
+  "all-in-one-hp-eliteone-840-g9-7f116av": {
+    "tagline": "High-end performance, polished video conferencing, and enterprise security in a premium design",
+    "description": "HP EliteOne 840 G9 23.8\" professional all-in-one: high-end performance, polished video conferencing, and enterprise security in a premium design."
+  },
+  "ecran-hp-series-7-pro-732pk": {
+    "tagline": "Colour accuracy, complete connectivity, and premium visual comfort for creative and intensive work",
+    "description": "HP Series 7 Pro 31.5\" 4K UHD professional monitor: colour accuracy, complete connectivity, and premium visual comfort for creative and intensive work."
+  },
+  "ecran-hp-series-5-pro-527pf": {
+    "tagline": "A crisp image, wide viewing angles, and a borderless design for a modern, comfortable workstation",
+    "description": "HP Series 5 Pro 27\" Full HD IPS monitor: a crisp image, wide viewing angles, and a borderless design for a modern, comfortable workstation."
+  },
+  "ecran-hp-series-5-pro-527pq": {
+    "tagline": "Higher resolution for more workspace and detail, perfect for advanced office work and multitasking",
+    "description": "HP Series 5 Pro 27\" QHD monitor: higher resolution for more workspace and detail, perfect for advanced office work and multitasking."
+  },
+  "ecran-hp-series-5-pro-524pf": {
+    "tagline": "Compact, elegant, and ergonomic, the ideal choice to efficiently equip business workstations",
+    "description": "HP Series 5 Pro 23.8\" Full HD IPS monitor: compact, elegant, and ergonomic, the ideal choice to efficiently equip business workstations."
+  },
+  "ecran-hp-series-5-pro-527pu": {
+    "tagline": "Power your laptop and display your image over a single cable, for a clean, productive desk",
+    "description": "HP Series 5 Pro 27\" monitor with USB-C connectivity: power your laptop and display your image over a single cable, for a clean, productive desk."
+  },
+  "ecran-lenovo-c24-40": {
+    "tagline": "A high-contrast image, a slim reduced-bezel design, and an accessible price — perfect for home and office",
+    "description": "Lenovo 23.8\" Full HD VA monitor: a high-contrast image, a slim reduced-bezel design, and an accessible price — perfect for home and office."
+  },
+  "ecran-lenovo-c27-40": {
+    "tagline": "A large, comfortable format for office work and entertainment, with smooth rendering and excellent size-to-price value",
+    "description": "Lenovo 27\" Full HD monitor: a large, comfortable format for office work and entertainment, with smooth rendering and excellent size-to-price value."
+  },
+  "ecran-lenovo-l24e-40": {
+    "tagline": "Visual comfort with blue-light reduction, a clean design, and versatility for work and leisure",
+    "description": "Lenovo 23.8\" Full HD VA monitor: visual comfort with blue-light reduction, a clean design, and versatility for work and leisure."
+  },
+  "ecran-lenovo-l22e-40": {
+    "tagline": "A compact, economical format, perfect for tight spaces and equipping workstations at volume",
+    "description": "Lenovo 21.5\" Full HD monitor: a compact, economical format, perfect for tight spaces and equipping workstations at volume."
+  },
+  "ecran-msi-pro-mp275q": {
+    "tagline": "High resolution, a panel that's comfortable for long days, and anti-flicker technology for professional productivity",
+    "description": "MSI PRO 27\" QHD monitor: high resolution, a panel that's comfortable for long days, and anti-flicker technology for professional productivity."
+  },
+  "ecran-msi-pro-mp273u": {
+    "tagline": "Exceptional sharpness for precision work, content creation, and intensive multitasking",
+    "description": "MSI PRO 27\" 4K UHD monitor: exceptional sharpness for precision work, content creation, and intensive multitasking."
+  },
+  "ecran-msi-mpg-271qrx": {
+    "tagline": "Extreme responsiveness, perfect blacks, and vivid colours for competitive gaming at the highest level",
+    "description": "MSI MPG 27\" QHD OLED 360 Hz gaming monitor: extreme responsiveness, perfect blacks, and vivid colours for competitive gaming at the highest level."
+  },
+  "ecran-msi-mpg-271qr": {
+    "tagline": "Remarkable smoothness, minimal response time, and an immersive image for demanding gamers",
+    "description": "MSI MPG 27\" QHD high-refresh gaming monitor: remarkable smoothness, minimal response time, and an immersive image for demanding gamers."
+  },
+  "ecran-asus-proart-pa279cv": {
+    "tagline": "Factory-calibrated 100% sRGB, 65W USB-C, and certified colour accuracy for demanding creatives",
+    "description": "ASUS ProArt PA279CV 27\" 4K monitor: factory-calibrated 100% sRGB, 65W USB-C, and certified colour accuracy for demanding creatives."
+  },
+  "ecran-asus-rog-swift-pro-pg248qp": {
+    "tagline": "The most extreme refresh rate for competition at the highest level",
+    "description": "ASUS ROG Swift Pro PG248QP 24.1\" 540 Hz e-sport monitor: the most extreme refresh rate for competition at the highest level."
+  },
+  "ecran-asus-rog-swift-oled-pg27aqdm": {
+    "tagline": "Absolute blacks, a 0.03 ms response time, and a spectacular image for premium gaming",
+    "description": "ASUS ROG Swift OLED PG27AQDM 27\" QHD 240 Hz monitor: absolute blacks, a 0.03 ms response time, and a spectacular image for premium gaming."
+  },
+  "ecran-asus-rog-strix-xg27ucs": {
+    "tagline": "UHD sharpness combined with high smoothness, for gaming in ultra-high definition",
+    "description": "ASUS ROG Strix XG27UCS 27\" 4K 160 Hz gaming monitor: UHD sharpness combined with high smoothness, for gaming in ultra-high definition."
+  },
+  "ecran-asus-rog-swift-pg27aqn": {
+    "tagline": "Built for e-sport with NVIDIA G-SYNC and world-class responsiveness",
+    "description": "ASUS ROG Swift PG27AQN 27\" QHD 360 Hz monitor: built for e-sport with NVIDIA G-SYNC and world-class responsiveness."
+  },
+  "ecran-asus-rog-swift-pg49wcd": {
+    "tagline": "An immersive super-ultrawide format equivalent to two 27\" screens, for gaming and extreme multitasking",
+    "description": "ASUS ROG Swift PG49WCD 49\" curved QD-OLED monitor: an immersive super-ultrawide format equivalent to two 27\" screens, for gaming and extreme multitasking."
+  },
+  "ecran-game-revolution-armaguedon-27": {
+    "tagline": "A large, smooth high-refresh panel for an immersive gaming experience at a competitive price",
+    "description": "Game Revolution Armaguedon 27\" gaming monitor: a large, smooth high-refresh panel for an immersive gaming experience at a competitive price."
+  },
+  "ecran-game-revolution-apocalyps-27": {
+    "tagline": "A responsive image and an aggressive design for gamers who want a big screen without breaking the bank",
+    "description": "Game Revolution Apocalyps 27\" gaming monitor: a responsive image and an aggressive design for gamers who want a big screen without breaking the bank."
+  },
+  "ecran-game-revolution-ragnarok-24": {
+    "tagline": "The competitive format par excellence, with high smoothness for FPS and e-sport",
+    "description": "Game Revolution Ragnarok 24\" gaming monitor: the competitive format par excellence, with high smoothness for FPS and e-sport."
+  },
+  "ecran-asus-tuf-vg249qm1a": {
+    "tagline": "Smoothness, Extreme Low Motion Blur, and FreeSync for responsive, accessible gaming",
+    "description": "ASUS TUF VG249Q1A 23.8\" Full HD gaming monitor up to 165 Hz: smoothness, Extreme Low Motion Blur, and FreeSync for responsive, accessible gaming."
+  },
+  "ecran-asus-tuf-vg279ql3a": {
+    "tagline": "A large, fast panel with blur reduction and adaptive sync for crisp gaming",
+    "description": "ASUS TUF VG279QL3A 27\" Full HD 180 Hz gaming monitor: a large, fast panel with blur reduction and adaptive sync for crisp gaming."
+  },
+  "ecran-reaction-sg-2205vh": {
+    "tagline": "A simple, crisp, economical monitor to equip workstations and points of sale",
+    "description": "Reaction SG-2205VH 22\" Full HD monitor: a simple, crisp, economical monitor to equip workstations and points of sale."
+  },
+  "ecran-reaction-sg-2701g": {
+    "tagline": "A comfortable large format at a contained price for office work and multimedia",
+    "description": "Reaction SG-2701G 27\" monitor: a comfortable large format at a contained price for office work and multimedia."
+  },
+  "ecran-hp-e27u-g5": {
+    "tagline": "High resolution, a built-in USB hub, and full ergonomics for demanding professionals",
+    "description": "HP E27u G5 27\" QHD USB-C monitor: high resolution, a built-in USB hub, and full ergonomics for demanding professionals."
+  },
+  "ecran-hp-v22ve-g5": {
+    "tagline": "Crisp, economical, and comfortable, perfect for equipping workstations at low cost",
+    "description": "HP V22ve G5 21.5\" Full HD monitor: crisp, economical, and comfortable, perfect for equipping workstations at low cost."
+  },
+  "ecran-hp-v221vb": {
+    "tagline": "Simplicity, HP reliability, and an accessible price for everyday office work",
+    "description": "HP V221vb 21.5\" Full HD monitor: simplicity, HP reliability, and an accessible price for everyday office work."
+  },
+  "ecran-hp-v24v-g5": {
+    "tagline": "A crisp image, a slim design, and an accessible price for all everyday uses",
+    "description": "HP V24v G5 23.8\" Full HD monitor: a crisp image, a slim design, and an accessible price for all everyday uses."
+  },
+  "ecran-hp-p27h-g5": {
+    "tagline": "Great visual comfort, built-in speakers, and a height-adjustable stand for long workdays",
+    "description": "HP P27h G5 27\" Full HD IPS monitor: great visual comfort, built-in speakers, and a height-adjustable stand for long workdays."
+  },
+  "ecran-dell-e2422hs": {
+    "tagline": "Height-adjustable with built-in speakers, the reliable standard for professional workstations",
+    "description": "Dell E2422HS 23.8\" Full HD IPS monitor: height-adjustable with built-in speakers, the reliable standard for professional workstations."
+  },
+  "ecran-dell-e2420hs": {
+    "tagline": "Ergonomic and comfortable, with Dell's build quality trusted in business",
+    "description": "Dell E2420HS 23.8\" Full HD monitor: ergonomic and comfortable, with Dell's build quality trusted in business."
+  },
+  "ecran-aoc-c27g2ze": {
+    "tagline": "Total immersion and extreme 0.5 ms smoothness for competitive gamers",
+    "description": "AOC C27G2ZE 27\" 240 Hz curved gaming monitor: total immersion and extreme 0.5 ms smoothness for competitive gamers."
+  },
+  "ecran-asus-va24ehf": {
+    "tagline": "A smooth image, eye-comfort technologies, and a borderless design at a low price",
+    "description": "ASUS VA24EHF 23.8\" Full HD IPS 100 Hz monitor: a smooth image, eye-comfort technologies, and a borderless design at a low price."
+  },
+  "ecran-dell-p2422h": {
+    "tagline": "Full ergonomics, a USB hub, and certified visual comfort for business productivity",
+    "description": "Dell P2422H 23.8\" Full HD IPS professional monitor: full ergonomics, a USB hub, and certified visual comfort for business productivity."
+  },
+  "ecran-asus-vg249ql3a": {
+    "tagline": "High responsiveness, FreeSync Premium, and adjustable ergonomics for competitive gaming",
+    "description": "ASUS VG249QL3A 23.8\" Full HD 180 Hz gaming monitor: high responsiveness, FreeSync Premium, and adjustable ergonomics for competitive gaming."
+  },
+  "ecran-hp-p24v-g5": {
+    "tagline": "The safe bet for professional offices — simple, crisp, and reliable",
+    "description": "HP P24v G5 23.8\" Full HD monitor: the safe bet for professional offices — simple, crisp, and reliable."
+  },
+  "ecran-dell-se2722h": {
+    "tagline": "A large, comfortable screen with AMD FreeSync, perfect for work and entertainment",
+    "description": "Dell SE2722H 27\" Full HD monitor: a large, comfortable screen with AMD FreeSync, perfect for work and entertainment."
+  },
+  "ecran-hp-p22v-g4": {
+    "tagline": "Compact and efficient, ideal for equipping workstations in volume",
+    "description": "HP P22v G4 21.5\" Full HD monitor: compact and efficient, ideal for equipping workstations in volume."
+  },
+  "ecran-hp-v22v-g5": {
+    "tagline": "The essentials of a good monitor at the best price, for home and office",
+    "description": "HP V22v G5 21.5\" Full HD monitor: the essentials of a good monitor at the best price, for home and office."
+  },
+  "ecran-hp-z27u-g3": {
+    "tagline": "Colour accuracy, docking-station connectivity, and professional quality for creatives and engineers",
+    "description": "HP Z27u G3 27\" QHD USB-C monitor: colour accuracy, docking-station connectivity, and professional quality for creatives and engineers."
+  },
+  "ecran-hp-v24i-g5": {
+    "tagline": "Faithful colours, wide angles, and a refined design at a contained price",
+    "description": "HP V24i G5 23.8\" Full HD IPS monitor: faithful colours, wide angles, and a refined design at a contained price."
+  },
+  "ecran-hp-p22-g4": {
+    "tagline": "The reliable, no-frills entry-level professional monitor",
+    "description": "HP P22 G4 21.5\" Full HD monitor: the reliable, no-frills entry-level professional monitor."
+  },
+  "ecran-dell-e2723h": {
+    "tagline": "A large professional format with a high-contrast VA panel and Dell reliability",
+    "description": "Dell E2723H 27\" Full HD monitor: a large professional format with a high-contrast VA panel and Dell reliability."
+  },
+  "ecran-dell-e2423h": {
+    "tagline": "The economical benchmark for IT fleets — rugged and comfortable",
+    "description": "Dell E2423H 23.8\" Full HD monitor: the economical benchmark for IT fleets — rugged and comfortable."
+  },
+  "ecran-hp-e27-g5": {
+    "tagline": "Full ergonomics, a USB hub, and certified comfort for professionals who spend their days on screen",
+    "description": "HP E27 G5 27\" Full HD IPS monitor: full ergonomics, a USB hub, and certified comfort for professionals who spend their days on screen."
+  },
+  "ecran-hp-e24-g5": {
+    "tagline": "Adjustable in every direction, understated and efficient — the standard for modern offices",
+    "description": "HP E24 G5 23.8\" Full HD IPS monitor: adjustable in every direction, understated and efficient — the standard for modern offices."
+  },
+  "ecran-hp-e22-g5": {
+    "tagline": "Compact, ergonomic, and reliable for optimized workspaces",
+    "description": "HP E22 G5 21.5\" Full HD IPS monitor: compact, ergonomic, and reliable for optimized workspaces."
+  },
+  "ecran-dell-se2222h": {
+    "tagline": "Simple, crisp, and economical — the perfect secondary or office monitor",
+    "description": "Dell SE2222H 21.5\" Full HD monitor: simple, crisp, and economical — the perfect secondary or office monitor."
+  },
+  "tablette-lenovo-tab-m7": {
+    "tagline": "Ideal for browsing, reading, and multimedia on the go, with the full Android ecosystem",
+    "description": "Compact, light, and affordable 7\" tablet: ideal for browsing, reading, and multimedia on the go, with the full Android ecosystem."
+  },
+  "tablette-d-tech-protab-t101": {
+    "tagline": "A large screen, smooth Android, and an unbeatable price — the family and business tablet by D-Tech",
+    "description": "D-Tech ProTab T101 10.1\" tablet: a large screen, smooth Android, and an unbeatable price — the family and business tablet by D-Tech."
+  },
+  "imprimante-hp-laserjet-monochrome-enterprise-700-m712dn": {
+    "tagline": "High speed, automatic duplex printing, and endurance built for high-volume business",
+    "description": "HP Enterprise large-format monochrome laser printer (up to A3): high speed, automatic duplex printing, and endurance built for high-volume business."
+  },
+  "imprimante-canon-multifonction-i-sensys-mf752cdw": {
+    "tagline": "Fast printing, copying, and scanning, built-in Wi-Fi, and professional colour quality for work teams",
+    "description": "Canon i-SENSYS MF752Cdw colour laser multifunction: fast printing, copying, and scanning, built-in Wi-Fi, and professional colour quality for work teams."
+  },
+  "imprimante-matricielle-dfx-9000": {
+    "tagline": "The industrial benchmark for continuous printing of invoices and multi-part listings — rugged and tireless",
+    "description": "Epson DFX-9000 dot-matrix printer: the industrial benchmark for continuous printing of invoices and multi-part listings — rugged and tireless."
+  },
+  "copieur-epson-workforce-enterprise-wf-c20750": {
+    "tagline": "Up to 75 ppm in colour, minimal energy consumption, and reduced printing costs for large organizations",
+    "description": "Epson WorkForce Enterprise WF-C20750 A3 inkjet multifunction: up to 75 ppm in colour, minimal energy consumption, and reduced printing costs for large organizations."
+  },
+  "copieur-epson-workforce-enterprise-am-c5000": {
+    "tagline": "Professional inkjet technology that combines speed, reliability, and dramatic energy savings",
+    "description": "Epson AM-C5000 A3 colour multifunction copier: professional inkjet technology that combines speed, reliability, and dramatic energy savings."
+  },
+  "disc-producer-epson-pp-100iii": {
+    "tagline": "Produce and personalize your CDs/DVDs/Blu-rays in batches, automatically and with professional quality",
+    "description": "Epson Discproducer PP-100III disc publishing and printing robot: produce and personalize your CDs/DVDs/Blu-rays in batches, automatically and with professional quality."
+  },
+  "imprimante-canon-laser-monochrome-multifonction-461dw": {
+    "tagline": "Fast printing, copying, and scanning with duplex and Wi-Fi, for productive teams",
+    "description": "Canon i-SENSYS MF461dw monochrome laser multifunction: fast printing, copying, and scanning with duplex and Wi-Fi, for productive teams."
+  },
+  "imprimante-canon-laser-monochrome-multifonction-mf275dw": {
+    "tagline": "Compact and complete (print, copy, scan, fax) with Wi-Fi and automatic duplex",
+    "description": "Canon i-SENSYS MF275dw monochrome laser multifunction: compact and complete (print, copy, scan, fax) with Wi-Fi and automatic duplex."
+  },
+  "imprimante-canon-laser-monochrome-monofonction-lbp122dw": {
+    "tagline": "Fast, compact, and Wi-Fi connected, perfect for the home office and small teams",
+    "description": "Canon i-SENSYS LBP122dw monochrome laser printer: fast, compact, and Wi-Fi connected, perfect for the home office and small teams."
+  },
+  "imprimante-photocopieur-multifonction-couleur-canon-imagerunner-3326i": {
+    "tagline": "Professional colour printing, fast scanning, and a secure platform for workgroups",
+    "description": "Canon imageRUNNER C3326i A3 colour multifunction photocopier: professional colour printing, fast scanning, and a secure platform for workgroups."
+  },
+  "imprimante-photocopieur-multifonction-monochrome-canon-imagerunner-2425i": {
+    "tagline": "Reliable network copying, printing, and scanning for offices with sustained volume",
+    "description": "Canon imageRUNNER 2425i A3 monochrome multifunction photocopier: reliable network copying, printing, and scanning for offices with sustained volume."
+  },
+  "imprimante-photocopieur-multifonction-monochrome-canon-imagerunner-2224": {
+    "tagline": "Simplicity, ruggedness, and low running costs for everyday copying needs",
+    "description": "Canon imageRUNNER 2224 A3 monochrome multifunction photocopier: simplicity, ruggedness, and low running costs for everyday copying needs."
+  },
+  "imprimante-ecotank-couleur-monofonction-epson-l11050": {
+    "tagline": "Print in large format at a tiny cost per page thanks to refillable ink tanks",
+    "description": "Epson EcoTank L11050 A3+ colour printer: print in large format at a tiny cost per page thanks to refillable ink tanks."
+  },
+  "imprimante-epson-ecotank-couleur-monofonction-l8050": {
+    "tagline": "Vibrant photo prints in quantity, without cartridges and without breaking the bank",
+    "description": "Epson EcoTank L8050 6-colour photo printer: vibrant photo prints in quantity, without cartridges and without breaking the bank."
+  },
+  "imprimante-epson-ecotank-couleur-multifonction-l15160": {
+    "tagline": "Large-format printing, copying, scanning, and fax with duplex, for thousands of pages at minimal cost",
+    "description": "Epson EcoTank L15160 A3 colour multifunction: large-format printing, copying, scanning, and fax with duplex, for thousands of pages at minimal cost."
+  },
+  "imprimante-epson-ecotank-couleur-multifonction-l14150": {
+    "tagline": "Professional large format with high-capacity ink tanks and complete connectivity",
+    "description": "Epson EcoTank L14150 A3+ multifunction: professional large format with high-capacity ink tanks and complete connectivity."
+  },
+  "imprimante-epson-ecotank-couleur-multifonction-l4260": {
+    "tagline": "Printing, copying, and scanning with duplex and Wi-Fi, and up to 3 years of ink included in the box",
+    "description": "Epson EcoTank L4260 multifunction: printing, copying, and scanning with duplex and Wi-Fi, and up to 3 years of ink included in the box."
+  },
+  "imprimante-hp-laser-monochrome-multifonction-m236sdw": {
+    "tagline": "Printing, copying, and scanning with automatic duplex and Wi-Fi, in a compact format ideal for small offices",
+    "description": "HP LaserJet M236sdw monochrome laser multifunction: printing, copying, and scanning with automatic duplex and Wi-Fi, in a compact format ideal for small offices."
+  },
+  "imprimante-canon-laser-monochrome-multifonction-x1440i": {
+    "tagline": "Professional speed, advanced security, and fleet management for structured businesses",
+    "description": "Canon i-SENSYS X 1440i monochrome laser multifunction: professional speed, advanced security, and fleet management for structured businesses."
+  },
+  "imprimante-epson-workforce-pro-wf-c878rdtwf-multifonction-couleur": {
+    "tagline": "Professional colour printing with a high-capacity RIPS system, for months of printing without changing supplies",
+    "description": "Epson WorkForce Pro WF-C878RDTWF A3 multifunction: professional colour printing with a high-capacity RIPS system, for months of printing without changing supplies."
+  },
+  "imprimante-epson-ecotank-couleur-monofonction-l18050": {
+    "tagline": "Sumptuous large-format photo prints at a tiny cost thanks to refillable tanks",
+    "description": "Epson EcoTank L18050 A3+ 6-colour photo printer: sumptuous large-format photo prints at a tiny cost thanks to refillable tanks."
+  },
+  "copieur-epson-workforce-enterprise-am-c4000": {
+    "tagline": "40 ppm, Heat-Free inkjet technology, and minimal power consumption for responsible workgroups",
+    "description": "Epson AM-C4000 A3 colour multifunction copier: 40 ppm, Heat-Free inkjet technology, and minimal power consumption for responsible workgroups."
+  },
+  "imprimante-jet-d-encre-couleur-multifonction-hp-l6570": {
+    "tagline": "Fast printing, copying, scanning, and fax with duplex and networking, for dynamic offices",
+    "description": "HP OfficeJet Pro colour inkjet multifunction: fast printing, copying, scanning, and fax with duplex and networking, for dynamic offices."
+  },
+  "imprimante-hp-laser-monochrome-multifonction-4103fdn": {
+    "tagline": "40 ppm, duplex, fax, and an automatic document feeder — complete productivity for teams",
+    "description": "HP LaserJet Pro 4103fdn monochrome laser multifunction: 40 ppm, duplex, fax, and an automatic document feeder — complete productivity for teams."
+  },
+  "imprimante-canon-laser-monochrome-multifonction-i-sensys-lbp463dw": {
+    "tagline": "High speed, automatic duplex, and complete connectivity for workgroups",
+    "description": "Canon i-SENSYS LBP463dw monochrome laser printer: high speed, automatic duplex, and complete connectivity for workgroups."
+  },
+  "imprimante-canon-laser-monochrome-mononction-lbp361dw": {
+    "tagline": "Up to 61 ppm for high volumes, with reliability built for the enterprise",
+    "description": "Canon i-SENSYS LBP361dw monochrome laser printer: up to 61 ppm for high volumes, with reliability built for the enterprise."
+  },
+  "imprimante-canon-laser-monochrome-multifonction-mf465dw": {
+    "tagline": "High-speed printing, copying, scanning, and fax with a touchscreen and full duplex",
+    "description": "Canon i-SENSYS MF465dw monochrome laser multifunction: high-speed printing, copying, scanning, and fax with a touchscreen and full duplex."
+  },
+  "imprimante-canon-laser-monochrome-multifonction-mf272dw": {
+    "tagline": "Compact, connected, and economical — the ally of small offices and remote work",
+    "description": "Canon i-SENSYS MF272dw monochrome laser multifunction: compact, connected, and economical — the ally of small offices and remote work."
+  },
+  "imprimante-canon-laser-monochrome-mononction-lbp246dw": {
+    "tagline": "40 ppm, duplex, and reinforced security for fast-paced offices",
+    "description": "Canon i-SENSYS LBP246dw monochrome laser printer: 40 ppm, duplex, and reinforced security for fast-paced offices."
+  },
+  "imprimante-canon-laser-monochrome-monofonction-lbp243dw": {
+    "tagline": "Fast, quiet, and Wi-Fi connected, for crisp everyday prints",
+    "description": "Canon i-SENSYS LBP243dw monochrome laser printer: fast, quiet, and Wi-Fi connected, for crisp everyday prints."
+  },
+  "imprimante-hp-laser-monochrome-monofonction-4003dn": {
+    "tagline": "40 ppm, automatic duplex, and Ethernet networking for sustained print volumes",
+    "description": "HP LaserJet Pro 4003dn monochrome laser printer: 40 ppm, automatic duplex, and Ethernet networking for sustained print volumes."
+  },
+  "imprimante-epson-ecotank-multifonction-couleur-l3251": {
+    "tagline": "Printing, copying, and scanning with Wi-Fi and refillable tanks — thousands of pages for a few dinars of ink",
+    "description": "Epson EcoTank L3251 multifunction: printing, copying, and scanning with Wi-Fi and refillable tanks — thousands of pages for a few dinars of ink."
+  },
+  "scanner-epson-workforce-ds-7500": {
+    "tagline": "Scan documents and books quickly, with flawless quality",
+    "description": "Epson WorkForce DS-7500 professional flatbed scanner with automatic document feeder: scan documents and books quickly, with flawless quality."
+  },
+  "scanner-epson-workforce-ds-50000": {
+    "tagline": "Precise large-format scanning for plans, registers, and bound documents",
+    "description": "Epson WorkForce DS-50000 A3 flatbed scanner: precise large-format scanning for plans, registers, and bound documents."
+  },
+  "scanner-epson-workforce-ds-50000n": {
+    "tagline": "Share large-format scanning across every user in your business",
+    "description": "Epson WorkForce DS-50000N A3 network scanner: share large-format scanning across every user in your business."
+  },
+  "scanner-epson-workforce-ds-60000n": {
+    "tagline": "The productive solution for scanning high volumes of large-format documents",
+    "description": "Epson WorkForce DS-60000N A3 network scanner with automatic document feeder: the productive solution for scanning high volumes of large-format documents."
+  },
+  "scanner-epson-workforce-ds-870": {
+    "tagline": "Up to 65 ppm in duplex, advanced image processing, and reliability for intensive digitization",
+    "description": "Epson WorkForce DS-870 production scanner: up to 65 ppm in duplex, advanced image processing, and reliability for intensive digitization."
+  },
+  "scanner-epson-workforce-ds-970": {
+    "tagline": "Up to 85 ppm in duplex, the champion of mass digitization",
+    "description": "Epson WorkForce DS-970 production scanner: up to 85 ppm in duplex, the champion of mass digitization."
+  },
+  "scanner-epson-workforce-ds-790wn": {
+    "tagline": "Scan directly to the cloud, email, or network, with no computer",
+    "description": "Epson WorkForce DS-790WN network scanner with touchscreen: scan directly to the cloud, email, or network, with no computer."
+  },
+  "scanner-epson-workforce-ds-770ii": {
+    "tagline": "45 ppm in duplex, intelligent document handling, and ruggedness for intensive daily scanning",
+    "description": "Epson WorkForce DS-770II professional scanner: 45 ppm in duplex, intelligent document handling, and ruggedness for intensive daily scanning."
+  },
+  "scanner-epson-workforce-ds-730n": {
+    "tagline": "Share fast scanning across multiple users, connected directly to the company network",
+    "description": "Epson WorkForce DS-730N network scanner: share fast scanning across multiple users, connected directly to the company network."
+  },
+  "scanner-epson-workforce-ds-70000n": {
+    "tagline": "The high end of large-format network scanning, for the most demanding volumes",
+    "description": "Epson WorkForce DS-70000N A3 network scanner: the high end of large-format network scanning, for the most demanding volumes."
+  },
+  "scanner-canon-lide-400": {
+    "tagline": "Ultra-thin, USB-powered, and precise (4800 dpi), perfect for scanning documents and photos at home",
+    "description": "Canon CanoScan LiDE 400 flatbed scanner: ultra-thin, USB-powered, and precise (4800 dpi), perfect for scanning documents and photos at home."
+  },
+  "videoprojecteur-epson-eb-1780w": {
+    "tagline": "Barely thicker than a laptop, it follows you anywhere for bright presentations with no complicated setup",
+    "description": "Epson EB-1780W WXGA ultra-slim projector: barely thicker than a laptop, it follows you anywhere for bright presentations with no complicated setup."
+  },
+  "videoprojecteur-epson-eb-l530u": {
+    "tagline": "Powerful brightness, a maintenance-free laser source, and a Full HD+ image for meeting rooms and lecture halls",
+    "description": "Epson EB-L530U WUXGA 5200-lumen laser projector: powerful brightness, a maintenance-free laser source, and a Full HD+ image for meeting rooms and lecture halls."
+  },
+  "videoprojecteur-epson-eb-fh52": {
+    "tagline": "A large, bright, and precise image for meeting and training rooms",
+    "description": "Epson EB-FH52 Full HD 4000-lumen projector: a large, bright, and precise image for meeting and training rooms."
+  },
+  "videoprojecteur-epson-eb-e20": {
+    "tagline": "Simple, reliable, and affordable for classroom or meeting presentations",
+    "description": "Epson EB-E20 XGA 3400-lumen projector: simple, reliable, and affordable for classroom or meeting presentations."
+  },
+  "toner-ink-master-tk1245": {
+    "tagline": "Crisp print quality and reliable yield at a fraction of the price of original toner",
+    "description": "Ink Master TK-1245 compatible toner for Kyocera printers: crisp print quality and reliable yield at a fraction of the price of original toner."
+  },
+  "toner-ink-master-tk1150": {
+    "tagline": "Dense, consistent monochrome prints to reduce your printing costs",
+    "description": "Ink Master TK-1150 compatible toner for Kyocera ECOSYS: dense, consistent monochrome prints to reduce your printing costs."
+  },
+  "toner-ink-master-tk1140": {
+    "tagline": "An economical, high-performance alternative for sustained print volumes",
+    "description": "Ink Master TK-1140 compatible toner for Kyocera: an economical, high-performance alternative for sustained print volumes."
+  },
+  "toner-ink-master-tk1130": {
+    "tagline": "Consistent quality page after page, at the best cost per page",
+    "description": "Ink Master TK-1130 compatible toner for Kyocera FS/ECOSYS: consistent quality page after page, at the best cost per page."
+  },
+  "toner-ink-master-tk1120": {
+    "tagline": "The smart way to print more while spending less",
+    "description": "Ink Master TK-1120 compatible toner for Kyocera: the smart way to print more while spending less."
+  },
+  "toner-ink-master-universal-tk1110-1115": {
+    "tagline": "A single supply covering several Kyocera models, simple and economical",
+    "description": "Ink Master universal toner compatible with TK-1110/TK-1115: a single supply covering several Kyocera models, simple and economical."
+  },
+  "toner-ink-master-universal-tk110-111-112-113-114": {
+    "tagline": "Maximum versatility and reliable yield for your printer fleet",
+    "description": "Ink Master universal toner compatible with the Kyocera TK-110 to TK-114 series: maximum versatility and reliable yield for your printer fleet."
+  },
+  "toner-ink-master-crg-071": {
+    "tagline": "Crisp text, easy installation, and guaranteed savings",
+    "description": "Ink Master CRG-071 compatible toner for Canon laser printers: crisp text, easy installation, and guaranteed savings."
+  },
+  "toner-ink-master-crg-070": {
+    "tagline": "High yield and professional quality for recent monochrome printers",
+    "description": "Ink Master CRG-070 compatible toner for Canon: high yield and professional quality for recent monochrome printers."
+  },
+  "toner-ink-master-crg-057": {
+    "tagline": "Precise, consistent prints at the best price",
+    "description": "Ink Master CRG-057 compatible toner for Canon i-SENSYS: precise, consistent prints at the best price."
+  },
+  "toner-ink-master-crg-056": {
+    "tagline": "High yield for workgroup printers, with no compromise on quality",
+    "description": "Ink Master CRG-056 compatible toner for Canon: high yield for workgroup printers, with no compromise on quality."
+  },
+  "toner-ink-master-universal-npg-59-gpr-45-exv42": {
+    "tagline": "Designed for imageRUNNER photocopiers, reliable and economical for high volumes",
+    "description": "Ink Master universal toner compatible with Canon NPG-59/GPR-45/C-EXV42: designed for imageRUNNER photocopiers, reliable and economical for high volumes."
+  },
+  "toner-ink-master-universal-npg-51-gpr-35-exv33": {
+    "tagline": "The economical benchmark for your monochrome imageRUNNER copiers",
+    "description": "Ink Master universal toner compatible with Canon NPG-51/GPR-35/C-EXV33: the economical benchmark for your monochrome imageRUNNER copiers."
+  },
+  "toner-ink-master-q5942a": {
+    "tagline": "Built for production HP LaserJets, with high yield and a reduced cost per page",
+    "description": "Ink Master Q5942A (HP 42A) compatible toner: built for production HP LaserJets, with high yield and a reduced cost per page."
+  },
+  "toner-ink-master-216a": {
+    "tagline": "Faithful colours and crisp prints at a reduced price",
+    "description": "Ink Master 216A compatible toner for HP Color LaserJet: faithful colours and crisp prints at a reduced price."
+  },
+  "toner-ink-master-cf244a": {
+    "tagline": "Compact and economical for entry-level HP LaserJet Pro",
+    "description": "Ink Master CF244A (HP 44A) compatible toner: compact and economical for entry-level HP LaserJet Pro."
+  },
+  "toner-ink-master-106a": {
+    "tagline": "Flawless monochrome prints at the best cost",
+    "description": "Ink Master 106A compatible toner for HP Laser 107/135/137: flawless monochrome prints at the best cost."
+  },
+  "toner-ink-master-151a-avec-puce": {
+    "tagline": "Immediate installation with no fuss on recent HP LaserJets, with quality and savings",
+    "description": "Ink Master 151A compatible toner with built-in chip: immediate installation with no fuss on recent HP LaserJets, with quality and savings."
+  },
+  "toner-ink-master-136a-avec-puce": {
+    "tagline": "Recognized directly by your HP printer, for reliable prints at no extra cost",
+    "description": "Ink Master 136A compatible toner with chip: recognized directly by your HP printer, for reliable prints at no extra cost."
+  },
+  "toner-ink-master-283a": {
+    "tagline": "An economical classic for the HP LaserJet Pro M125/M127/M201",
+    "description": "Ink Master 283A (HP 83A) compatible toner: an economical classic for the HP LaserJet Pro M125/M127/M201."
+  },
+  "toner-ink-master-505a": {
+    "tagline": "Professional quality for the HP LaserJet P2035/P2055, at a controlled cost",
+    "description": "Ink Master 505A (HP 05A) compatible toner: professional quality for the HP LaserJet P2035/P2055, at a controlled cost."
+  },
+  "toner-ink-master-12a": {
+    "tagline": "The essential supply for the HP LaserJet 1010/1020, reliable and very economical",
+    "description": "Ink Master 12A (Q2612A) compatible toner: the essential supply for the HP LaserJet 1010/1020, reliable and very economical."
+  },
+  "toner-ink-master-85a-universal": {
+    "tagline": "Compatible with a wide range of HP LaserJets (85A/35A/36A), a single toner to simplify your purchasing",
+    "description": "Ink Master 85A universal toner: compatible with a wide range of HP LaserJets (85A/35A/36A), a single toner to simplify your purchasing."
+  },
+  "bouteilles-d-encre-ink-master-cgi-41": {
+    "tagline": "Refill your MegaTank printer at lower cost for thousands of pages",
+    "description": "Ink Master ink bottles compatible with Canon GI-41: refill your MegaTank printer at lower cost for thousands of pages."
+  },
+  "bouteilles-d-encre-ink-master-e103": {
+    "tagline": "The economical refill for EcoTank printers, with print quality you can count on",
+    "description": "Ink Master ink bottles compatible with Epson 103: the economical refill for EcoTank printers, with print quality you can count on."
+  },
+  "bouteille-d-encre-epson-112-noir-ecotank": {
+    "tagline": "Crisp, water-resistant documents for your EcoTank printer, with exceptional yield",
+    "description": "Genuine Epson 112 black pigment ink bottle: crisp, water-resistant documents for your EcoTank printer, with exceptional yield."
+  },
+  "pack-bouteille-d-encre-epson-101-ecotank": {
+    "tagline": "Fully refill your EcoTank and print thousands of pages",
+    "description": "Complete pack of genuine Epson 101 ink bottles (black, cyan, magenta, yellow): fully refill your EcoTank and print thousands of pages."
+  },
+  "bouteille-d-encre-epson-101-cyan-ecotank": {
+    "tagline": "Faithful colour and high yield for EcoTank printers",
+    "description": "Genuine Epson 101 cyan ink bottle: faithful colour and high yield for EcoTank printers."
+  },
+  "bouteille-d-encre-epson-101-yellow-ecotank": {
+    "tagline": "Vibrant colour prints at an unbeatable cost per page",
+    "description": "Genuine Epson 101 yellow ink bottle: vibrant colour prints at an unbeatable cost per page."
+  },
+  "bouteille-d-encre-epson-101-black-ecotank": {
+    "tagline": "Dense, crisp text, for thousands of pages without changing a cartridge",
+    "description": "Genuine Epson 101 black ink bottle: dense, crisp text, for thousands of pages without changing a cartridge."
+  },
+  "bouteille-d-encre-epson-101-magenta-ecotank": {
+    "tagline": "Guaranteed Epson quality for vivid colours on your EcoTank",
+    "description": "Genuine Epson 101 magenta ink bottle: guaranteed Epson quality for vivid colours on your EcoTank."
+  },
+  "pack-bouteille-d-encre-epson-103-ecotank": {
+    "tagline": "The complete refill for your EcoTank to print for a long time at very low cost",
+    "description": "Pack of four genuine Epson 103 ink bottles: the complete refill for your EcoTank to print for a long time at very low cost."
+  },
+  "bouteille-d-encre-epson-103-magenta-ecotank": {
+    "tagline": "Faithful, lasting colour rendering for EcoTank printers",
+    "description": "Genuine Epson 103 magenta ink bottle: faithful, lasting colour rendering for EcoTank printers."
+  },
+  "bouteille-d-encre-epson-103-yellow-ecotank": {
+    "tagline": "Bright colours and maximum yield for your EcoTank",
+    "description": "Genuine Epson 103 yellow ink bottle: bright colours and maximum yield for your EcoTank."
+  },
+  "bouteille-d-encre-epson-103-cyan-ecotank": {
+    "tagline": "The guarantee of Epson quality for your everyday colour prints",
+    "description": "Genuine Epson 103 cyan ink bottle: the guarantee of Epson quality for your everyday colour prints."
+  },
+  "bouteille-d-encre-epson-103-noir-ecotank": {
+    "tagline": "Crisp, economical text, for thousands of pages on your EcoTank",
+    "description": "Genuine Epson 103 black ink bottle: crisp, economical text, for thousands of pages on your EcoTank."
+  },
+  "pack-epson-108-ecotank": {
+    "tagline": "The official refill for photo EcoTanks, for rich, lasting prints at a low price",
+    "description": "Pack of genuine Epson 108 ink bottles: the official refill for photo EcoTanks, for rich, lasting prints at a low price."
+  },
+  "disque-dur-hiksemi-ssd-hs-essd-t300s-2tb": {
+    "tagline": "Ultra-fast transfers over USB-C, pocket size, and large capacity to carry all your files",
+    "description": "HIKSEMI T300S 2 TB portable external SSD: ultra-fast transfers over USB-C, pocket size, and large capacity to carry all your files."
+  },
+  "disque-dur-hiksemi-ssd-hs-essd-t300s-1tb": {
+    "tagline": "Compact, rugged, and fast, perfect for backing up and carrying your data with complete peace of mind",
+    "description": "HIKSEMI T300S 1 TB external SSD: compact, rugged, and fast, perfect for backing up and carrying your data with complete peace of mind."
+  },
+  "disque-dur-hiksemi-ssd-nvme-m-2-2280-pcie-3-0-512-go-wave": {
+    "tagline": "Instant boots and lightning-fast loading to give your PC a second life",
+    "description": "HIKSEMI Wave NVMe M.2 512 GB PCIe 3.0 internal SSD: instant boots and lightning-fast loading to give your PC a second life."
+  },
+  "disque-dur-hiksemi-ssd-nvme-m-2-2280-pcie-3-0-1024-go-wave": {
+    "tagline": "NVMe speed and large capacity for the system, games, and demanding applications",
+    "description": "HIKSEMI Wave NVMe M.2 1 TB PCIe 3.0 SSD: NVMe speed and large capacity for the system, games, and demanding applications."
+  },
+  "disque-dur-hiksemi-ssd-sata-iii-2-5-1024-go-wave": {
+    "tagline": "The ideal upgrade to boost a laptop or desktop, with generous storage",
+    "description": "HIKSEMI Wave SATA III 2.5\" 1 TB SSD: the ideal upgrade to boost a laptop or desktop, with generous storage."
+  },
+  "disque-dur-hiksemi-ssd-sata-iii-2-5-2048-go-wave": {
+    "tagline": "Maximum capacity and SSD responsiveness to replace your mechanical drive for good",
+    "description": "HIKSEMI Wave SATA III 2.5\" 2 TB SSD: maximum capacity and SSD responsiveness to replace your mechanical drive for good."
+  },
+  "disque-dur-hiksemi-ssd-sata-iii-2-5-512-go-wave": {
+    "tagline": "Excellent capacity-to-price value to speed up any computer",
+    "description": "HIKSEMI Wave SATA III 2.5\" 512 GB SSD: excellent capacity-to-price value to speed up any computer."
+  },
+  "disque-dur-hiksemi-ssd-sata-iii-2-5-256-go-wave": {
+    "tagline": "The most economical way to switch to SSD and transform your machine's performance",
+    "description": "HIKSEMI Wave SATA III 2.5\" 256 GB SSD: the most economical way to switch to SSD and transform your machine's performance."
+  },
+  "carte-mere-asus-prime-b550m-a": {
+    "tagline": "PCIe 4.0, M.2 NVMe, and ASUS reliability for a balanced, upgradable build",
+    "description": "ASUS Prime B550M-A micro-ATX motherboard for AMD Ryzen (AM4): PCIe 4.0, M.2 NVMe, and ASUS reliability for a balanced, upgradable build."
+  },
+  "carte-mere-asus-prime-a620m-k": {
+    "tagline": "DDR5, M.2 NVMe, and the essentials of the new AMD platform at an accessible price",
+    "description": "ASUS Prime A620M-K micro-ATX motherboard for AMD Ryzen 7000/8000 (AM5): DDR5, M.2 NVMe, and the essentials of the new AMD platform at an accessible price."
+  },
+  "carte-mere-asus-prime-b450m-a-ii": {
+    "tagline": "A safe bet for building a reliable, economical Ryzen configuration",
+    "description": "ASUS Prime B450M-A II micro-ATX motherboard (AM4): a safe bet for building a reliable, economical Ryzen configuration."
+  },
+  "carte-mere-asus-prime-b650m-k": {
+    "tagline": "DDR5, PCIe 4.0, and Ryzen 7000/8000/9000 compatibility for a modern, lasting platform",
+    "description": "ASUS Prime B650M-K motherboard (AM5): DDR5, PCIe 4.0, and Ryzen 7000/8000/9000 compatibility for a modern, lasting platform."
+  },
+  "carte-mere-asus-prime-b760m-k": {
+    "tagline": "Stability, fast M.2, and the ideal foundation for an entry-level office or gaming PC",
+    "description": "ASUS Prime B760M-K micro-ATX motherboard for Intel 12th/13th/14th gen: stability, fast M.2, and the ideal foundation for an entry-level office or gaming PC."
+  },
+  "carte-mere-asus-prime-gaming-z790-p": {
+    "tagline": "Overclocking, PCIe 5.0, and reinforced power delivery for high-performance builds",
+    "description": "ASUS Prime Z790-P ATX motherboard for unlocked Intel Core: overclocking, PCIe 5.0, and reinforced power delivery for high-performance builds."
+  },
+  "carte-mere-asus-prime-z890-p": {
+    "tagline": "DDR5, PCIe 5.0, and a next-generation platform for a machine that stays fast",
+    "description": "ASUS Prime Z890-P ATX motherboard for Intel Core Ultra (LGA1851): DDR5, PCIe 5.0, and a next-generation platform for a machine that stays fast."
+  },
+  "carte-mere-asus-prime-z890-p-wifi": {
+    "tagline": "The complete Intel Core Ultra platform with built-in Wi-Fi, DDR5, and modern connectivity",
+    "description": "ASUS Prime Z890-P WiFi motherboard: the complete Intel Core Ultra platform with built-in Wi-Fi, DDR5, and modern connectivity."
+  },
+  "carte-mere-asus-tuf-gaming-z890-plus-wifi": {
+    "tagline": "Military-grade components, reinforced power delivery, and Wi-Fi 7 for a reliable, powerful Intel Core Ultra build",
+    "description": "ASUS TUF Gaming Z890-Plus WiFi motherboard: military-grade components, reinforced power delivery, and Wi-Fi 7 for a reliable, powerful Intel Core Ultra build."
+  },
+  "carte-mere-asus-tuf-gaming-z790-plus-wifi": {
+    "tagline": "Reinforced components, DDR5, PCIe 5.0, and Wi-Fi 6 for a solid, overclockable Intel platform",
+    "description": "ASUS TUF Gaming Z790-Plus WiFi motherboard: reinforced components, DDR5, PCIe 5.0, and Wi-Fi 6 for a solid, overclockable Intel platform."
+  },
+  "carte-mere-asus-tuf-gaming-a620m-plus-wifi": {
+    "tagline": "The entry into the Ryzen 7000+ ecosystem with TUF durability and built-in Wi-Fi",
+    "description": "ASUS TUF Gaming A620M-Plus WiFi motherboard (AM5): the entry into the Ryzen 7000+ ecosystem with TUF durability and built-in Wi-Fi."
+  },
+  "carte-mere-asus-prime-h510m-k": {
+    "tagline": "The reliable essentials for an economical Intel 10th/11th gen configuration",
+    "description": "ASUS Prime H510M-K micro-ATX motherboard (LGA1200): the reliable essentials for an economical Intel 10th/11th gen configuration."
+  },
+  "carte-mere-asus-rog-zenith-extreme-e-atx": {
+    "tagline": "The extreme platform for workstations and enthusiast builds",
+    "description": "ASUS ROG Zenith Extreme E-ATX motherboard for AMD Threadripper: the extreme platform for workstations and enthusiast builds."
+  },
+  "asus-tuf-z690-plus-d4": {
+    "tagline": "The rugged Intel 12th/13th gen platform with DDR4 memory for an economical upgrade",
+    "description": "ASUS TUF Gaming Z690-Plus D4 motherboard: the rugged Intel 12th/13th gen platform with DDR4 memory for an economical upgrade."
+  },
+  "carte-mere-asus-prime-h610m-k": {
+    "tagline": "The reliable, affordable base for an Intel 12th/13th gen PC",
+    "description": "ASUS Prime H610M-K micro-ATX motherboard (LGA1700): the reliable, affordable base for an Intel 12th/13th gen PC."
+  },
+  "carte-mere-asus-strix-b450-f-gaming-ii": {
+    "tagline": "ROG aesthetics, refined audio, and reliability for a Ryzen gaming build",
+    "description": "ASUS ROG Strix B450-F Gaming II ATX motherboard (AM4): ROG aesthetics, refined audio, and reliability for a Ryzen gaming build."
+  },
+  "carte-mere-asus-rog-strix-z590-f-gaming-wifi": {
+    "tagline": "Beefy power delivery, Wi-Fi 6, and the ROG look for unlocked Intel 10th/11th gen",
+    "description": "ASUS ROG Strix Z590-F Gaming WiFi motherboard (LGA1200): beefy power delivery, Wi-Fi 6, and the ROG look for unlocked Intel 10th/11th gen."
+  },
+  "carte-mere-asus-tuf-gaming-x570-plus": {
+    "tagline": "PCIe 4.0, military-grade components, and broad Ryzen compatibility for a lasting machine",
+    "description": "ASUS TUF Gaming X570-Plus motherboard (AM4): PCIe 4.0, military-grade components, and broad Ryzen compatibility for a lasting machine."
+  },
+  "carte-mere-asus-rog-strix-b550-f-gaming": {
+    "tagline": "The favourite of Ryzen builders — premium audio, solid VRMs, and ROG design",
+    "description": "ASUS ROG Strix B550-F Gaming motherboard (AM4): the favourite of Ryzen builders — premium audio, solid VRMs, and ROG design."
+  },
+  "carte-mere-asus-tuf-gaming-b450m-pro-ii": {
+    "tagline": "TUF-certified durability and the essentials of Ryzen gaming at a contained price",
+    "description": "ASUS TUF Gaming B450M-Pro II micro-ATX motherboard (AM4): TUF-certified durability and the essentials of Ryzen gaming at a contained price."
+  },
+  "carte-mere-asus-prime-b450m-k-ii": {
+    "tagline": "The economical, proven base for a sensible Ryzen build",
+    "description": "ASUS Prime B450M-K II micro-ATX motherboard (AM4): the economical, proven base for a sensible Ryzen build."
+  },
+  "carte-mere-asus-rog-strix-z490-a-gaming": {
+    "tagline": "A distinctive white/silver design and reinforced power delivery for Intel 10th gen",
+    "description": "ASUS ROG Strix Z490-A Gaming motherboard (LGA1200): a distinctive white/silver design and reinforced power delivery for Intel 10th gen."
+  },
+  "carte-mere-asus-tuf-b460m-plus-gaming": {
+    "tagline": "Military durability and gaming essentials for Intel 10th gen",
+    "description": "ASUS TUF Gaming B460M-Plus micro-ATX motherboard (LGA1200): military durability and gaming essentials for Intel 10th gen."
+  },
+  "carte-mere-asus-tuf-b460-plus-gaming": {
+    "tagline": "Full size, TUF-certified components, and everyday reliability",
+    "description": "ASUS TUF Gaming B460-Plus ATX motherboard (LGA1200): full size, TUF-certified components, and everyday reliability."
+  },
+  "carte-mere-asus-prime-b460m-k": {
+    "tagline": "The understated, reliable base for an economical Intel 10th gen PC",
+    "description": "ASUS Prime B460M-K micro-ATX motherboard (LGA1200): the understated, reliable base for an economical Intel 10th gen PC."
+  },
+  "carte-mere-asus-prime-h410m-k": {
+    "tagline": "The essential Intel entry-level for office configurations",
+    "description": "ASUS Prime H410M-K micro-ATX motherboard (LGA1200): the essential Intel entry-level for office configurations."
+  },
+  "carte-mere-asus-rog-strix-z490-f-gaming": {
+    "tagline": "Robust VRMs, SupremeFX audio, and ROG style for Intel overclocking",
+    "description": "ASUS ROG Strix Z490-F Gaming motherboard (LGA1200): robust VRMs, SupremeFX audio, and ROG style for Intel overclocking."
+  },
+  "carte-mere-asus-tuf-b550-plus-gaming": {
+    "tagline": "PCIe 4.0, military-grade components, and the safe bet for Ryzen gaming builds",
+    "description": "ASUS TUF Gaming B550-Plus ATX motherboard (AM4): PCIe 4.0, military-grade components, and the safe bet for Ryzen gaming builds."
+  },
+  "carte-mere-asus-prime-b550m-k": {
+    "tagline": "PCIe 4.0 and ASUS reliability in a compact format, for an efficient Ryzen build",
+    "description": "ASUS Prime B550M-K micro-ATX motherboard (AM4): PCIe 4.0 and ASUS reliability in a compact format, for an efficient Ryzen build."
+  },
+  "vga-asus-tuf-gaming-geforce-rtx-5080-16g-oc-edition": {
+    "tagline": "NVIDIA Blackwell architecture, DLSS 4, and an ultra-rugged build for uncompromising 4K gaming",
+    "description": "ASUS TUF Gaming GeForce RTX 5080 16 GB OC graphics card: NVIDIA Blackwell architecture, DLSS 4, and an ultra-rugged build for uncompromising 4K gaming."
+  },
+  "vga-asus-dual-geforce-rtx-3050-o6g": {
+    "tagline": "Accessible ray tracing and DLSS, in a compact, power-efficient format for Full HD gaming",
+    "description": "ASUS Dual GeForce RTX 3050 6 GB graphics card: accessible ray tracing and DLSS, in a compact, power-efficient format for Full HD gaming."
+  },
+  "vga-asus-dual-geforce-rtx-4060-ti": {
+    "tagline": "Excellent 1080p/1440p performance, DLSS 3, and remarkable energy efficiency",
+    "description": "ASUS Dual GeForce RTX 4060 Ti graphics card: excellent 1080p/1440p performance, DLSS 3, and remarkable energy efficiency."
+  },
+  "vga-asus-rog-strix-geforce-rtx-4090-o24g-gaming": {
+    "tagline": "The absolute peak of 4K gaming and content creation, with ROG's most refined cooling",
+    "description": "ASUS ROG Strix GeForce RTX 4090 24 GB OC graphics card: the absolute peak of 4K gaming and content creation, with ROG's most refined cooling."
+  },
+  "vga-asus-dual-geforce-rtx-3060-o12g-v2": {
+    "tagline": "The 1080p/1440p gaming benchmark with ray tracing and generous video memory",
+    "description": "ASUS Dual GeForce RTX 3060 12 GB graphics card: the 1080p/1440p gaming benchmark with ray tracing and generous video memory."
+  },
+  "vga-asus-dual-geforce-rtx-3050-o8g": {
+    "tagline": "The entry into the RTX world with DLSS, perfect for Full HD gaming",
+    "description": "ASUS Dual GeForce RTX 3050 8 GB graphics card: the entry into the RTX world with DLSS, perfect for Full HD gaming."
+  },
+  "vga-asus-phoenix-gtx1650-evo-oc-4gb-gddr6": {
+    "tagline": "Compact and requiring no extra power connector, ideal for turning an office PC into a light gaming machine",
+    "description": "ASUS Phoenix GTX 1650 EVO OC 4 GB GDDR6 graphics card: compact and requiring no extra power connector, ideal for turning an office PC into a light gaming machine."
+  },
+  "vga-asus-dual-gtx1660s-o6g-evo": {
+    "tagline": "A Full HD gaming classic — powerful, understated, and reliable",
+    "description": "ASUS Dual GTX 1660 Super EVO 6 GB graphics card: a Full HD gaming classic — powerful, understated, and reliable."
+  },
+  "vga-asus-rog-strix-rtx3060-o12g-gaming": {
+    "tagline": "1080p/1440p gaming with the premium cooling and lighting of the ROG range",
+    "description": "ASUS ROG Strix RTX 3060 12 GB OC graphics card: 1080p/1440p gaming with the premium cooling and lighting of the ROG range."
+  },
+  "vga-asus-tuf-rx-6900-xt-o16g-gaming": {
+    "tagline": "The AMD RDNA 2 high end for 4K gaming, with TUF ruggedness",
+    "description": "ASUS TUF Radeon RX 6900 XT 16 GB OC graphics card: the AMD RDNA 2 high end for 4K gaming, with TUF ruggedness."
+  },
+  "vga-asus-rog-strix-rtx3090-o24g-gaming": {
+    "tagline": "A powerhouse for 4K/8K gaming and the heaviest creative workloads",
+    "description": "ASUS ROG Strix RTX 3090 24 GB OC graphics card: a powerhouse for 4K/8K gaming and the heaviest creative workloads."
+  },
+  "vga-asus-tuf-rx-6800-xt-o16g-gaming": {
+    "tagline": "Excellent 4K performance and a military-grade build to last",
+    "description": "ASUS TUF Radeon RX 6800 XT 16 GB OC graphics card: excellent 4K performance and a military-grade build to last."
+  },
+  "vga-asus-rog-strix-rtx3080-o10g-white": {
+    "tagline": "High-flying 4K performance in an immaculate white finish for bright builds",
+    "description": "ASUS ROG Strix RTX 3080 10 GB OC white edition graphics card: high-flying 4K performance in an immaculate white finish for bright builds."
+  },
+  "vga-asus-rog-strix-rtx3080-o10g-v2-gaming": {
+    "tagline": "4K power with ROG's iconic triple-fan cooling",
+    "description": "ASUS ROG Strix RTX 3080 V2 10 GB OC graphics card: 4K power with ROG's iconic triple-fan cooling."
+  },
+  "vga-asus-tuf-rtx3080-o10g-v2-gaming": {
+    "tagline": "Serious 4K performance and an ultra-reliable military-grade build",
+    "description": "ASUS TUF RTX 3080 V2 10 GB OC graphics card: serious 4K performance and an ultra-reliable military-grade build."
+  },
+  "vga-asus-rog-strix-rtx3070-o8g-gaming": {
+    "tagline": "The perfect balance for high-refresh 1440p, with the premium ROG finish",
+    "description": "ASUS ROG Strix RTX 3070 8 GB OC graphics card: the perfect balance for high-refresh 1440p, with the premium ROG finish."
+  },
+  "vga-asus-tuf3-gtx1660-o6g-gaming": {
+    "tagline": "Reliable Full HD gaming with oversized cooling",
+    "description": "ASUS TUF GTX 1660 6 GB OC triple-fan graphics card: reliable Full HD gaming with oversized cooling."
+  },
+  "processeur-intel-core-i7-14700kf": {
+    "tagline": "Unleashed power for high-end gaming and creation, to pair with a dedicated graphics card",
+    "description": "Intel Core i7-14700KF processor (20 cores, up to 5.6 GHz): unleashed power for high-end gaming and creation, to pair with a dedicated graphics card."
+  },
+  "processeur-intel-i5-14600kf": {
+    "tagline": "The best performance-to-price ratio for an unlocked gaming machine with a dedicated graphics card",
+    "description": "Intel Core i5-14600KF processor (14 cores, up to 5.3 GHz): the best performance-to-price ratio for an unlocked gaming machine with a dedicated graphics card."
+  },
+  "processeur-intel-core-i5-14400f": {
+    "tagline": "Solid gaming and multitasking performance, the smart choice for balanced builds",
+    "description": "Intel Core i5-14400F processor (10 cores): solid gaming and multitasking performance, the smart choice for balanced builds."
+  },
+  "processeur-amd-ryzen-7-7700": {
+    "tagline": "Remarkable power and energy efficiency for gaming and creation, cooler included",
+    "description": "AMD Ryzen 7 7700 processor (8 cores, up to 5.3 GHz): remarkable power and energy efficiency for gaming and creation, cooler included."
+  },
+  "processeur-amd-ryzen-5-8500g": {
+    "tagline": "Build a complete PC without a dedicated graphics card, ideal for office work and light gaming",
+    "description": "AMD Ryzen 5 8500G processor with Radeon Graphics: build a complete PC without a dedicated graphics card, ideal for office work and light gaming."
+  },
+  "processeur-amd-ryzen-5-8600g": {
+    "tagline": "Its integrated Radeon 760M graphics let you play in Full HD without a graphics card — the champion of smart builds",
+    "description": "AMD Ryzen 5 8600G processor: its integrated Radeon 760M graphics let you play in Full HD without a graphics card — the champion of smart builds."
+  },
+  "processeur-amd-ryzen-7-8700g": {
+    "tagline": "AMD's most powerful integrated-graphics processor, with an AI NPU and Radeon 780M for gaming without a dedicated GPU",
+    "description": "AMD Ryzen 7 8700G processor: AMD's most powerful integrated-graphics processor, with an AI NPU and Radeon 780M for gaming without a dedicated GPU."
+  },
+  "alimentation-gamemax-rgb-smart-1300-white": {
+    "tagline": "Massive power for extreme multi-GPU builds, with RGB lighting and modular cabling",
+    "description": "GameMax RGB-Smart 1300W white power supply: massive power for extreme multi-GPU builds, with RGB lighting and modular cabling."
+  },
+  "alimentation-gamemax-rgb-smart-1300-bk": {
+    "tagline": "A colossal, stable power reserve to feed the most demanding machines",
+    "description": "GameMax RGB-Smart 1300W black power supply: a colossal, stable power reserve to feed the most demanding machines."
+  },
+  "alimentation-gamemax-rgb-1050-pro-white": {
+    "tagline": "High efficiency, an RGB fan, and reliability for high-end gaming builds",
+    "description": "GameMax RGB-1050 Pro 1050W white power supply: high efficiency, an RGB fan, and reliability for high-end gaming builds."
+  },
+  "alimentation-gamemax-rgb-1050-pro": {
+    "tagline": "Comfortable power for demanding graphics cards, with built-in RGB lighting",
+    "description": "GameMax RGB-1050 Pro 1050W power supply: comfortable power for demanding graphics cards, with built-in RGB lighting."
+  },
+  "alimentation-gamemax-ge-500": {
+    "tagline": "A reliable, economical solution for entry-level office and gaming configurations",
+    "description": "GameMax GE-500 500W power supply: a reliable, economical solution for entry-level office and gaming configurations."
+  },
+  "alimentation-asus-tuf-gaming-850w": {
+    "tagline": "High efficiency, military-grade capacitors, and quiet operation for serious gaming builds",
+    "description": "ASUS TUF Gaming 850W Gold power supply: high efficiency, military-grade capacitors, and quiet operation for serious gaming builds."
+  },
+  "alimentation-asus-tuf-gaming-1000w-gold": {
+    "tagline": "An 80+ Gold-certified power reserve to comfortably feed the most demanding GPUs",
+    "description": "ASUS TUF Gaming 1000W Gold power supply: an 80+ Gold-certified power reserve to comfortably feed the most demanding GPUs."
+  },
+  "alimentation-gamemax-ge-450": {
+    "tagline": "Reliable and economical, perfect for office and multimedia configurations",
+    "description": "GameMax GE-450 450W power supply: reliable and economical, perfect for office and multimedia configurations."
+  },
+  "alimentation-gamemax-vp-800-rgb-m": {
+    "tagline": "Comfortable power, modular cabling, and an illuminated fan for gaming builds",
+    "description": "GameMax VP-800 800W RGB modular power supply: comfortable power, modular cabling, and an illuminated fan for gaming builds."
+  },
+  "alimentation-gamemax-vp-600": {
+    "tagline": "The reliable, affordable unit for mid-range gaming builds",
+    "description": "GameMax VP-600 600W power supply: the reliable, affordable unit for mid-range gaming builds."
+  },
+  "alimentation-gamemax-ge-700": {
+    "tagline": "A healthy power margin for machines equipped with dedicated graphics cards",
+    "description": "GameMax GE-700 700W power supply: a healthy power margin for machines equipped with dedicated graphics cards."
+  },
+  "alimentation-gamemax-ge-600": {
+    "tagline": "Stability and good efficiency for sensible office and gaming configurations",
+    "description": "GameMax GE-600 600W power supply: stability and good efficiency for sensible office and gaming configurations."
+  },
+  "boitier-gamemax-n80-white": {
+    "tagline": "An airy front panel, a glass side panel, and generous space for watercooling, all in a bright, modern design",
+    "description": "GameMax N80 white case: an airy front panel, a glass side panel, and generous space for watercooling, all in a bright, modern design."
+  },
+  "boitier-gamemax-n80-black": {
+    "tagline": "A well-ventilated gaming chassis with a tempered-glass panel, ready to house the beefiest builds",
+    "description": "GameMax N80 black case: a well-ventilated gaming chassis with a tempered-glass panel, ready to house the beefiest builds."
+  },
+  "boitier-gamemax-infinity-plus-white": {
+    "tagline": "Large volume, extensive radiator compatibility, and a clean tempered-glass aesthetic to show off your components",
+    "description": "GameMax Infinity Plus white case: large volume, extensive radiator compatibility, and a clean tempered-glass aesthetic to show off your components."
+  },
+  "boitier-gamemax-infinity-plus-black": {
+    "tagline": "A spacious design and optimized airflow for building a powerful, well-cooled gaming machine",
+    "description": "GameMax Infinity Plus black case: a spacious design and optimized airflow for building a powerful, well-cooled gaming machine."
+  },
+  "boitier-gamemax-infinity-white": {
+    "tagline": "An elegant dual-glass-panel design that showcases your build's RGB lighting",
+    "description": "GameMax Infinity white case: an elegant dual-glass-panel design that showcases your build's RGB lighting."
+  },
+  "boitier-gamemax-infinity-black": {
+    "tagline": "An aggressive look, tempered glass, and excellent airflow for polished gaming setups",
+    "description": "GameMax Infinity black case: an aggressive look, tempered glass, and excellent airflow for polished gaming setups."
+  },
+  "boitier-gamemax-vista-mw": {
+    "tagline": "Pillarless tempered glass for a total showcase of your components and lighting",
+    "description": "GameMax Vista white panoramic case: pillarless tempered glass for a total showcase of your components and lighting."
+  },
+  "boitier-gamemax-vista-mb": {
+    "tagline": "Show off your build from every angle thanks to edge-to-edge glass panels",
+    "description": "GameMax Vista black panoramic case: show off your build from every angle thanks to edge-to-edge glass panels."
+  },
+  "boiter-gamemax-precision-2": {
+    "tagline": "A gaming chassis with a refined design, a glass panel, and good airflow, at an accessible price",
+    "description": "GameMax Precision 2 case: a gaming chassis with a refined design, a glass panel, and good airflow, at an accessible price."
+  },
+  "boitier-asus-prime-a21": {
+    "tagline": "Compact, understated, and well thought out, with BTF card support for a cable-free build",
+    "description": "ASUS Prime A21 micro-ATX case: compact, understated, and well thought out, with BTF card support for a cable-free build."
+  },
+  "boitier-gaming-gamemax-moonlight-frgb-bk": {
+    "tagline": "An RGB-lit front panel, a glass side panel, and included fans for a stylish gaming build right out of the box",
+    "description": "GameMax Moonlight FRGB black case: an RGB-lit front panel, a glass side panel, and included fans for a stylish gaming build right out of the box."
+  },
+  "boitier-gaming-gamemax-hype": {
+    "tagline": "A modern design, tempered glass, and generous airflow to showcase your gaming components",
+    "description": "GameMax Hype case: a modern design, tempered glass, and generous airflow to showcase your gaming components."
+  },
+  "boitier-gaming-gamemax-contac-coc": {
+    "tagline": "A well-equipped, affordable gaming chassis for building a clean, high-performance machine",
+    "description": "GameMax Contac COC case: a well-equipped, affordable gaming chassis for building a clean, high-performance machine."
+  },
+  "boitier-asus-rog-strix-helios-gx601": {
+    "tagline": "Brushed aluminium, triple tempered glass, and XXL space — the ultimate showcase for exceptional builds",
+    "description": "ASUS ROG Strix Helios GX601 premium case: brushed aluminium, triple tempered glass, and XXL space — the ultimate showcase for exceptional builds."
+  },
+  "boitier-asus-gt502-tuf-gaming": {
+    "tagline": "A dual-chamber design for a clean build and optimal cooling, with a panoramic view of your components",
+    "description": "ASUS TUF Gaming GT502 case: a dual-chamber design for a clean build and optimal cooling, with a panoramic view of your components."
+  },
+  "watercooling-asus-ryujin-iii-360": {
+    "tagline": "Extreme cooling, a built-in LCD screen, and optimized fans for the most powerful processors",
+    "description": "ASUS ROG Ryujin III 360 mm AIO watercooling kit: extreme cooling, a built-in LCD screen, and optimized fans for the most powerful processors."
+  },
+  "watercooling-asus-proart-lc-420": {
+    "tagline": "Quiet, massive cooling with an understated design, built for creative workstations",
+    "description": "ASUS ProArt LC 420 mm watercooling: quiet, massive cooling with an understated design, built for creative workstations."
+  },
+  "ventilateur-asus-tuf-gaming-tf120-argb": {
+    "tagline": "Powerful airflow, customizable lighting, and TUF durability for a high-performance, stylish case",
+    "description": "ASUS TUF Gaming TF120 120 mm ARGB fan: powerful airflow, customizable lighting, and TUF durability for a high-performance, stylish case."
+  },
+  "ventilateur-asus-tuf-gaming-tf120-argb-x3": {
+    "tagline": "Equip your whole case at once with synchronized lighting and optimal cooling",
+    "description": "Pack of three ASUS TUF Gaming TF120 ARGB fans with controller: equip your whole case at once with synchronized lighting and optimal cooling."
+  },
+  "ventilateur-gamemax-kf300r-wh": {
+    "tagline": "Cool your build while giving it style, at a tiny price",
+    "description": "GameMax KF300R white fan with RGB lighting: cool your build while giving it style, at a tiny price."
+  },
+  "ventilateur-gamemax-fn12a-s5-white": {
+    "tagline": "Quiet, illuminated, and efficient to optimize your case's airflow",
+    "description": "GameMax FN12A-S5 120 mm white ARGB fan: quiet, illuminated, and efficient to optimize your case's airflow."
+  },
+  "ventilateur-gamemax-fn12a-s5-black": {
+    "tagline": "Cooling performance and customizable lighting for all gaming builds",
+    "description": "GameMax FN12A-S5 120 mm black ARGB fan: cooling performance and customizable lighting for all gaming builds."
+  },
+  "ventilateur-gamemax-fn12a-s8i-white": {
+    "tagline": "A premium visual effect and sustained airflow for your gaming tower",
+    "description": "GameMax FN12A-S8I white fan with infinity ARGB lighting: a premium visual effect and sustained airflow for your gaming tower."
+  },
+  "ventilateur-gamemax-fn12a-s8i": {
+    "tagline": "A refined design, quiet operation, and reliable cooling to support your intensive sessions",
+    "description": "GameMax FN12A-S8I ARGB fan: a refined design, quiet operation, and reliable cooling to support your intensive sessions."
+  },
+  "watercooling-asus-ryujin-iii-360-kit": {
+    "tagline": "Premium liquid cooling with a customizable LCD screen, to tame the hottest processors",
+    "description": "ASUS ROG Ryujin III 360 watercooling kit: premium liquid cooling with a customizable LCD screen, to tame the hottest processors."
+  },
+  "ventilateur-gamemax-fn-12rainbow-c9-infinity": {
+    "tagline": "A spectacular infinity-mirror effect and efficient airflow to light up your case",
+    "description": "GameMax FN-12 Rainbow C9 Infinity fan: a spectacular infinity-mirror effect and efficient airflow to light up your case."
+  },
+  "ventilateur-gamemax-fn-12rainbow-m-rainbow-argb-fan": {
+    "tagline": "Addressable rainbow lighting and quiet operation at a low price",
+    "description": "GameMax FN-12 Rainbow M ARGB fan: addressable rainbow lighting and quiet operation at a low price."
+  },
+  "onduleur-unomat-ups-rackmount-3kva": {
+    "tagline": "Protect critical servers and network equipment from outages and surges, in a 19\" rack format",
+    "description": "Unomat 3 kVA rackmount UPS: protect critical servers and network equipment from outages and surges, in a 19\" rack format."
+  },
+  "onduleur-unomat-ups-rackmount-2kva": {
+    "tagline": "Reliable backup power for rack-mounted network infrastructure and servers",
+    "description": "Unomat 2 kVA rackmount UPS: reliable backup power for rack-mounted network infrastructure and servers."
+  },
+  "onduleur-unomat-ups-rackmount-1kva": {
+    "tagline": "Compact electrical protection for your essential rack equipment",
+    "description": "Unomat 1 kVA rackmount UPS: compact electrical protection for your essential rack equipment."
+  },
+  "onduleur-unomat-ups-2000va-4-sorties": {
+    "tagline": "Keep several workstations and devices running through power outages",
+    "description": "Unomat 2000 VA UPS with 4 outlets: keep several workstations and devices running through power outages."
+  },
+  "onduleur-unomat-ups-2000va-6-sorties": {
+    "tagline": "Large connection capacity to protect an entire complete workstation",
+    "description": "Unomat 2000 VA UPS with 6 outlets: large connection capacity to protect an entire complete workstation."
+  },
+  "onduleur-unomat-ups-1500va-4sorties": {
+    "tagline": "Comfortable runtime and voltage regulation for a PC, monitor, and peripherals",
+    "description": "Unomat 1500 VA UPS with 4 outlets: comfortable runtime and voltage regulation for a PC, monitor, and peripherals."
+  },
+  "onduleur-unomat-ups-1500va-4-sorties": {
+    "tagline": "Protect your equipment from outages and power-grid instability, with complete peace of mind",
+    "description": "Unomat 1500 VA UPS with 4 outlets: protect your equipment from outages and power-grid instability, with complete peace of mind."
+  },
+  "onduleur-unomat-ups-1200va": {
+    "tagline": "The time you need to save your work and shut down your equipment cleanly in the event of an outage",
+    "description": "Unomat 1200 VA UPS: the time you need to save your work and shut down your equipment cleanly in the event of an outage."
+  },
+  "onduleur-unomat-um-top-1050va": {
+    "tagline": "Reliable, affordable electrical protection for workstations and sensitive equipment",
+    "description": "Unomat UM TOP 1050 VA UPS: reliable, affordable electrical protection for workstations and sensitive equipment."
+  },
+  "onduleur-unomat-ups-1050va-2-sorties": {
+    "tagline": "The essentials of outage protection for a PC and its monitor",
+    "description": "Unomat 1050 VA UPS with 2 outlets: the essentials of outage protection for a PC and its monitor."
+  },
+  "onduleur-unomat-ups-1050va-4-sorties": {
+    "tagline": "Protect several devices at once against power fluctuations",
+    "description": "Unomat 1050 VA UPS with 4 outlets: protect several devices at once against power fluctuations."
+  },
+  "onduleur-unomat-ups-850va-4-sorties": {
+    "tagline": "Accessible protection against everyday micro-outages and surges",
+    "description": "Unomat 850 VA UPS with 4 outlets: accessible protection against everyday micro-outages and surges."
+  },
+  "onduleur-unomat-ups-um-top-650va": {
+    "tagline": "The ideal entry-level protection for an office workstation or network device",
+    "description": "Unomat UM TOP 650 VA UPS: the ideal entry-level protection for an office workstation or network device."
+  },
+  "onduleur-unomat-650va-4-sorties": {
+    "tagline": "Small format, tiny price, and peace of mind against power outages",
+    "description": "Unomat 650 VA UPS with 4 outlets: small format, tiny price, and peace of mind against power outages."
+  },
+  "onduleur-apc-e3sups30khb-30kva": {
+    "tagline": "Datacenter-grade electrical protection for critical infrastructure, with Schneider Electric reliability",
+    "description": "APC Easy UPS 3S 30 kVA three-phase UPS: datacenter-grade electrical protection for critical infrastructure, with Schneider Electric reliability."
+  },
+  "onduleur-apc-srv10ki-10000va": {
+    "tagline": "Pure double conversion for perfectly stable power to servers and critical equipment",
+    "description": "APC Easy UPS On-Line SRV 10 kVA: pure double conversion for perfectly stable power to servers and critical equipment."
+  },
+  "onduleur-apc-srv6ki-6000va": {
+    "tagline": "Professional double-conversion protection for demanding IT infrastructure",
+    "description": "APC Easy UPS On-Line SRV 6 kVA: professional double-conversion protection for demanding IT infrastructure."
+  },
+  "onduleur-apc-srv2ki-2000va-4-sorties": {
+    "tagline": "Clean, uninterrupted power for sensitive servers and network equipment",
+    "description": "APC Easy UPS On-Line SRV 2 kVA with 4 outlets: clean, uninterrupted power for sensitive servers and network equipment."
+  },
+  "onduleur-apc-srv1ki-1000va-3-sorties": {
+    "tagline": "APC's double-conversion technology in a compact format, for critical equipment",
+    "description": "APC Easy UPS On-Line SRV 1 kVA with 3 outlets: APC's double-conversion technology in a compact format, for critical equipment."
+  },
+  "onduleur-apc-srv10kri-10000va": {
+    "tagline": "High capacity and double conversion in a 19\" format for server rooms",
+    "description": "APC Easy UPS On-Line SRV 10 kVA rackmount: high capacity and double conversion in a 19\" format for server rooms."
+  },
+  "onduleur-apc-srv6kri-6000va": {
+    "tagline": "Professional rack-mounted protection for your network and server infrastructure",
+    "description": "APC Easy UPS On-Line SRV 6 kVA rackmount: professional rack-mounted protection for your network and server infrastructure."
+  },
+  "onduleur-apc-srv3kri-3000va-6-sorties": {
+    "tagline": "Double-conversion uninterruptible power for enterprise IT racks",
+    "description": "APC SRV 3 kVA rackmount with 6 outlets: double-conversion uninterruptible power for enterprise IT racks."
+  },
+  "onduleur-apc-srv2kri-2200va-4-sorties": {
+    "tagline": "Compact on-line protection for essential rack equipment",
+    "description": "APC SRV 2200 VA rackmount with 4 outlets: compact on-line protection for essential rack equipment."
+  },
+  "onduleur-apc-bvx2200li-2200va-6-sorties": {
+    "tagline": "Large-capacity protection against outages and surges, by APC",
+    "description": "APC Easy UPS BVX 2200 VA with 6 outlets: large-capacity protection against outages and surges, by APC."
+  },
+  "onduleur-apc-bvx1600li-1600va-4-sorties": {
+    "tagline": "Comfortable runtime and automatic voltage regulation for your workstations",
+    "description": "APC Easy UPS BVX 1600 VA with 4 outlets: comfortable runtime and automatic voltage regulation for your workstations."
+  },
+  "onduleur-apc-bvx1200li-1200va-6-sorties": {
+    "tagline": "Protect your whole office from electrical fluctuations with APC reliability",
+    "description": "APC Easy UPS BVX 1200 VA with 6 outlets: protect your whole office from electrical fluctuations with APC reliability."
+  },
+  "routeur-tcl-linkhub-hh62v": {
+    "tagline": "Connect the whole home to the Internet via SIM card, with no fixed line, fast Wi-Fi, and setup in minutes",
+    "description": "TCL LinkHub HH62V 4G LTE router: connect the whole home to the Internet via SIM card, with no fixed line, fast Wi-Fi, and setup in minutes."
+  },
+  "routeur-tcl-linkhub-hh40": {
+    "tagline": "A simple, affordable solution for sharing a mobile connection over Wi-Fi at home or the office",
+    "description": "TCL LinkHub HH40 4G router: a simple, affordable solution for sharing a mobile connection over Wi-Fi at home or the office."
+  },
+  "modem-tcl-linkzone-mw24v": {
+    "tagline": "Pocket Wi-Fi on battery to stay connected anywhere, on daily and business travel",
+    "description": "TCL LinkZone MW24V 4G mobile hotspot: pocket Wi-Fi on battery to stay connected anywhere, on daily and business travel."
+  },
+  "routeur-asus-rog-rapture-gt-ax6000": {
+    "tagline": "Ultra-fast Wi-Fi 6, dual 2.5G ports, and game-traffic prioritization for minimal latency",
+    "description": "ASUS ROG Rapture GT-AX6000 gaming router: ultra-fast Wi-Fi 6, dual 2.5G ports, and game-traffic prioritization for minimal latency."
+  },
+  "injector-tp-link-tl-poe150s": {
+    "tagline": "Power IP cameras and access points over the network cable, with no power outlet nearby",
+    "description": "TP-Link TL-PoE150S PoE injector: power IP cameras and access points over the network cable, with no power outlet nearby."
+  },
+  "switch-tp-link-tl-sg2428p": {
+    "tagline": "The ideal backbone for business networks with cameras and access points",
+    "description": "TP-Link JetStream TL-SG2428P managed switch, 28 Gigabit ports including 24 PoE+: the ideal backbone for business networks with cameras and access points."
+  },
+  "switch-tp-link-jetstream-tl-sg2210p-8-ports": {
+    "tagline": "Smart management, VLANs, and PoE power for small professional networks",
+    "description": "TP-Link JetStream TL-SG2210P managed switch, 8 Gigabit PoE+ ports: smart management, VLANs, and PoE power for small professional networks."
+  },
+  "convertisseur-tp-link-mc210cs": {
+    "tagline": "Link single-mode fibre optic and Gigabit copper networks to extend your network up to 15 km",
+    "description": "TP-Link MC210CS media converter: link single-mode fibre optic and Gigabit copper networks to extend your network up to 15 km."
+  },
+  "adaptateur-tp-link-archer-tg-3468": {
+    "tagline": "Add a fast, reliable Ethernet port to any desktop PC",
+    "description": "TP-Link TG-3468 Gigabit PCI Express network card: add a fast, reliable Ethernet port to any desktop PC."
+  },
+  "routeur-tp-link-archer-ax72-wifi-6-ax5400": {
+    "tagline": "Very high speeds, wide coverage, and smart device management for ultra-connected homes",
+    "description": "TP-Link Archer AX72 Wi-Fi 6 AX5400 router: very high speeds, wide coverage, and smart device management for ultra-connected homes."
+  },
+  "repeteur-tp-link-re705x-wifi-6-ax3000": {
+    "tagline": "Eliminate dead zones with a powerful, OneMesh-compatible signal for a unified network",
+    "description": "TP-Link RE705X Wi-Fi 6 AX3000 range extender: eliminate dead zones with a powerful, OneMesh-compatible signal for a unified network."
+  },
+  "repeteur-tp-link-re700x-wifi-6-ax3000": {
+    "tagline": "Extend your coverage with speeds worthy of the main router, everywhere in the house",
+    "description": "TP-Link RE700X Wi-Fi 6 AX3000 range extender: extend your coverage with speeds worthy of the main router, everywhere in the house."
+  },
+  "adaptateur-tp-link-archer-tx55e-wifi-6-ax3000": {
+    "tagline": "Equip your desktop PC with next-generation wireless and high-performance antennas",
+    "description": "TP-Link Archer TX55E Wi-Fi 6 + Bluetooth 5.2 PCIe card: equip your desktop PC with next-generation wireless and high-performance antennas."
+  },
+  "repeteur-tp-link-deco-x50-wifi-6-ax3000": {
+    "tagline": "A single, smooth, intelligent network that covers the whole house without drops",
+    "description": "TP-Link Deco X50 AX3000 Mesh Wi-Fi system: a single, smooth, intelligent network that covers the whole house without drops."
+  },
+  "routeur-tp-link-archer-ax53-wifi-6-ax3000": {
+    "tagline": "Fast dual-band, low latency, and massive simultaneous connections for the modern home",
+    "description": "TP-Link Archer AX53 Wi-Fi 6 AX3000 router: fast dual-band, low latency, and massive simultaneous connections for the modern home."
+  },
+  "repeteur-tp-link-deco-re605x-wifi-6-ax1800": {
+    "tagline": "Grow your Deco or OneMesh network with a stable, fast signal",
+    "description": "TP-Link RE605X Wi-Fi 6 AX1800 Mesh extender: grow your Deco or OneMesh network with a stable, fast signal."
+  },
+  "repeteur-tp-link-re600x-wifi-6-ax1800": {
+    "tagline": "Cover distant rooms with fast Wi-Fi and a built-in Gigabit port",
+    "description": "TP-Link RE600X Wi-Fi 6 AX1800 range extender: cover distant rooms with fast Wi-Fi and a built-in Gigabit port."
+  },
+  "repeteur-tp-link-deco-x20-ax1800-pack-1": {
+    "tagline": "The building block of a Mesh network that's simple to set up and expand as you need",
+    "description": "TP-Link Deco X20 Wi-Fi 6 AX1800 (1 unit): the building block of a Mesh network that's simple to set up and expand as you need."
+  },
+  "repeteur-tp-link-deco-x20-ax1800-pack-2": {
+    "tagline": "Cover a large home with a seamless Mesh network, with transparent roaming between units",
+    "description": "Pack of 2 TP-Link Deco X20 Wi-Fi 6 AX1800: cover a large home with a seamless Mesh network, with transparent roaming between units."
+  },
+  "adaptateur-tp-link-archer-tx20u-nano-wifi-6-ax1800": {
+    "tagline": "Bring any PC up to Wi-Fi 6 with a discreet dongle you'll forget is there",
+    "description": "TP-Link Archer TX20U Nano Wi-Fi 6 AX1800 USB adapter: bring any PC up to Wi-Fi 6 with a discreet dongle you'll forget is there."
+  },
+  "point-d-acces-tp-link-eap610-ax1800": {
+    "tagline": "Centralized Omada management and professional coverage for offices, shops, and hotels",
+    "description": "TP-Link EAP610 Wi-Fi 6 AX1800 ceiling access point: centralized Omada management and professional coverage for offices, shops, and hotels."
+  },
+  "repeteur-tp-link-re505x-ax1500": {
+    "tagline": "An efficient, affordable coverage extension, compatible with all routers",
+    "description": "TP-Link RE505X Wi-Fi 6 AX1500 range extender: an efficient, affordable coverage extension, compatible with all routers."
+  },
+  "repeteur-tp-link-deco-x10-ax1500-pack-1": {
+    "tagline": "Start or extend your Mesh network with an elegant, easy-to-configure unit",
+    "description": "TP-Link Deco X10 Wi-Fi 6 AX1500 (1 unit): start or extend your Mesh network with an elegant, easy-to-configure unit."
+  },
+  "repeteur-tp-link-deco-x10-ax1500": {
+    "tagline": "Unified Wi-Fi throughout the home, managed from an intuitive app",
+    "description": "TP-Link Deco X10 Wi-Fi 6 AX1500 Mesh system: unified Wi-Fi throughout the home, managed from an intuitive app."
+  },
+  "repeteur-tp-link-re205-ac750": {
+    "tagline": "The simplest, most economical way to extend your Wi-Fi into poorly covered areas",
+    "description": "TP-Link RE205 AC750 dual-band range extender: the simplest, most economical way to extend your Wi-Fi into poorly covered areas."
+  },
+  "point-d-acces-tp-link-eap245-ac1750": {
+    "tagline": "Professional dual-band Wi-Fi with Omada management, ideal for high user-density environments",
+    "description": "TP-Link EAP245 AC1750 access point: professional dual-band Wi-Fi with Omada management, ideal for high user-density environments."
+  },
+  "point-d-acces-tp-link-eap225-ac1350": {
+    "tagline": "Reliable coverage, a captive portal, and centralized administration for professional spaces",
+    "description": "TP-Link EAP225 AC1350 ceiling access point: reliable coverage, a captive portal, and centralized administration for professional spaces."
+  },
+  "switch-tp-link-tl-sg1008d-8-ports-10-100-1000-mbps": {
+    "tagline": "Connect your equipment on a fast wired network, with no configuration, effortlessly",
+    "description": "TP-Link TL-SG1008D 8-port Gigabit switch: connect your equipment on a fast wired network, with no configuration, effortlessly."
+  },
+  "switch-tp-link-tl-sf1008p-6-ports-10-100-mbps": {
+    "tagline": "Power IP cameras and phones directly over the network cable, at a low price",
+    "description": "TP-Link TL-SF1008P switch, 8 ports 10/100 including 4 PoE: power IP cameras and phones directly over the network cable, at a low price."
+  },
+  "switch-tp-link-tl-sf1006p-6-ports-10-100-mbps": {
+    "tagline": "The compact, economical solution for small video-surveillance installations",
+    "description": "TP-Link TL-SF1006P switch, 6 ports 10/100 including 4 PoE: the compact, economical solution for small video-surveillance installations."
+  },
+  "switch-tp-link-tl-sg1005d-5-ports-10-100-mbps": {
+    "tagline": "Extend your wired network instantly, silently, and with no configuration",
+    "description": "TP-Link TL-SG1005D 5-port Gigabit switch: extend your wired network instantly, silently, and with no configuration."
+  },
+  "switch-tp-link-tl-sf1005d-5-ports-10-100-mbps": {
+    "tagline": "The simplest, cheapest way to link several devices on a network",
+    "description": "TP-Link TL-SF1005D 5-port 10/100 switch: the simplest, cheapest way to link several devices on a network."
+  },
+  "repeteur-tp-link-cpe510": {
+    "tagline": "Create point-to-point wireless links up to 15 km to connect remote sites",
+    "description": "TP-Link CPE510 5 GHz outdoor antenna: create point-to-point wireless links up to 15 km to connect remote sites."
+  },
+  "adaptateur-tp-link-tl-wn881nd": {
+    "tagline": "Connect your desktop PC to Wi-Fi simply and at low cost",
+    "description": "TP-Link TL-WN881ND N300 Wi-Fi PCI Express card: connect your desktop PC to Wi-Fi simply and at low cost."
+  },
+  "point-d-acces-tp-link-eap115-n300-mbps": {
+    "tagline": "Entry-level professional Wi-Fi with PoE power and centralized management",
+    "description": "TP-Link EAP115 N300 ceiling access point: entry-level professional Wi-Fi with PoE power and centralized management."
+  },
+  "repeteur-tp-link-tl-wa855re-n300-mbps": {
+    "tagline": "Compact and discreet, it extends your Wi-Fi at the press of a button",
+    "description": "TP-Link TL-WA855RE N300 range extender: compact and discreet, it extends your Wi-Fi at the press of a button."
+  },
+  "repeteur-tp-link-tl-wa854re-n300-mbps": {
+    "tagline": "The ultra-simple way to gain a few extra rooms of Wi-Fi coverage",
+    "description": "TP-Link TL-WA854RE N300 range extender: the ultra-simple way to gain a few extra rooms of Wi-Fi coverage."
+  },
+  "adaptateur-tp-link-tl-wn823n-300-mbps": {
+    "tagline": "Add Wi-Fi to any computer with a dongle that fits in your palm",
+    "description": "TP-Link TL-WN823N 300 Mbps mini USB Wi-Fi adapter: add Wi-Fi to any computer with a dongle that fits in your palm."
+  },
+  "switch-tp-link-tl-sf1024d-24-ports-10-100-1000-mbps": {
+    "tagline": "The capacity to wire a whole office, in a rack format with no noisy fan",
+    "description": "TP-Link 24-port Gigabit switch: the capacity to wire a whole office, in a rack format with no noisy fan."
+  },
+  "switch-tp-link-tl-sf1024d-24-ports-10-100-mbps": {
+    "tagline": "Connect a large number of workstations at low cost, with complete reliability",
+    "description": "TP-Link TL-SF1024D 24-port 10/100 switch: connect a large number of workstations at low cost, with complete reliability."
+  },
+  "point-d-acces-tp-link-cpe210": {
+    "tagline": "Long-range wireless links up to 5 km, perfect for video surveillance and building interconnection",
+    "description": "TP-Link CPE210 2.4 GHz outdoor antenna: long-range wireless links up to 5 km, perfect for video surveillance and building interconnection."
+  },
+  "switch-tp-link-tl-sg1218mpe-18-ports": {
+    "tagline": "A generous PoE budget and simplified management for camera and access-point installations",
+    "description": "TP-Link TL-SG1218MPE switch, 18 Gigabit ports including 16 PoE+: a generous PoE budget and simplified management for camera and access-point installations."
+  },
+  "switch-tp-link-tl-sg1016d-16-ports-10-100-1000-mbps": {
+    "tagline": "Performance, silence, and reliability to structure an SMB's network",
+    "description": "TP-Link TL-SG1016D 16-port Gigabit switch: performance, silence, and reliability to structure an SMB's network."
+  },
+  "switch-tp-link-tl-sf1016d-16-ports-10-100-mbps": {
+    "tagline": "A simple, durable network solution to connect workstations and peripherals at a low price",
+    "description": "TP-Link TL-SF1016D 16-port 10/100 switch: a simple, durable network solution to connect workstations and peripherals at a low price."
+  },
+  "routeur-tp-link-archer-ax23-wifi-6-ax1800-bi-bande": {
+    "tagline": "The ideal gateway to Wi-Fi 6, with solid speeds and extended coverage",
+    "description": "TP-Link Archer AX23 Wi-Fi 6 AX1800 dual-band router: the ideal gateway to Wi-Fi 6, with solid speeds and extended coverage."
+  },
+  "repeteur-tp-link-wifi-6-re500x-ax1500": {
+    "tagline": "Extend your network with Wi-Fi 6 speeds and a Gigabit port for wired devices",
+    "description": "TP-Link RE500X Wi-Fi 6 AX1500 range extender: extend your network with Wi-Fi 6 speeds and a Gigabit port for wired devices."
+  },
+  "point-d-acces-tp-link-eap615": {
+    "tagline": "A discreet design, centralized Omada management, and modern speeds for hotels and offices",
+    "description": "TP-Link EAP615-Wall Wi-Fi 6 access point: a discreet design, centralized Omada management, and modern speeds for hotels and offices."
+  },
+  "adaptateur-wifi-epson-elpap11": {
+    "tagline": "Connect your Epson projector to the wireless network and project from any device",
+    "description": "Epson ELPAP11 Wi-Fi adapter: connect your Epson projector to the wireless network and project from any device."
+  },
+  "adaptateur-asus-wifi-ax1800-pci-e-dual-band": {
+    "tagline": "Give your desktop PC fast, stable wireless with built-in Bluetooth",
+    "description": "ASUS Wi-Fi 6 AX1800 dual-band PCIe card: give your desktop PC fast, stable wireless with built-in Bluetooth."
+  },
+  "adaptateur-asus-wifi-usb-ax56-dual-band": {
+    "tagline": "Move up to Wi-Fi 6 on any computer, simply by plugging it in",
+    "description": "ASUS AX56 Wi-Fi 6 dual-band USB adapter: move up to Wi-Fi 6 on any computer, simply by plugging it in."
+  },
+  "modem-router-mercusys-mw300d": {
+    "tagline": "The economical all-in-one solution to connect your ADSL line over Wi-Fi",
+    "description": "Mercusys MW300D ADSL2+ modem router with N300 Wi-Fi: the economical all-in-one solution to connect your ADSL line over Wi-Fi."
+  },
+  "modem-routeur-tp-link-archer-vr300": {
+    "tagline": "Compatible with FTTB fibre and ADSL, it connects the whole home in dual-band",
+    "description": "TP-Link Archer VR300 VDSL/ADSL Wi-Fi AC1200 modem router: compatible with FTTB fibre and ADSL, it connects the whole home in dual-band."
+  },
+  "switch-tp-link-tl-sf1009p": {
+    "tagline": "Power up to 8 cameras or access points over the network, ideal for video surveillance",
+    "description": "TP-Link TL-SF1009P switch, 9 ports including 8 PoE+: power up to 8 cameras or access points over the network, ideal for video surveillance."
+  },
+  "switch-tp-link-tl-sf1006p": {
+    "tagline": "Compact and affordable for small IP-camera installations",
+    "description": "TP-Link TL-SF1006P switch, 6 ports including 4 PoE+: compact and affordable for small IP-camera installations."
+  },
+  "modem-routeur-tp-link-archer-vr400": {
+    "tagline": "Connect your line in fast dual-band with built-in Gigabit and USB ports",
+    "description": "TP-Link Archer VR400 VDSL/ADSL Wi-Fi AC1200 modem router: connect your line in fast dual-band with built-in Gigabit and USB ports."
+  },
+  "switch-tp-link-tl-sg1016pe": {
+    "tagline": "Simplified management and a solid PoE budget for cameras and IP telephony",
+    "description": "TP-Link TL-SG1016PE switch, 16 Gigabit ports including 8 PoE+: simplified management and a solid PoE budget for cameras and IP telephony."
+  },
+  "switch-rackable-tp-link-tl-sg1048": {
+    "tagline": "Maximum capacity to wire an entire company, in a 19\" rack format",
+    "description": "TP-Link TL-SG1048 48-port Gigabit rackmount switch: maximum capacity to wire an entire company, in a 19\" rack format."
+  },
+  "souris-asus-p507-rog-gladius-ii": {
+    "tagline": "A high-precision sensor, swappable switches, and proven ergonomics to dominate in FPS and MOBA",
+    "description": "ASUS ROG Gladius II gaming mouse: a high-precision sensor, swappable switches, and proven ergonomics to dominate in FPS and MOBA."
+  },
+  "casque-asus-tuf-gaming-h3-gun-metal": {
+    "tagline": "7.1 surround sound, comfortable earcups, and a lightweight build for long gaming sessions",
+    "description": "ASUS TUF Gaming H3 gaming headset: 7.1 surround sound, comfortable earcups, and a lightweight build for long gaming sessions."
+  },
+  "casque-asus-tuf-gaming-h1-wireless": {
+    "tagline": "Total freedom over 2.4 GHz, deep sound, and generous battery life to play without constraint",
+    "description": "ASUS TUF Gaming H1 Wireless headset: total freedom over 2.4 GHz, deep sound, and generous battery life to play without constraint."
+  },
+  "tapis-de-souris-asus-rog-scabbard-ii-xxl": {
+    "tagline": "A splash-resistant treated surface covering the whole desk, for precise glide and a uniform setup",
+    "description": "ASUS ROG Scabbard II XXL mouse pad: a splash-resistant treated surface covering the whole desk, for precise glide and a uniform setup."
+  },
+  "clavier-gaming-asus-rog-strix-scope-ii-96-wireless": {
+    "tagline": "A compact 96% format, pre-lubed mechanical switches, and triple connectivity for performance and versatility",
+    "description": "ASUS ROG Strix Scope II 96 wireless gaming keyboard: a compact 96% format, pre-lubed mechanical switches, and triple connectivity for performance and versatility."
+  },
+  "clavier-asus-rog-azoth-noir": {
+    "tagline": "A gasket-mounted structure, a built-in OLED screen, and a customizable typing experience worthy of high-end custom builds",
+    "description": "ASUS ROG Azoth 75% mechanical keyboard: a gasket-mounted structure, a built-in OLED screen, and a customizable typing experience worthy of high-end custom builds."
+  },
+  "clavier-mecanique-asus-rog-falchion-ace-white": {
+    "tagline": "Ultra-compact, dual USB-C, and a touch panel — the perfect companion for minimalist setups",
+    "description": "ASUS ROG Falchion Ace white 65% mechanical keyboard: ultra-compact, dual USB-C, and a touch panel — the perfect companion for minimalist setups."
+  },
+  "casque-gamemax-hg3600": {
+    "tagline": "Immersive sound, a built-in mic, and LED lighting — the essential gaming gear at an accessible price",
+    "description": "GameMax HG3600 gaming headset: immersive sound, a built-in mic, and LED lighting — the essential gaming gear at an accessible price."
+  },
+  "combo-gaming-gamemax-mg7": {
+    "tagline": "A matching keyboard, mouse, headset, and pad with RGB lighting — the gamer's complete kit in a single purchase",
+    "description": "GameMax MG7 gaming combo: a matching keyboard, mouse, headset, and pad with RGB lighting — the gamer's complete kit in a single purchase."
+  },
+  "tapis-de-souris-gamemax-gmp-002": {
+    "tagline": "A surface optimized for precision and a non-slip base, at a tiny price",
+    "description": "GameMax GMP-002 gaming mouse pad: a surface optimized for precision and a non-slip base, at a tiny price."
+  },
+  "gamemax-tapis-souris-gmp-001": {
+    "tagline": "Smooth glide and stable grip to support all your sessions",
+    "description": "GameMax GMP-001 mouse pad: smooth glide and stable grip to support all your sessions."
+  },
+  "power-bank-d-tech-dp20h-20000mah": {
+    "tagline": "Several full smartphone charges and enough to power a tablet, so you never run out",
+    "description": "D-Tech DP20H 20,000 mAh power bank: several full smartphone charges and enough to power a tablet, so you never run out."
+  },
+  "power-bank-d-tech-dp10h-10000mah": {
+    "tagline": "Compact and light, it recharges your smartphone several times wherever you are",
+    "description": "D-Tech DP10H 10,000 mAh power bank: compact and light, it recharges your smartphone several times wherever you are."
+  },
+  "power-bank-d-tech-dpc65-40000-mah": {
+    "tagline": "Powerful enough to recharge a laptop, essential for professionals on the move",
+    "description": "D-Tech DPC65 40,000 mAh power bank with 65W fast charging: powerful enough to recharge a laptop, essential for professionals on the move."
+  },
+  "power-bank-d-tech-dp15-15000-mah": {
+    "tagline": "The ideal capacity between lightness and endurance, for several days without a power outlet",
+    "description": "D-Tech DP15 15,000 mAh power bank: the ideal capacity between lightness and endurance, for several days without a power outlet."
+  }
+}

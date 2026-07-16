@@ -1,0 +1,125 @@
+diff --git a/src/app/admin/products/page.tsx b/src/app/admin/products/page.tsx
+index db519ec..ffd648f 100644
+--- a/src/app/admin/products/page.tsx
++++ b/src/app/admin/products/page.tsx
+@@ -187,32 +187,50 @@ export default async function ProductsListPage({ searchParams }: PageProps) {
+       ? params.flag
+       : ''
+ 
+-  const [{ rows, total }, filterOptions, noPhotoRow, noFrRow] = await Promise.all([
+-    getProducts(state, tier, brandSlug, categorySlug, query, page, flag),
+-    getFilterOptions(),
+-    db
+-      .select({ n: count() })
+-      .from(products)
+-      .where(
+-        and(
+-          isNull(products.archivedAt),
+-          or(isNull(products.cardImagePath), eq(products.cardImagePath, ''))
+-        )
+-      ),
+-    db
+-      .select({ n: count() })
+-      .from(products)
+-      .where(
+-        and(
+-          isNull(products.archivedAt),
+-          or(isNull(products.nameFr), eq(products.nameFr, ''))
+-        )
+-      ),
+-  ])
++  // Resilient fetch: a transient DB/pool error degrades to an empty state
++  // instead of throwing a 500 for the whole admin page.
++  let rows: Awaited<ReturnType<typeof getProducts>>['rows'] = []
++  let total = 0
++  let filterOptions: Awaited<ReturnType<typeof getFilterOptions>> = {
++    brands: [],
++    categories: [],
++  }
++  let noPhotoCount = 0
++  let noFrCount = 0
++
++  try {
++    const [productsResult, opts, noPhotoRow, noFrRow] = await Promise.all([
++      getProducts(state, tier, brandSlug, categorySlug, query, page, flag),
++      getFilterOptions(),
++      db
++        .select({ n: count() })
++        .from(products)
++        .where(
++          and(
++            isNull(products.archivedAt),
++            or(isNull(products.cardImagePath), eq(products.cardImagePath, ''))
++          )
++        ),
++      db
++        .select({ n: count() })
++        .from(products)
++        .where(
++          and(
++            isNull(products.archivedAt),
++            or(isNull(products.nameFr), eq(products.nameFr, ''))
++          )
++        ),
++    ])
++    rows = productsResult.rows
++    total = productsResult.total
++    filterOptions = opts
++    noPhotoCount = noPhotoRow[0]?.n ?? 0
++    noFrCount = noFrRow[0]?.n ?? 0
++  } catch (err) {
++    console.error('[admin/products] data fetch failed:', err)
++  }
+ 
+   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+-  const noPhotoCount = noPhotoRow[0]?.n ?? 0
+-  const noFrCount = noFrRow[0]?.n ?? 0
+ 
+   const tierFilters: Array<{ value: TierFilter; label: string }> = [
+     { value: 'all', label: 'Toutes les mises en scène' },
+diff --git a/src/components/admin/products/ProductListRow.tsx b/src/components/admin/products/ProductListRow.tsx
+index 008a771..860f88e 100644
+--- a/src/components/admin/products/ProductListRow.tsx
++++ b/src/components/admin/products/ProductListRow.tsx
+@@ -1,6 +1,6 @@
+-import Image from 'next/image'
+ import Link from 'next/link'
+ import { Badge } from '@/components/admin/ui/Badge'
++import { SmartImage } from '@/components/ui/SmartImage'
+ import { TIER_STYLES, type Tier } from '@/components/admin/tierStyles'
+ import { RowActions } from './RowActions'
+ 
+@@ -24,7 +24,9 @@ export function ProductListRow({ product }: ProductListRowProps) {
+   const isArchived = product.archivedAt !== null
+   const hasFrTranslation =
+     product.nameFr !== null && product.nameFr.length > 0
+-  const tier = TIER_STYLES[product.tier as Tier]
++  // Fall back to a known tier style so an unexpected/blank tier value can never
++  // crash the row (TIER_STYLES[bad] would be undefined → .label throws).
++  const tier = TIER_STYLES[product.tier as Tier] ?? TIER_STYLES.longtail
+ 
+   return (
+     <li
+@@ -44,15 +46,13 @@ export function ProductListRow({ product }: ProductListRowProps) {
+       >
+         <div className="flex items-center gap-4">
+           <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded bg-white/[0.04]">
+-            {product.cardImagePath && (
+-              <Image
+-                src={product.cardImagePath}
+-                alt=""
+-                width={48}
+-                height={48}
+-                className="h-full w-full object-cover"
+-              />
+-            )}
++            <SmartImage
++              src={product.cardImagePath}
++              alt=""
++              width={48}
++              height={48}
++              className="h-full w-full object-cover"
++            />
+           </div>
+ 
+           <div className="min-w-0 flex-1">
