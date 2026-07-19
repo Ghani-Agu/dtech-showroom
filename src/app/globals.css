@@ -16,7 +16,7 @@
      v2's "quiet" value (slightly lighter, marginally more chroma). */
   --color-text-primary: oklch(0.97 0.005 80);
   --color-text-secondary: oklch(0.78 0.008 80);
-  --color-text-muted: oklch(0.58 0.010 80);
+  --color-text-muted: oklch(0.635 0.010 80); /* was 0.58 — ~4.0:1 on elevated; lifted to pass AA */
   --color-text-disabled: oklch(0.42 0.012 80);
 
   /* Product material tones (for 3D shading) — not in v2 spec; preserved. */
@@ -109,7 +109,7 @@
      the Hero v2 pass + component audit are run. */
   --color-text-warm-primary: oklch(0.97 0.005 80);
   --color-text-warm-secondary: oklch(0.78 0.008 80);
-  --color-text-warm-tertiary: oklch(0.58 0.010 80);
+  --color-text-warm-tertiary: oklch(0.635 0.010 80); /* was 0.58 — lifted to pass AA */
   --color-text-warm-quiet: oklch(0.42 0.012 80);
 
   /* v2 — the Dtech color. Brighter and more saturated than v1's
@@ -312,7 +312,7 @@ samp {
   --admin-overlay: rgba(5, 10, 8, 0.65);
   --admin-text-primary: #ffffff;
   --admin-text-secondary: #9db3ac;
-  --admin-text-tertiary: #69807a;
+  --admin-text-tertiary: #83988f; /* was #69807a (~4.4:1) — lifted for AA on glass */
   --admin-blur: blur(24px) saturate(180%);
   --admin-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -355,7 +355,7 @@ html[data-admin-theme='light'] .admin-shell {
   /* ── Text ───────────────────────────────────────────────────── */
   --admin-text-primary: #181410;     /* warm near-black */
   --admin-text-secondary: #4d4438;
-  --admin-text-tertiary: #847762;
+  --admin-text-tertiary: #6a6152; /* was #847762 (~4.4:1) — deepened for AA on cream */
 
   /* ── Vivid section accents ──────────────────────────────────── */
   --c-mint:    #0aa17a;
@@ -691,4 +691,66 @@ body[data-home-theme='light']:has(.home-showcase-root),
 body[data-home-theme='light'][data-home-chrome='showcase'] {
   background: #eef1f0;
   color-scheme: light;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI/UX PASS (2026-07) — light theme for the classic content pages.
+   about / legal / inquiry / newsletter / error / not-found style
+   themselves with the Tailwind --color-* tokens (dark-only). They
+   render inside .sr-root, so when the global light theme is on, flip
+   those tokens here. Scoped to .sr-root so admin (.admin-shell) and
+   the home/brand skins are untouched.
+   ═══════════════════════════════════════════════════════════════ */
+body[data-home-theme='light'] .sr-root {
+  --color-surface-void: #e6eae7;
+  --color-surface-base: #eef1f0;
+  --color-surface-base-plus: #f4f6f5;
+  --color-surface-elevated: #ffffff;
+  --color-surface-overlay: #ffffff;
+  --color-surface-overlay-plus: #ffffff;
+  --color-text-primary: #13211c;
+  --color-text-secondary: #35433d;
+  --color-text-muted: #566661;
+  --color-text-disabled: #8b938f;
+  --color-accent: #0a7057;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN responsive nav — the sidebar was a fixed 268px rail that
+   crushed content on tablets/phones. Below 1024px it becomes an
+   off-canvas drawer opened by a floating menu button (with scrim +
+   focus trap in AdminSidebar). Desktop is unchanged.
+   ═══════════════════════════════════════════════════════════════ */
+.admin-navfab, .admin-navclose, .admin-navscrim { display: none; }
+@media (max-width: 1023px) {
+  .admin-shell aside.glass-surface {
+    position: fixed; inset-block: 0; inset-inline-start: 0;
+    z-index: 60; width: 280px; max-width: 86vw;
+    transform: translateX(-100%);
+    transition: transform 0.28s var(--admin-ease, ease);
+  }
+  [dir='rtl'] .admin-shell aside.glass-surface { transform: translateX(100%); }
+  .admin-shell aside.glass-surface[data-open='true'] { transform: translateX(0); }
+  .admin-navfab {
+    display: inline-grid; place-items: center;
+    position: fixed; inset-inline-start: 16px; inset-block-end: 16px; z-index: 56;
+    width: 52px; height: 52px; border-radius: 999px;
+    background: var(--c-mint); color: var(--admin-on-accent);
+    border: 1px solid color-mix(in oklab, var(--c-mint) 60%, transparent);
+    box-shadow: 0 10px 26px -8px color-mix(in oklab, var(--c-mint) 55%, transparent);
+  }
+  .admin-navclose {
+    display: inline-grid; place-items: center;
+    position: absolute; inset-block-start: 14px; inset-inline-end: 14px; z-index: 2;
+    width: 40px; height: 40px; border-radius: 999px;
+    color: var(--admin-text-secondary); background: var(--admin-soft);
+    border: 1px solid var(--admin-glass-border);
+  }
+  .admin-navscrim[data-open='true'] {
+    display: block; position: fixed; inset: 0; z-index: 58;
+    background: var(--admin-overlay);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell aside.glass-surface { transition: none; }
 }

@@ -31,6 +31,7 @@ import { useCart, WHATSAPP_NUMBER } from '@/lib/cart'
 import { SpecsToggle } from '@/components/product/SpecsToggle'
 import { CartDrawer } from '@/components/showroom/CartDrawer'
 import { FloatingCart } from '@/components/showroom/FloatingCart'
+import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
 import { seededRating } from '@/lib/reviews'
 import { Stars } from '@/components/showroom/Stars'
 import { Carousel } from '@/components/showroom/Carousel'
@@ -211,6 +212,10 @@ function Counter({
         entries.forEach((e) => {
           if (e.isIntersecting && !started.current) {
             started.current = true
+            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+              setV(to)
+              return
+            }
             const start = performance.now()
             const dur = 1600
             const tick = (t: number) => {
@@ -255,13 +260,30 @@ function HeroSlider({
   config?: HeroConfig | null
 }) {
   const t = useTranslations('showcase.hero')
+  const locale = useLocale()
   const [idx, setIdx] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [reduced, setReduced] = useState(false)
   const real = slides.length > 0 ? slides : [{ src: '', alt: '' }]
   useEffect(() => {
-    if (real.length <= 1) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const on = () => setReduced(mq.matches)
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  // Auto-advance only when there are multiple slides, the visitor hasn't
+  // paused, and reduced-motion isn't requested (WCAG 2.2.2).
+  useEffect(() => {
+    if (real.length <= 1 || paused || reduced) return
     const id = setInterval(() => setIdx((v) => (v + 1) % real.length), 4500)
     return () => clearInterval(id)
-  }, [real.length])
+  }, [real.length, paused, reduced])
+  const slideLabel = (n: number) =>
+    locale === 'ar' ? `الشريحة ${n}` : locale === 'fr' ? `Diapositive ${n}` : `Slide ${n}`
+  const carouselLabel = locale === 'ar' ? 'لافتة' : locale === 'fr' ? 'Bannière' : 'Banner'
+  const pauseLabel = locale === 'ar' ? 'إيقاف مؤقت' : locale === 'fr' ? 'Mettre en pause' : 'Pause'
+  const playLabel = locale === 'ar' ? 'تشغيل' : locale === 'fr' ? 'Lecture' : 'Play'
 
   const title1 = config?.title1 ?? t('title1')
   const title2 = config?.title2 ?? t('title2')
@@ -323,7 +345,16 @@ function HeroSlider({
           </div>
         </div>
 
-        <div className="hero-slider" aria-roledescription="carousel">
+        <div
+          className="hero-slider"
+          role="group"
+          aria-roledescription="carousel"
+          aria-label={carouselLabel}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={() => setPaused(false)}
+        >
           {real.map((sl, i) => (
             <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
               {sl.src ? (
@@ -348,13 +379,27 @@ function HeroSlider({
           <div className="hero-slider-veil" />
           {real.length > 1 && (
             <div className="hero-slider-dots">
+              <button
+                type="button"
+                className="hero-slider-play"
+                aria-label={paused ? playLabel : pauseLabel}
+                aria-pressed={paused}
+                onClick={() => setPaused((p) => !p)}
+              >
+                {paused ? (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                ) : (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" /></svg>
+                )}
+              </button>
               {real.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   className={i === idx ? 'is-active' : ''}
                   onClick={() => setIdx(i)}
-                  aria-label={`Image ${i + 1}`}
+                  aria-label={slideLabel(i + 1)}
+                  aria-current={i === idx ? 'true' : undefined}
                 />
               ))}
             </div>
@@ -1542,6 +1587,7 @@ function Footer({ onSelectCat }: { onSelectCat: (c: string | 'all') => void }) {
                 </svg>
               </a>
             </div>
+            <FooterNewsletter source="footer-home" />
           </div>
           <FootCol
             title={t('cols.catalog.title')}

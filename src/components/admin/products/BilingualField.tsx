@@ -48,11 +48,12 @@ export function BilingualField({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="space-y-1">
           <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
-            English{' '}
-            {required && <span className="text-[var(--admin-cyan)]">(required)</span>}
+            Anglais{' '}
+            {required && <span className="text-[var(--admin-cyan)]">(requis)</span>}
           </p>
           {type === 'input' ? (
             <Input
+              aria-label={`${label} (anglais)`}
               value={enValue}
               onChange={(e) => onEnChange(e.target.value)}
               error={enError}
@@ -60,6 +61,7 @@ export function BilingualField({
             />
           ) : (
             <Textarea
+              aria-label={`${label} (anglais)`}
               value={enValue}
               onChange={(e) => onEnChange(e.target.value)}
               error={enError}
@@ -71,27 +73,29 @@ export function BilingualField({
 
         <div className="space-y-1">
           <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
-            FranÃ§ais <span className="text-[var(--admin-text-tertiary)]">(optional)</span>
+            Français <span className="text-[var(--admin-text-tertiary)]">(optionnel)</span>
           </p>
           {type === 'input' ? (
             <Input
+              aria-label={`${label} (français)`}
               value={frValue}
               onChange={(e) => onFrChange(e.target.value)}
               error={frError}
               placeholder={
                 enValue
-                  ? `(falls back to: ${enValue.slice(0, 40)}...)`
+                  ? `(par défaut : ${enValue.slice(0, 40)}…)`
                   : ''
               }
             />
           ) : (
             <Textarea
+              aria-label={`${label} (français)`}
               value={frValue}
               onChange={(e) => onFrChange(e.target.value)}
               error={frError}
               rows={rows}
               placeholder={
-                enValue ? '(falls back to English when empty)' : ''
+                enValue ? "(par défaut : l'anglais si vide)" : ''
               }
             />
           )}

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { auth } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth-helpers'
+import { getBrevoSettingsView } from '@/server/admin-settings-actions'
 import { SettingsTabs } from '@/components/admin/settings/SettingsTabs'
 
 export const metadata: Metadata = {
@@ -10,13 +10,13 @@ export const metadata: Metadata = {
 }
 
 export default async function AdminSettingsPage() {
-  const session = await auth.api
-    .getSession({ headers: await headers() })
-    .catch(() => null)
+  const sessionUser = await getSessionUser()
 
-  if (!session) {
+  if (!sessionUser) {
     redirect('/login?redirect=/admin/settings')
   }
+
+  const brevo = await getBrevoSettingsView()
 
   return (
     <div className="space-y-8">
@@ -42,8 +42,10 @@ export default async function AdminSettingsPage() {
       </header>
 
       <SettingsTabs
-        initialName={session.user.name ?? ''}
-        email={session.user.email}
+        initialName={sessionUser.name ?? ''}
+        email={sessionUser.email}
+        isAdmin={sessionUser.role === 'admin'}
+        brevo={brevo}
       />
     </div>
   )

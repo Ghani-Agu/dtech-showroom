@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { bustDataCache } from '@/lib/data-cache'
 import { count, eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { brands, products } from '@/db/schema'
@@ -53,6 +54,7 @@ export async function createBrand(values: BrandFormValues) {
     .values(normalize(parsed.data))
     .returning({ id: brands.id })
 
+  bustDataCache()
   revalidatePath('/admin/brands')
   revalidatePath('/brands')
   revalidatePath('/')
@@ -97,6 +99,7 @@ export async function updateBrand(
     .set({ ...normalize(parsed.data), updatedAt: new Date() })
     .where(eq(brands.id, brandId))
 
+  bustDataCache()
   revalidatePath('/admin/brands')
   revalidatePath(`/admin/brands/${brandId}/edit`)
   revalidatePath(`/brands/${parsed.data.slug}`)
@@ -114,6 +117,7 @@ export async function archiveBrand(brandId: string) {
     .set({ archivedAt: new Date() })
     .where(eq(brands.id, brandId))
 
+  bustDataCache()
   revalidatePath('/admin/brands')
   revalidatePath('/brands')
 
@@ -128,6 +132,7 @@ export async function restoreBrand(brandId: string) {
     .set({ archivedAt: null })
     .where(eq(brands.id, brandId))
 
+  bustDataCache()
   revalidatePath('/admin/brands')
   revalidatePath('/brands')
 
@@ -156,6 +161,7 @@ export async function deleteBrandPermanently(brandId: string) {
 
   await db.delete(brands).where(eq(brands.id, brandId))
 
+  bustDataCache()
   revalidatePath('/admin/brands')
   revalidatePath('/brands')
   revalidatePath('/')

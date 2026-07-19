@@ -45,8 +45,12 @@ export function Stars({
   tone?: StarTone
 }) {
   return (
-    <span className="sr-stars">
-      <span className="s">
+    <span
+      className="sr-stars"
+      role="img"
+      aria-label={`${value.toFixed(1)} / 5${count !== undefined ? ` · ${count}` : ''}`}
+    >
+      <span className="s" aria-hidden="true">
         {[1, 2, 3, 4, 5].map((i) => (
           <Star key={i} size={size} fill={value - i + 1} tone={tone} />
         ))}

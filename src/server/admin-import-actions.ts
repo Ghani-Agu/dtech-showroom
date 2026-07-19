@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { bustDataCache } from '@/lib/data-cache'
 import { inArray } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { brands, categories, products } from '@/db/schema'
@@ -170,6 +171,7 @@ export async function bulkInsertProducts(
       }
     })
 
+    bustDataCache()
     revalidatePath('/admin/products')
     revalidatePath('/admin')
     revalidatePath('/')

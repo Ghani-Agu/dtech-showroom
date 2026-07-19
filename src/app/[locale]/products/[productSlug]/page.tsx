@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { imgOr } from '@/lib/img'
+import { sanitizeCustomHtml } from '@/lib/custom-html'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StickyBuyBar } from '@/components/product/StickyBuyBar'
 import { notFound } from 'next/navigation'
@@ -65,6 +66,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             catSlug: product.category.slug,
             tagline: product.tagline ?? '',
             description: product.description ?? '',
+            customHtml: product.customHtml
+              ? sanitizeCustomHtml(product.customHtml)
+              : '',
             image: imgOr(product.cardImagePath),
             specs: product.specs,
             images: (product.photoCarouselPaths ?? []).map(imgOr),
@@ -175,6 +179,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             ))}
           </div>
+
+          {product.customHtml ? (
+            <div
+              className="sr-customhtml"
+              dangerouslySetInnerHTML={{
+                __html: sanitizeCustomHtml(product.customHtml),
+              }}
+            />
+          ) : null}
 
           <Link
             href={`/inquiry/${product.slug}`}

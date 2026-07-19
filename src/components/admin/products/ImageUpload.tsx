@@ -76,7 +76,7 @@ export function ImageUpload({
 
   function handleDelete() {
     if (!value) return
-    if (!confirm(`Delete the ${variant} image?`)) return
+    if (!confirm(`Supprimer l'image ${variant} ?`)) return
 
     startDelete(async () => {
       const result = await deleteEntityImage(value)
@@ -171,10 +171,19 @@ export function ImageUpload({
         </div>
       ) : (
         <div
+          role="button"
+          tabIndex={isPending ? -1 : 0}
+          aria-label={label}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => !isPending && inputRef.current?.click()}
+          onKeyDown={(e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && !isPending) {
+              e.preventDefault()
+              inputRef.current?.click()
+            }
+          }}
           className={cn(
             'relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed transition-colors',
             variant === 'hero'
@@ -195,7 +204,7 @@ export function ImageUpload({
                 Optimisation de la photo…
               </p>
               <p className="font-mono text-xs text-[var(--admin-text-tertiary)]">
-                Generating WebP + AVIF variants
+                Génération des variantes WebP + AVIF
               </p>
             </>
           ) : (
@@ -207,13 +216,13 @@ export function ImageUpload({
                 </p>
                 <p className="mt-1 font-mono text-xs text-[var(--admin-text-tertiary)]">
                   {variant === 'hero'
-                    ? '2400Ã—1350'
+                    ? '2400×1350'
                     : variant === 'card'
-                      ? '800Ã—600'
+                      ? '800×600'
                       : variant === 'logo'
-                        ? '600Ã—600'
-                        : '1600Ã—1200'}{' '}
-                  Â· WebP + AVIF
+                        ? '600×600'
+                        : '1600×1200'}{' '}
+                  · WebP + AVIF
                 </p>
               </div>
             </>

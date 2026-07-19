@@ -14,7 +14,33 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import * as schema from '@/db/schema'
 import { users } from '@/db/schema'
-import { resend, getFromHeader } from './email'
+import { sendEmail } from './mailer'
+
+/** Every origin logins are allowed from. Multiple entries so the same
+ *  deployment accepts logins from the canonical domain, the vercel.app
+ *  URL and local dev — logging in "from many devices" previously broke
+ *  whenever a device reached the site through an origin that wasn't the
+ *  single configured BETTER_AUTH_URL (403 INVALID_ORIGIN). */
+function getTrustedOrigins(): string[] {
+  const origins = new Set<string>()
+  for (const raw of [
+    process.env.BETTER_AUTH_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+    'https://dtech-showroom.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3100',
+  ]) {
+    const v = (raw ?? '').trim().replace(/\/+$/, '')
+    if (v) origins.add(v)
+  }
+  // Extra origins (e.g. a future custom domain) without a code change:
+  // AUTH_TRUSTED_ORIGINS=https://dtech.dz,https://www.dtech.dz
+  for (const extra of (process.env.AUTH_TRUSTED_ORIGINS ?? '').split(',')) {
+    const v = extra.trim().replace(/\/+$/, '')
+    if (v) origins.add(v)
+  }
+  return [...origins]
+}
 
 function getAdminEmails(): string[] {
   const raw = process.env.ADMIN_EMAILS ?? ''
@@ -42,16 +68,10 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     autoSignIn: true,
     sendResetPassword: async ({ user, url }) => {
-      if (!resend) {
-        console.error(
-          '[auth] Cannot send reset email — Resend not configured. Reset URL:',
-          url
-        )
-        return
-      }
-
-      await resend.emails.send({
-        from: getFromHeader(),
+      // Goes through the central mailer: Brevo when configured, else
+      // Resend, else the dev stub (logged + written to .next/dev-mail).
+      await sendEmail({
+        tag: 'password-reset',
         to: user.email,
         subject: 'Reset your Dtech admin password',
         html: `
@@ -81,6 +101,17 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
+    /**
+     * Short-lived signed cookie mirror of the session. getSession() calls
+     * within this window read the cookie instead of querying the sessions
+     * table — cutting a DB round-trip from every admin page render and
+     * server action. Role/permission checks still hit the users table
+     * fresh (see auth-helpers.getSessionUser).
+     */
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5, // 5 minutes
+    },
   },
 
   socialProviders: {
@@ -121,7 +152,7 @@ export const auth = betterAuth({
     },
   },
 
-  trustedOrigins: [process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'],
+  trustedOrigins: getTrustedOrigins(),
 
   secret:
     process.env.BETTER_AUTH_SECRET ?? 'dev-only-secret-change-in-production',

@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { bustDataCache } from '@/lib/data-cache'
 import { headers } from 'next/headers'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
@@ -47,6 +48,7 @@ async function requireSession(): Promise<boolean> {
 
 /** Flush cached routes after a publish/unpublish (pages are force-dynamic). */
 function flush() {
+  bustDataCache()
   revalidatePath('/', 'layout')
 }
 

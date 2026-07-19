@@ -126,7 +126,7 @@ export function ReviewsSection({ slug }: { slug: string }) {
               {t('submit')}
             </button>
             {thanks ? (
-              <p className="sr-mono" style={{ color: 'var(--sr-cyan)', textTransform: 'none', letterSpacing: '0.02em' }}>
+              <p className="sr-mono" role="status" style={{ color: 'var(--sr-ice)', textTransform: 'none', letterSpacing: '0.02em' }}>
                 {t('thanks')}
               </p>
             ) : null}
@@ -146,7 +146,7 @@ export function ReviewsSection({ slug }: { slug: string }) {
                     <div className="nm">
                       {r.author}
                       {r.mine ? (
-                        <span className="sr-mono" style={{ color: 'var(--sr-cyan)', marginInlineStart: 8 }}>
+                        <span className="sr-mono" style={{ color: 'var(--sr-ice)', marginInlineStart: 8 }}>
                           · {t('mine')}
                         </span>
                       ) : null}

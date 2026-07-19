@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { eq } from 'drizzle-orm'
+import { cachedData } from '@/lib/data-cache'
 import { db } from '@/db/client'
 import { sitePages, type SitePageRow } from '@/db/schema'
 import {
@@ -37,11 +38,23 @@ export async function getSitePageRow(
   }
 }
 
+/**
+ * Cached row read for VISITOR-facing lookups (published design, theme, hero,
+ * published docs). The editor keeps using getSitePageRow directly so drafts
+ * are always fresh. Admin publish/save actions call bustDataCache().
+ * `cacheEmpty` because "no row yet" is a legit steady state for most keys.
+ */
+function getSitePageRowCached(key: string): Promise<SitePageRow | null> {
+  return cachedData(`sitePage:${key}`, () => getSitePageRow(key), {
+    cacheEmpty: true,
+  })
+}
+
 /** The published document a given page key should render, or null. */
 export async function getPublishedPage(
   key: string
 ): Promise<Record<string, unknown> | null> {
-  const row = await getSitePageRow(key)
+  const row = await getSitePageRowCached(key)
   const published = row?.published
   if (published && typeof published === 'object') {
     return published as Record<string, unknown>
@@ -59,7 +72,7 @@ export async function getPublishedHome(): Promise<Record<
 
 /** The list of custom pages from the manifest row. */
 export async function getCustomPages(): Promise<CustomPageMeta[]> {
-  const row = await getSitePageRow(MANIFEST_KEY)
+  const row = await getSitePageRowCached(MANIFEST_KEY)
   const data = row?.draft as { pages?: CustomPageMeta[] } | null
   return Array.isArray(data?.pages) ? (data.pages as CustomPageMeta[]) : []
 }
@@ -99,7 +112,7 @@ const HERO_KEY = 'home-hero'
 
 /** Published homepage hero config, or null (homepage uses default slider). */
 export async function getHomeHero(): Promise<HeroConfig | null> {
-  const row = await getSitePageRow(HERO_KEY)
+  const row = await getSitePageRowCached(HERO_KEY)
   if (!row?.published) return null
   return sanitizeHeroConfig(row.published)
 }
@@ -140,7 +153,7 @@ function coerceContent(src: unknown): EditData {
 
 /** Inline content published for a real page (live site reads this). */
 export async function getPublishedContent(pageKey: string): Promise<EditData> {
-  const row = await getSitePageRow(`content:${pageKey}`)
+  const row = await getSitePageRowCached(`content:${pageKey}`)
   return coerceContent(row?.published)
 }
 
@@ -151,7 +164,7 @@ export async function getPublishedContent(pageKey: string): Promise<EditData> {
  */
 export async function getSiteTheme(): Promise<string> {
   try {
-    const row = await getSitePageRow('content:home')
+    const row = await getSitePageRowCached('content:home')
     const t = coerceContent(row?.published).theme
     return t && typeof t === 'string' ? t : 'nightline'
   } catch {
@@ -166,7 +179,7 @@ export async function getSiteTheme(): Promise<string> {
  */
 export const getPublishedDesign = cache(async (): Promise<DesignId> => {
   try {
-    const row = await getSitePageRow(DESIGN_KEY)
+    const row = await getSitePageRowCached(DESIGN_KEY)
     return coerceDesign(row?.published)
   } catch {
     return coerceDesign(undefined)

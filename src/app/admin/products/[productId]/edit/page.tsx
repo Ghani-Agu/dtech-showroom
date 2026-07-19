@@ -109,6 +109,7 @@ export default async function EditProductPage({ params }: PageProps) {
           photoCarouselPaths: product.photoCarouselPaths ?? [],
           seoTitle: product.seoTitle ?? '',
           seoDescription: product.seoDescription ?? '',
+          customHtml: product.customHtml ?? '',
         }}
         isArchived={product.archivedAt !== null}
         brands={brandList}

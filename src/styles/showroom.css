@@ -702,3 +702,186 @@ body[data-home-theme='light'] .sr-root .sr-wamini:hover { background: #1da851; c
 .pg-main { background: #ffffff; }
 .pg-main > img { object-fit: contain !important; padding: 14px; }
 .pg-thumb img { object-fit: contain !important; padding: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   UI/UX PASS (2026-07) — RTL, accessibility, motion, touch, contrast.
+   Appended last so it overrides earlier rules where needed. Scoped
+   to .sr-root / .sr-* / [dir='rtl'] so it never bleeds into admin.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* RTL — carousel & chip-row arrow GLYPHS mirror (the button positions
+   already flip via inset-inline). Carousel.tsx renders each chevron with
+   `transform: var(--sr-flip, none)`, so defining the var in RTL flips it. */
+[dir='rtl'] .sr-arrow { --sr-flip: scaleX(-1); }
+
+/* RTL — pagination prev/next chevrons mirror. */
+[dir='rtl'] .sr-pages svg { transform: scaleX(-1); }
+
+/* Motion — honour prefers-reduced-motion across the whole classic skin,
+   not just the .sr-in entrance. Neutralises entrance/slide/fade/float and
+   hover transforms; keeps content fully visible. */
+@media (prefers-reduced-motion: reduce) {
+  .sr-root *, .sr-root *::before, .sr-root *::after,
+  .sr-mobile-menu, .sr-mobile-menu *,
+  .sr-drawer, .sr-overlay, .sr-toast, .sr-fab, .sr-buybar {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sr-card, .sr-card:hover { transform: none !important; }
+  .sr-card:hover .imgbox img { transform: none !important; }
+}
+
+/* Touch — meet the ~44px minimum target on coarse pointers (phones/
+   tablets) without enlarging the desktop layout. */
+@media (pointer: coarse) {
+  .sr-icn { width: 44px; height: 44px; }
+  .sr-arrow { width: 40px; height: 40px; }
+  .sr-carousel .sr-arrow { width: 44px; height: 44px; }
+  .sr-page { min-width: 44px; height: 44px; }
+  .sr-qty button { width: 36px; height: 36px; }
+  .sr-cart-remove { width: 40px; height: 40px; }
+  .sr-lang button { padding: 8px 7px; }
+  .sr-starpick button { padding: 6px; }
+}
+
+/* Focus — a clear keyboard ring on every interactive control (several
+   relied only on the faint UA outline over the dark accent surfaces). */
+.sr-root :is(.sr-chip, .sr-page, .sr-arrow, .sr-cartbtn, .sr-wamini, .sr-icn, .sr-btn, .sr-starpick button, .sr-qty button):focus-visible,
+.sr-drawer a:focus-visible, .sr-mobile-menu a:focus-visible {
+  outline: 2px solid var(--sr-cyan);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Contrast — the mint accent (#0e9b78 in light mode) fails 4.5:1 as
+   small text; use a darker mint for text-sized labels. */
+body[data-home-theme='light'] .sr-root .sr-cartbtn { color: #0a6a50; }
+body[data-home-theme='light'] .sr-root .sr-cartbtn:hover,
+body[data-home-theme='light'] .sr-root .sr-cartbtn.added { color: #ffffff; }
+body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
+
+/* RTL — cart-count bubble was pinned with a physical `right`. */
+.sr-icn .count { inset-inline-end: -5px; right: auto; }
+
+/* The floating cart bubble must never overlap the sticky buy bar (both
+   mount on product pages once scrolled); hide it while the bar shows. */
+.sr-root:has(.sr-buybar) .sr-fab { display: none; }
+
+/* ═══════════ ROUND 8 — PRODUCT CUSTOM HTML BLOCK ═══════════
+   Admin-authored HTML rendered under the product description (both skins —
+   brand overrides inherit through the --sr-* token mapping). */
+.sr-customhtml {
+  border-top: 1px solid var(--sr-line);
+  padding-top: 18px;
+  color: var(--sr-sub);
+  font-size: 15.5px;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+.sr-customhtml h2, .sr-customhtml h3, .sr-customhtml h4 {
+  color: var(--sr-text);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin: 18px 0 8px;
+}
+.sr-customhtml h2 { font-size: 22px; }
+.sr-customhtml h3 { font-size: 18px; }
+.sr-customhtml h4 { font-size: 16px; }
+.sr-customhtml p { margin: 0 0 10px; }
+.sr-customhtml ul, .sr-customhtml ol { margin: 0 0 12px; padding-inline-start: 20px; }
+.sr-customhtml li { margin-bottom: 4px; }
+.sr-customhtml a { color: var(--sr-cyan); text-underline-offset: 3px; }
+.sr-customhtml img, .sr-customhtml video, .sr-customhtml iframe {
+  max-width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--sr-line);
+}
+.sr-customhtml iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; }
+.sr-customhtml table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.sr-customhtml th, .sr-customhtml td {
+  border: 1px solid var(--sr-line);
+  padding: 9px 12px;
+  text-align: start;
+}
+.sr-customhtml th { color: var(--sr-text); background: color-mix(in srgb, var(--sr-cyan) 7%, transparent); }
+.sr-customhtml blockquote {
+  border-inline-start: 3px solid var(--sr-cyan);
+  margin: 12px 0;
+  padding: 4px 0 4px 14px;
+  color: var(--sr-text);
+}
+.sr-customhtml hr { border: 0; border-top: 1px solid var(--sr-line); margin: 16px 0; }
+/* Brand skin: token mapping under .brand-root already re-points --sr-*;
+   just soften the block edges to match the lighter design. */
+.brand-root .sr-customhtml { font-size: 15px; }
+
+/* ═══════════ ROUND 8 — FOOTER NEWSLETTER (all skins) ═══════════
+   Token fallback chain: .sr-root defines --sr-*, .brand-root maps --sr-*
+   to the brand palette, and the classic homepage falls back to its own
+   --text/--mute/--cyan/--line-2 tokens. */
+.sr-nl { max-width: 380px; position: relative; margin-top: 18px; }
+.sr-nl-title {
+  font-weight: 650;
+  font-size: 14.5px;
+  letter-spacing: -0.01em;
+  color: var(--sr-text, var(--text, #fdfdfd));
+  margin: 0 0 10px;
+}
+.sr-nl-row { display: flex; gap: 8px; align-items: stretch; }
+.sr-nl-input {
+  flex: 1; min-width: 0;
+  border-radius: 999px;
+  border: 1px solid var(--sr-line, var(--line-2, rgba(255,255,255,0.14)));
+  background: color-mix(in srgb, var(--sr-text, var(--text, #fff)) 4%, transparent);
+  color: var(--sr-text, var(--text, #fdfdfd));
+  padding: 10px 16px;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.sr-nl-input::placeholder { color: var(--sr-muted, var(--mute, #8a8f99)); }
+.sr-nl-input:focus-visible {
+  border-color: var(--sr-cyan, var(--cyan, #7ce0c3));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sr-cyan, var(--cyan, #7ce0c3)) 25%, transparent);
+}
+.sr-nl-btn {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 650;
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--sr-cyan, var(--cyan, #7ce0c3));
+  color: #08131c;
+  transition: transform .18s ease, filter .18s ease;
+}
+.sr-nl-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.sr-nl-btn:disabled { opacity: .6; cursor: default; transform: none; }
+.sr-nl-btn:focus-visible {
+  outline: 2px solid var(--sr-cyan, var(--cyan, #7ce0c3));
+  outline-offset: 2px;
+}
+.sr-nl-msg { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; }
+.sr-nl-msg.is-ok { color: var(--sr-cyan, var(--cyan, #7ce0c3)); }
+.sr-nl-msg.is-err { color: #f08a8a;
+}
+/* brand skin: solid surfaces, darker ink on teal button */
+.brand-root .sr-nl-input {
+  background: var(--surface, #fff);
+  color: var(--ink, #15152e);
+  border-color: var(--line-2, rgba(0,0,0,0.12));
+}
+.brand-root .sr-nl-input::placeholder { color: var(--mute, #6a6a82); }
+.brand-root .sr-nl-btn { color: #fff; background: var(--teal-deep, #0f766e); }
+@media (max-width: 480px) {
+  .sr-nl-row { flex-direction: column; }
+  .sr-nl-btn { padding: 11px 18px; }
+}

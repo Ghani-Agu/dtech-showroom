@@ -21,6 +21,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { locales, type Locale } from '@/i18n/config'
 import { useCart } from '@/lib/cart'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import '@/components/home/home-showcase.css'
 import '@/components/home/site-themes.css'
 
@@ -209,7 +210,7 @@ function HeaderSearch() {
         </svg>
       </button>
       {showPop ? (
-        <div className="hs-pop" role="listbox" aria-label={t('searchAria')}>
+        <div className="hs-pop" aria-label={t('searchAria')}>
           {hits.length === 0 ? (
             <div className="hs-pop-empty">
               {busy ? '···' : t('searchNoResults')}
@@ -278,6 +279,16 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on route change
   useEffect(() => setMenu(false), [pathname])
 
+  // focus trap + Escape for the mobile menu, and lock body scroll while open
+  const menuTrapRef = useFocusTrap<HTMLDivElement>(menu, () => setMenu(false))
+  useEffect(() => {
+    if (!menu) return
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [menu])
+
   const routeLinks = [
     { href: '/products' as const, label: t('products') },
     { href: '/categories' as const, label: t('catalogue') },
@@ -304,6 +315,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
               <Link
                 key={l.href}
                 href={l.href}
+                prefetch
                 className={pathname?.startsWith(l.href) ? 'on' : undefined}
                 {...(l.secondary ? { 'data-h': '' } : {})}
               >
@@ -386,7 +398,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
       {menu
         ? createPortal(
         <div className="home-showcase-root" style={{ display: 'contents' }}>
-        <div className="sr-mobile-menu" role="dialog" aria-modal="true">
+        <div ref={menuTrapRef} className="sr-mobile-menu" role="dialog" aria-modal="true">
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Logo home={variant === 'home'} />
             <button

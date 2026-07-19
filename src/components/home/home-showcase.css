@@ -2270,3 +2270,89 @@ body[data-home-theme='light'] .home-showcase-root .prod .wa-mini:hover { backgro
 /* ─── catalog cards adapt to the picture (no cropping) ───────── */
 .home-showcase-root .prod .canvas { background: #ffffff; }
 .home-showcase-root .prod .canvas > img { object-fit: contain !important; padding: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   UI/UX PASS (2026-07) — RTL, accessibility, motion, touch, contrast.
+   Appended last so it overrides earlier rules where needed. Scoped to
+   .home-showcase-root so it never bleeds into admin/other skins.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Motion — honour prefers-reduced-motion across the whole homepage
+   (drifting orbs, pulsing dots, map pings, parallax, scroll reveals). */
+@media (prefers-reduced-motion: reduce) {
+  .home-showcase-root *, .home-showcase-root *::before, .home-showcase-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* keep scroll-reveal content visible even with transitions off */
+  .home-showcase-root .fade { opacity: 1 !important; transform: none !important; }
+}
+
+/* Contrast — near-white ink on the mint accent fails ~3:1 in light mode.
+   Use a dark ink on the filled primary button / active chip / active page. */
+body[data-home-theme='light'] .home-showcase-root .btn-primary,
+body[data-home-theme='light'] .home-showcase-root .cat-chip.on,
+body[data-home-theme='light'] .home-showcase-root .page-btn.on {
+  color: #04140e;
+}
+/* the text-accent token (kickers, small labels, years) needs AA on white */
+body[data-home-theme='light'] .home-showcase-root { --ice: #0a6a50; }
+
+/* RTL — physical-side props that carry directional meaning. */
+.home-showcase-root .brand { text-align: start; }
+.home-showcase-root .cat .arr { inset-inline-end: 22px; right: auto; }
+.home-showcase-root .icn .dot { inset-inline-end: 5px; right: auto; }
+[dir='rtl'] .home-showcase-root .cat .arr svg,
+[dir='rtl'] .home-showcase-root .btn-explore svg,
+[dir='rtl'] .home-showcase-root .hs-all svg { transform: scaleX(-1); }
+
+/* Focus — a clear keyboard ring on interactive homepage controls (the
+   file shipped none; the UA outline is faint on the accent surfaces). */
+.home-showcase-root :is(a, button, input, .cat-chip, .page-btn, .lang-opt, .contact-tab, .hero-slider-dots button):focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Touch — meet ~44px targets on coarse pointers without resizing the
+   visible dots (an invisible ::after enlarges the hit area). */
+@media (pointer: coarse) {
+  .home-showcase-root .hero-slider-dots button { position: relative; }
+  .home-showcase-root .hero-slider-dots button::after { content: ''; position: absolute; inset: -12px; }
+  .home-showcase-root .qd-item-qty button { width: 36px; height: 36px; }
+  .home-showcase-root .lang-opt { padding: 8px 8px; }
+  .home-showcase-root .hero-slider-play { width: 30px; height: 30px; }
+}
+
+/* Hero pause/play control (added for WCAG 2.2.2 — auto-advancing carousel). */
+.home-showcase-root .hero-slider-play {
+  display: inline-grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42); border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #fff; cursor: pointer; margin-inline-end: 6px;
+  transition: background 0.2s, transform 0.15s;
+}
+.home-showcase-root .hero-slider-play:hover { background: rgba(0, 0, 0, 0.62); }
+body[data-home-theme='light'] .home-showcase-root .hero-slider-play {
+  background: rgba(255, 255, 255, 0.82); border-color: rgba(18, 32, 27, 0.25); color: #13211c;
+}
+
+/* ═══════════ ROUND 8 — FULL-PAGE HERO ═══════════
+   The hero now fills the entire first screen (viewport minus the sticky
+   72px header), with its content vertically centered. svh keeps mobile
+   browser chrome from causing an overflow scrollbar; the vh line is the
+   fallback for older engines. */
+.home-showcase-root .hero {
+  min-height: calc(100vh - 72px);
+  min-height: calc(100svh - 72px);
+  padding: 44px 0 56px;
+}
+@media (max-width: 980px) {
+  .home-showcase-root .hero {
+    min-height: calc(100vh - 72px);
+    min-height: calc(100svh - 72px);
+    padding: 36px 0 64px;
+  }
+}

@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 interface CommandItem {
   id: string
@@ -39,6 +40,7 @@ export function CommandPalette({
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const trapRef = useFocusTrap<HTMLDivElement>(open, () => onOpenChange(false))
 
   const items: CommandItem[] = [
     {
@@ -165,33 +167,42 @@ export function CommandPalette({
       <div className="absolute inset-0 bg-[var(--admin-canvas)]/80 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-xl overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-2xl"
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Recherche rapide"
+        className="relative w-full max-w-xl overflow-hidden rounded-lg border border-[var(--admin-glass-border)] bg-[var(--admin-glass-bg)] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-[var(--admin-glass-border)] px-4 py-3">
           <Search size={18} className="flex-shrink-0 text-[var(--admin-text-tertiary)]" />
           <input
             ref={inputRef}
             type="text"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="cmdk-list"
+            aria-activedescendant={filtered[selectedIndex] ? `cmdk-opt-${selectedIndex}` : undefined}
+            aria-label="Rechercher dans l'admin"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
               setSelectedIndex(0)
             }}
             placeholder="Rechercher dans l'admin…"
-            className="flex-1 bg-transparent font-body text-base text-white outline-none placeholder:text-[var(--admin-text-tertiary)]"
+            className="flex-1 bg-transparent font-body text-base text-[var(--admin-text-primary)] outline-none placeholder:text-[var(--admin-text-tertiary)]"
           />
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="p-1 text-[var(--admin-text-tertiary)] transition-colors hover:text-white"
+            className="p-1 text-[var(--admin-text-tertiary)] transition-colors hover:text-[var(--admin-text-primary)]"
             aria-label="Fermer"
           >
             <X size={16} />
           </button>
         </div>
 
-        <ul className="max-h-[400px] overflow-y-auto">
+        <ul id="cmdk-list" role="listbox" aria-label="Actions" className="max-h-[400px] overflow-y-auto">
           {filtered.length === 0 ? (
             <li className="px-4 py-8 text-center font-body text-sm text-[var(--admin-text-tertiary)]">
               Aucun résultat pour « {query} »
@@ -201,9 +212,10 @@ export function CommandPalette({
               const Icon = item.icon
               const isSelected = idx === selectedIndex
               return (
-                <li key={item.id}>
+                <li key={item.id} id={`cmdk-opt-${idx}`} role="option" aria-selected={isSelected}>
                   <button
                     type="button"
+                    tabIndex={-1}
                     onMouseEnter={() => setSelectedIndex(idx)}
                     onClick={() => {
                       item.action()
@@ -212,8 +224,8 @@ export function CommandPalette({
                     className={cn(
                       'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
                       isSelected
-                        ? 'bg-white/[0.06]'
-                        : 'hover:bg-white/[0.04]'
+                        ? 'bg-[var(--admin-soft-2)]'
+                        : 'hover:bg-[var(--admin-soft)]'
                     )}
                   >
                     <Icon
@@ -223,7 +235,7 @@ export function CommandPalette({
                       )}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="font-body text-sm text-white">
+                      <p className="font-body text-sm text-[var(--admin-text-primary)]">
                         {item.label}
                       </p>
                       {item.description && (
@@ -239,7 +251,7 @@ export function CommandPalette({
           )}
         </ul>
 
-        <div className="flex items-center justify-between border-t border-white/[0.08] px-4 py-2 text-[var(--admin-text-tertiary)]">
+        <div className="flex items-center justify-between border-t border-[var(--admin-glass-border)] px-4 py-2 text-[var(--admin-text-tertiary)]">
           <p className="font-mono text-xs">
             ↑↓ naviguer · ↵ sélectionner · échap fermer
           </p>
