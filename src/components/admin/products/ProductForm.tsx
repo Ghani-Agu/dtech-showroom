@@ -25,6 +25,7 @@ import { BilingualField } from './BilingualField'
 import { ImageManager } from './ImageManager'
 import { ImageUpload } from './ImageUpload'
 import { SpecsEditor } from './SpecsEditor'
+import { SerpPreview } from './SerpPreview'
 import {
   archiveProduct,
   createProduct,
@@ -33,6 +34,7 @@ import {
   updateProduct,
 } from '@/server/admin-product-actions'
 import { toast } from '@/lib/toast'
+import { SITE_URL } from '@/lib/seo'
 import type { ProductFormValues } from '@/lib/validations/product'
 
 interface ProductFormProps {
@@ -590,16 +592,26 @@ export function ProductForm({
               />
               <Input
                 label="Titre SEO"
-                description="120 caractères max. Par défaut : le nom du produit."
+                description="Idéalement 60 caractères (120 max). Par défaut : le nom du produit."
                 value={values.seoTitle}
                 onChange={(e) => update('seoTitle', e.target.value)}
+                error={errors.seoTitle?.[0]}
               />
               <Textarea
                 label="Description SEO"
-                description="300 caractères max. Par défaut : l'accroche."
-                rows={2}
+                description="Idéalement 155 caractères (300 max). Par défaut : l'accroche."
+                rows={3}
                 value={values.seoDescription}
                 onChange={(e) => update('seoDescription', e.target.value)}
+                error={errors.seoDescription?.[0]}
+              />
+              <SerpPreview
+                seoTitle={values.seoTitle}
+                seoDescription={values.seoDescription}
+                name={values.name}
+                tagline={values.tagline}
+                slug={values.slug}
+                siteUrl={SITE_URL}
               />
             </div>
           )}

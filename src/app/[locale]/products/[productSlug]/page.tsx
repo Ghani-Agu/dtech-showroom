@@ -23,6 +23,14 @@ import type { PageDoc } from '@/components/admin/editor/types'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { BrandProductDetail } from '@/components/brand/BrandProductDetail'
 import { toBrandProducts } from '@/server/brand-data'
+import { TrackProductView } from '@/components/analytics/TrackView'
+import {
+  alternatesFor,
+  openGraphFor,
+  breadcrumbLd,
+  productLd,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +44,20 @@ export async function generateMetadata({
   const { locale, productSlug } = await params
   const product = await getProductBySlug(productSlug, locale as Locale)
   if (!product) notFound()
-  return { title: product.name, description: product.tagline }
+
+  // seoTitle / seoDescription are edited in admin → Produit → "SEO & avancé".
+  // They were being written to the DB, round-tripped in the form, and read by
+  // nothing — the <title> always used name/tagline. Now they win when set.
+  const title = product.seoTitle?.trim() || product.name
+  const description = product.seoDescription?.trim() || product.tagline
+  const path = `/products/${product.slug}`
+
+  return {
+    title,
+    description,
+    alternates: alternatesFor(locale, path),
+    openGraph: openGraphFor(locale as Locale, path, title, description),
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -48,6 +69,50 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
 
+  // Product + breadcrumb structured data. Rendered on every skin/template
+  // branch below, because rich results shouldn't depend on which design is
+  // published.
+  //
+  // Deliberately NO `offers` and NO `aggregateRating`:
+  //  - there is no price column, and an Offer without a price is a Search
+  //    Console error;
+  //  - the star ratings on this site come from `seededRating`, which is
+  //    synthetic placeholder data until the reviews API lands. Publishing
+  //    invented review counts as structured data is a policy violation
+  //    (fake review markup) and risks a manual action. Wire it here only
+  //    once real reviews are persisted.
+  const productJsonLd = jsonLdScript([
+    productLd(locale, {
+      slug: product.slug,
+      name: product.name,
+      description: product.seoDescription?.trim() || product.tagline,
+      brandName: product.brand.name,
+      categoryName: product.category.name,
+      image: imgOr(product.cardImagePath),
+    }),
+    breadcrumbLd(locale, [
+      { name: t('nav.home'), path: '' },
+      { name: t('productsPage.breadcrumb'), path: '/products' },
+      { name: product.name, path: `/products/${product.slug}` },
+    ]),
+  ])
+  const jsonLd = (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: productJsonLd }}
+      />
+      <TrackProductView
+        product={{
+          slug: product.slug,
+          name: product.name,
+          brandName: product.brand.name,
+          categoryName: product.category.name,
+        }}
+      />
+    </>
+  )
+
   // New "dtech Brand" design — brand-styled product page, same data.
   const design = await getPublishedDesign()
   if (design === 'brand') {
@@ -56,6 +121,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ).filter((p) => p.slug !== product.slug)
     return (
       <BrandPageShell locale={locale}>
+        {jsonLd}
         <BrandProductDetail
           product={{
             slug: product.slug,
@@ -87,10 +153,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       await getProductsByCategory(product.category.slug, locale)
     ).filter((rp) => rp.slug !== product.slug)
     return (
-      <PublishedPage
-        doc={tmpl as unknown as PageDoc}
-        data={buildProductData(product, relatedRaw.slice(0, 12))}
-      />
+      <>
+        {jsonLd}
+        <PublishedPage
+          doc={tmpl as unknown as PageDoc}
+          data={buildProductData(product, relatedRaw.slice(0, 12))}
+        />
+      </>
     )
   }
 
@@ -106,6 +175,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
+      {jsonLd}
       <nav className="sr-crumbs sr-in" style={{ marginBottom: 20 }}>
         <Link href="/">{t('nav.home')}</Link>
         <span className="sep">/</span>

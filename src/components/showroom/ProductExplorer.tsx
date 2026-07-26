@@ -9,6 +9,8 @@ export interface ExplorerProduct extends ShowroomProduct {
   brandSlug: string
   categorySlug: string
   featured: boolean
+  /** Epoch ms — powers the "newest first" sort on /products. */
+  createdAt?: number
 }
 
 export interface FacetOption {

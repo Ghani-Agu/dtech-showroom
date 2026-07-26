@@ -15,7 +15,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -79,19 +78,21 @@ import { EditProvider, Editable, EditableLink, SectionList, type EditData } from
 
 export function HomeShowcase({
   products,
+  productCount,
   categories,
   brands,
   heroConfig = null,
   content = {},
 }: {
+  /** Featured shortlist only — the full catalogue lives on /products. */
   products: HomeProduct[]
+  /** Total published products (for counters/copy), not products.length. */
+  productCount: number
   categories: HomeCategory[]
   brands: HomeBrand[]
   heroConfig?: HeroConfig | null
   content?: Partial<EditData>
 }) {
-  const [activeCat, setActiveCat] = useState<string | 'all'>('all')
-
   // Hero slides come ONLY from the images uploaded in the admin interface
   // (Slider Hero / éditeur — same source as the Brand design). When nothing
   // has been uploaded yet, the slider shows a branded D-Tech panel.
@@ -119,32 +120,24 @@ export function HomeShowcase({
         <SectionList
           defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']}
           nodes={{
-            hero: (
-              <HeroSlider
-                productCount={products.length}
-                brandCount={brands.length}
-                slides={heroSlides}
-                config={heroConfig}
-              />
-            ),
+            hero: <HeroSlider slides={heroSlides} />,
             categories: <CategoriesSection categories={categories} />,
             catalog: (
-              <CatalogSection
-                activeCat={activeCat}
-                setActiveCat={setActiveCat}
+              <FeaturedSection
                 products={products}
+                productCount={productCount}
                 categories={categories}
                 brandCount={brands.length}
               />
             ),
             services: <ServicesStrip />,
             brands: <BrandsSection brands={brands} />,
-            about: <AboutSection productCount={products.length} brandCount={brands.length} categoryCount={categories.length} />,
+            about: <AboutSection productCount={productCount} brandCount={brands.length} categoryCount={categories.length} />,
             contact: <ContactSection />,
           }}
         />
       </div>
-      <Footer onSelectCat={setActiveCat} />
+      <Footer />
       <CartDrawer />
       <FloatingCart />
     </div>
@@ -249,17 +242,10 @@ function Counter({
  * ──────────────────────────────────────────────────────────────── */
 
 function HeroSlider({
-  productCount,
-  brandCount,
   slides,
-  config,
 }: {
-  productCount: number
-  brandCount: number
   slides: { src: string; alt: string }[]
-  config?: HeroConfig | null
 }) {
-  const t = useTranslations('showcase.hero')
   const locale = useLocale()
   const [idx, setIdx] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -284,100 +270,66 @@ function HeroSlider({
   const carouselLabel = locale === 'ar' ? 'لافتة' : locale === 'fr' ? 'Bannière' : 'Banner'
   const pauseLabel = locale === 'ar' ? 'إيقاف مؤقت' : locale === 'fr' ? 'Mettre en pause' : 'Pause'
   const playLabel = locale === 'ar' ? 'تشغيل' : locale === 'fr' ? 'Lecture' : 'Play'
+  const prevLabel = locale === 'ar' ? 'السابق' : locale === 'fr' ? 'Précédent' : 'Previous'
+  const nextLabel = locale === 'ar' ? 'التالي' : locale === 'fr' ? 'Suivant' : 'Next'
+  const go = (n: number) => setIdx((n + real.length) % real.length)
 
-  const title1 = config?.title1 ?? t('title1')
-  const title2 = config?.title2 ?? t('title2')
-  const primaryLabel = config?.primaryLabel ?? t('ctaCatalog')
-  const primaryHref = config?.primaryHref ?? '#products'
-  const secondaryLabel = config?.secondaryLabel ?? t('ctaStory')
-  const secondaryHref = config?.secondaryHref ?? '#about'
-
+  // Full-bleed image hero: the slider IS the hero section. No copy, no CTA —
+  // the uploaded slides carry the message (admin → Slider Hero).
   return (
-    <section className="hero" id="top">
-      <div className="wrap hero-grid">
-        <div className="hero-text">
-          <span className="kicker" style={{ marginBottom: 24 }}>
-            {config?.kicker ?? t('kicker')}
-          </span>
-          <h1 className="h-mega">
-            {title1}
-            <br />
-            <span className="serif-i" style={{ color: 'var(--cyan)' }}>
-              {title2}
-            </span>
-          </h1>
-          <p className="sub">
-            {config?.subtitle
-              ? config.subtitle
-              : t.rich('sub', {
-                  count: productCount,
-                  strong: (chunks: ReactNode) => (
-                    <strong style={{ color: 'var(--text)' }}>{chunks}</strong>
-                  ),
-                })}
-          </p>
-          <div className="cta">
-            <a className="btn btn-primary btn-lg" href={primaryHref}>
-              <span className="shimmer" />
-              {primaryLabel}
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M13 5l7 7-7 7" />
-              </svg>
-            </a>
-            <a className="btn btn-ghost btn-lg" href={secondaryHref}>
-              {secondaryLabel}
-            </a>
+    <section className="hero hero-full" id="top">
+      <div
+        className="hero-slider"
+        role="group"
+        aria-roledescription="carousel"
+        aria-label={carouselLabel}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
+        {real.map((sl, i) => (
+          <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
+            {sl.src ? (
+              <Image
+                src={sl.src}
+                alt={sl.alt}
+                fill
+                sizes="100vw"
+                priority={i === 0}
+                fetchPriority={i === 0 ? 'high' : 'auto'}
+                quality={82}
+                style={{ objectFit: 'cover' }}
+              />
+            ) : (
+              <div className="hero-slide-brand" aria-hidden>
+                <span className="hsb-mark">
+                  D-Tech<span className="dot">.</span>
+                </span>
+                <span className="hsb-tag">Algérie · Digital Technologie</span>
+              </div>
+            )}
           </div>
-
-          <div className="hero-stats">
-            <div>
-              <div className="v"><Counter to={new Date().getFullYear() - 2006} /><span className="accent"> {t('stats.yearsSuffix')}</span></div>
-              <div className="l">{t('stats.presence')}</div>
-            </div>
-            <div>
-              <div className="v"><Counter to={brandCount} /><span className="accent"> {t('stats.brandsSuffix')}</span></div>
-              <div className="l">{t('stats.partners')}</div>
-            </div>
-            <div>
-              <div className="v"><Counter to={58} /><span className="accent"> {t('stats.wilayasSuffix')}</span></div>
-              <div className="l">{t('stats.wilayas')}</div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="hero-slider"
-          role="group"
-          aria-roledescription="carousel"
-          aria-label={carouselLabel}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocusCapture={() => setPaused(true)}
-          onBlurCapture={() => setPaused(false)}
-        >
-          {real.map((sl, i) => (
-            <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
-              {sl.src ? (
-                <Image
-                  src={sl.src}
-                  alt={sl.alt}
-                  fill
-                  sizes="(min-width: 1024px) 720px, 100vw"
-                  priority={i === 0}
-                  style={{ objectFit: 'cover' }}
-                />
-              ) : (
-                <div className="hero-slide-brand" aria-hidden>
-                  <span className="hsb-mark">
-                    D-Tech<span className="dot">.</span>
-                  </span>
-                  <span className="hsb-tag">Algérie · Digital Technologie</span>
-                </div>
-              )}
-            </div>
-          ))}
-          <div className="hero-slider-veil" />
-          {real.length > 1 && (
+        ))}
+        <div className="hero-slider-veil" />
+        {real.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="hero-slider-arrow prev"
+              aria-label={prevLabel}
+              onClick={() => go(idx - 1)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            </button>
+            <button
+              type="button"
+              className="hero-slider-arrow next"
+              aria-label={nextLabel}
+              onClick={() => go(idx + 1)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </button>
             <div className="hero-slider-dots">
               <button
                 type="button"
@@ -403,8 +355,8 @@ function HeroSlider({
                 />
               ))}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </section>
   )
@@ -639,60 +591,27 @@ function BrandsSection({ brands }: { brands: HomeBrand[] }) {
  * Catalog (filterable + paginated)
  * ──────────────────────────────────────────────────────────────── */
 
-const PER_PAGE = 12
-
-function CatalogSection({
-  activeCat,
-  setActiveCat,
+/**
+ * Featured products teaser. The full 393-product catalogue moved to
+ * /products (URL-driven filters, server-side paging, indexable) — shipping
+ * every row into the homepage payload was the single biggest cause of the
+ * "site feels heavy" complaint. This section keeps the homepage commercial
+ * with a short shortlist plus category entry points into /products.
+ */
+function FeaturedSection({
   products,
+  productCount,
   categories,
   brandCount,
 }: {
-  activeCat: string | 'all'
-  setActiveCat: (c: string | 'all') => void
   products: HomeProduct[]
+  productCount: number
   categories: HomeCategory[]
   brandCount: number
 }) {
   const t = useTranslations('showcase.catalog')
+  const tf = useTranslations('showroom.featured')
   const ref = useFade<HTMLDivElement>()
-  const [page, setPage] = useState(1)
-
-  const filtered = useMemo(
-    () =>
-      activeCat === 'all'
-        ? products
-        : products.filter((p) => p.categorySlug === activeCat),
-    [activeCat, products]
-  )
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset pagination when the filter changes
-    setPage(1)
-  }, [activeCat])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
-  const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
-
-  const goPage = (p: number) => {
-    if (p < 1 || p > totalPages) return
-    setPage(p)
-    setTimeout(() => {
-      const el = document.getElementById('products')
-      if (el) {
-        const y = el.getBoundingClientRect().top + window.scrollY - 80
-        window.scrollTo({ top: y, behavior: 'smooth' })
-      }
-    }, 50)
-  }
-
-  const pageNums: (number | '…')[] = useMemo(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
-    if (page <= 4) return [1, 2, 3, 4, 5, '…', totalPages]
-    if (page >= totalPages - 3)
-      return [1, '…', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
-    return [1, '…', page - 1, page, page + 1, '…', totalPages]
-  }, [page, totalPages])
 
   return (
     <section id="products" className="sec">
@@ -701,7 +620,7 @@ function CatalogSection({
           <div>
             <Editable as="span" id="home.catalog.kicker" className="kicker" style={{ marginBottom: 12 }} label="Sur-titre — Catalogue">
               {t('kicker', {
-                products: products.length,
+                products: productCount,
                 categories: categories.length,
                 brands: brandCount,
               })}
@@ -715,9 +634,13 @@ function CatalogSection({
             </h2>
             <p className="sub"><Editable id="home.catalog.sub" label="Sous-titre — Catalogue">{t('sub')}</Editable></p>
           </div>
-          <span className="kicker mono" style={{ color: 'var(--mute)' }}>
-            {t('results', { count: filtered.length })}
-          </span>
+          <Link href="/products" className="btn btn-primary hs-seeall-top">
+            <span className="shimmer" />
+            {tf('seeAll', { count: productCount })}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </Link>
         </div>
 
         <div className="catalog-chips">
@@ -726,107 +649,44 @@ function CatalogSection({
             prevLabel={t('prevAria')}
             nextLabel={t('nextAria')}
           >
-            <button
-              type="button"
-              className={`cat-chip ${activeCat === 'all' ? 'on' : ''}`}
-              onClick={() => setActiveCat('all')}
-            >
+            <Link href="/products" className="cat-chip">
               {t('all')}
-              <span className="ct">{products.length}</span>
-            </button>
+              <span className="ct">{productCount}</span>
+            </Link>
             {categories.map((c) => (
-              <button
-                type="button"
+              <Link
                 key={c.slug}
-                className={`cat-chip ${activeCat === c.slug ? 'on' : ''}`}
-                onClick={() => setActiveCat(c.slug)}
+                href={{ pathname: '/products', query: { category: c.slug } }}
+                className="cat-chip"
               >
                 <CatIcon kind={c.icon} size={14} />
                 {c.name}
                 <span className="ct">{c.count}</span>
-              </button>
+              </Link>
             ))}
           </Carousel>
         </div>
 
-        <div className="page-meta">
-          <span>
-            {t.rich('showing', {
-              from: (page - 1) * PER_PAGE + 1,
-              to: Math.min(page * PER_PAGE, filtered.length),
-              total: filtered.length,
-              b: (chunks: ReactNode) => (
-                <b style={{ color: 'var(--text)' }}>{chunks}</b>
-              ),
-            })}
-          </span>
-          <span>
-            {t.rich('page', {
-              page,
-              total: totalPages,
-              b: (chunks: ReactNode) => (
-                <b style={{ color: 'var(--cyan)' }}>{chunks}</b>
-              ),
-            })}
-          </span>
-        </div>
-
-        <div className="prod-grid" style={{ marginTop: 18 }}>
-          {pageItems.map((p, i) => (
+        <div className="prod-grid" style={{ marginTop: 22 }}>
+          {products.map((p, i) => (
             <ProductCard
               key={p.slug}
               product={p}
-              animationDelay={(i % 12) * 40}
+              animationDelay={(i % 8) * 40}
             />
           ))}
         </div>
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              type="button"
-              className="page-btn nav"
-              disabled={page === 1}
-              onClick={() => goPage(page - 1)}
-              aria-label={t('prevAria')}
-            >
-              <svg className="ico-prev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M19 12H5M12 5l-7 7 7 7" />
-              </svg>
-              {t('prev')}
-            </button>
-            {pageNums.map((n, i) =>
-              n === '…' ? (
-                <span key={`e${i}`} className="page-ellipsis">
-                  …
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  key={n}
-                  className={`page-btn ${page === n ? 'on' : ''}`}
-                  onClick={() => goPage(n)}
-                  aria-label={t('pageAria', { n })}
-                  aria-current={page === n ? 'page' : undefined}
-                >
-                  {n}
-                </button>
-              )
-            )}
-            <button
-              type="button"
-              className="page-btn nav"
-              disabled={page === totalPages}
-              onClick={() => goPage(page + 1)}
-              aria-label={t('nextAria')}
-            >
-              {t('next')}
-              <svg className="ico-next" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <div className="hs-seeall">
+          <Link href="/products" className="btn btn-primary btn-lg">
+            <span className="shimmer" />
+            {tf('browseAll')}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </Link>
+          <span className="hs-seeall-note">{tf('note', { count: productCount })}</span>
+        </div>
       </div>
     </section>
   )
@@ -1552,15 +1412,9 @@ function ContactPanel({
  * Footer
  * ──────────────────────────────────────────────────────────────── */
 
-function Footer({ onSelectCat }: { onSelectCat: (c: string | 'all') => void }) {
+function Footer() {
   const t = useTranslations('showcase.footer')
   const tShowroom = useTranslations('showroom.footer')
-  const filterTo = (cat: string) => () => {
-    onSelectCat(cat)
-    document
-      .getElementById('products')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
   return (
     <footer>
       <div className="wrap">
@@ -1593,10 +1447,10 @@ function Footer({ onSelectCat }: { onSelectCat: (c: string | 'all') => void }) {
             title={t('cols.catalog.title')}
             links={[
               { label: tShowroom('allProducts'), internal: '/products' },
-              { label: t('cols.catalog.l1'), onClick: filterTo('desktops') },
-              { label: t('cols.catalog.l2'), onClick: filterTo('laptops') },
-              { label: t('cols.catalog.l3'), onClick: filterTo('all-in-one') },
-              { label: t('cols.catalog.l5'), onClick: filterTo('printers') },
+              { label: t('cols.catalog.l1'), internal: '/products?category=desktops' },
+              { label: t('cols.catalog.l2'), internal: '/products?category=laptops' },
+              { label: t('cols.catalog.l3'), internal: '/products?category=all-in-one' },
+              { label: t('cols.catalog.l5'), internal: '/products?category=printers' },
             ]}
           />
           <FootCol
@@ -1650,7 +1504,6 @@ interface FootLink {
   href?: string
   /** locale-aware route (rendered with the i18n <Link>) */
   internal?: string
-  onClick?: () => void
   external?: boolean
 }
 
@@ -1663,16 +1516,6 @@ function FootCol({ title, links }: { title: string; links: FootLink[] }) {
           <li key={l.label}>
             {l.internal ? (
               <Link href={l.internal}>{l.label}</Link>
-            ) : l.onClick ? (
-              <a
-                href="#products"
-                onClick={(e) => {
-                  e.preventDefault()
-                  l.onClick?.()
-                }}
-              >
-                {l.label}
-              </a>
             ) : (
               <a
                 href={l.href}

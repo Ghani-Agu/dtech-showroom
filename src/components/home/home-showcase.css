@@ -2356,3 +2356,113 @@ body[data-home-theme='light'] .home-showcase-root .hero-slider-play {
     padding: 36px 0 64px;
   }
 }
+
+/* ═══════════ ROUND 9 — FULL-BLEED HERO SLIDER ═══════════
+   The slider IS the hero now: it fills the whole first screen edge to edge,
+   with no copy column. `.hero-full` overrides the ROUND 8 padding/flex rules
+   above (same specificity, later in the file wins). */
+.home-showcase-root .hero.hero-full {
+  display: block;
+  padding: 0;
+  min-height: calc(100vh - 72px);
+  min-height: calc(100svh - 72px);
+  overflow: hidden;
+}
+.home-showcase-root .hero.hero-full .hero-slider {
+  /* escape .wrap: the slider is no longer inside one, so inset:0 is enough */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--bg-0);
+}
+/* Bottom-only scrim so the dots/arrows stay legible over any photo. */
+.home-showcase-root .hero.hero-full .hero-slider-veil {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(0, 0, 0, 0) 26%,
+    rgba(0, 0, 0, 0) 62%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
+}
+.home-showcase-root .hero.hero-full .hero-slider-dots {
+  bottom: 26px;
+  z-index: 3;
+}
+.home-showcase-root .hero-slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(4, 10, 16, 0.34);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.18s, transform 0.15s, border-color 0.18s;
+}
+.home-showcase-root .hero-slider-arrow:hover {
+  background: rgba(4, 10, 16, 0.62);
+  border-color: var(--cyan);
+}
+.home-showcase-root .hero-slider-arrow.prev { inset-inline-start: 18px; }
+.home-showcase-root .hero-slider-arrow.next { inset-inline-end: 18px; }
+/* Arrow glyphs point at a physical direction — mirror them in RTL. */
+[dir='rtl'] .home-showcase-root .hero-slider-arrow svg { transform: scaleX(-1); }
+body[data-home-theme='light'] .home-showcase-root .hero-slider-arrow {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(18, 32, 27, 0.22);
+  color: #13211c;
+}
+body[data-home-theme='light'] .home-showcase-root .hero-slider-arrow:hover {
+  background: #fff;
+}
+@media (max-width: 640px) {
+  .home-showcase-root .hero-slider-arrow { width: 38px; height: 38px; }
+  .home-showcase-root .hero-slider-arrow.prev { inset-inline-start: 10px; }
+  .home-showcase-root .hero-slider-arrow.next { inset-inline-end: 10px; }
+  .home-showcase-root .hero.hero-full .hero-slider-dots { bottom: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-showcase-root .hero-slider-arrow { backdrop-filter: none; }
+}
+
+/* ── featured teaser: "see everything" affordances ───────────────── */
+.home-showcase-root .hs-seeall-top {
+  align-self: flex-start;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.home-showcase-root .hs-seeall {
+  margin-top: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+.home-showcase-root .hs-seeall-note {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+/* Category chips are links now, not buttons — keep the chip look identical. */
+.home-showcase-root a.cat-chip { text-decoration: none; }
+@media (max-width: 720px) {
+  .home-showcase-root .hs-seeall-top { display: none; }
+}

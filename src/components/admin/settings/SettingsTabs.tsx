@@ -6,9 +6,9 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  Mail,
   Monitor,
   Palette,
+  Plug,
   ShieldCheck,
   User as UserIcon,
 } from 'lucide-react'
@@ -22,8 +22,14 @@ import {
   saveBrevoSettings,
   testBrevoConnection,
   updateProfile,
+  type AiChatSettingsView,
+  type AnalyticsSettingsView,
   type BrevoSettingsView,
 } from '@/server/admin-settings-actions'
+import {
+  AnalyticsIntegrationCard,
+  AiChatIntegrationCard,
+} from './AnalyticsPanel'
 import { cn } from '@/lib/utils'
 
 type TabId = 'profile' | 'password' | 'preferences' | 'sessions' | 'integrations'
@@ -39,15 +45,17 @@ const TABS: Tab[] = [
   { id: 'password', label: 'Mot de passe', icon: KeyRound },
   { id: 'preferences', label: 'Préférences', icon: Palette },
   { id: 'sessions', label: 'Sessions', icon: ShieldCheck },
-  { id: 'integrations', label: 'Intégrations', icon: Mail },
+  { id: 'integrations', label: 'Intégrations', icon: Plug },
 ]
 
 export interface SettingsTabsProps {
   initialName: string
   email: string
-  /** Intégrations (Brevo) est réservé aux administrateurs. */
+  /** L'onglet Intégrations est réservé aux administrateurs. */
   isAdmin?: boolean
   brevo?: BrevoSettingsView | null
+  analytics?: AnalyticsSettingsView | null
+  aiChat?: AiChatSettingsView | null
 }
 
 export function SettingsTabs({
@@ -55,6 +63,8 @@ export function SettingsTabs({
   email,
   isAdmin = false,
   brevo = null,
+  analytics = null,
+  aiChat = null,
 }: SettingsTabsProps) {
   const [active, setActive] = useState<TabId>('profile')
   const visibleTabs = TABS.filter(
@@ -107,7 +117,11 @@ export function SettingsTabs({
         {active === 'preferences' && <PreferencesPanel />}
         {active === 'sessions' && <SessionsPanel />}
         {active === 'integrations' && isAdmin && (
-          <IntegrationsPanel brevo={brevo} />
+          <div className="space-y-6">
+            <AnalyticsIntegrationCard analytics={analytics} />
+            <AiChatIntegrationCard aiChat={aiChat} />
+            <IntegrationsPanel brevo={brevo} />
+          </div>
         )}
       </div>
     </div>

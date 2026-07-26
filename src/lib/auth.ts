@@ -23,9 +23,24 @@ import { sendEmail } from './mailer'
  *  single configured BETTER_AUTH_URL (403 INVALID_ORIGIN). */
 function getTrustedOrigins(): string[] {
   const origins = new Set<string>()
+  // VERCEL_URL is the unique hostname of THIS deployment — every preview build
+  // gets its own. Deriving the origins here means a preview URL can be logged
+  // into without adding an env var per branch, which is exactly the case that
+  // used to 403 with INVALID_ORIGIN. VERCEL_PROJECT_PRODUCTION_URL covers the
+  // production alias and survives a future domain change.
+  const vercelHosts = [
+    process.env.VERCEL_URL,
+    process.env.VERCEL_BRANCH_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ]
+    .map((h) => (h ?? '').trim())
+    .filter(Boolean)
+    .map((h) => (h.startsWith('http') ? h : `https://${h}`))
+
   for (const raw of [
     process.env.BETTER_AUTH_URL,
     process.env.NEXT_PUBLIC_SITE_URL,
+    ...vercelHosts,
     'https://dtech-showroom.vercel.app',
     'http://localhost:3000',
     'http://localhost:3100',

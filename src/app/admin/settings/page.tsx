@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getSessionUser } from '@/lib/auth-helpers'
-import { getBrevoSettingsView } from '@/server/admin-settings-actions'
+import {
+  getAiChatSettingsView,
+  getAnalyticsSettingsView,
+  getBrevoSettingsView,
+} from '@/server/admin-settings-actions'
 import { SettingsTabs } from '@/components/admin/settings/SettingsTabs'
 
 export const metadata: Metadata = {
@@ -16,7 +20,11 @@ export default async function AdminSettingsPage() {
     redirect('/login?redirect=/admin/settings')
   }
 
-  const brevo = await getBrevoSettingsView()
+  const [brevo, analytics, aiChat] = await Promise.all([
+    getBrevoSettingsView(),
+    getAnalyticsSettingsView(),
+    getAiChatSettingsView(),
+  ])
 
   return (
     <div className="space-y-8">
@@ -36,8 +44,8 @@ export default async function AdminSettingsPage() {
           Compte et préférences.
         </h1>
         <p className="mt-2 max-w-prose font-body text-sm text-[var(--admin-text-secondary)]">
-          Gérez votre profil, votre mot de passe et vos sessions actives
-          pour ce tableau de bord.
+          Gérez votre profil, votre mot de passe, vos sessions actives et
+          les intégrations du site — Google Analytics, chat IA et Brevo.
         </p>
       </header>
 
@@ -46,6 +54,8 @@ export default async function AdminSettingsPage() {
         email={sessionUser.email}
         isAdmin={sessionUser.role === 'admin'}
         brevo={brevo}
+        analytics={analytics}
+        aiChat={aiChat}
       />
     </div>
   )

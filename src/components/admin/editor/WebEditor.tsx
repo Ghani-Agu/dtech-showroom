@@ -1876,7 +1876,7 @@ function LibHelpCard({ info }: { info: HelpInfo }) {
 }
 
 const SEC_LABELS: Record<string, string> = {
-  hero: 'Hero', categories: 'Catégories', catalog: 'Catalogue', services: 'Services', brands: 'Marques', about: 'À propos', contact: 'Contact',
+  hero: 'Hero', categories: 'Catégories', catalog: 'Produits en vedette', services: 'Services', brands: 'Marques', about: 'À propos', contact: 'Contact',
 }
 const LAYOUT_LABELS: Record<Layout, string> = {
   stack: 'Pile', center: 'Centré', cols2: '2 colonnes', cols3: '3 colonnes', cols4: '4 colonnes', row: 'Ligne',

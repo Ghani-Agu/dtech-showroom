@@ -758,7 +758,10 @@
       "prevPage": "Previous page",
       "nextPage": "Next page",
       "brandsLabel": "Brands",
-      "categoriesLabel": "Categories"
+      "categoriesLabel": "Categories",
+      "featuredOnly": "Featured",
+      "clearFilter": "Remove this filter",
+      "sortNewest": "Newest first"
     },
     "product": {
       "addToCart": "Add to cart",
@@ -805,7 +808,19 @@
       "kicker": "{count} products · {cats} categories · {brands} brands",
       "title1": "The full",
       "title2": "catalog.",
-      "sub": "Filter by category or brand, sort, and order directly on WhatsApp."
+      "sub": "Filter by category or brand, sort, and order directly on WhatsApp.",
+      "breadcrumb": "Catalog",
+      "titleCategory": "{category} — D-Tech Catalog",
+      "titleBrand": "{brand} — D-Tech Catalog",
+      "titleBrandCategory": "{brand} {category} — D-Tech Catalog",
+      "titleSearch": "Search “{q}” — Catalog",
+      "titlePaged": "{title} — Page {page}",
+      "subFiltered": "{scope} — browse the D-Tech Algeria selection, filter, compare and order on WhatsApp."
+    },
+    "featured": {
+      "seeAll": "See all {count} products",
+      "browseAll": "Browse the full catalog",
+      "note": "{count} products · filter by category, brand and search"
     }
   },
   "newsletter": {

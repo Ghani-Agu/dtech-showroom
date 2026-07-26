@@ -11,7 +11,7 @@
 import { BrandPageShell } from './BrandPageShell'
 import {
   BrandHero,
-  BrandShop,
+  BrandFeatured,
   BrandBrands,
   BrandServices,
   BrandAbout,
@@ -22,8 +22,12 @@ import type { BrandData } from './brand-types'
 export function BrandHome({ locale, data }: { locale: string; data: BrandData }) {
   return (
     <BrandPageShell locale={locale}>
-      <BrandHero heroImages={data.heroImages} productCount={data.products.length} />
-      <BrandShop products={data.products} categories={data.categories} />
+      <BrandHero heroImages={data.heroImages} />
+      <BrandFeatured
+        products={data.products}
+        productCount={data.productCount}
+        categories={data.categories}
+      />
       <BrandServices />
       <BrandBrands brands={data.brands} />
       <BrandAbout />

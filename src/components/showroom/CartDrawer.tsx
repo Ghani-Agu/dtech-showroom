@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { imgOr } from '@/lib/img'
-import { useCart, whatsappOrderUrl } from '@/lib/cart'
+import { useCart, whatsappOrderUrl, trackWhatsappOrder } from '@/lib/cart'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 export function CartDrawer() {
@@ -86,6 +86,9 @@ export function CartDrawer() {
             href={canOrder ? whatsappOrderUrl(items, t('waIntro')) : undefined}
             target={canOrder ? '_blank' : undefined}
             rel={canOrder ? 'noopener noreferrer' : undefined}
+            onClick={() => {
+              if (canOrder) trackWhatsappOrder(items)
+            }}
             aria-disabled={!canOrder}
             tabIndex={canOrder ? undefined : -1}
           >

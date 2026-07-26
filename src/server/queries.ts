@@ -256,6 +256,21 @@ export async function getAllProducts(
   return rows.map((p) => localizeProduct(p, locale))
 }
 
+/**
+ * Featured-first shortlist for homepage teasers. Pure — operates on rows the
+ * caller already has, so it costs no extra round trip. Falls back to filling
+ * with non-featured rows so the teaser is never short.
+ */
+export function pickFeatured<T extends { featured: boolean }>(
+  rows: T[],
+  limit = 8
+): T[] {
+  const feat = rows.filter((r) => r.featured)
+  if (feat.length >= limit) return feat.slice(0, limit)
+  const rest = rows.filter((r) => !r.featured)
+  return [...feat, ...rest.slice(0, limit - feat.length)]
+}
+
 export async function getFeaturedProducts(
   limit = 8,
   locale: Locale = defaultLocale

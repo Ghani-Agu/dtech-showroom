@@ -9,7 +9,16 @@ const SITE_URL =
 
 export const revalidate = 3600 // regenerate hourly
 
-const STATIC_PATHS = ['', '/about', '/brands', '/categories', '/search']
+// `/products` (the full catalogue) and `/legal` were missing. `/search` is
+// intentionally dropped — thin content with no crawlable state of its own.
+const STATIC_PATHS = [
+  '',
+  '/products',
+  '/about',
+  '/brands',
+  '/categories',
+  '/legal',
+]
 
 function languageAlternates(path: string): Record<string, string> {
   return Object.fromEntries(
@@ -75,6 +84,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly',
         priority: 0.7,
         alternates: { languages: languageAlternates(path) },
+      })
+      // Catalogue facet view of the same set. These are distinct indexable
+      // pages now that /products carries its filters in the URL, and they
+      // match how shoppers actually search ("HP laptops", "printers").
+      const facet = `/products?category=${category.slug}`
+      entries.push({
+        url: `${SITE_URL}/${locale}${facet}`,
+        lastModified: category.updatedAt ?? now,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+        alternates: { languages: languageAlternates(facet) },
       })
     }
 

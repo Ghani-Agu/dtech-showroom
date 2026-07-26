@@ -758,7 +758,10 @@
       "prevPage": "الصفحة السابقة",
       "nextPage": "الصفحة التالية",
       "brandsLabel": "العلامات",
-      "categoriesLabel": "الفئات"
+      "categoriesLabel": "الفئات",
+      "featuredOnly": "مميّزة",
+      "clearFilter": "إزالة هذا الفلتر",
+      "sortNewest": "الأحدث أولاً"
     },
     "product": {
       "addToCart": "أضف إلى السلة",
@@ -805,7 +808,19 @@
       "kicker": "{count} منتج · {cats} فئة · {brands} علامة",
       "title1": "الكتالوج",
       "title2": "الكامل.",
-      "sub": "صفِّ حسب الفئة أو العلامة، رتّب، واطلب مباشرة عبر واتساب."
+      "sub": "صفِّ حسب الفئة أو العلامة، رتّب، واطلب مباشرة عبر واتساب.",
+      "breadcrumb": "الكتالوج",
+      "titleCategory": "{category} — كتالوج D-Tech",
+      "titleBrand": "{brand} — كتالوج D-Tech",
+      "titleBrandCategory": "{brand} {category} — كتالوج D-Tech",
+      "titleSearch": "بحث «{q}» — الكتالوج",
+      "titlePaged": "{title} — صفحة {page}",
+      "subFiltered": "{scope} — تصفّح تشكيلة D-Tech الجزائر، فلتر، قارن واطلب عبر واتساب."
+    },
+    "featured": {
+      "seeAll": "شاهد كل المنتجات ({count})",
+      "browseAll": "استكشف الكتالوج الكامل",
+      "note": "{count} منتج · فلترة حسب الفئة والعلامة والبحث"
     }
   },
   "newsletter": {

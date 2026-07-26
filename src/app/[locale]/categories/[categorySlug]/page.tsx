@@ -17,6 +17,13 @@ import type { PageDoc } from '@/components/admin/editor/types'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { BrandGridPage } from '@/components/brand/BrandCollections'
 import { toBrandProducts } from '@/server/brand-data'
+import {
+  alternatesFor,
+  openGraphFor,
+  breadcrumbLd,
+  itemListLd,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +37,18 @@ export async function generateMetadata({
   const { locale, categorySlug } = await params
   const category = await getCategoryBySlug(categorySlug, locale as Locale)
   if (!category) notFound()
-  return { title: category.name, description: category.description }
+  const path = `/categories/${category.slug}`
+  return {
+    title: category.name,
+    description: category.description,
+    alternates: alternatesFor(locale, path),
+    openGraph: openGraphFor(
+      locale as Locale,
+      path,
+      category.name,
+      category.description ?? ''
+    ),
+  }
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
@@ -72,6 +90,19 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript([
+            breadcrumbLd(locale, [
+              { name: t('nav.home'), path: '' },
+              { name: t('nav.categories'), path: '/categories' },
+              { name: category.name, path: `/categories/${category.slug}` },
+            ]),
+            itemListLd(locale, products.slice(0, 24)),
+          ]),
+        }}
+      />
       <nav className="sr-crumbs sr-in" style={{ marginBottom: 18 }}>
         <Link href="/">{t('nav.home')}</Link>
         <span className="sep">/</span>

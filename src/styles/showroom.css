@@ -885,3 +885,133 @@ body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
   .sr-nl-row { flex-direction: column; }
   .sr-nl-btn { padding: 11px 18px; }
 }
+
+/* ═══════════ ROUND 9 — CATALOGUE BROWSER ═══════════
+   /products is server-rendered: every filter is a real link, so these
+   selectors have to style anchors as well as the buttons they replaced. */
+.sr-browser { scroll-margin-top: 90px; }
+
+.sr-filterbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  /* The site header is sticky at top:0 and shrinks on scroll (72→56 classic,
+     78→66 brand). Pin to the SHRUNK height so the bar never leaves a band of
+     scrolling content visible between itself and the header. A couple of px of
+     overlap while unshrunk is invisible; a gap is not. */
+  top: 56px;
+  z-index: 20;
+  padding: 12px 0 14px;
+  /* clip, not hidden: `hidden` here would create a scroll container and
+     silently kill position:sticky (learned the hard way in an earlier round) */
+  overflow-x: clip;
+  background: linear-gradient(
+    to bottom,
+    var(--sr-bg0, #04060c) 0%,
+    var(--sr-bg0, #04060c) 72%,
+    transparent 100%
+  );
+}
+.brand-root .sr-filterbar {
+  top: 66px;
+  background: linear-gradient(
+    to bottom,
+    var(--bg, #fff) 0%,
+    var(--bg, #fff) 72%,
+    transparent 100%
+  );
+}
+@media (max-width: 720px) {
+  /* Two class selectors so this also beats `.brand-root .sr-filterbar`, which
+     would otherwise keep a gradient band over a now-static bar. */
+  .sr-browser .sr-filterbar,
+  .brand-root .sr-filterbar {
+    position: static;
+    background: none;
+    padding-top: 0;
+  }
+}
+
+a.sr-chip { text-decoration: none; }
+.sr-chip-flag { gap: 6px; }
+.sr-chip-flag svg { opacity: 0.8; }
+.sr-chip-flag.on svg { opacity: 1; }
+
+.sr-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+}
+.sr-count { margin-inline-start: auto; }
+@media (max-width: 560px) {
+  .sr-count { margin-inline-start: 0; width: 100%; }
+}
+
+/* subtle "working" state while the debounced search navigates */
+.sr-search-busy .sr-input { opacity: 0.72; }
+.sr-search-busy svg { animation: srPulse 1s ease-in-out infinite; }
+@keyframes srPulse { 50% { opacity: 0.35; } }
+
+/* active-filter pills — each one removes itself */
+.sr-activefilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.sr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--sr-cyan) 42%, transparent);
+  background: color-mix(in srgb, var(--sr-cyan) 12%, transparent);
+  color: var(--sr-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sr-pill:hover {
+  border-color: var(--sr-cyan);
+  background: color-mix(in srgb, var(--sr-cyan) 20%, transparent);
+}
+.sr-pill span[aria-hidden] {
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0.7;
+}
+.sr-pill-reset {
+  border-style: dashed;
+  background: transparent;
+  color: var(--sr-muted);
+}
+.sr-pill-reset:hover { color: var(--sr-text); background: transparent; }
+
+/* pagination links share the .sr-page look; disabled ends are inert spans */
+a.sr-page { text-decoration: none; }
+.sr-page.is-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  display: inline-grid;
+  place-items: center;
+}
+
+/* screen-reader-only helper (was only available as a Tailwind utility, which
+   the storefront CSS layer can't reach) */
+.sr-browser .sr-only,
+.sr-filterbar .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -16,7 +16,28 @@ export const SETTING_KEYS = {
   brevoListId: 'brevo:list_id',
   mailFromEmail: 'mail:from_email',
   mailFromName: 'mail:from_name',
+
+  /** Google Analytics 4 — pasted in admin, no redeploy needed. */
+  gaMeasurementId: 'analytics:ga_id',
+  gaEnabled: 'analytics:ga_enabled',
+
+  /** D-Tech AI customer chat (messaging-ai widget API). */
+  aiChatEnabled: 'ai:chat_enabled',
+  aiChatBaseUrl: 'ai:chat_base_url',
+  aiChatWidgetKey: 'ai:chat_widget_key',
+  aiChatTitle: 'ai:chat_title',
 } as const
+
+/** Read several settings in one pass (each is individually cached). */
+export async function getAppSettings<K extends string>(
+  keys: readonly K[]
+): Promise<Record<K, string | null>> {
+  const values = await Promise.all(keys.map((k) => getAppSetting(k)))
+  return Object.fromEntries(keys.map((k, i) => [k, values[i] ?? null])) as Record<
+    K,
+    string | null
+  >
+}
 
 export async function getAppSetting(key: string): Promise<string | null> {
   return cachedData(

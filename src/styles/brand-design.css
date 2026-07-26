@@ -978,3 +978,93 @@
   min-height: calc(100svh - 78px);
   align-content: center;
 }
+
+/* ═══════════ ROUND 9 — FULL-BLEED HERO SLIDER (brand skin) ═══════════
+   The slider fills the whole first screen; the copy column is gone. The
+   header shrinks 78px → 66px on scroll, so the hero is sized off the
+   SHRUNK height: it can only ever be slightly taller than the first screen,
+   never leave a gap under it. */
+.brand-root .hero.hero-full {
+  position: relative;
+  padding: 0;
+  min-height: calc(100vh - 66px);
+  min-height: calc(100svh - 66px);
+  overflow: hidden;
+}
+.brand-root .hero.hero-full .hero-slider {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  align-self: stretch;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--surface-2);
+}
+/* the 880px rule above re-locks aspect-ratio on .hero-right .hero-slider;
+   full-bleed has no .hero-right, but pin it anyway so a future edit can't
+   reintroduce the letterbox */
+@media (max-width: 880px) {
+  .brand-root .hero.hero-full .hero-slider { aspect-ratio: auto; }
+}
+.brand-root .hero.hero-full .hs-dots { bottom: 24px; }
+.brand-root .hero.hero-full .hs-arrow { width: 46px; height: 46px; }
+.brand-root .hero.hero-full .hs-arrow.prev { inset-inline-start: 20px; }
+.brand-root .hero.hero-full .hs-arrow.next { inset-inline-end: 20px; }
+@media (max-width: 640px) {
+  .brand-root .hero.hero-full .hs-arrow { width: 38px; height: 38px; }
+  .brand-root .hero.hero-full .hs-arrow.prev { inset-inline-start: 10px; }
+  .brand-root .hero.hero-full .hs-arrow.next { inset-inline-end: 10px; }
+  .brand-root .hero.hero-full .hs-dots { bottom: 16px; }
+}
+
+/* Branded empty state — shown until slides are uploaded in admin. */
+.brand-root .hs-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  background: radial-gradient(
+    120% 90% at 78% 14%,
+    var(--teal) 0%,
+    var(--teal-deep) 58%,
+    var(--teal-ink) 100%
+  );
+  color: #fff;
+}
+.brand-root .hs-fallback .hsf-mark {
+  font-family: var(--disp);
+  font-weight: 800;
+  font-size: clamp(38px, 6vw, 86px);
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+.brand-root .hs-fallback .hsf-mark sup { font-size: 0.42em; }
+.brand-root .hs-fallback .hsf-tag {
+  font-size: clamp(10px, 1.1vw, 13px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.86;
+}
+
+/* ── featured teaser (homepage) ───────────────────────────────────── */
+.brand-root .bf-seeall {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand-root .bf-note {
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+/* Filter chips became links; keep them visually identical to the buttons. */
+.brand-root a.chip { text-decoration: none; }

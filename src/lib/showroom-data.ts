@@ -19,6 +19,7 @@ export function toExplorerProducts(
     cardImagePath: imgOr(p.cardImagePath),
     specs: p.specs,
     featured: p.featured,
+    createdAt: p.createdAt ? new Date(p.createdAt).getTime() : undefined,
   }))
 }
 

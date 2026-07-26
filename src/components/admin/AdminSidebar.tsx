@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  BarChart3,
   ExternalLink,
   FolderKanban,
   Images,
@@ -46,6 +47,13 @@ const PRIMARY_NAV: NavItem[] = [
     desc: 'Vue d’ensemble',
     icon: LayoutDashboard,
     color: 'var(--c-mint)',
+  },
+  {
+    href: '/admin/analytics',
+    label: 'Statistiques',
+    desc: 'Audience et activité du site',
+    icon: BarChart3,
+    color: 'var(--c-blue)',
   },
   {
     href: '/admin/products',
