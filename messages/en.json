@@ -821,6 +821,15 @@
       "seeAll": "See all {count} products",
       "browseAll": "Browse the full catalog",
       "note": "{count} products · filter by category, brand and search"
+    },
+    "partner": {
+      "eyebrow": "{brand} partner",
+      "partnerLine": "D-Tech Algeria × {brand}",
+      "title1": "The professional {brand} range,",
+      "title2": "from your distributor.",
+      "sub": "{brand} workstations, displays and printing for businesses and public bodies — with a written quote, invoice and official warranty, delivered across all 58 wilayas.",
+      "cta": "Explore the {brand} range",
+      "tileSub": "{count} products"
     }
   },
   "newsletter": {

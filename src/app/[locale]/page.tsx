@@ -27,6 +27,7 @@ import { buildHomeData } from '@/server/template-data'
 import type { PageDoc } from '@/components/admin/editor/types'
 import { BrandHome } from '@/components/brand/BrandHome'
 import { buildBrandData } from '@/server/brand-data'
+import { buildPartnerBand } from '@/server/partner-band'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,6 +95,11 @@ export default async function HomePage() {
     countByBrand.set(p.brand.slug, (countByBrand.get(p.brand.slug) ?? 0) + 1)
   }
 
+  // Partner spotlight — tiles derived from the live catalogue (see
+  // buildPartnerBand). Returns null if the brand has no products, which hides
+  // the whole section rather than rendering an empty band.
+  const partner = buildPartnerBand(productsRaw, brandsRaw)
+
   const orgJsonLd = (
     <script
       type="application/ld+json"
@@ -109,6 +115,7 @@ export default async function HomePage() {
         <BrandHome
           locale={locale}
           data={buildBrandData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
+          partner={partner}
         />
       </>
     )
@@ -164,6 +171,7 @@ export default async function HomePage() {
         productCount={productsRaw.length}
         categories={categories}
         brands={brands}
+        partner={partner}
         heroConfig={heroConfig}
         content={contentOverrides}
       />

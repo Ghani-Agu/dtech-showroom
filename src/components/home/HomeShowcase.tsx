@@ -35,6 +35,8 @@ import { seededRating } from '@/lib/reviews'
 import { Stars } from '@/components/showroom/Stars'
 import { Carousel } from '@/components/showroom/Carousel'
 import { SiteNav, Logo } from '@/components/showroom/SiteNav'
+import { PartnerBand } from './PartnerBand'
+import type { PartnerBandData } from '@/server/partner-band'
 
 export type IconKind =
   | 'desktop'
@@ -81,6 +83,7 @@ export function HomeShowcase({
   productCount,
   categories,
   brands,
+  partner = null,
   heroConfig = null,
   content = {},
 }: {
@@ -90,6 +93,8 @@ export function HomeShowcase({
   productCount: number
   categories: HomeCategory[]
   brands: HomeBrand[]
+  /** Partner spotlight, derived from the catalogue. Null hides the section. */
+  partner?: PartnerBandData | null
   heroConfig?: HeroConfig | null
   content?: Partial<EditData>
 }) {
@@ -118,7 +123,7 @@ export function HomeShowcase({
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
         <SectionList
-          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']}
+          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact']}
           nodes={{
             hero: <HeroSlider slides={heroSlides} />,
             categories: <CategoriesSection categories={categories} />,
@@ -132,6 +137,7 @@ export function HomeShowcase({
             ),
             services: <ServicesStrip />,
             brands: <BrandsSection brands={brands} />,
+            partner: <PartnerSection partner={partner} />,
             about: <AboutSection productCount={productCount} brandCount={brands.length} categoryCount={categories.length} />,
             contact: <ContactSection />,
           }}
@@ -689,6 +695,66 @@ function FeaturedSection({
         </div>
       </div>
     </section>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Partner spotlight (classic skin wrapper)
+ * ──────────────────────────────────────────────────────────────── */
+
+/**
+ * Wraps the shared band with `<Editable>` nodes so the headline, sub-text and
+ * button label are editable through the inline site editor. The tiles are NOT
+ * editable by design — they're generated from the catalogue, so editing them
+ * by hand is how they'd end up pointing at products that no longer exist.
+ */
+function PartnerSection({ partner }: { partner: PartnerBandData | null }) {
+  const t = useTranslations('showroom.partner')
+  if (!partner) return null
+  const brand = partner.brandName
+
+  return (
+    <PartnerBand
+      brandSlug={partner.brandSlug}
+      brandName={brand}
+      logoPath={partner.logoPath}
+      accent={partner.accent}
+      accentDeep={partner.accentDeep}
+      eyebrow={
+        <Editable id="home.partner.eyebrow" label="Sur-titre — Partenaire">
+          {t('eyebrow', { brand })}
+        </Editable>
+      }
+      partnerLine={
+        <Editable id="home.partner.line" label="Ligne partenaire">
+          {t('partnerLine', { brand })}
+        </Editable>
+      }
+      heading={
+        <>
+          <Editable id="home.partner.title1" label="Titre — Partenaire (ligne 1)">
+            {t('title1', { brand })}
+          </Editable>{' '}
+          <Editable id="home.partner.title2" label="Titre — Partenaire (ligne 2)">
+            {t('title2', { brand })}
+          </Editable>
+        </>
+      }
+      sub={
+        <Editable id="home.partner.sub" label="Texte — Partenaire">
+          {t('sub', { brand })}
+        </Editable>
+      }
+      ctaLabel={
+        <Editable id="home.partner.cta" label="Bouton — Partenaire">
+          {t('cta', { brand })}
+        </Editable>
+      }
+      tiles={partner.tiles.map((tile) => ({
+        ...tile,
+        sub: t('tileSub', { count: Number(tile.sub) }),
+      }))}
+    />
   )
 }
 
