@@ -3,11 +3,14 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
-import { ProductExplorer } from '@/components/showroom/ProductExplorer'
+import { ProductsBrowser } from '@/components/showroom/ProductsBrowser'
+import { TrackProductList } from '@/components/analytics/TrackView'
+import { toExplorerProducts } from '@/lib/showroom-data'
 import {
-  facetFromProducts,
-  toExplorerProducts,
-} from '@/lib/showroom-data'
+  parseProductQuery,
+  runProductQuery,
+  type RawSearchParams,
+} from '@/lib/product-filters'
 import { type Locale } from '@/i18n/config'
 import { getBrandBySlug, getProductsByBrand } from '@/server/queries'
 import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
@@ -29,6 +32,7 @@ export const dynamic = 'force-dynamic'
 
 interface BrandPageProps {
   params: Promise<{ locale: string; brandSlug: string }>
+  searchParams: Promise<RawSearchParams>
 }
 
 export async function generateMetadata({
@@ -51,8 +55,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function BrandPage({ params }: BrandPageProps) {
+export default async function BrandPage({
+  params,
+  searchParams,
+}: BrandPageProps) {
   const { brandSlug } = await params
+  const sp = await searchParams
   const locale = (await getLocale()) as Locale
   const t = await getTranslations('showroom')
 
@@ -85,8 +93,12 @@ export default async function BrandPage({ params }: BrandPageProps) {
     )
   }
 
-  const products = toExplorerProducts(rawProducts)
-  const categories = facetFromProducts(products, 'category')
+  // Same URL-driven engine as /products, with the brand fixed by the route.
+  const query = parseProductQuery(sp)
+  const result = runProductQuery(toExplorerProducts(rawProducts), {
+    ...query,
+    brand: null, // the route already scopes it
+  })
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
@@ -99,7 +111,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
               { name: t('nav.brands'), path: '/brands' },
               { name: brand.name, path: `/brands/${brand.slug}` },
             ]),
-            itemListLd(locale, products.slice(0, 24)),
+            itemListLd(locale, result.items, result.offset),
           ]),
         }}
       />
@@ -122,7 +134,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
         <div className="veil" />
         <div className="inner">
           <span className="sr-kicker">
-            {t('categoriesPage.products', { count: products.length })}
+            {t('categoriesPage.products', { count: rawProducts.length })}
           </span>
           <h1 className="sr-h1" style={{ marginTop: 10 }}>
             {brand.name}
@@ -133,13 +145,24 @@ export default async function BrandPage({ params }: BrandPageProps) {
       </div>
 
       <div className="sr-in sr-in-2">
-        <ProductExplorer
-          products={products}
-          brands={[]}
-          categories={categories}
+        <ProductsBrowser
+          query={query}
+          result={result}
+          basePath={`/brands/${brand.slug}`}
           lock="brand"
         />
       </div>
+      <TrackProductList
+        listName={`brand:${brand.slug}`}
+        searchTerm={query.q || undefined}
+        facets={{ category: query.category, featured: query.featuredOnly }}
+        items={result.items.map((p) => ({
+          slug: p.slug,
+          name: p.name,
+          brandName: p.brandName,
+          categoryName: p.categoryName,
+        }))}
+      />
     </section>
   )
 }

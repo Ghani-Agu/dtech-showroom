@@ -23,20 +23,36 @@ export async function ProductsBrowser({
   query,
   result,
   basePath = '/products',
+  lock = 'none',
 }: {
   query: ProductQuery
   result: ProductQueryResult
   basePath?: string
+  /**
+   * On /categories/x and /brands/x the facet is fixed by the ROUTE, not the
+   * query. Locking it hides that lane and keeps the slug out of the query
+   * string, so the canonical URL stays `/categories/x?brand=hp` rather than
+   * `/categories/x?category=x&brand=hp`.
+   */
+  lock?: 'none' | 'brand' | 'category'
 }) {
   const t = await getTranslations('showroom.filters')
+  // Never serialise the locked facet — the path already carries it.
+  const linkQuery: ProductQuery = {
+    ...query,
+    ...(lock === 'category' ? { category: null } : {}),
+    ...(lock === 'brand' ? { brand: null } : {}),
+  }
   const href = (patch: Partial<ProductQuery>) =>
-    `${basePath}${productQueryToSearch(query, { page: 1, ...patch })}`
+    `${basePath}${productQueryToSearch(linkQuery, { page: 1, ...patch })}`
   const pageHref = (n: number) =>
-    `${basePath}${productQueryToSearch(query, { page: n })}`
+    `${basePath}${productQueryToSearch(linkQuery, { page: n })}`
 
   const { items, total, totalPages, page, categories, brands, featuredCount } =
     result
-  const active = hasActiveFilters(query)
+  // The locked facet isn't a "filter the visitor applied", so it must not make
+  // the reset row appear on an otherwise-unfiltered category page.
+  const active = hasActiveFilters(linkQuery)
 
   // Windowed page list: 1 … p-1 p p+1 … N
   const pageNums: (number | '…')[] = []
@@ -53,18 +69,19 @@ export async function ProductsBrowser({
   // excludes the other's selection, so BOTH lookups miss and neither removal
   // pill would render — leaving the visitor an empty grid and only a blanket
   // "reset". Falling back to the slug keeps both pills clickable.
-  const activeCategoryLabel = query.category
-    ? (categories.find((c) => c.slug === query.category)?.name ?? query.category)
+  const activeCategoryLabel = linkQuery.category
+    ? (categories.find((c) => c.slug === linkQuery.category)?.name ??
+      linkQuery.category)
     : null
-  const activeBrandLabel = query.brand
-    ? (brands.find((b) => b.slug === query.brand)?.name ?? query.brand)
+  const activeBrandLabel = linkQuery.brand
+    ? (brands.find((b) => b.slug === linkQuery.brand)?.name ?? linkQuery.brand)
     : null
 
   return (
     <div className="sr-browser">
       {/* ── filter lanes ─────────────────────────────────────────── */}
       <div className="sr-filterbar">
-        {categories.length > 1 ? (
+        {lock !== 'category' && categories.length > 1 ? (
           <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
             <Link
               href={href({ category: null })}
@@ -89,7 +106,7 @@ export async function ProductsBrowser({
           </Carousel>
         ) : null}
 
-        {brands.length > 1 ? (
+        {lock !== 'brand' && brands.length > 1 ? (
           <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
             <Link
               href={href({ brand: null })}
@@ -115,7 +132,7 @@ export async function ProductsBrowser({
         <div className="sr-toolbar">
           <ProductSearchField
             basePath={basePath}
-            query={query}
+            query={linkQuery}
             placeholder={t('searchPlaceholder')}
           />
           {featuredCount > 0 ? (
@@ -131,7 +148,7 @@ export async function ProductsBrowser({
               {t('featuredOnly')} <span className="n">{featuredCount}</span>
             </Link>
           ) : null}
-          <ProductSortSelect basePath={basePath} query={query} />
+          <ProductSortSelect basePath={basePath} query={linkQuery} />
           <span className="sr-count sr-mono">
             {t('results', { count: total })}
             {totalPages > 1 ? (

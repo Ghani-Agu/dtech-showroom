@@ -3,11 +3,14 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
-import { ProductExplorer } from '@/components/showroom/ProductExplorer'
+import { ProductsBrowser } from '@/components/showroom/ProductsBrowser'
+import { TrackProductList } from '@/components/analytics/TrackView'
+import { toExplorerProducts } from '@/lib/showroom-data'
 import {
-  facetFromProducts,
-  toExplorerProducts,
-} from '@/lib/showroom-data'
+  parseProductQuery,
+  runProductQuery,
+  type RawSearchParams,
+} from '@/lib/product-filters'
 import { type Locale } from '@/i18n/config'
 import { getCategoryBySlug, getProductsByCategory } from '@/server/queries'
 import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
@@ -29,6 +32,7 @@ export const dynamic = 'force-dynamic'
 
 interface CategoryPageProps {
   params: Promise<{ locale: string; categorySlug: string }>
+  searchParams: Promise<RawSearchParams>
 }
 
 export async function generateMetadata({
@@ -51,8 +55,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: CategoryPageProps) {
   const { categorySlug } = await params
+  const sp = await searchParams
   const locale = (await getLocale()) as Locale
   const t = await getTranslations('showroom')
 
@@ -85,8 +93,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     )
   }
 
-  const products = toExplorerProducts(rawProducts)
-  const brands = facetFromProducts(products, 'brand')
+  // Same URL-driven engine as /products, with the category fixed by the route.
+  // Previously this page shipped every product in the category to the browser
+  // and filtered client-side, with no shareable state.
+  const query = parseProductQuery(sp)
+  const result = runProductQuery(toExplorerProducts(rawProducts), {
+    ...query,
+    category: null, // the route already scopes it
+  })
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
@@ -99,7 +113,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               { name: t('nav.categories'), path: '/categories' },
               { name: category.name, path: `/categories/${category.slug}` },
             ]),
-            itemListLd(locale, products.slice(0, 24)),
+            itemListLd(locale, result.items, result.offset),
           ]),
         }}
       />
@@ -122,7 +136,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <div className="veil" />
         <div className="inner">
           <span className="sr-kicker">
-            {t('categoriesPage.products', { count: products.length })}
+            {t('categoriesPage.products', { count: rawProducts.length })}
           </span>
           <h1 className="sr-h1" style={{ marginTop: 10 }}>
             {category.name}
@@ -133,13 +147,24 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       <div className="sr-in sr-in-2">
-        <ProductExplorer
-          products={products}
-          brands={brands}
-          categories={[]}
+        <ProductsBrowser
+          query={query}
+          result={result}
+          basePath={`/categories/${category.slug}`}
           lock="category"
         />
       </div>
+      <TrackProductList
+        listName={`category:${category.slug}`}
+        searchTerm={query.q || undefined}
+        facets={{ brand: query.brand, featured: query.featuredOnly }}
+        items={result.items.map((p) => ({
+          slug: p.slug,
+          name: p.name,
+          brandName: p.brandName,
+          categoryName: p.categoryName,
+        }))}
+      />
     </section>
   )
 }

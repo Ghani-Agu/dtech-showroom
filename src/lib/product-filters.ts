@@ -13,7 +13,7 @@
  * `generateMetadata` and components can all share it.
  */
 
-import type { ExplorerProduct, FacetOption } from '@/components/showroom/ProductExplorer'
+import type { ExplorerProduct, FacetOption } from '@/types/catalog'
 
 export const PRODUCTS_PER_PAGE = 24
 
