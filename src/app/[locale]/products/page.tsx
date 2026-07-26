@@ -7,6 +7,7 @@ import { type Locale } from '@/i18n/config'
 import { getAllProducts, getAllCategories, getAllBrands } from '@/server/queries'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
 import {
   parseProductQuery,
   productQueryToSearch,
@@ -136,12 +137,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           brands: result.brands.length,
         })}
       </span>
-      <h1 className="sr-h1" style={{ marginTop: 14 }}>
+      <h1 className="sr-h1">
         {t('title1')} <span className="acc">{t('title2')}</span>
       </h1>
-      <p className="sr-sub" style={{ marginTop: 12 }}>
-        {t('sub')}
-      </p>
+      <p className="sr-sub">{t('sub')}</p>
     </>
   )
 
@@ -172,9 +171,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         />
       ) : null}
 
-      <div className="sr-in" style={{ marginBottom: 26 }}>
-        {header}
-      </div>
+      <header className="sr-in sr-pagehead">{header}</header>
       <div className="sr-in sr-in-2">
         <ProductsBrowser query={query} result={result} />
       </div>
@@ -205,6 +202,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   // maintain instead of two diverging ones.
   if (design === 'brand') {
     return <BrandPageShell locale={locale}>{body}</BrandPageShell>
+  }
+  if (design === 'editorial') {
+    return <EditorialPageShell locale={locale}>{body}</EditorialPageShell>
   }
 
   return body

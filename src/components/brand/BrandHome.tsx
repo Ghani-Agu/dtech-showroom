@@ -39,8 +39,8 @@ export function BrandHome({
         categories={data.categories}
       />
       <BrandServices />
-      <BrandBrands brands={data.brands} />
       <BrandPartnerSection partner={partner} />
+      <BrandBrands brands={data.brands} />
       <BrandAbout />
       <BrandContact />
     </BrandPageShell>

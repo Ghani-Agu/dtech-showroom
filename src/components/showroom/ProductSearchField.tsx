@@ -78,10 +78,7 @@ export function ProductSearchField({
   }
 
   return (
-    <span
-      className={isPending ? 'sr-search sr-search-busy' : 'sr-search'}
-      style={{ flex: '1 1 220px', maxWidth: 360 }}
-    >
+    <span className={isPending ? 'sr-search sr-search-busy' : 'sr-search'}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         <circle cx="11" cy="11" r="7" />
         <path d="m21 21-4.3-4.3" />

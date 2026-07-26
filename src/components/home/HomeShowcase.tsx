@@ -123,7 +123,7 @@ export function HomeShowcase({
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
         <SectionList
-          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact']}
+          defaultOrder={['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact']}
           nodes={{
             hero: <HeroSlider slides={heroSlides} />,
             categories: <CategoriesSection categories={categories} />,
@@ -1163,13 +1163,13 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
           <circle cx="22" cy="22" r="20" stroke="rgba(184,239,220,0.25)" />
           <circle cx="22" cy="22" r="14" stroke="rgba(184,239,220,0.15)" />
-          <text x="22" y="9" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#7ce0c3" fontWeight="600">N</text>
+          <text x="22" y="9" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#4f9dff" fontWeight="600">N</text>
           <text x="22" y="40" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">S</text>
           <text x="6" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">W</text>
           <text x="38" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">E</text>
-          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="#7ce0c3" />
-          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="none" stroke="rgba(124,224,195,0.5)" />
-          <circle cx="22" cy="22" r="1.5" fill="#7ce0c3" />
+          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="#4f9dff" />
+          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="none" stroke="rgba(79,157,255,0.5)" />
+          <circle cx="22" cy="22" r="1.5" fill="#4f9dff" />
         </svg>
       </div>
 
@@ -1216,9 +1216,9 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
             <stop offset="100%" stopColor="#0f1116" />
           </linearGradient>
           <radialGradient id="m2-aura" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0%" stopColor="rgba(124,224,195,0.28)" />
-            <stop offset="60%" stopColor="rgba(124,224,195,0.06)" />
-            <stop offset="100%" stopColor="rgba(124,224,195,0)" />
+            <stop offset="0%" stopColor="rgba(79,157,255,0.28)" />
+            <stop offset="60%" stopColor="rgba(79,157,255,0.06)" />
+            <stop offset="100%" stopColor="rgba(79,157,255,0)" />
           </radialGradient>
         </defs>
 
@@ -1235,7 +1235,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         />
         <ellipse cx="500" cy="390" rx="170" ry="120" fill="url(#m2-aura)" />
 
-        <g fill="rgba(124,224,195,0.05)" stroke="rgba(124,224,195,0.10)" strokeWidth="0.5">
+        <g fill="rgba(79,157,255,0.05)" stroke="rgba(79,157,255,0.10)" strokeWidth="0.5">
           <path d="M 260 460 C 240 450, 230 480, 250 500 C 280 514, 320 504, 326 480 C 332 460, 296 446, 260 460 Z" />
           <path d="M 600 240 C 590 232, 578 254, 590 268 C 612 280, 638 270, 638 252 C 638 238, 616 232, 600 240 Z" />
         </g>
@@ -1271,7 +1271,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         <g fill="none" strokeLinecap="round">
           <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(0,0,0,0.7)" strokeWidth="6" />
           <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(255,255,255,0.16)" strokeWidth="3.2" />
-          <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(124,224,195,0.20)" strokeWidth="1" strokeDasharray="6 6" />
+          <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(79,157,255,0.20)" strokeWidth="1" strokeDasharray="6 6" />
           <path d="M 0 232 C 200 224, 400 244, 800 228" stroke="rgba(0,0,0,0.5)" strokeWidth="4" />
           <path d="M 0 232 C 200 224, 400 244, 800 228" stroke="rgba(255,255,255,0.10)" strokeWidth="2" />
           <path d="M 0 460 C 200 456, 400 472, 800 458" stroke="rgba(0,0,0,0.5)" strokeWidth="4" />
@@ -1290,7 +1290,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         <g fontFamily="JetBrains Mono" fontSize="9" fill="rgba(255,255,255,0.32)" letterSpacing="3">
           <text x="400" y="80" textAnchor="middle">{t('map.sea')}</text>
         </g>
-        <g fontFamily="JetBrains Mono" fontSize="8" fill="rgba(124,224,195,0.45)" letterSpacing="1.5">
+        <g fontFamily="JetBrains Mono" fontSize="8" fill="rgba(79,157,255,0.45)" letterSpacing="1.5">
           <text x="120" y="316" textAnchor="middle">A1</text>
         </g>
         <g fontFamily="JetBrains Mono" fontSize="9" fill="rgba(255,255,255,0.22)" letterSpacing="2">
@@ -1353,23 +1353,23 @@ function ContactPanel({
                 <stop offset="100%" stopColor="#0d0e12" />
               </linearGradient>
             </defs>
-            <rect x="50" y="40" width="300" height="20" fill="url(#store-grad)" stroke="rgba(124,224,195,0.3)" />
-            <text x="200" y="56" textAnchor="middle" fontFamily="Inter" fontSize="14" fontWeight="700" fill="#7ce0c3" letterSpacing="2">D-TECH</text>
-            <rect x="50" y="60" width="300" height="140" fill="url(#store-grad)" stroke="rgba(124,224,195,0.2)" />
-            <rect x="74" y="76" width="116" height="100" fill="rgba(124,224,195,0.08)" stroke="rgba(124,224,195,0.4)" />
-            <line x1="132" y1="76" x2="132" y2="176" stroke="rgba(124,224,195,0.3)" />
-            <line x1="74" y1="126" x2="190" y2="126" stroke="rgba(124,224,195,0.2)" />
+            <rect x="50" y="40" width="300" height="20" fill="url(#store-grad)" stroke="rgba(79,157,255,0.3)" />
+            <text x="200" y="56" textAnchor="middle" fontFamily="Inter" fontSize="14" fontWeight="700" fill="#4f9dff" letterSpacing="2">D-TECH</text>
+            <rect x="50" y="60" width="300" height="140" fill="url(#store-grad)" stroke="rgba(79,157,255,0.2)" />
+            <rect x="74" y="76" width="116" height="100" fill="rgba(79,157,255,0.08)" stroke="rgba(79,157,255,0.4)" />
+            <line x1="132" y1="76" x2="132" y2="176" stroke="rgba(79,157,255,0.3)" />
+            <line x1="74" y1="126" x2="190" y2="126" stroke="rgba(79,157,255,0.2)" />
             <rect x="82" y="88" width="42" height="28" rx="2" fill="rgba(184,239,220,0.18)" />
             <rect x="140" y="88" width="42" height="28" rx="2" fill="rgba(184,239,220,0.10)" />
             <rect x="82" y="138" width="42" height="28" rx="2" fill="rgba(184,239,220,0.10)" />
             <rect x="140" y="138" width="42" height="28" rx="2" fill="rgba(184,239,220,0.18)" />
-            <rect x="208" y="100" width="48" height="76" fill="rgba(124,224,195,0.06)" stroke="rgba(124,224,195,0.5)" />
-            <circle cx="246" cy="138" r="1.5" fill="#7ce0c3" />
-            <rect x="270" y="76" width="60" height="100" fill="rgba(124,224,195,0.06)" stroke="rgba(124,224,195,0.3)" />
-            <line x1="300" y1="76" x2="300" y2="176" stroke="rgba(124,224,195,0.2)" />
-            <line x1="270" y1="126" x2="330" y2="126" stroke="rgba(124,224,195,0.2)" />
-            <rect x="282" y="86" width="36" height="14" rx="2" fill="rgba(124,224,195,0.2)" />
-            <text x="300" y="96" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" fill="#7ce0c3" letterSpacing="1.5">2026</text>
+            <rect x="208" y="100" width="48" height="76" fill="rgba(79,157,255,0.06)" stroke="rgba(79,157,255,0.5)" />
+            <circle cx="246" cy="138" r="1.5" fill="#4f9dff" />
+            <rect x="270" y="76" width="60" height="100" fill="rgba(79,157,255,0.06)" stroke="rgba(79,157,255,0.3)" />
+            <line x1="300" y1="76" x2="300" y2="176" stroke="rgba(79,157,255,0.2)" />
+            <line x1="270" y1="126" x2="330" y2="126" stroke="rgba(79,157,255,0.2)" />
+            <rect x="282" y="86" width="36" height="14" rx="2" fill="rgba(79,157,255,0.2)" />
+            <text x="300" y="96" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" fill="#4f9dff" letterSpacing="1.5">2026</text>
             <line x1="30" y1="200" x2="370" y2="200" stroke="rgba(184,239,220,0.4)" strokeWidth="1.5" />
             <circle cx="100" cy="194" r="3" fill="rgba(184,239,220,0.55)" />
             <rect x="98" y="194" width="4" height="6" rx="1" fill="rgba(184,239,220,0.55)" />

@@ -16,7 +16,7 @@
 
 :where(.dt-chat-fab, .dt-chat-panel) {
   /* classic (Nightline) — dark surfaces, mint accent */
-  --dtc-accent: #7ce0c3;
+  --dtc-accent: #4f9dff;
   --dtc-on-accent: #04110c;
   --dtc-bg: #0a1322;
   --dtc-bg-2: rgba(255, 255, 255, 0.05);
@@ -25,6 +25,18 @@
   --dtc-line: rgba(255, 255, 255, 0.1);
   --dtc-line-2: rgba(255, 255, 255, 0.2);
   --dtc-ring: #04060c;
+}
+[data-design='editorial'] :where(.dt-chat-fab, .dt-chat-panel) {
+  /* éditorial — warm paper surfaces, teal accent, ink text */
+  --dtc-accent: #0ea79e;
+  --dtc-on-accent: #ffffff;
+  --dtc-bg: #fcfbf9;
+  --dtc-bg-2: rgba(14, 167, 158, 0.07);
+  --dtc-text: #292520;
+  --dtc-muted: #6f675e;
+  --dtc-line: rgba(41, 37, 32, 0.12);
+  --dtc-line-2: rgba(41, 37, 32, 0.22);
+  --dtc-ring: #fcfbf9;
 }
 [data-design='brand'] :where(.dt-chat-fab, .dt-chat-panel) {
   /* brand (dtech) — light surfaces, teal accent */

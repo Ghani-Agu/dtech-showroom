@@ -87,15 +87,25 @@ export function FooterNewsletter({ source = 'footer' }: { source?: string }) {
     <form action={formAction} className="sr-nl" noValidate>
       <p className="sr-nl-title">{title}</p>
 
-      {/* Honeypot */}
+      {/* Honeypot — hidden without an off-screen offset.
+
+          `inset-inline-start: -9999px` (and plain `left: -9999px`) resolves to
+          `right: -9999px` under RTL, which pushes the field 9 999px past the
+          right edge and grows document scrollWidth to ~11 300px. That gave
+          every Arabic page a huge phantom horizontal scrollbar. Clipping in
+          place keeps the field in the DOM for bots with zero layout effect in
+          either direction. */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          insetInlineStart: '-9999px',
           width: 1,
           height: 1,
           overflow: 'hidden',
+          clipPath: 'inset(50%)',
+          whiteSpace: 'nowrap',
+          opacity: 0,
+          pointerEvents: 'none',
         }}
       >
         <label htmlFor={hpId}>Website</label>

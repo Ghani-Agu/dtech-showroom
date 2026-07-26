@@ -761,7 +761,12 @@
       "categoriesLabel": "Categories",
       "featuredOnly": "Featured",
       "clearFilter": "Remove this filter",
-      "sortNewest": "Newest first"
+      "sortNewest": "Newest first",
+      "filtersTitle": "Filters",
+      "refine": "Refine",
+      "categoriesTitle": "Category",
+      "brandsTitle": "Brand",
+      "activeCount": "{n} active filter(s)"
     },
     "product": {
       "addToCart": "Add to cart",

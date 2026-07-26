@@ -761,7 +761,12 @@
       "categoriesLabel": "Catégories",
       "featuredOnly": "En vedette",
       "clearFilter": "Retirer ce filtre",
-      "sortNewest": "Plus récents"
+      "sortNewest": "Plus récents",
+      "filtersTitle": "Filtres",
+      "refine": "Affiner",
+      "categoriesTitle": "Catégorie",
+      "brandsTitle": "Marque",
+      "activeCount": "{n} filtre(s) actif(s)"
     },
     "product": {
       "addToCart": "Ajouter au panier",

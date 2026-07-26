@@ -761,7 +761,12 @@
       "categoriesLabel": "الفئات",
       "featuredOnly": "مميّزة",
       "clearFilter": "إزالة هذا الفلتر",
-      "sortNewest": "الأحدث أولاً"
+      "sortNewest": "الأحدث أولاً",
+      "filtersTitle": "الفلاتر",
+      "refine": "تحديد",
+      "categoriesTitle": "الفئة",
+      "brandsTitle": "العلامة",
+      "activeCount": "{n} فلتر نشط"
     },
     "product": {
       "addToCart": "أضف إلى السلة",
