@@ -4,6 +4,7 @@ import * as schema from './schema'
 
 const globalForDb = globalThis as unknown as {
   client?: ReturnType<typeof postgres>
+  poolWarned?: boolean
 }
 
 const rawConnectionString =
@@ -72,9 +73,25 @@ const client =
     connect_timeout: 10,
     // Poolers don't support server-side prepared statements.
     ...(isPooledEndpoint ? { prepare: false } : {}),
+    /**
+     * postgres.js prints every server NOTICE. ensure-schema.ts is a wall of
+     * `IF NOT EXISTS` DDL, so every boot dumped ~25 "already exists,
+     * skipping" objects and buried the lines that matter. Real problems are
+     * ERRORs, not NOTICEs — set DB_DEBUG=1 to see them again.
+     */
+    onnotice:
+      process.env.DB_DEBUG === '1'
+        ? undefined
+        : (notice) => {
+            if (notice.severity && notice.severity !== 'NOTICE') {
+              console.warn(`[db] ${notice.severity}: ${notice.message}`)
+            }
+          },
   })
 
-if (upgradedToTransactionPooler && !globalForDb.client) {
+// Warn ONCE per process — the module is evaluated in several Next runtimes.
+if (upgradedToTransactionPooler && !globalForDb.poolWarned) {
+  globalForDb.poolWarned = true
   console.warn(
     '[db] DATABASE_URL pointed at the Supabase SESSION pooler (:5432, max 15 clients). ' +
       'Using the transaction pooler (:6543) instead — update the env var to make it explicit.'
