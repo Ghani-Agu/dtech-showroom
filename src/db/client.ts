@@ -70,7 +70,13 @@ const client =
   postgres(connectionString, {
     max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : defaultPoolMax,
     idle_timeout: 20, // close idle connections after 20s (serverless-friendly)
-    connect_timeout: 10,
+    /**
+     * 4s, not 10s. A `force-dynamic` render fans out to a dozen-plus queries
+     * against a database an ocean away; at 10s a single bad link turned one
+     * page into a 30-70s render. The app-level deadline in db/health.ts sits
+     * just above this so the driver's real error is the one that surfaces.
+     */
+    connect_timeout: Number(process.env.DB_CONNECT_TIMEOUT ?? 4),
     // Poolers don't support server-side prepared statements.
     ...(isPooledEndpoint ? { prepare: false } : {}),
     /**

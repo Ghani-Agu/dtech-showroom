@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { eq } from 'drizzle-orm'
 import { cachedData } from '@/lib/data-cache'
 import { db } from '@/db/client'
+import { withDb } from '@/db/health'
 import { sitePages, type SitePageRow } from '@/db/schema'
 import {
   customKeyForPath,
@@ -23,17 +24,19 @@ export const MANIFEST_KEY = '__pages__'
 
 /** Full row (draft + published) — used by the editor to seed its state. */
 export async function getSitePageRow(
-  key: string = HOME
+  key: string = HOME,
+  timeoutMs?: number
 ): Promise<SitePageRow | null> {
   try {
-    const rows = await db
-      .select()
-      .from(sitePages)
-      .where(eq(sitePages.key, key))
-      .limit(1)
+    const rows = await withDb(
+      () => db.select().from(sitePages).where(eq(sitePages.key, key)).limit(1),
+      timeoutMs
+    )
     return rows[0] ?? null
   } catch {
-    // Table may not exist yet (first boot before ensure-schema). Fail soft.
+    // Table may not exist yet (first boot before ensure-schema), or the link
+    // is down and the breaker rejected us. Fail soft — callers all have a
+    // sensible default and getPublishedDesign() keeps the last known skin.
     return null
   }
 }
@@ -187,13 +190,37 @@ export async function getSiteTheme(): Promise<string> {
  * force-dynamic anyway — so the cost is noise and the switch is instant
  * everywhere.
  */
+/**
+ * Last design we successfully read, kept for the lifetime of the process.
+ *
+ * getSitePageRow() fails soft to `null`, and `coerceDesign(null)` is
+ * 'classic'. That meant a single dropped connection silently re-skinned the
+ * WHOLE site to the default for that render — the live design flipping
+ * under you mid-session was a symptom of the link, not of the editor.
+ * A remembered value makes an outage invisible instead of visible-and-wrong.
+ */
+const lastKnownDesign = globalThis as unknown as { __dtechDesign?: DesignId }
+
+/**
+ * Ceiling for the design lookup specifically.
+ *
+ * This one read is deliberately NOT cached (a skin switch must be instant
+ * everywhere), which makes it the only DB call a storefront render can block
+ * on. It is a single primary-key row: on a healthy link it answers in
+ * milliseconds, so anything past 1.5s means the link is sick and the
+ * remembered skin is the better answer. Without this ceiling every render
+ * during an outage paid the full generic deadline before the breaker opened.
+ */
+const DESIGN_READ_TIMEOUT_MS = Number(process.env.DB_DESIGN_TIMEOUT_MS ?? 1_500)
+
 export const getPublishedDesign = cache(async (): Promise<DesignId> => {
-  try {
-    const row = await getSitePageRow(DESIGN_KEY)
-    return coerceDesign(row?.published)
-  } catch {
-    return coerceDesign(undefined)
+  const row = await getSitePageRow(DESIGN_KEY, DESIGN_READ_TIMEOUT_MS)
+  if (row) {
+    const design = coerceDesign(row.published)
+    lastKnownDesign.__dtechDesign = design
+    return design
   }
+  return lastKnownDesign.__dtechDesign ?? coerceDesign(undefined)
 })
 
 /**

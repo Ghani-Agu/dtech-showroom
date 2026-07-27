@@ -2,6 +2,7 @@ import 'server-only'
 import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm'
 import { cachedData } from '@/lib/data-cache'
 import { db } from '@/db/client'
+import { withDb } from '@/db/health'
 import {
   brands,
   categories,
@@ -19,7 +20,10 @@ import { defaultLocale, type Locale } from '@/i18n/config'
 // an EmptyState; getBySlug callers see null and route to notFound().
 async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
-    return await fn()
+    // withDb() bounds the call and short-circuits instantly while the
+    // breaker is open, so a dead link costs one timeout per cooldown
+    // window instead of one per query per render.
+    return await withDb(fn)
   } catch (err) {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(

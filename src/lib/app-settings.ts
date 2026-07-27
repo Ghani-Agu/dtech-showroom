@@ -1,6 +1,6 @@
 import 'server-only'
-import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
+import { withDb } from '@/db/health'
 import { appSettings } from '@/db/schema'
 import { cachedData, bustDataCache } from './data-cache'
 
@@ -28,35 +28,47 @@ export const SETTING_KEYS = {
   aiChatTitle: 'ai:chat_title',
 } as const
 
-/** Read several settings in one pass (each is individually cached). */
+/**
+ * The whole table in ONE round trip, cached under a single key.
+ *
+ * app_settings holds a handful of short rows. Reading them key-by-key meant
+ * the [locale] layout alone issued six separate queries per render just to
+ * decide whether to mount GA and the chat bubble — six chances to stall on a
+ * slow link, for a payload measured in bytes. One read covers every key,
+ * present or future.
+ */
+async function getAllAppSettings(): Promise<Record<string, string | null>> {
+  return cachedData(
+    'appSettings:all',
+    async () => {
+      try {
+        const rows = await withDb(() =>
+          db.select({ key: appSettings.key, value: appSettings.value }).from(appSettings)
+        )
+        return Object.fromEntries(rows.map((r) => [r.key, r.value ?? null]))
+      } catch {
+        // Table may not exist yet on first boot — behave as "nothing set".
+        return {}
+      }
+    },
+    { cacheEmpty: true, ttlMs: 30_000 }
+  )
+}
+
+/** Read several settings in one pass — a single query behind the cache. */
 export async function getAppSettings<K extends string>(
   keys: readonly K[]
 ): Promise<Record<K, string | null>> {
-  const values = await Promise.all(keys.map((k) => getAppSetting(k)))
-  return Object.fromEntries(keys.map((k, i) => [k, values[i] ?? null])) as Record<
+  const all = await getAllAppSettings()
+  return Object.fromEntries(keys.map((k) => [k, all[k] ?? null])) as Record<
     K,
     string | null
   >
 }
 
 export async function getAppSetting(key: string): Promise<string | null> {
-  return cachedData(
-    `appSetting:${key}`,
-    async () => {
-      try {
-        const rows = await db
-          .select({ value: appSettings.value })
-          .from(appSettings)
-          .where(eq(appSettings.key, key))
-          .limit(1)
-        return rows[0]?.value ?? null
-      } catch {
-        // Table may not exist yet on first boot — behave as "not set".
-        return null
-      }
-    },
-    { cacheEmpty: true, ttlMs: 30_000 }
-  )
+  const all = await getAllAppSettings()
+  return all[key] ?? null
 }
 
 export async function setAppSetting(
@@ -70,5 +82,5 @@ export async function setAppSetting(
       target: appSettings.key,
       set: { value, updatedAt: new Date() },
     })
-  bustDataCache('appSetting:')
+  bustDataCache('appSettings:')
 }

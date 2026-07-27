@@ -27,6 +27,7 @@ import 'server-only'
 import { after } from 'next/server'
 import { and, count, eq, isNotNull, lt, lte, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
+import { isDbUnavailable } from '@/db/health'
 import {
   campaigns,
   campaignSends,
@@ -314,6 +315,11 @@ export async function processCampaignChunk(
 let lastPokeAt = 0
 
 export function pokeCampaignScheduler(): void {
+  // A known-down database gets no extra traffic: the poke would queue behind
+  // the same dead connection the render is already waiting on, and its
+  // failure log buried the useful lines. It resumes on its own once the
+  // breaker closes.
+  if (isDbUnavailable()) return
   const now = Date.now()
   if (now - lastPokeAt < 60_000) return
   lastPokeAt = now
