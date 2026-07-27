@@ -9,6 +9,7 @@ import {
   jsonb,
   pgEnum,
   index,
+  uniqueIndex,
   customType,
 } from 'drizzle-orm/pg-core'
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
@@ -156,6 +157,10 @@ export const products = pgTable(
     taglineAr: text('tagline_ar'),
     descriptionAr: text('description_ar'),
 
+    /** Raw HTML block (Round 8) shown under the description on the
+     *  product page — same content for all locales. Sanitized at render. */
+    customHtml: text('custom_html'),
+
     // SEO overrides (Phase 7c) — null falls back to name/tagline
     seoTitle: text('seo_title'),
     seoDescription: text('seo_description'),
@@ -285,7 +290,7 @@ export type InquiryStatus = (typeof inquiryStatusEnum.enumValues)[number]
 // USERS + SESSIONS (Phase 6 — authentication)
 // =========================================================================
 
-export const userRoleEnum = pgEnum('user_role', ['admin', 'staff'])
+export const userRoleEnum = pgEnum('user_role', ['admin', 'staff', 'customer'])
 
 export const users = pgTable(
   'users',
@@ -295,7 +300,11 @@ export const users = pgTable(
     emailVerified: boolean('email_verified').notNull().default(false),
     name: text('name').notNull(),
     image: text('image'),
-    role: userRoleEnum('role').notNull().default('staff'),
+    /** 'customer' = public storefront sign-up (Round 15) — the DB default,
+     *  so self-registered visitors never inherit staff access. The admin
+     *  "Créer un compte" flow sets staff/admin explicitly right after
+     *  creation, and the ADMIN_EMAILS hook still promotes on first sign-in. */
+    role: userRoleEnum('role').notNull().default('customer'),
 
     /** Admin sections a staff member can manage (null = staff defaults).
      *  Admins always have full access. Keys: products, categories, brands,
@@ -382,6 +391,21 @@ export const sitePages = pgTable('site_pages', {
 
 export type SitePageRow = InferSelectModel<typeof sitePages>
 
+/**
+ * Small key/value store for app-level configuration edited from the admin
+ * (e.g. the Brevo API key, Brevo list id). Created idempotently in
+ * ensure-schema.ts. Values are plain text — mask them in the UI.
+ */
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value'),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+export type AppSettingRow = InferSelectModel<typeof appSettings>
+
 /* ─────────────────────────────────────────────────────────────────
  * NEWSLETTER — subscribers, campaigns, per-recipient sends
  *
@@ -444,7 +468,9 @@ export const campaigns = pgTable(
     preheader: text('preheader'),
     bodyHtml: text('body_html').notNull().default(''),
     bodyText: text('body_text').notNull().default(''),
-    /** Audience selector — for now: 'all'. Future: category id, language… */
+    /** Composer state (email-blocks.ts). Null = legacy raw-HTML campaign. */
+    bodyBlocks: jsonb('body_blocks'),
+    /** Audience selector — 'all' or a locale prefix: 'fr' | 'en' | 'ar'. */
     audience: text('audience').notNull().default('all'),
     status: campaignStatusEnum('status').notNull().default('draft'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
@@ -452,7 +478,8 @@ export const campaigns = pgTable(
     sentCount: integer('sent_count').notNull().default(0),
     openCount: integer('open_count').notNull().default(0),
     clickCount: integer('click_count').notNull().default(0),
-    createdBy: uuid('created_by'),
+    /** better-auth user id (TEXT — was uuid, which broke inserts). */
+    createdBy: text('created_by'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -492,6 +519,12 @@ export const campaignSends = pgTable(
   (table) => [
     index('campaign_sends_campaign_id_idx').on(table.campaignId),
     index('campaign_sends_subscriber_id_idx').on(table.subscriberId),
+    // One row per (campaign × subscriber) — the resumable send pipeline
+    // relies on INSERT … ON CONFLICT DO NOTHING against this index.
+    uniqueIndex('campaign_sends_campaign_subscriber_uq').on(
+      table.campaignId,
+      table.subscriberId
+    ),
   ]
 )
 

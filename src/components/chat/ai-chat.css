@@ -1,0 +1,737 @@
+/**
+ * ai-chat.css — D-Tech AI chat launcher + panel (ROUND 17 redesign).
+ *
+ * Placement: bottom-INLINE-START. The cart FAB owns bottom-inline-end, so the
+ * two never collide in either direction (LTR: chat left / cart right; RTL the
+ * mirror). z-index 57/58 sits above the cart FAB (56) and the sticky buy bar
+ * (55) but below the cart drawer (95), overlay (90) and toasts (99) — a modal
+ * should still cover the chat.
+ *
+ * Colours: the widget mounts OUTSIDE `.sr-root`, so the `--sr-*` family is not
+ * in scope here. It defines its own `--dtc-*` tokens instead, keyed off the
+ * `data-design` attribute on the locale wrapper (classic / brand / editorial)
+ * and the `body[data-home-theme='light']` flag, so all three skins and light
+ * mode are covered without depending on another scope's variables.
+ *
+ * Every offset uses logical properties (inset-inline-*, border-start-start-*)
+ * so the Arabic layout mirrors for free.
+ */
+
+:where(.dt-chat-fab, .dt-chat-panel, .dt-chat-scrim) {
+  /* classic (Nightline) — deep navy glass, D-Tech blue → cyan accent */
+  --dtc-g1: #4f9dff;
+  --dtc-g2: #3ec5e0;
+  --dtc-on-accent: #04121f;
+  --dtc-bg: #0b1524;
+  --dtc-bg-soft: #101d30;
+  --dtc-bubble: rgba(255, 255, 255, 0.06);
+  --dtc-text: #eaf2ff;
+  --dtc-muted: #93a8c4;
+  --dtc-line: rgba(255, 255, 255, 0.1);
+  --dtc-line-2: rgba(255, 255, 255, 0.2);
+  --dtc-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.75);
+  --dtc-head-text: #ffffff;
+  --dtc-dot: rgba(255, 255, 255, 0.055);
+}
+[data-design='brand'] :where(.dt-chat-fab, .dt-chat-panel, .dt-chat-scrim) {
+  /* brand (dtech) — light surfaces, teal accent */
+  --dtc-g1: #0a808c;
+  --dtc-g2: #16b5a4;
+  --dtc-on-accent: #ffffff;
+  --dtc-bg: #ffffff;
+  --dtc-bg-soft: #f4fafb;
+  --dtc-bubble: rgba(10, 128, 140, 0.07);
+  --dtc-text: #16232b;
+  --dtc-muted: #5d7480;
+  --dtc-line: rgba(18, 40, 46, 0.12);
+  --dtc-line-2: rgba(18, 40, 46, 0.22);
+  --dtc-shadow: 0 30px 70px -26px rgba(9, 51, 56, 0.45);
+  --dtc-head-text: #ffffff;
+  --dtc-dot: rgba(10, 128, 140, 0.07);
+}
+[data-design='editorial'] :where(.dt-chat-fab, .dt-chat-panel, .dt-chat-scrim) {
+  /* éditorial — warm paper, ink text, teal accent */
+  --dtc-g1: #0ea79e;
+  --dtc-g2: #34c39a;
+  --dtc-on-accent: #ffffff;
+  --dtc-bg: #fcfbf9;
+  --dtc-bg-soft: #f5f2ec;
+  --dtc-bubble: rgba(41, 37, 32, 0.055);
+  --dtc-text: #292520;
+  --dtc-muted: #6f675e;
+  --dtc-line: rgba(41, 37, 32, 0.13);
+  --dtc-line-2: rgba(41, 37, 32, 0.24);
+  --dtc-shadow: 0 28px 66px -24px rgba(41, 37, 32, 0.42);
+  --dtc-head-text: #ffffff;
+  --dtc-dot: rgba(41, 37, 32, 0.06);
+}
+/* Classic in light mode — the brand/editorial skins are already light. */
+body[data-home-theme='light']
+  :where(.dt-chat-fab, .dt-chat-panel, .dt-chat-scrim) {
+  --dtc-bg: #ffffff;
+  --dtc-bg-soft: #f4f8fd;
+  --dtc-bubble: rgba(19, 33, 28, 0.05);
+  --dtc-text: #10203a;
+  --dtc-muted: #5b6b7f;
+  --dtc-line: rgba(16, 32, 58, 0.12);
+  --dtc-line-2: rgba(16, 32, 58, 0.22);
+  --dtc-shadow: 0 30px 70px -26px rgba(16, 32, 58, 0.35);
+  --dtc-dot: rgba(16, 32, 58, 0.06);
+}
+
+/* ───────────────────────── launcher ───────────────────────── */
+
+.dt-chat-fab {
+  position: fixed;
+  bottom: 18px;
+  inset-inline-start: 18px;
+  z-index: 57;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--dtc-on-accent);
+  background: linear-gradient(140deg, var(--dtc-g1), var(--dtc-g2));
+  box-shadow:
+    0 10px 26px -6px color-mix(in srgb, var(--dtc-g1) 55%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s ease,
+    background 0.22s ease;
+}
+.dt-chat-fab:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 18px 36px -8px color-mix(in srgb, var(--dtc-g1) 62%, transparent),
+    0 3px 8px rgba(0, 0, 0, 0.2);
+}
+.dt-chat-fab:active {
+  transform: translateY(-1px) scale(0.98);
+}
+.dt-chat-fab:focus-visible {
+  outline: 2px solid var(--dtc-g1);
+  outline-offset: 3px;
+}
+.dt-chat-fab.is-open {
+  background: var(--dtc-bg);
+  color: var(--dtc-text);
+  border: 1px solid var(--dtc-line);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.45);
+}
+.dt-chat-fab-ico {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dt-chat-fab:hover .dt-chat-fab-ico {
+  transform: rotate(-6deg) scale(1.06);
+}
+.dt-chat-fab.is-open .dt-chat-fab-ico {
+  transform: rotate(90deg);
+}
+
+/* breathing ring — pure decoration, dropped for reduced motion */
+.dt-chat-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: dtcHalo 2.8s ease-out infinite;
+}
+@keyframes dtcHalo {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--dtc-g1) 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* hover label — desktop only, never overlaps the panel */
+.dt-chat-tip {
+  position: absolute;
+  inset-inline-start: calc(100% + 12px);
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--dtc-text);
+  background: var(--dtc-bg);
+  border: 1px solid var(--dtc-line);
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+[dir='rtl'] .dt-chat-tip {
+  transform: translateX(6px);
+}
+.dt-chat-fab:hover .dt-chat-tip,
+.dt-chat-fab:focus-visible .dt-chat-tip {
+  opacity: 1;
+  transform: none;
+}
+.dt-chat-fab.is-open .dt-chat-tip {
+  display: none;
+}
+@media (max-width: 900px), (hover: none) {
+  .dt-chat-tip {
+    display: none;
+  }
+}
+
+/* ───────────────────────── panel ───────────────────────── */
+
+.dt-chat-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 56;
+  background: rgba(4, 10, 18, 0.5);
+  backdrop-filter: blur(2px);
+  animation: dtcFade 0.2s ease both;
+}
+@keyframes dtcFade {
+  from {
+    opacity: 0;
+  }
+}
+
+.dt-chat-panel {
+  position: fixed;
+  bottom: 88px;
+  inset-inline-start: 18px;
+  z-index: 58;
+  width: min(384px, calc(100vw - 36px));
+  max-height: min(600px, calc(100vh - 130px));
+  max-height: min(600px, calc(100svh - 130px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid var(--dtc-line);
+  background: var(--dtc-bg);
+  color: var(--dtc-text);
+  box-shadow: var(--dtc-shadow);
+  transform: translateY(14px) scale(0.97);
+  transform-origin: bottom left;
+  opacity: 0;
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[dir='rtl'] .dt-chat-panel {
+  transform-origin: bottom right;
+}
+.dt-chat-panel.is-open {
+  opacity: 1;
+  transform: none;
+}
+/* [hidden] must actually hide — `display:flex` above would otherwise win. */
+.dt-chat-panel[hidden] {
+  display: none;
+}
+
+/* header — the gradient is the signature of the whole widget */
+.dt-chat-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 14px 15px;
+  color: var(--dtc-head-text);
+  background: linear-gradient(125deg, var(--dtc-g1), var(--dtc-g2));
+  isolation: isolate;
+}
+.dt-chat-head::after {
+  /* soft light sweep so the flat gradient reads as a surface */
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 80% at 8% -20%, rgba(255, 255, 255, 0.34), transparent 60%),
+    radial-gradient(80% 120% at 105% 120%, rgba(0, 0, 0, 0.16), transparent 62%);
+}
+/* the sheet's drag affordance — hidden on desktop */
+.dt-chat-grab {
+  display: none;
+}
+
+.dt-chat-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  color: var(--dtc-head-text);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+.dt-chat-live {
+  position: absolute;
+  bottom: -1px;
+  inset-inline-end: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: #3ddc84;
+  border: 2px solid color-mix(in srgb, var(--dtc-g1) 70%, #000 12%);
+  animation: dtcPulse 2.2s ease-in-out infinite;
+}
+.dt-chat-live.is-off {
+  background: #f0b429;
+  animation: none;
+}
+@keyframes dtcPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(61, 220, 132, 0.55);
+  }
+  60% {
+    box-shadow: 0 0 0 7px rgba(61, 220, 132, 0);
+  }
+}
+
+.dt-chat-headtext {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+.dt-chat-headtext strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dt-chat-headtext small {
+  font-size: 11.5px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dt-chat-hbtn {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+.dt-chat-hbtn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+.dt-chat-hbtn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ───────────────────────── transcript ───────────────────────── */
+
+.dt-chat-log {
+  flex: 1;
+  min-height: 168px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dtc-line-2) transparent;
+  background-color: var(--dtc-bg);
+  background-image: radial-gradient(var(--dtc-dot) 1px, transparent 1px);
+  background-size: 15px 15px;
+}
+
+.dt-chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  animation: dtcIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dt-chat-row.is-bot {
+  justify-content: flex-start;
+}
+.dt-chat-row.is-user {
+  justify-content: flex-end;
+}
+@keyframes dtcIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.dt-chat-mini {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  margin-bottom: 1px;
+  border-radius: 999px;
+  color: var(--dtc-g1);
+  background: color-mix(in srgb, var(--dtc-g1) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dtc-g1) 26%, transparent);
+}
+
+.dt-chat-msg {
+  max-width: 84%;
+  padding: 10px 13px;
+  border-radius: 16px;
+  font-size: 13.8px;
+  line-height: 1.58;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dt-chat-row.is-bot .dt-chat-msg {
+  border-start-start-radius: 6px;
+  background: var(--dtc-bubble);
+  border: 1px solid var(--dtc-line);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.dt-chat-row.is-user .dt-chat-msg {
+  border-end-end-radius: 6px;
+  color: var(--dtc-on-accent);
+  background: linear-gradient(135deg, var(--dtc-g1), var(--dtc-g2));
+  font-weight: 500;
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--dtc-g1) 70%, transparent);
+}
+.dt-chat-row.is-failed .dt-chat-msg {
+  border-color: rgba(255, 84, 112, 0.45);
+  color: #b3223c;
+  background: rgba(255, 84, 112, 0.1);
+}
+/* readable on the dark classic surface too */
+:where([data-design='classic'], :not([data-design]))
+  .dt-chat-row.is-failed
+  .dt-chat-msg {
+  color: #ffb3c0;
+}
+body[data-home-theme='light'] .dt-chat-row.is-failed .dt-chat-msg {
+  color: #b3223c;
+}
+
+.dt-chat-typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 2px;
+}
+.dt-chat-typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dtc-muted);
+  animation: dtcBounce 1.1s infinite ease-in-out;
+}
+.dt-chat-typing i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dt-chat-typing i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes dtcBounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* quick replies — only while the thread is empty */
+.dt-chat-chips {
+  margin-top: 4px;
+  padding-inline-start: 32px;
+  animation: dtcIn 0.3s 0.06s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dt-chat-chips-t {
+  margin: 0 0 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--dtc-muted);
+}
+.dt-chat-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dt-chat-chip {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--dtc-text);
+  background: var(--dtc-bg-soft);
+  border: 1px solid var(--dtc-line);
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease,
+    background 0.16s ease;
+}
+.dt-chat-chip:hover {
+  color: var(--dtc-g1);
+  border-color: color-mix(in srgb, var(--dtc-g1) 55%, transparent);
+  background: color-mix(in srgb, var(--dtc-g1) 10%, var(--dtc-bg-soft));
+  transform: translateY(-1px);
+}
+.dt-chat-chip:focus-visible {
+  outline: 2px solid var(--dtc-g1);
+  outline-offset: 2px;
+}
+
+.dt-chat-retry {
+  align-self: flex-start;
+  margin-inline-start: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--dtc-text);
+  background: transparent;
+  border: 1px dashed var(--dtc-line-2);
+}
+.dt-chat-retry:hover {
+  border-color: var(--dtc-g1);
+  color: var(--dtc-g1);
+}
+
+/* ───────────────────────── composer ───────────────────────── */
+
+.dt-chat-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 11px 11px 9px;
+  border-top: 1px solid var(--dtc-line);
+  background: var(--dtc-bg);
+}
+.dt-chat-input {
+  flex: 1;
+  resize: none;
+  min-height: 40px;
+  max-height: 112px;
+  padding: 10px 13px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 13.8px;
+  line-height: 1.5;
+  color: var(--dtc-text);
+  background: var(--dtc-bg-soft);
+  border: 1px solid var(--dtc-line);
+  field-sizing: content;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.dt-chat-input::placeholder {
+  color: var(--dtc-muted);
+}
+.dt-chat-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--dtc-g1) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dtc-g1) 16%, transparent);
+}
+.dt-chat-input:disabled {
+  opacity: 0.6;
+}
+.dt-chat-send {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 13px;
+  cursor: pointer;
+  color: var(--dtc-on-accent);
+  background: linear-gradient(140deg, var(--dtc-g1), var(--dtc-g2));
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--dtc-g1) 70%, transparent);
+  transition: opacity 0.15s, transform 0.15s ease;
+}
+.dt-chat-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.dt-chat-send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+/* The paper-plane points at a direction — mirror it in RTL. */
+[dir='rtl'] .dt-chat-send svg {
+  transform: scaleX(-1);
+}
+
+.dt-chat-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 0 14px 11px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dtc-muted);
+}
+.dt-chat-footlink {
+  color: var(--dtc-g1);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--dtc-g1) 40%, transparent);
+}
+.dt-chat-footlink:hover {
+  border-bottom-color: currentColor;
+}
+
+/* ───────────────────── human handoff (not configured) ───────────────────── */
+
+.dt-chat-handoff {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--dtc-line);
+  background: var(--dtc-bg);
+}
+.dt-chat-wa,
+.dt-chat-call {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+.dt-chat-wa {
+  color: #fff;
+  background: linear-gradient(140deg, #25d366, #14a44b);
+  box-shadow: 0 10px 22px -10px rgba(37, 211, 102, 0.7);
+}
+.dt-chat-wa:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px -10px rgba(37, 211, 102, 0.8);
+}
+.dt-chat-call {
+  color: var(--dtc-text);
+  background: var(--dtc-bg-soft);
+  border: 1px solid var(--dtc-line);
+  /* the number is Latin digits — keep it LTR inside an RTL panel */
+  unicode-bidi: isolate;
+}
+.dt-chat-call:hover {
+  transform: translateY(-1px);
+  border-color: var(--dtc-line-2);
+}
+
+/* ───────────────────────── mobile: bottom sheet ───────────────────────── */
+
+@media (max-width: 560px) {
+  .dt-chat-panel {
+    inset-inline: 0;
+    bottom: 0;
+    width: auto;
+    max-height: min(86svh, 640px);
+    border-radius: 22px 22px 0 0;
+    border-inline: none;
+    border-bottom: none;
+    transform: translateY(100%);
+    transform-origin: bottom center;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .dt-chat-panel.is-open {
+    transform: none;
+  }
+  .dt-chat-head {
+    padding-top: 18px;
+  }
+  .dt-chat-grab {
+    display: block;
+    position: absolute;
+    top: 7px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    width: 38px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.45);
+  }
+  /* the launcher would sit on top of the sheet — hide it while open */
+  .dt-chat-fab.is-open {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .dt-chat-fab {
+    width: 54px;
+    height: 54px;
+    bottom: 16px;
+    inset-inline-start: 14px;
+  }
+  .dt-chat-msg {
+    max-width: 88%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-chat-fab,
+  .dt-chat-fab-ico,
+  .dt-chat-panel,
+  .dt-chat-tip,
+  .dt-chat-chip,
+  .dt-chat-send,
+  .dt-chat-wa,
+  .dt-chat-call {
+    transition: none;
+  }
+  .dt-chat-halo,
+  .dt-chat-live,
+  .dt-chat-row,
+  .dt-chat-chips,
+  .dt-chat-scrim {
+    animation: none;
+  }
+  .dt-chat-typing i {
+    animation: none;
+    opacity: 0.6;
+  }
+}

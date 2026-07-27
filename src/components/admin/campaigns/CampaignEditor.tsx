@@ -1,54 +1,79 @@
 'use client'
 
-import { useActionState, useState, useTransition } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Rocket, Save, Send, Trash2, Eye } from 'lucide-react'
+import { Save, Trash2 } from 'lucide-react'
 import type { Campaign } from '@/db/schema'
 import { GlassCard } from '@/components/admin/GlassCard'
 import { CampaignStatusBadge } from './CampaignStatusBadge'
+import { BlockComposer } from './BlockComposer'
+import { EnvelopePreview } from './EnvelopePreview'
+import { SendPanel, humanCampaignError } from './SendPanel'
+import { deleteCampaign, updateCampaign } from '@/server/campaign-actions'
+import type { AudienceCounts, CampaignProgress } from '@/types/campaigns'
 import {
-  updateCampaign,
-  sendCampaign,
-  sendTestCampaign,
-  deleteCampaign,
-  type CampaignActionResult,
-} from '@/server/campaign-actions'
+  legacyBlocksFromHtml,
+  parseBlocks,
+  type CampaignAudience,
+  type EmailBlock,
+} from '@/lib/email-blocks'
 
-function SaveSubmit() {
-  const { pending } = useFormStatus()
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-glass-border-strong)] bg-[var(--admin-soft-2)] px-4 py-2 font-body text-sm font-semibold text-[var(--admin-text-primary)] transition-colors hover:border-[color-mix(in_oklab,var(--c-mint)_45%,transparent)] disabled:opacity-60"
-    >
-      <Save size={15} /> {pending ? 'Enregistrement…' : 'Enregistrer'}
-    </button>
-  )
-}
+const inputCls =
+  'w-full rounded-xl border border-[var(--admin-glass-border)] bg-[var(--admin-soft)] px-4 py-2.5 font-body text-[14px] text-[var(--admin-text-primary)] outline-none focus:border-[color-mix(in_oklab,var(--c-mint)_50%,transparent)] disabled:opacity-60'
 
 interface CampaignEditorProps {
   campaign: Campaign
-  subscribedCount: number
+  counts: AudienceCounts
+  initialProgress: CampaignProgress
 }
 
-export function CampaignEditor({ campaign, subscribedCount }: CampaignEditorProps) {
+export function CampaignEditor({ campaign, counts, initialProgress }: CampaignEditorProps) {
   const router = useRouter()
-  const [state, formAction] = useActionState<CampaignActionResult | null, FormData>(
-    updateCampaign,
-    null
-  )
   const [subject, setSubject] = useState(campaign.subject)
   const [preheader, setPreheader] = useState(campaign.preheader ?? '')
-  const [bodyHtml, setBodyHtml] = useState(campaign.bodyHtml)
-  const [testEmail, setTestEmail] = useState('')
-  const [sending, startSending] = useTransition()
+  const [audience, setAudience] = useState<CampaignAudience>(
+    campaign.audience === 'fr' || campaign.audience === 'en' || campaign.audience === 'ar'
+      ? campaign.audience
+      : 'all'
+  )
+  const [blocks, setBlocks] = useState<EmailBlock[]>(() => {
+    const parsed = parseBlocks(campaign.bodyBlocks)
+    if (parsed && parsed.length > 0) return parsed
+    return campaign.bodyHtml.trim() ? legacyBlocksFromHtml(campaign.bodyHtml) : []
+  })
+  const [saving, startSaving] = useTransition()
   const [deleting, startDeleting] = useTransition()
-  const [sendingTest, startSendingTest] = useTransition()
 
-  const sent = campaign.status === 'sent' || campaign.status === 'sending'
+  // Snapshot of the last-saved state — powers the "unsaved changes" logic.
+  const savedRef = useRef('')
+  const snapshot = useMemo(
+    () => JSON.stringify({ subject, preheader, audience, blocks }),
+    [subject, preheader, audience, blocks]
+  )
+  if (savedRef.current === '') {
+    savedRef.current = snapshot
+  }
+  const dirty = snapshot !== savedRef.current
+
+  const editable =
+    campaign.status === 'draft' ||
+    campaign.status === 'scheduled' ||
+    campaign.status === 'failed'
+
+  function save() {
+    const payload = { id: campaign.id, subject, preheader, audience, blocks }
+    const savedSnapshot = snapshot
+    startSaving(async () => {
+      const r = await updateCampaign(payload)
+      if (r.ok) {
+        savedRef.current = savedSnapshot
+        toast.success('Campagne enregistrée')
+      } else {
+        toast.error(humanCampaignError(r.error))
+      }
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -61,196 +86,129 @@ export function CampaignEditor({ campaign, subscribedCount }: CampaignEditorProp
             {subject || 'Sans titre'}
           </h1>
           <p className="mt-1 font-body text-[13px] text-[var(--admin-text-secondary)]">
-            {subscribedCount} abonné·e·s confirmé·e·s sont éligibles.
+            {counts.all} abonné·e·s confirmé·e·s au total.
           </p>
         </div>
-        <CampaignStatusBadge status={campaign.status} />
+        <div className="flex items-center gap-2">
+          {dirty && editable && (
+            <span className="rounded-full border border-[color-mix(in_oklab,var(--c-amber)_45%,transparent)] bg-[color-mix(in_oklab,var(--c-amber)_10%,transparent)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-[var(--c-amber)]">
+              Non enregistré
+            </span>
+          )}
+          <CampaignStatusBadge status={campaign.status} />
+        </div>
       </div>
 
-      {state && !state.ok && (
-        <div
-          role="alert"
-          className="rounded-xl border border-[color-mix(in_oklab,var(--c-rose)_40%,transparent)] bg-[color-mix(in_oklab,var(--c-rose)_8%,transparent)] px-4 py-3 font-body text-[13px] text-[var(--c-rose)]"
-        >
-          {humanError(state.error)}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
-        {/* ── Form ────────────────────────────────────────────── */}
-        <GlassCard className="p-6">
-          <form action={formAction} className="space-y-4">
-            <input type="hidden" name="id" value={campaign.id} />
-
-            <Field label="Sujet" hint="200 caractères max — premier élément que voit le client.">
-              <input
-                type="text"
-                name="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                required
-                maxLength={200}
-                disabled={sent}
-                className="w-full rounded-xl border border-[var(--admin-glass-border)] bg-[var(--admin-soft)] px-4 py-2.5 font-body text-[14px] text-[var(--admin-text-primary)] outline-none focus:border-[color-mix(in_oklab,var(--c-mint)_50%,transparent)]"
-              />
-            </Field>
-
-            <Field
-              label="Pré-en-tête"
-              hint="Courte phrase affichée après le sujet par Gmail / Outlook."
-            >
-              <input
-                type="text"
-                name="preheader"
-                value={preheader}
-                onChange={(e) => setPreheader(e.target.value)}
-                maxLength={200}
-                disabled={sent}
-                className="w-full rounded-xl border border-[var(--admin-glass-border)] bg-[var(--admin-soft)] px-4 py-2.5 font-body text-[14px] text-[var(--admin-text-primary)] outline-none focus:border-[color-mix(in_oklab,var(--c-mint)_50%,transparent)]"
-              />
-            </Field>
-
-            <Field
-              label="Contenu (HTML)"
-              hint="Tags simples uniquement : <p>, <h2>, <ul>, <a>, <strong>, <em>. Les liens http(s) sont automatiquement instrumentés pour les clics."
-            >
-              <textarea
-                name="bodyHtml"
-                value={bodyHtml}
-                onChange={(e) => setBodyHtml(e.target.value)}
-                disabled={sent}
-                rows={14}
-                className="w-full rounded-xl border border-[var(--admin-glass-border)] bg-[var(--admin-soft)] px-4 py-3 font-mono text-[12.5px] text-[var(--admin-text-primary)] outline-none focus:border-[color-mix(in_oklab,var(--c-mint)_50%,transparent)]"
-              />
-            </Field>
-
-            {/* Hidden — the server keeps a plain-text variant in sync. */}
-            <input type="hidden" name="bodyText" value="" />
-
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <SaveSubmit />
-              {!sent && (
-                <button
-                  type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (!confirm('Supprimer cette campagne ?')) return
-                    startDeleting(async () => {
-                      const r = await deleteCampaign(campaign.id)
-                      if (r.ok) {
-                        toast.success('Campagne supprimée')
-                        router.push('/admin/campaigns')
-                      } else {
-                        toast.error(humanError(r.error))
-                      }
-                    })
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_oklab,var(--c-rose)_40%,transparent)] bg-transparent px-3 py-2 font-body text-[13px] font-medium text-[var(--c-rose)] hover:bg-[color-mix(in_oklab,var(--c-rose)_8%,transparent)] disabled:opacity-60"
-                >
-                  <Trash2 size={14} /> Supprimer
-                </button>
-              )}
-            </div>
-          </form>
-
-          {/* ── Test send ────────────────────────────────────── */}
-          {!sent && (
-            <div className="mt-6 rounded-xl border border-dashed border-[var(--admin-glass-border-strong)] p-4">
-              <p className="font-mono text-[10.5px] uppercase tracking-wider text-[var(--admin-text-tertiary)]">
-                Test
-              </p>
-              <p className="mt-1 font-body text-[13px] text-[var(--admin-text-secondary)]">
-                Envoyez la campagne à une seule adresse pour vérifier le rendu.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[1.05fr_1fr]">
+        {/* ── left: meta + composer + sending ─────────────────── */}
+        <div className="space-y-4">
+          <GlassCard className="p-6">
+            <div className="space-y-4">
+              <Field label="Sujet" hint="200 caractères max — premier élément que voit le client.">
                 <input
-                  type="email"
-                  value={testEmail}
-                  onChange={(e) => setTestEmail(e.target.value)}
-                  placeholder="vous@dtech.dz"
-                  className="min-w-0 flex-1 rounded-full border border-[var(--admin-glass-border)] bg-transparent px-4 py-2 font-body text-[13px] text-[var(--admin-text-primary)] outline-none focus:border-[var(--admin-glass-border-strong)]"
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                  maxLength={200}
+                  disabled={!editable}
+                  className={inputCls}
                 />
-                <button
-                  type="button"
-                  disabled={sendingTest || !testEmail}
-                  onClick={() => {
-                    startSendingTest(async () => {
-                      const r = await sendTestCampaign(campaign.id, testEmail)
-                      if (r.ok) toast.success('Test envoyé')
-                      else toast.error(humanError(r.error))
-                    })
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[var(--admin-glass-border-strong)] px-3 py-2 font-body text-[13px] font-medium text-[var(--admin-text-primary)] hover:border-[color-mix(in_oklab,var(--c-mint)_45%,transparent)] disabled:opacity-60"
-                >
-                  <Send size={14} /> {sendingTest ? 'Envoi…' : 'Envoyer un test'}
-                </button>
-              </div>
-            </div>
-          )}
+              </Field>
 
-          {/* ── Send to everyone ─────────────────────────────── */}
-          {!sent && (
-            <div className="mt-4 rounded-xl border border-[color-mix(in_oklab,var(--c-mint)_35%,transparent)] bg-[color-mix(in_oklab,var(--c-mint)_8%,transparent)] p-4">
-              <p className="font-mono text-[10.5px] uppercase tracking-wider text-[var(--c-mint)]">
-                Envoyer maintenant
-              </p>
-              <p className="mt-1 font-body text-[13px] text-[var(--admin-text-secondary)]">
-                Sera envoyée aux <strong>{subscribedCount}</strong> adresses confirmées.
-                Pas de retour en arrière.
-              </p>
-              <button
-                type="button"
-                disabled={sending}
-                onClick={() => {
-                  if (!confirm(`Envoyer "${subject}" à ${subscribedCount} abonné·e·s ?`)) return
-                  startSending(async () => {
-                    const r = await sendCampaign(campaign.id)
-                    if (r.ok) {
-                      toast.success('Campagne envoyée')
-                      router.refresh()
-                    } else {
-                      toast.error(humanError(r.error))
-                    }
-                  })
-                }}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--c-mint)] px-4 py-2 font-body text-sm font-semibold text-[var(--admin-on-accent)] shadow-sm transition-transform hover:-translate-y-px disabled:opacity-60"
+              <Field
+                label="Pré-en-tête"
+                hint="Courte phrase affichée après le sujet par Gmail / Outlook."
               >
-                <Rocket size={15} /> {sending ? 'Envoi en cours…' : 'Envoyer à tous'}
-              </button>
-            </div>
-          )}
+                <input
+                  type="text"
+                  value={preheader}
+                  onChange={(e) => setPreheader(e.target.value)}
+                  maxLength={200}
+                  disabled={!editable}
+                  className={inputCls}
+                />
+              </Field>
 
-          {sent && (
-            <div className="mt-6 rounded-xl border border-[var(--admin-glass-border)] bg-[var(--admin-soft)] p-4 font-body text-[13px] text-[var(--admin-text-secondary)]">
-              <p>
-                <strong className="text-[var(--admin-text-primary)]">{campaign.sentCount}</strong>{' '}
-                envoyés ·{' '}
-                <strong className="text-[var(--admin-text-primary)]">{campaign.openCount}</strong>{' '}
-                ouverts ·{' '}
-                <strong className="text-[var(--admin-text-primary)]">{campaign.clickCount}</strong>{' '}
-                clics
-              </p>
-              {campaign.sentAt && (
-                <p className="mt-1 font-mono text-[11px] text-[var(--admin-text-tertiary)]">
-                  Envoyée le {new Date(campaign.sentAt).toLocaleString('fr-FR')}
-                </p>
+              <Field label="Audience" hint="Les abonnés confirmés de la langue choisie.">
+                <select
+                  value={audience}
+                  onChange={(e) => setAudience(e.target.value as CampaignAudience)}
+                  disabled={!editable}
+                  className={inputCls}
+                >
+                  <option value="all">Tous les abonnés ({counts.all})</option>
+                  <option value="fr">Français ({counts.fr})</option>
+                  <option value="en">English ({counts.en})</option>
+                  <option value="ar">العربية ({counts.ar})</option>
+                </select>
+              </Field>
+
+              {editable && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={save}
+                    disabled={saving || !dirty}
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-glass-border-strong)] bg-[var(--admin-soft-2)] px-4 py-2 font-body text-sm font-semibold text-[var(--admin-text-primary)] transition-colors hover:border-[color-mix(in_oklab,var(--c-mint)_45%,transparent)] disabled:opacity-60"
+                  >
+                    <Save size={15} /> {saving ? 'Enregistrement…' : 'Enregistrer'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => {
+                      if (!confirm('Supprimer cette campagne ?')) return
+                      startDeleting(async () => {
+                        const r = await deleteCampaign(campaign.id)
+                        if (r.ok) {
+                          toast.success('Campagne supprimée')
+                          router.push('/admin/campaigns')
+                        } else {
+                          toast.error(humanCampaignError(r.error))
+                        }
+                      })
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_oklab,var(--c-rose)_40%,transparent)] bg-transparent px-3 py-2 font-body text-[13px] font-medium text-[var(--c-rose)] hover:bg-[color-mix(in_oklab,var(--c-rose)_8%,transparent)] disabled:opacity-60"
+                  >
+                    <Trash2 size={14} /> Supprimer
+                  </button>
+                </div>
               )}
             </div>
-          )}
-        </GlassCard>
+          </GlassCard>
 
-        {/* ── Preview ─────────────────────────────────────────── */}
-        <GlassCard className="overflow-hidden p-0">
-          <div className="border-b border-[var(--admin-glass-border)] px-5 py-3">
-            <p className="inline-flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-wider text-[var(--admin-text-tertiary)]">
-              <Eye size={13} /> Aperçu — {subject || 'Sans titre'}
+          <GlassCard className="p-6">
+            <p className="mb-3 font-mono text-[10.5px] uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+              Contenu
             </p>
-          </div>
-          <div
-            className="bg-[#04060c] p-5"
-            style={{ minHeight: 360 }}
-            dangerouslySetInnerHTML={{ __html: bodyHtml }}
-          />
+            <BlockComposer blocks={blocks} onChange={setBlocks} disabled={!editable} />
+          </GlassCard>
+
+          <GlassCard className="p-6">
+            <p className="mb-3 font-mono text-[10.5px] uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+              Envoi
+            </p>
+            <SendPanel
+              key={`${campaign.status}:${initialProgress.processed}:${initialProgress.failed}`}
+              campaignId={campaign.id}
+              status={campaign.status}
+              scheduledFor={campaign.scheduledFor ? campaign.scheduledFor.toISOString() : null}
+              sentAt={campaign.sentAt ? campaign.sentAt.toISOString() : null}
+              openCount={campaign.openCount}
+              clickCount={campaign.clickCount}
+              audience={audience}
+              counts={counts}
+              initialProgress={initialProgress}
+              dirty={dirty}
+              onAfterChange={() => router.refresh()}
+            />
+          </GlassCard>
+        </div>
+
+        {/* ── right: exact preview ────────────────────────────── */}
+        <GlassCard className="overflow-hidden p-0 xl:sticky xl:top-6">
+          <EnvelopePreview subject={subject} preheader={preheader} blocks={blocks} />
         </GlassCard>
       </div>
     </div>
@@ -279,17 +237,4 @@ function Field({
       <span className="mt-1.5 block">{children}</span>
     </label>
   )
-}
-
-function humanError(err?: string): string {
-  if (!err) return 'Échec'
-  if (err === 'unauthorized') return 'Session expirée. Reconnectez-vous.'
-  if (err === 'missing_id') return 'Identifiant manquant.'
-  if (err === 'subject_required') return 'Le sujet est requis.'
-  if (err === 'not_found') return 'Campagne introuvable.'
-  if (err === 'already_sending') return 'Cette campagne est déjà partie ou en cours d’envoi.'
-  if (err === 'missing_subject_or_body') return 'Sujet et contenu sont requis avant l’envoi.'
-  if (err === 'cannot_delete_sent') return 'Une campagne déjà envoyée ne peut pas être supprimée.'
-  if (err === 'invalid_email') return 'Adresse e-mail invalide.'
-  return err
 }

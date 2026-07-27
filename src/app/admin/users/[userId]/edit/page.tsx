@@ -77,7 +77,7 @@ export default async function EditUserPage({ params }: PageProps) {
           </h1>
           <div className="mt-3 flex items-center gap-2">
             <Badge variant={user.role === 'admin' ? 'accent' : 'neutral'}>
-              {{ admin: 'admin', staff: 'équipe' }[user.role]}
+              {{ admin: 'admin', staff: 'équipe', customer: 'client' }[user.role]}
             </Badge>
             {isDeactivated && <Badge variant="error">Désactivé</Badge>}
             {isSelf && <Badge variant="neutral">Vous</Badge>}

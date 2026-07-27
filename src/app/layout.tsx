@@ -3,6 +3,21 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { displayFont, bodyFont, monoFont } from '@/lib/fonts'
 import './globals.css'
+/**
+ * Storefront stylesheet, imported at the ROOT layout.
+ *
+ * It used to be imported only by ShowroomShell — a `'use client'` component
+ * rendered from the [locale] layout — and in a PRODUCTION build Next emitted
+ * it into a CSS chunk that no page ever linked. `next dev` injects styles
+ * differently and hid this completely, so it only broke once built: /products,
+ * /categories/*, /brands/*, /search and every product page shipped with none
+ * of their `.sr-*` rules — no max-width, chips rendering as inline text, and
+ * the carousels losing `display:flex` so they stacked into one tall column.
+ *
+ * Importing here guarantees it is linked on every route. It is fully scoped to
+ * `.sr-*` / `.sr-root`, so it cannot bleed into the admin.
+ */
+import '@/styles/showroom.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(

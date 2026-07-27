@@ -29,6 +29,11 @@ export function hasAccess(
   section: SectionKey
 ): boolean {
   if (user.role === 'admin') return true
+  // Only the 'staff' role can hold admin sections. Customers (public
+  // storefront sign-ups, Round 15) and any future role get nothing —
+  // WITHOUT this guard the DEFAULT_STAFF_PERMISSIONS fallback below would
+  // hand every self-registered visitor the whole back-office.
+  if (user.role !== 'staff') return false
   if (section === 'users') return false // always admin-only
   const granted = user.permissions ?? DEFAULT_STAFF_PERMISSIONS
   return granted.includes(section)

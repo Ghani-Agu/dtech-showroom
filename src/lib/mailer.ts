@@ -21,6 +21,8 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { resend, getFromHeader, FROM } from './email'
+import { getBrevoApiKey, sendViaBrevo } from './brevo'
+import { getAppSetting, SETTING_KEYS } from './app-settings'
 
 export interface SendInput {
   to: string
@@ -45,17 +47,52 @@ export interface SendResult {
   error?: string
 }
 
-export function isEmailConfigured(): boolean {
-  return resend !== null
+export async function isEmailConfigured(): Promise<boolean> {
+  return (await getBrevoApiKey()) !== null || resend !== null
+}
+
+/** Sender identity: admin-configured (Réglages → Intégrations) with the
+ *  existing env vars as fallback. */
+async function getFrom(): Promise<{ email: string; name: string }> {
+  const [email, name] = await Promise.all([
+    getAppSetting(SETTING_KEYS.mailFromEmail),
+    getAppSetting(SETTING_KEYS.mailFromName),
+  ])
+  return {
+    email: (email ?? '').trim() || FROM.email,
+    name: (name ?? '').trim() || FROM.name,
+  }
 }
 
 /**
- * Send a single email. In production with a key set this calls Resend.
- * Without a key, it logs to console and writes the HTML to a tmp file so
- * the developer can preview it.
+ * Send a single email.
+ * Provider order: Brevo (key pasted in admin or BREVO_API_KEY env) →
+ * Resend (RESEND_API_KEY env) → dev stub (logged + written to
+ * .next/dev-mail so the HTML can be previewed without any key).
  */
 export async function sendEmail(input: SendInput): Promise<SendResult> {
   const { to, subject, html, text, replyTo, headers, tag = 'mail' } = input
+
+  // ── Brevo first — the key the admin pasted in Réglages ───────────────
+  const brevoKey = await getBrevoApiKey()
+  if (brevoKey) {
+    const from = await getFrom()
+    const res = await sendViaBrevo({
+      to,
+      subject,
+      html,
+      text,
+      replyTo,
+      headers,
+      fromEmail: from.email,
+      fromName: from.name,
+    })
+    if (res.ok) return { ok: true, id: res.id }
+    // A hard Brevo failure falls through to Resend when available so a
+    // revoked key doesn't silently kill password resets.
+    if (!resend) return { ok: false, error: res.error }
+    console.warn(`[mailer] Brevo failed (${res.error}) — falling back to Resend`)
+  }
 
   // ── dev / no-key fallback ────────────────────────────────────────────
   if (!resend) {
@@ -64,8 +101,9 @@ export async function sendEmail(input: SendInput): Promise<SendResult> {
 
   try {
     // resend.emails.send returns { data, error }
+    const from = await getFrom()
     const res = await resend.emails.send({
-      from: getFromHeader(),
+      from: `${from.name} <${from.email}>`,
       to,
       subject,
       html,

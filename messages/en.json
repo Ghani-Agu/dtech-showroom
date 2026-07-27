@@ -720,7 +720,9 @@
       "search": "Search",
       "cart": "Cart",
       "menu": "Menu",
-      "close": "Close"
+      "close": "Close",
+      "newsletter": "Newsletter",
+      "chat": "D-Tech Assistant"
     },
     "footer": {
       "blurb": "Official distributor of HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson in Algeria since 2006. 393 products, delivered across the 58 wilayas.",
@@ -758,7 +760,15 @@
       "prevPage": "Previous page",
       "nextPage": "Next page",
       "brandsLabel": "Brands",
-      "categoriesLabel": "Categories"
+      "categoriesLabel": "Categories",
+      "featuredOnly": "Featured",
+      "clearFilter": "Remove this filter",
+      "sortNewest": "Newest first",
+      "filtersTitle": "Filters",
+      "refine": "Refine",
+      "categoriesTitle": "Category",
+      "brandsTitle": "Brand",
+      "activeCount": "{n} active filter(s)"
     },
     "product": {
       "addToCart": "Add to cart",
@@ -805,7 +815,28 @@
       "kicker": "{count} products · {cats} categories · {brands} brands",
       "title1": "The full",
       "title2": "catalog.",
-      "sub": "Filter by category or brand, sort, and order directly on WhatsApp."
+      "sub": "Filter by category or brand, sort, and order directly on WhatsApp.",
+      "breadcrumb": "Catalog",
+      "titleCategory": "{category} — D-Tech Catalog",
+      "titleBrand": "{brand} — D-Tech Catalog",
+      "titleBrandCategory": "{brand} {category} — D-Tech Catalog",
+      "titleSearch": "Search “{q}” — Catalog",
+      "titlePaged": "{title} — Page {page}",
+      "subFiltered": "{scope} — browse the D-Tech Algeria selection, filter, compare and order on WhatsApp."
+    },
+    "featured": {
+      "seeAll": "See all {count} products",
+      "browseAll": "Browse the full catalog",
+      "note": "{count} products · filter by category, brand and search"
+    },
+    "partner": {
+      "eyebrow": "{brand} partner",
+      "partnerLine": "D-Tech Algeria × {brand}",
+      "title1": "The professional {brand} range,",
+      "title2": "from your distributor.",
+      "sub": "{brand} workstations, displays and printing for businesses and public bodies — with a written quote, invoice and official warranty, delivered across all 58 wilayas.",
+      "cta": "Explore the {brand} range",
+      "tileSub": "{count} products"
     }
   },
   "newsletter": {
@@ -824,5 +855,27 @@
     "alreadyTitle": "Already on the list.",
     "invalidTitle": "Invalid or expired link.",
     "errorTitle": "Technical error."
+  },
+  "nlPopup": {
+    "kicker": "D-Tech newsletter",
+    "title": "Exclusive deals, before everyone else.",
+    "sub": "Join the D-Tech list: subscriber discounts, new arrivals and flash sales — straight to your inbox.",
+    "point1": "Subscriber-only discounts",
+    "point2": "PC, gaming & printing news first",
+    "point3": "Flash sales announced by e-mail",
+    "emailPh": "your@email.com",
+    "cta": "Subscribe",
+    "ctaBusy": "Sending…",
+    "micro": "Unsubscribe in one click, anytime. Never spam.",
+    "okTitle": "Almost done!",
+    "okSub": "A confirmation e-mail is on its way — click the link to activate your subscription.",
+    "alreadyTitle": "You're already subscribed!",
+    "alreadySub": "Your deals and news keep landing in your inbox.",
+    "doneBtn": "Great",
+    "close": "Close",
+    "visualTag": "The good-deals club",
+    "errInvalid": "Invalid e-mail address.",
+    "errRateLimited": "Too many attempts — try again later.",
+    "errGeneric": "Something went wrong. Please try again."
   }
 }

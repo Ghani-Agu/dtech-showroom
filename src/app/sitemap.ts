@@ -9,7 +9,17 @@ const SITE_URL =
 
 export const revalidate = 3600 // regenerate hourly
 
-const STATIC_PATHS = ['', '/about', '/brands', '/categories', '/search']
+// `/search` is intentionally dropped — thin content with no crawlable state
+// of its own. `/categories` (and the per-slug category/brand pages) are gone
+// too (ROUND 13): they 308 to the faceted catalogue, whose facet URLs are
+// listed below instead.
+const STATIC_PATHS = [
+  '',
+  '/products',
+  '/about',
+  '/brands',
+  '/legal',
+]
 
 function languageAlternates(path: string): Record<string, string> {
   return Object.fromEntries(
@@ -56,25 +66,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     }
 
+    // Facet views of the one catalogue page. These are the canonical
+    // category/brand URLs now (the old /categories/x and /brands/x routes
+    // 308 here) and they match how shoppers actually search
+    // ("HP laptops", "printers").
     for (const brand of brandList) {
-      const path = `/brands/${brand.slug}`
+      const facet = `/products?brand=${brand.slug}`
       entries.push({
-        url: `${SITE_URL}/${locale}${path}`,
+        url: `${SITE_URL}/${locale}${facet}`,
         lastModified: brand.updatedAt ?? now,
         changeFrequency: 'weekly',
-        priority: 0.7,
-        alternates: { languages: languageAlternates(path) },
+        priority: 0.6,
+        alternates: { languages: languageAlternates(facet) },
       })
     }
 
     for (const category of categoryList) {
-      const path = `/categories/${category.slug}`
+      const facet = `/products?category=${category.slug}`
       entries.push({
-        url: `${SITE_URL}/${locale}${path}`,
+        url: `${SITE_URL}/${locale}${facet}`,
         lastModified: category.updatedAt ?? now,
         changeFrequency: 'weekly',
-        priority: 0.7,
-        alternates: { languages: languageAlternates(path) },
+        priority: 0.6,
+        alternates: { languages: languageAlternates(facet) },
       })
     }
 

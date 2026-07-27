@@ -1,10 +1,13 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { InquiryButton } from '@/components/ui/InquiryButton'
+import { SkinShell } from '@/components/skin/SkinShell'
 
 export default async function NotFound() {
   const t = await getTranslations('notFound')
+  const locale = await getLocale()
 
   return (
+    <SkinShell locale={locale}>
     <div className="flex min-h-[70vh] items-center justify-center bg-surface-base px-8 py-16">
       <div className="mx-auto max-w-2xl space-y-6 text-center">
         <h1 className="font-display text-7xl font-medium leading-tight tracking-tight text-text-primary">
@@ -21,5 +24,6 @@ export default async function NotFound() {
         </div>
       </div>
     </div>
+    </SkinShell>
   )
 }

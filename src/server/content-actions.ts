@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { bustDataCache } from '@/lib/data-cache'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { sitePages } from '@/db/schema'
@@ -227,6 +228,7 @@ export async function setContentTheme(pageKey: string, themeId: string): Promise
       .insert(sitePages)
       .values({ key: KEY(pageKey), draft, published, updatedAt: now, publishedAt: now })
       .onConflictDoUpdate({ target: sitePages.key, set: { draft, published, updatedAt: now, publishedAt: now } })
+    bustDataCache()
     revalidatePath('/', 'layout')
     return { ok: true }
   } catch (err) {
@@ -262,6 +264,7 @@ export async function publishContent(pageKey: string, data: unknown): Promise<Co
         target: sitePages.key,
         set: { draft: clean, published: clean, updatedAt: now, publishedAt: now },
       })
+    bustDataCache()
     revalidatePath('/', 'layout')
     return { ok: true }
   } catch (err) {
@@ -276,6 +279,7 @@ export async function resetContent(pageKey: string): Promise<ContentResult> {
       .update(sitePages)
       .set({ published: null, publishedAt: null, draft: null, updatedAt: new Date() })
       .where(eq(sitePages.key, KEY(pageKey)))
+    bustDataCache()
     revalidatePath('/', 'layout')
     return { ok: true }
   } catch (err) {

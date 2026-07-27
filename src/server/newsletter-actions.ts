@@ -12,11 +12,17 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
-import { subscribers, type SubscriberStatus } from '@/db/schema'
+import { campaignSends, subscribers, type SubscriberStatus } from '@/db/schema'
 import { sendEmail } from '@/lib/mailer'
 import { confirmationTemplate } from '@/lib/email-templates'
+import {
+  isBrevoConfigured,
+  upsertBrevoContact,
+  setBrevoContactBlacklist,
+  getBrevoListId,
+} from '@/lib/brevo'
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
@@ -183,6 +189,23 @@ async function sendConfirmation(
   })
 }
 
+/** Push a confirmed subscriber into the Brevo contact base (and the
+ *  configured list, if any). No-op when no Brevo key is set. */
+async function syncSubscriberToBrevo(email: string): Promise<void> {
+  try {
+    if (!(await isBrevoConfigured())) return
+    const listId = await getBrevoListId()
+    const res = await upsertBrevoContact(email, {}, listId)
+    if (!res.ok) {
+      console.warn(`[newsletter] Brevo contact sync failed for ${email}: ${res.error}`)
+    }
+    // A re-subscriber may have been blacklisted by an earlier unsubscribe.
+    await setBrevoContactBlacklist(email, false)
+  } catch (err) {
+    console.warn('[newsletter] Brevo contact sync error:', err)
+  }
+}
+
 /* ── confirm / unsubscribe — token consumption ────────────────────────
  * These are called by GET pages, not form actions. They return small
  * status objects the page renders into a friendly outcome.
@@ -224,6 +247,11 @@ export async function confirmSubscriptionByToken(
         confirmedAt: sql`now()`,
       })
       .where(eq(subscribers.id, row.id))
+
+    // Mirror the confirmed subscriber into Brevo contacts (fire-and-forget
+    // — a Brevo hiccup must never break the visitor's confirmation page).
+    void syncSubscriberToBrevo(row.email)
+
     return { ok: true, state: 'subscribed', email: row.email }
   } catch (err) {
     console.error('[newsletter] confirm failed:', err)
@@ -232,7 +260,11 @@ export async function confirmSubscriptionByToken(
 }
 
 export async function unsubscribeByToken(
-  token: string
+  token: string,
+  /** Optional campaign_sends id (the `s=` param embedded in campaign
+   *  unsubscribe links) — lets the campaign record which send triggered
+   *  the departure. */
+  sendId?: string
 ): Promise<TokenActionResult> {
   if (!token || typeof token !== 'string' || token.length > 256) {
     return { ok: false, state: 'invalid' }
@@ -245,6 +277,20 @@ export async function unsubscribeByToken(
       .limit(1)
       .then((r) => r[0])
     if (!row) return { ok: false, state: 'invalid' }
+
+    // Attribution — only a send row that really belongs to THIS subscriber.
+    if (sendId && /^[a-f0-9-]{36}$/i.test(sendId)) {
+      db.update(campaignSends)
+        .set({ unsubscribedAt: sql`now()` })
+        .where(
+          and(
+            eq(campaignSends.id, sendId),
+            eq(campaignSends.subscriberId, row.id)
+          )
+        )
+        .catch(() => {})
+    }
+
     if (row.status === 'unsubscribed') {
       return { ok: true, state: 'already', email: row.email }
     }
@@ -255,9 +301,26 @@ export async function unsubscribeByToken(
         unsubscribedAt: sql`now()`,
       })
       .where(eq(subscribers.id, row.id))
+
+    // Keep the Brevo contact base coherent (fire-and-forget — a Brevo
+    // hiccup must never break the visitor's unsubscribe page).
+    void syncUnsubscribeToBrevo(row.email)
+
     return { ok: true, state: 'unsubscribed', email: row.email }
   } catch (err) {
     console.error('[newsletter] unsubscribe failed:', err)
     return { ok: false, state: 'error' }
+  }
+}
+
+async function syncUnsubscribeToBrevo(email: string): Promise<void> {
+  try {
+    if (!(await isBrevoConfigured())) return
+    const res = await setBrevoContactBlacklist(email, true)
+    if (!res.ok) {
+      console.warn(`[newsletter] Brevo blacklist sync failed for ${email}: ${res.error}`)
+    }
+  } catch (err) {
+    console.warn('[newsletter] Brevo blacklist sync error:', err)
   }
 }

@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { headers } from 'next/headers'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
@@ -6,7 +7,16 @@ import { users } from '@/db/schema'
 import { auth } from './auth'
 import { hasAccess, type SectionKey } from './permissions'
 
-export async function getSessionUser() {
+/**
+ * Session + user row for the current request. Wrapped in React cache() so
+ * the admin layout, the page and any server actions rendered in the same
+ * request share ONE lookup instead of each paying their own session +
+ * users queries. The session part itself is additionally served from the
+ * better-auth cookie cache (see auth.ts) — most admin renders now cost a
+ * single users-table query, and role/permission changes still apply
+ * immediately because that query never caches across requests.
+ */
+export const getSessionUser = cache(async () => {
   const session = await auth.api
     .getSession({ headers: await headers() })
     .catch(() => null)
@@ -28,7 +38,7 @@ export async function getSessionUser() {
     .catch(() => null)
 
   return user ?? null
-}
+})
 
 export async function requireSession() {
   const user = await getSessionUser()

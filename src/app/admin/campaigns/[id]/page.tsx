@@ -1,18 +1,30 @@
 import { eq } from 'drizzle-orm'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/db/client'
 import { campaigns } from '@/db/schema'
+import { getSessionUser } from '@/lib/auth-helpers'
+import { hasAccess } from '@/lib/permissions'
+import {
+  getAudienceCounts,
+  getCampaignProgress,
+} from '@/server/campaign-send-core'
 import { CampaignEditor } from '@/components/admin/campaigns/CampaignEditor'
 
 export const dynamic = 'force-dynamic'
+// The chunked send actions POST to this route — give them headroom on
+// serverless (a chunk is ~5-8s; default budgets can be as low as 10s).
+export const maxDuration = 60
 
 export default async function CampaignDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
+  const user = await getSessionUser()
+  if (!user || !hasAccess(user, 'newsletter')) redirect('/admin')
+
   const { id } = await params
   const campaign = await db
     .select()
@@ -22,11 +34,10 @@ export default async function CampaignDetailPage({
     .then((r) => r[0])
   if (!campaign) notFound()
 
-  const subscribedCountRow = await db.execute(
-    `SELECT COUNT(*)::int AS c FROM subscribers WHERE status = 'subscribed'`
-  )
-  // drizzle's `execute` returns provider-specific shape; pull `c` defensively
-  const subscribedCount = readCount(subscribedCountRow)
+  const [counts, progress] = await Promise.all([
+    getAudienceCounts(),
+    getCampaignProgress(campaign),
+  ])
 
   return (
     <div className="space-y-5">
@@ -39,25 +50,9 @@ export default async function CampaignDetailPage({
 
       <CampaignEditor
         campaign={campaign}
-        subscribedCount={subscribedCount}
+        counts={counts}
+        initialProgress={progress}
       />
     </div>
   )
-}
-
-function readCount(res: unknown): number {
-  // postgres-js returns an array-like with the rows.
-  if (Array.isArray(res)) {
-    const first = res[0]
-    if (first && typeof first === 'object' && 'c' in first) {
-      return Number((first as { c: number }).c) || 0
-    }
-  }
-  if (res && typeof res === 'object' && 'rows' in (res as Record<string, unknown>)) {
-    const rows = (res as { rows: unknown[] }).rows
-    if (Array.isArray(rows) && rows[0] && typeof rows[0] === 'object' && 'c' in (rows[0] as Record<string, unknown>)) {
-      return Number((rows[0] as { c: number }).c) || 0
-    }
-  }
-  return 0
 }

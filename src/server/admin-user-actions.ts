@@ -1,9 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { db } from '@/db/client'
-import { sessions, users } from '@/db/schema'
+import { accounts, inquiryStatusHistory, sessions, users } from '@/db/schema'
 import { auth } from '@/lib/auth'
 import { requireAdmin } from '@/lib/auth-helpers'
 import {
@@ -137,6 +137,72 @@ export async function reactivateUser(userId: string) {
     .update(users)
     .set({ deactivatedAt: null })
     .where(eq(users.id, userId))
+
+  revalidatePath('/admin/users')
+
+  return { ok: true as const }
+}
+
+/**
+ * Permanent account deletion (Round 15 — the « Supprimer » button in
+ * Utilisateurs). Removes the user row and everything that lets it sign in
+ * (sessions + credential/OAuth accounts). Guards: never yourself, never the
+ * last admin. Child rows are deleted explicitly BEFORE the user row so the
+ * action works even on a database whose FKs were created without ON DELETE
+ * clauses. Newsletter subscription is intentionally untouched — it's managed
+ * from the Abonnés page and by the person's own unsubscribe link.
+ */
+export async function deleteUserAccount(userId: string) {
+  const admin = await requireAdmin()
+
+  if (admin.id === userId) {
+    return {
+      ok: false as const,
+      error: 'Vous ne pouvez pas supprimer votre propre compte.' as const,
+    }
+  }
+
+  const target = await db
+    .select({ id: users.id, role: users.role })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+    .then((rows) => rows[0])
+
+  if (!target) {
+    return { ok: false as const, error: 'Compte introuvable.' as const }
+  }
+
+  if (target.role === 'admin') {
+    const adminCount = await db
+      .select({ c: count() })
+      .from(users)
+      .where(eq(users.role, 'admin'))
+      .then((rows) => Number(rows[0]?.c ?? 0))
+    if (adminCount <= 1) {
+      return {
+        ok: false as const,
+        error: 'Impossible de supprimer le dernier compte admin.' as const,
+      }
+    }
+  }
+
+  try {
+    // Detach audit-trail rows (they keep changed_by_email for history).
+    await db
+      .update(inquiryStatusHistory)
+      .set({ changedByUserId: null })
+      .where(eq(inquiryStatusHistory.changedByUserId, userId))
+    await db.delete(sessions).where(eq(sessions.userId, userId))
+    await db.delete(accounts).where(eq(accounts.userId, userId))
+    await db.delete(users).where(eq(users.id, userId))
+  } catch (err) {
+    console.error('[user-delete] Failed:', err)
+    return {
+      ok: false as const,
+      error: 'Échec de la suppression du compte.' as const,
+    }
+  }
 
   revalidatePath('/admin/users')
 

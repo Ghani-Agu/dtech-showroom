@@ -36,9 +36,6 @@ export function HeroEditor({
 
   const fileRef = React.useRef<HTMLInputElement>(null)
 
-  function patch(p: Partial<HeroConfig>) {
-    setCfg((c) => ({ ...c, ...p }))
-  }
   function setSlides(slides: HeroSlide[]) {
     setCfg((c) => ({ ...c, slides }))
   }
@@ -111,21 +108,6 @@ export function HeroEditor({
       setBusy(false)
     }
   }
-
-  const field = (
-    label: string,
-    key: keyof HeroConfig,
-    placeholder = ''
-  ) => (
-    <label className="he-field">
-      <span>{label}</span>
-      <input
-        value={(cfg[key] as string) ?? ''}
-        placeholder={placeholder}
-        onChange={(e) => patch({ [key]: e.target.value } as Partial<HeroConfig>)}
-      />
-    </label>
-  )
 
   const slides = cfg.slides
   const preview = slides[active] ?? slides[0]
@@ -218,30 +200,12 @@ export function HeroEditor({
         </section>
 
         <section className="he-col">
-          <h2 className="he-h">Textes & boutons</h2>
-          <p className="he-hint">Laissez vide pour garder le texte par défaut du site.</p>
-          {field('Sur-titre', 'kicker', 'D-Tech Algérie · Depuis 2006')}
-          {field('Titre — ligne 1', 'title1', 'La techno qui')}
-          {field('Titre — ligne 2 (accent)', 'title2', 'vous ressemble.')}
-          <label className="he-field">
-            <span>Sous-titre</span>
-            <textarea
-              rows={3}
-              value={cfg.subtitle ?? ''}
-              placeholder="Plus de 393 produits sélectionnés…"
-              onChange={(e) => patch({ subtitle: e.target.value })}
-            />
-          </label>
-          <div className="he-row">
-            {field('Bouton principal — texte', 'primaryLabel', 'Voir le catalogue')}
-            {field('Bouton principal — lien', 'primaryHref', '/products')}
-          </div>
-          <div className="he-row">
-            {field('Bouton secondaire — texte', 'secondaryLabel', 'Notre histoire')}
-            {field('Bouton secondaire — lien', 'secondaryHref', '/about')}
-          </div>
-
-          <h2 className="he-h" style={{ marginTop: 22 }}>Aperçu</h2>
+          <h2 className="he-h">Aperçu</h2>
+          <p className="he-hint">
+            Le hero est désormais <strong>plein écran et 100&nbsp;% image</strong>&nbsp;: le
+            slider occupe toute la première page, sans texte ni bouton par-dessus.
+            Le message doit donc vivre dans l’image elle-même.
+          </p>
           <div className="he-preview">
             {preview?.src ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -249,15 +213,27 @@ export function HeroEditor({
             ) : (
               <div className="he-preview-empty">Vos images du slider s’afficheront ici</div>
             )}
-            <div className="he-preview-text">
-              <span className="he-pv-kicker">{cfg.kicker || 'D-Tech Algérie · Depuis 2006'}</span>
-              <strong className="he-pv-title">
-                {cfg.title1 || 'La techno qui'} <em>{cfg.title2 || 'vous ressemble.'}</em>
-              </strong>
-              <span className="he-pv-sub">{cfg.subtitle || 'Plus de 393 produits sélectionnés…'}</span>
-            </div>
           </div>
-          <p className="he-hint">L’aperçu est indicatif — cliquez « Publier » puis « Voir le site » pour le rendu réel.</p>
+          <p className="he-hint">
+            L’aperçu est indicatif — cliquez « Publier » puis « Voir le site »
+            pour le rendu réel.
+          </p>
+
+          <div className="he-tips">
+            <h3>Pour un rendu net</h3>
+            <ul>
+              <li>Format <strong>paysage large</strong> (2400 × 1350 ou plus).</li>
+              <li>
+                Gardez le sujet <strong>au centre</strong> — l’image est recadrée
+                selon la taille de l’écran, les bords peuvent être coupés.
+              </li>
+              <li>
+                Si l’image contient du texte, laissez-le loin du bas&nbsp;: les
+                flèches et les puces s’affichent par-dessus.
+              </li>
+              <li>Renseignez le texte alternatif de chaque image (accessibilité + SEO).</li>
+            </ul>
+          </div>
         </section>
       </div>
     </div>

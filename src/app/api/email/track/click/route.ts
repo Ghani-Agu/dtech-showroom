@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { campaigns, campaignSends } from '@/db/schema'
+import { verifyClickToken } from '@/lib/email-tracking'
 
 /**
  * Click redirect — marks the send as clicked on first hit, increments
@@ -11,15 +12,24 @@ import { campaigns, campaignSends } from '@/db/schema'
  * query-string parsing predictable across mail clients (some mangle
  * unencoded URLs).
  *
- * Safety: we only follow URLs that decode cleanly to http(s) and aren't
- * pointlessly long. Anything else returns 400.
+ * Safety: every link is HMAC-signed at send time (lib/email-tracking).
+ * Without a valid `sig` for this exact (sendId, url) pair the endpoint
+ * refuses — otherwise it would be an open redirect on our domain
+ * (phishing mails could bounce through d-techalgerie.com).
  */
 export async function GET(req: Request) {
   const url = new URL(req.url)
   const sendId = url.searchParams.get('s')
   const encoded = url.searchParams.get('u')
+  const sig = url.searchParams.get('sig') ?? ''
   if (!encoded || encoded.length > 2_000) {
     return NextResponse.json({ error: 'missing_url' }, { status: 400 })
+  }
+  if (!sendId || !/^[a-f0-9-]{36}$/i.test(sendId)) {
+    return NextResponse.json({ error: 'missing_send' }, { status: 400 })
+  }
+  if (!verifyClickToken(sendId, encoded, sig)) {
+    return NextResponse.json({ error: 'bad_signature' }, { status: 403 })
   }
 
   let target = ''
@@ -32,7 +42,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'bad_target' }, { status: 400 })
   }
 
-  if (sendId && /^[a-f0-9-]{36}$/i.test(sendId)) {
+  {
     try {
       const updated = await db
         .update(campaignSends)

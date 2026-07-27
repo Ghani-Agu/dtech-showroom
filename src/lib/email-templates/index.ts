@@ -14,7 +14,7 @@ const BRAND = {
   bg: '#0a0a0d',
   fg: '#f5f5f3',
   accent: '#3ec5e0',
-  mint: '#7ce0c3',
+  mint: '#4f9dff',
   muted: 'rgba(245,245,243,0.78)',
   faint: 'rgba(245,245,243,0.5)',
   panel: '#11121a',
@@ -35,18 +35,47 @@ function brandHeader(siteUrl: string): string {
   `
 }
 
+/** Footer strings per locale — the campaign CONTENT is written once by the
+ *  admin; only this chrome (and the unsubscribe line) localizes. */
+type FooterStrings = { receiving: (email: string) => string; unsubscribe: string }
+
+const FOOTER_STRINGS: Record<string, FooterStrings> = {
+  fr: {
+    receiving: (email) =>
+      `Vous recevez cet email parce que <strong style="color:${BRAND.muted};font-weight:500;">${email}</strong> est abonné à la newsletter D-Tech.`,
+    unsubscribe: 'Me désabonner',
+  },
+  en: {
+    receiving: (email) =>
+      `You are receiving this email because <strong style="color:${BRAND.muted};font-weight:500;">${email}</strong> is subscribed to the D-Tech newsletter.`,
+    unsubscribe: 'Unsubscribe',
+  },
+  ar: {
+    receiving: (email) =>
+      `تصلك هذه الرسالة لأن <strong style="color:${BRAND.muted};font-weight:500;">${email}</strong> مشترك في نشرة D-Tech.`,
+    unsubscribe: 'إلغاء الاشتراك',
+  },
+}
+
+function footerStringsFor(locale?: string): FooterStrings {
+  const key = (locale ?? 'fr').slice(0, 2).toLowerCase()
+  return FOOTER_STRINGS[key] ?? (FOOTER_STRINGS.fr as FooterStrings)
+}
+
 function brandFooter(opts: {
   siteUrl: string
   unsubscribeUrl?: string
   rawSubscriberEmail?: string
+  locale?: string
 }): string {
-  const { siteUrl, unsubscribeUrl, rawSubscriberEmail } = opts
+  const { siteUrl, unsubscribeUrl, rawSubscriberEmail, locale } = opts
+  const t = footerStringsFor(locale)
   return `
     <div style="height:1px;background:${BRAND.line};margin:32px 32px 0;"></div>
     <div style="padding:18px 32px 28px;font-family:'Inter',system-ui,sans-serif;font-size:12px;color:${BRAND.faint};line-height:1.6;">
-      ${rawSubscriberEmail ? `Vous recevez cet email parce que <strong style="color:${BRAND.muted};font-weight:500;">${escapeHtml(rawSubscriberEmail)}</strong> est abonné à la newsletter D-Tech.<br/>` : ''}
+      ${rawSubscriberEmail ? `${t.receiving(escapeHtml(rawSubscriberEmail))}<br/>` : ''}
       ${unsubscribeUrl
-        ? `<a href="${unsubscribeUrl}" style="color:${BRAND.accent};text-decoration:underline;">Me désabonner</a> · `
+        ? `<a href="${unsubscribeUrl}" style="color:${BRAND.accent};text-decoration:underline;">${t.unsubscribe}</a> · `
         : ''}
       <a href="${siteUrl}" style="color:${BRAND.accent};text-decoration:underline;">d-techalgerie.com</a>
       <br/>
@@ -55,12 +84,14 @@ function brandFooter(opts: {
   `
 }
 
-function shell(inner: string): string {
+function shell(inner: string, locale?: string): string {
+  const key = (locale ?? 'fr').slice(0, 2).toLowerCase()
+  const dir = key === 'ar' ? 'rtl' : 'ltr'
   return `<!doctype html>
-<html><body style="margin:0;padding:0;background:#04060c;">
+<html lang="${key}" dir="${dir}"><body style="margin:0;padding:0;background:#04060c;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#04060c;">
     <tr><td align="center" style="padding:24px 12px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:${BRAND.bg};border:1px solid ${BRAND.line};border-radius:14px;overflow:hidden;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" dir="${dir}" style="max-width:600px;width:100%;background:${BRAND.bg};border:1px solid ${BRAND.line};border-radius:14px;overflow:hidden;">
         <tr><td>${inner}</td></tr>
       </table>
     </td></tr>
@@ -115,6 +146,10 @@ export function campaignEnvelope(opts: {
   bodyHtml: string
   unsubscribeUrl: string
   subscriberEmail: string
+  /** Subscriber locale — localizes the chrome (footer, unsubscribe, RTL). */
+  locale?: string
+  /** Pre-computed plain-text body; falls back to a coarse HTML strip. */
+  bodyText?: string
   /** Marker tag for the tracking pixel — when set, an <img> is appended. */
   trackingPixelUrl?: string
 }): { html: string; text: string } {
@@ -124,6 +159,8 @@ export function campaignEnvelope(opts: {
     bodyHtml,
     unsubscribeUrl,
     subscriberEmail,
+    locale,
+    bodyText,
     trackingPixelUrl,
   } = opts
 
@@ -133,16 +170,21 @@ export function campaignEnvelope(opts: {
     <div style="padding:28px 32px;font-family:'Inter',system-ui,sans-serif;color:${BRAND.fg};font-size:15px;line-height:1.65;">
       ${bodyHtml}
     </div>
-    ${brandFooter({ siteUrl, unsubscribeUrl, rawSubscriberEmail: subscriberEmail })}
+    ${brandFooter({ siteUrl, unsubscribeUrl, rawSubscriberEmail: subscriberEmail, locale })}
     ${trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;border:0;outline:0;text-decoration:none;width:1px;height:1px;" />` : ''}
   `
-  // Plain-text version — strip tags coarsely.
-  const text = bodyHtml
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return { html: shell(inner), text: `${text}\n\nMe désabonner: ${unsubscribeUrl}` }
+  const text =
+    (bodyText ?? '').trim() ||
+    bodyHtml
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  const t = footerStringsFor(locale)
+  return {
+    html: shell(inner, locale),
+    text: `${text}\n\n${t.unsubscribe}: ${unsubscribeUrl}`,
+  }
 }
 
 // ── i18n strings for the confirmation email ───────────────────────────

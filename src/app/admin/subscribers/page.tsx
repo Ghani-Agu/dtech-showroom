@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { count, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm'
 import { GlassCard } from '@/components/admin/GlassCard'
-import { SectionTitle } from '@/components/admin/SectionTitle'
 import { db } from '@/db/client'
 import { subscribers, type SubscriberStatus } from '@/db/schema'
+import { getSessionUser } from '@/lib/auth-helpers'
+import { hasAccess } from '@/lib/permissions'
 import { SubscribersToolbar } from '@/components/admin/subscribers/SubscribersToolbar'
 import { SubscriberRow } from '@/components/admin/subscribers/SubscriberRow'
 
@@ -24,6 +26,9 @@ interface PageProps {
 }
 
 export default async function SubscribersPage({ searchParams }: PageProps) {
+  const user = await getSessionUser()
+  if (!user || !hasAccess(user, 'newsletter')) redirect('/admin')
+
   const params = await searchParams
   const status: StatusFilter = VALID.includes(
     (params.status ?? 'all') as StatusFilter

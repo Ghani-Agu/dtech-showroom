@@ -7,11 +7,13 @@
  * scoped brand-design.css. RTL + light/dark come from BrandProvider.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { useBrand } from './brand-context'
 import { SpecsToggle } from '@/components/product/SpecsToggle'
+// A logo-style mark for EVERY brand (vectors + designed wordmark tiles).
+import { getBrandMark, BrandMarkArt } from '@/components/home/brand-marks'
 import { fmtNum } from './brand-i18n'
 import {
   Arrow,
@@ -25,8 +27,6 @@ import {
   RouteIcon,
   ChevronLeft,
   ChevronRight,
-  PageArrowPrev,
-  PageArrowNext,
   GridCatIcon,
 } from './brand-icons'
 import { BRAND_WHATSAPP, type BrandProduct, type BrandCategory, type BrandBrandItem } from './brand-types'
@@ -93,7 +93,7 @@ function Counter({ to }: { to: number }) {
 
 function HeroSlider({ images }: { images: string[] }) {
   const { t } = useBrand()
-  const slides = images.length ? images : ['', '', '', '']
+  const slides = images.length ? images : ['']
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   useEffect(() => {
@@ -111,26 +111,18 @@ function HeroSlider({ images }: { images: string[] }) {
               src={src}
               alt=""
               fill
-              sizes="(min-width: 1024px) 640px, 100vw"
+              sizes="100vw"
               priority={idx === 0}
+              fetchPriority={idx === 0 ? 'high' : 'auto'}
+              quality={82}
               style={{ objectFit: 'cover' }}
             />
           ) : (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'grid',
-                placeItems: 'center',
-                background: 'radial-gradient(120% 90% at 80% 15%, var(--teal) 0%, var(--teal-deep) 60%, var(--teal-ink) 100%)',
-                color: '#fff',
-                fontFamily: 'var(--disp)',
-                fontWeight: 800,
-                fontSize: 26,
-                letterSpacing: '-0.04em',
-              }}
-            >
-              dtech<sup style={{ fontSize: '.5em' }}>®</sup>
+            <div className="hs-fallback" aria-hidden>
+              <span className="hsf-mark">
+                dtech<sup>®</sup>
+              </span>
+              <span className="hsf-tag">Algérie · Digital Technologie</span>
             </div>
           )}
         </div>
@@ -150,39 +142,14 @@ function HeroSlider({ images }: { images: string[] }) {
   )
 }
 
-export function BrandHero({ heroImages, productCount }: { heroImages: string[]; productCount: number }) {
-  const { t, lang } = useBrand()
-  // subStrong is like "44 produits" — strip the placeholder number, keep the unit word.
-  const unit = t('hero.subStrong').replace(/^[\d\s., ]+/, '').trim()
+/**
+ * Full-bleed image hero. The slider fills the whole first screen — no copy,
+ * no CTA overlay. Slides are the ones uploaded in admin → Slider Hero.
+ */
+export function BrandHero({ heroImages }: { heroImages: string[] }) {
   return (
-    <section className="hero" id="top">
-      <div className="wrap hero-clean">
-        <div className="hero-left">
-          <span className="eyebrow">{t('d.k')}</span>
-          <h1 className="display h-hero">
-            {t('d.h1a')} <span className="hl">{t('d.h1hl')}</span> {t('d.h1b')}
-          </h1>
-          <p className="lead">
-            {t('hero.sub1')}
-            <strong>{fmtNum(productCount, lang)} {unit}</strong>
-            {t('hero.sub2')}
-          </p>
-          <div className="hero-cta">
-            <a className="btn btn-teal btn-lg" href="#products">{t('d.cta')}<Arrow /></a>
-            <a className="btn btn-text" href="#about">{t('hero.ctaStory')}<Arrow s={13} /></a>
-          </div>
-          <div className="hero-meta">
-            <span><b><Counter to={20} />+</b> {t('hero.stat1l')}</span>
-            <span className="sep" />
-            <span><b>7</b> {t('hero.stat2l')}</span>
-            <span className="sep" />
-            <span><b>58/58</b> {t('hero.stat3l')}</span>
-          </div>
-        </div>
-        <div className="hero-right">
-          <HeroSlider images={heroImages} />
-        </div>
-      </div>
+    <section className="hero hero-full" id="top">
+      <HeroSlider images={heroImages} />
     </section>
   )
 }
@@ -255,33 +222,23 @@ export function ProductCard({ p }: { p: BrandProduct }) {
 
 /* ---------- shop ---------- */
 
-export function BrandShop({ products, categories }: { products: BrandProduct[]; categories: BrandCategory[] }) {
-  const { t } = useBrand()
+/* ---------- featured (homepage teaser) ---------- */
+
+/**
+ * Homepage product teaser. The full catalogue lives on /products with
+ * URL-driven filters — the homepage no longer ships every row to the client.
+ */
+export function BrandFeatured({
+  products,
+  productCount,
+  categories,
+}: {
+  products: BrandProduct[]
+  productCount: number
+  categories: BrandCategory[]
+}) {
+  const { t, lang } = useBrand()
   const ref = useFade()
-  const PER = 8
-  const [activeCat, setActiveCat] = useState('all')
-  const [page, setPage] = useState(1)
-  const filtered = useMemo(
-    () => (activeCat === 'all' ? products : products.filter((p) => p.cat === activeCat)),
-    [activeCat, products]
-  )
-  useEffect(() => setPage(1), [activeCat])
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER))
-  const items = filtered.slice((page - 1) * PER, page * PER)
-  const goPage = (p: number) => {
-    if (p < 1 || p > totalPages) return
-    setPage(p)
-    setTimeout(() => {
-      const el = document.getElementById('products')
-      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' })
-    }, 40)
-  }
-  const nums = useMemo<(number | string)[]>(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
-    if (page <= 4) return [1, 2, 3, 4, 5, '…', totalPages]
-    if (page >= totalPages - 3) return [1, '…', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
-    return [1, '…', page - 1, page, page + 1, '…', totalPages]
-  }, [page, totalPages])
 
   return (
     <section id="products" className="sec">
@@ -292,41 +249,44 @@ export function BrandShop({ products, categories }: { products: BrandProduct[]; 
               <span className="eyebrow">{t('shop.k')}</span>
               <h2 className="h-sec">{t('shop.h')}</h2>
             </div>
-            <span className="meta">{filtered.length} {t('catalog.resultsWord')}</span>
+            <Link className="btn btn-teal btn-sm" href="/products">
+              {t('catalog.seeAll')}
+              <Arrow s={13} />
+            </Link>
           </div>
 
           <div className="filters filters-lane">
             <Carousel variant="chips" prevLabel={t('catalog.prev')} nextLabel={t('catalog.next')}>
-              <button className={`chip ${activeCat === 'all' ? 'on' : ''}`} onClick={() => setActiveCat('all')}>{t('catalog.all')}</button>
+              <Link className="chip" href="/products">
+                {t('catalog.all')}
+                <span className="ct">{fmtNum(productCount, lang)}</span>
+              </Link>
               {categories.map((c) => (
-                <button key={c.id} className={`chip ${activeCat === c.id ? 'on' : ''}`} onClick={() => setActiveCat(c.id)}>
-                  {c.name}<span className="ct">{c.count}</span>
-                </button>
+                <Link
+                  key={c.id}
+                  className="chip"
+                  href={{ pathname: '/products', query: { category: c.id } }}
+                >
+                  {c.name}
+                  <span className="ct">{c.count}</span>
+                </Link>
               ))}
             </Carousel>
           </div>
 
           <div className="prod-grid">
-            {items.map((p) => <ProductCard key={p.slug} p={p} />)}
+            {products.map((p) => <ProductCard key={p.slug} p={p} />)}
           </div>
 
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button className="pg-btn nav" disabled={page === 1} onClick={() => goPage(page - 1)}>
-                <PageArrowPrev />{t('catalog.prev')}
-              </button>
-              {nums.map((n, i) =>
-                n === '…' ? (
-                  <span key={`e${i}`} className="pg-ell">…</span>
-                ) : (
-                  <button key={n} className={`pg-btn ${page === n ? 'on' : ''}`} onClick={() => goPage(n as number)} aria-current={page === n ? 'page' : undefined}>{n}</button>
-                )
-              )}
-              <button className="pg-btn nav" disabled={page === totalPages} onClick={() => goPage(page + 1)}>
-                {t('catalog.next')}<PageArrowNext />
-              </button>
-            </div>
-          )}
+          <div className="bf-seeall">
+            <Link className="btn btn-teal btn-lg" href="/products">
+              {t('catalog.browseAll')}
+              <Arrow />
+            </Link>
+            <span className="bf-note">
+              {fmtNum(productCount, lang)} {t('catalog.resultsWord')}
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -349,12 +309,23 @@ export function BrandBrands({ brands }: { brands: BrandBrandItem[] }) {
             </div>
           </div>
           <div className="brand-grid">
-            {brands.map((b) => (
-              <Link key={b.id} className="brandcard" href={`/brands/${b.id}`}>
-                <span className="lg">{b.name}</span>
-                <span className="cs">{b.count} {t('catalog.resultsWord')}</span>
-              </Link>
-            ))}
+            {brands.map((b) => {
+              const mark = getBrandMark(b.id, b.name)
+              return (
+                <Link
+                  key={b.id}
+                  className="brandcard"
+                  href={{ pathname: '/products', query: { brand: b.id } }}
+                  style={{ '--bl-tile': mark.tile, '--bl-fg': mark.fg } as React.CSSProperties}
+                  aria-label={`${b.name} — ${b.count} ${t('catalog.resultsWord')}`}
+                >
+                  <span className="bl-tile">
+                    <BrandMarkArt slug={b.id} name={b.name} h={42} maxW={170} />
+                  </span>
+                  <span className="cs">{b.count} {t('catalog.resultsWord')}</span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </div>

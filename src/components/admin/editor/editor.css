@@ -2191,3 +2191,25 @@
   .hp-shape { animation: none; }
   .hp-prev::after { animation: none; display: none; }
 }
+
+/* ── ROUND 9 — hero editor is image-only now ─────────────────────────
+   The text/CTA fields were removed (the storefront hero renders no copy),
+   so the preview no longer carries a text overlay. `.he-preview-text` and
+   its children stay defined above but are unused. */
+.he-preview-text { display: none; }
+.he-tips {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--we-line, rgba(255, 255, 255, 0.1));
+  background: var(--we-surface-2, rgba(255, 255, 255, 0.03));
+}
+.he-tips h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.he-tips ul { margin: 0; padding-inline-start: 18px; }
+.he-tips li { font-size: 12.8px; line-height: 1.65; margin-bottom: 5px; }

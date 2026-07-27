@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { SkinShell } from '@/components/skin/SkinShell'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
@@ -20,8 +21,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LegalPage() {
+  const locale = await getLocale()
   const tmpl = await getPublishedPage('page:legal')
-  if (tmpl) return <PublishedPage doc={tmpl as unknown as PageDoc} />
+  if (tmpl)
+    return (
+      <SkinShell locale={locale}>
+        <PublishedPage doc={tmpl as unknown as PageDoc} />
+      </SkinShell>
+    )
 
   const t = await getTranslations('legal')
   const tNav = await getTranslations('navigation')
@@ -34,6 +41,7 @@ export default async function LegalPage() {
   ]
 
   return (
+    <SkinShell locale={locale}>
     <EditProvider initial={content}>
       <section className="py-16 md:py-24">
         <Container>
@@ -71,5 +79,6 @@ export default async function LegalPage() {
         </Container>
       </section>
     </EditProvider>
+    </SkinShell>
   )
 }

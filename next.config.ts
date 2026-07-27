@@ -58,6 +58,15 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '25mb',
     },
+    /**
+     * Client router cache: keep visited dynamic pages fresh-enough for 30 s
+     * so back/forward and revisits render instantly instead of refetching.
+     * Server actions still purge this via revalidatePath after mutations.
+     */
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
 
   compress: true,

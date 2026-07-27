@@ -1,0 +1,642 @@
+diff --git a/src/app/[locale]/brands/[brandSlug]/page.tsx b/src/app/[locale]/brands/[brandSlug]/page.tsx
+index 02e904c..9729a26 100644
+--- a/src/app/[locale]/brands/[brandSlug]/page.tsx
++++ b/src/app/[locale]/brands/[brandSlug]/page.tsx
+@@ -3,11 +3,14 @@ import Image from 'next/image'
+ import { notFound } from 'next/navigation'
+ import { getLocale, getTranslations } from 'next-intl/server'
+ import { Link } from '@/i18n/routing'
+-import { ProductExplorer } from '@/components/showroom/ProductExplorer'
++import { ProductsBrowser } from '@/components/showroom/ProductsBrowser'
++import { TrackProductList } from '@/components/analytics/TrackView'
++import { toExplorerProducts } from '@/lib/showroom-data'
+ import {
+-  facetFromProducts,
+-  toExplorerProducts,
+-} from '@/lib/showroom-data'
++  parseProductQuery,
++  runProductQuery,
++  type RawSearchParams,
++} from '@/lib/product-filters'
+ import { type Locale } from '@/i18n/config'
+ import { getBrandBySlug, getProductsByBrand } from '@/server/queries'
+ import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
+@@ -29,6 +32,7 @@ export const dynamic = 'force-dynamic'
+ 
+ interface BrandPageProps {
+   params: Promise<{ locale: string; brandSlug: string }>
++  searchParams: Promise<RawSearchParams>
+ }
+ 
+ export async function generateMetadata({
+@@ -51,8 +55,12 @@ export async function generateMetadata({
+   }
+ }
+ 
+-export default async function BrandPage({ params }: BrandPageProps) {
++export default async function BrandPage({
++  params,
++  searchParams,
++}: BrandPageProps) {
+   const { brandSlug } = await params
++  const sp = await searchParams
+   const locale = (await getLocale()) as Locale
+   const t = await getTranslations('showroom')
+ 
+@@ -85,8 +93,12 @@ export default async function BrandPage({ params }: BrandPageProps) {
+     )
+   }
+ 
+-  const products = toExplorerProducts(rawProducts)
+-  const categories = facetFromProducts(products, 'category')
++  // Same URL-driven engine as /products, with the brand fixed by the route.
++  const query = parseProductQuery(sp)
++  const result = runProductQuery(toExplorerProducts(rawProducts), {
++    ...query,
++    brand: null, // the route already scopes it
++  })
+ 
+   return (
+     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
+@@ -99,7 +111,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
+               { name: t('nav.brands'), path: '/brands' },
+               { name: brand.name, path: `/brands/${brand.slug}` },
+             ]),
+-            itemListLd(locale, products.slice(0, 24)),
++            itemListLd(locale, result.items, result.offset),
+           ]),
+         }}
+       />
+@@ -122,7 +134,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
+         <div className="veil" />
+         <div className="inner">
+           <span className="sr-kicker">
+-            {t('categoriesPage.products', { count: products.length })}
++            {t('categoriesPage.products', { count: rawProducts.length })}
+           </span>
+           <h1 className="sr-h1" style={{ marginTop: 10 }}>
+             {brand.name}
+@@ -133,13 +145,24 @@ export default async function BrandPage({ params }: BrandPageProps) {
+       </div>
+ 
+       <div className="sr-in sr-in-2">
+-        <ProductExplorer
+-          products={products}
+-          brands={[]}
+-          categories={categories}
++        <ProductsBrowser
++          query={query}
++          result={result}
++          basePath={`/brands/${brand.slug}`}
+           lock="brand"
+         />
+       </div>
++      <TrackProductList
++        listName={`brand:${brand.slug}`}
++        searchTerm={query.q || undefined}
++        facets={{ category: query.category, featured: query.featuredOnly }}
++        items={result.items.map((p) => ({
++          slug: p.slug,
++          name: p.name,
++          brandName: p.brandName,
++          categoryName: p.categoryName,
++        }))}
++      />
+     </section>
+   )
+ }
+diff --git a/src/app/[locale]/categories/[categorySlug]/page.tsx b/src/app/[locale]/categories/[categorySlug]/page.tsx
+index 25863d6..7e322f8 100644
+--- a/src/app/[locale]/categories/[categorySlug]/page.tsx
++++ b/src/app/[locale]/categories/[categorySlug]/page.tsx
+@@ -3,11 +3,14 @@ import Image from 'next/image'
+ import { notFound } from 'next/navigation'
+ import { getLocale, getTranslations } from 'next-intl/server'
+ import { Link } from '@/i18n/routing'
+-import { ProductExplorer } from '@/components/showroom/ProductExplorer'
++import { ProductsBrowser } from '@/components/showroom/ProductsBrowser'
++import { TrackProductList } from '@/components/analytics/TrackView'
++import { toExplorerProducts } from '@/lib/showroom-data'
+ import {
+-  facetFromProducts,
+-  toExplorerProducts,
+-} from '@/lib/showroom-data'
++  parseProductQuery,
++  runProductQuery,
++  type RawSearchParams,
++} from '@/lib/product-filters'
+ import { type Locale } from '@/i18n/config'
+ import { getCategoryBySlug, getProductsByCategory } from '@/server/queries'
+ import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
+@@ -29,6 +32,7 @@ export const dynamic = 'force-dynamic'
+ 
+ interface CategoryPageProps {
+   params: Promise<{ locale: string; categorySlug: string }>
++  searchParams: Promise<RawSearchParams>
+ }
+ 
+ export async function generateMetadata({
+@@ -51,8 +55,12 @@ export async function generateMetadata({
+   }
+ }
+ 
+-export default async function CategoryPage({ params }: CategoryPageProps) {
++export default async function CategoryPage({
++  params,
++  searchParams,
++}: CategoryPageProps) {
+   const { categorySlug } = await params
++  const sp = await searchParams
+   const locale = (await getLocale()) as Locale
+   const t = await getTranslations('showroom')
+ 
+@@ -85,8 +93,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
+     )
+   }
+ 
+-  const products = toExplorerProducts(rawProducts)
+-  const brands = facetFromProducts(products, 'brand')
++  // Same URL-driven engine as /products, with the category fixed by the route.
++  // Previously this page shipped every product in the category to the browser
++  // and filtered client-side, with no shareable state.
++  const query = parseProductQuery(sp)
++  const result = runProductQuery(toExplorerProducts(rawProducts), {
++    ...query,
++    category: null, // the route already scopes it
++  })
+ 
+   return (
+     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
+@@ -99,7 +113,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
+               { name: t('nav.categories'), path: '/categories' },
+               { name: category.name, path: `/categories/${category.slug}` },
+             ]),
+-            itemListLd(locale, products.slice(0, 24)),
++            itemListLd(locale, result.items, result.offset),
+           ]),
+         }}
+       />
+@@ -122,7 +136,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
+         <div className="veil" />
+         <div className="inner">
+           <span className="sr-kicker">
+-            {t('categoriesPage.products', { count: products.length })}
++            {t('categoriesPage.products', { count: rawProducts.length })}
+           </span>
+           <h1 className="sr-h1" style={{ marginTop: 10 }}>
+             {category.name}
+@@ -133,13 +147,24 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
+       </div>
+ 
+       <div className="sr-in sr-in-2">
+-        <ProductExplorer
+-          products={products}
+-          brands={brands}
+-          categories={[]}
++        <ProductsBrowser
++          query={query}
++          result={result}
++          basePath={`/categories/${category.slug}`}
+           lock="category"
+         />
+       </div>
++      <TrackProductList
++        listName={`category:${category.slug}`}
++        searchTerm={query.q || undefined}
++        facets={{ brand: query.brand, featured: query.featuredOnly }}
++        items={result.items.map((p) => ({
++          slug: p.slug,
++          name: p.name,
++          brandName: p.brandName,
++          categoryName: p.categoryName,
++        }))}
++      />
+     </section>
+   )
+ }
+diff --git a/src/components/showroom/ProductExplorer.tsx b/src/components/showroom/ProductExplorer.tsx
+deleted file mode 100644
+index dfddf05..0000000
+--- a/src/components/showroom/ProductExplorer.tsx
++++ /dev/null
+@@ -1,246 +0,0 @@
+-'use client'
+-
+-import { useEffect, useMemo, useRef, useState } from 'react'
+-import { useTranslations } from 'next-intl'
+-import { Carousel } from './Carousel'
+-import { ShowroomCard, type ShowroomProduct } from './ShowroomCard'
+-
+-export interface ExplorerProduct extends ShowroomProduct {
+-  brandSlug: string
+-  categorySlug: string
+-  featured: boolean
+-  /** Epoch ms — powers the "newest first" sort on /products. */
+-  createdAt?: number
+-}
+-
+-export interface FacetOption {
+-  slug: string
+-  name: string
+-  count: number
+-}
+-
+-const PER_PAGE = 24
+-
+-/**
+- * Client-side product explorer: chip filters (scrollable lanes with
+- * arrows), text filter, sort, pagination. Used on /products and, with a
+- * locked facet, on category & brand pages.
+- */
+-export function ProductExplorer({
+-  products,
+-  brands,
+-  categories,
+-  lock = 'none',
+-}: {
+-  products: ExplorerProduct[]
+-  brands: FacetOption[]
+-  categories: FacetOption[]
+-  lock?: 'none' | 'brand' | 'category'
+-}) {
+-  const t = useTranslations('showroom.filters')
+-  const [brand, setBrand] = useState<string | null>(null)
+-  const [category, setCategory] = useState<string | null>(null)
+-  const [q, setQ] = useState('')
+-  const [sort, setSort] = useState<'featured' | 'az' | 'za'>('featured')
+-  const [page, setPage] = useState(1)
+-  const topRef = useRef<HTMLDivElement | null>(null)
+-
+-  const filtered = useMemo(() => {
+-    const needle = q.trim().toLowerCase()
+-    const list = products.filter(
+-      (p) =>
+-        (!brand || p.brandSlug === brand) &&
+-        (!category || p.categorySlug === category) &&
+-        (!needle ||
+-          p.name.toLowerCase().includes(needle) ||
+-          p.brandName.toLowerCase().includes(needle))
+-    )
+-    if (sort === 'az') list.sort((a, b) => a.name.localeCompare(b.name))
+-    else if (sort === 'za') list.sort((a, b) => b.name.localeCompare(a.name))
+-    else
+-      list.sort(
+-        (a, b) =>
+-          Number(b.featured) - Number(a.featured) ||
+-          a.name.localeCompare(b.name)
+-      )
+-    return list
+-  }, [products, brand, category, q, sort])
+-
+-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+-  const safePage = Math.min(page, totalPages)
+-  const pageItems = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE)
+-
+-  // reset page when filters change
+-  const filterKey = `${brand}|${category}|${q}|${sort}`
+-  const lastKey = useRef(filterKey)
+-  useEffect(() => {
+-    if (lastKey.current !== filterKey) {
+-      lastKey.current = filterKey
+-      setPage(1)
+-    }
+-  }, [filterKey])
+-
+-  const goto = (n: number) => {
+-    setPage(n)
+-    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+-  }
+-
+-  const hasFilter = brand || category || q
+-
+-  return (
+-    <div ref={topRef} style={{ scrollMarginTop: 90 }}>
+-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+-        {lock !== 'category' && categories.length > 1 ? (
+-          <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
+-            <button
+-              type="button"
+-              className={!category ? 'sr-chip on' : 'sr-chip'}
+-              onClick={() => setCategory(null)}
+-            >
+-              {t('categoriesLabel')} · {t('all')}
+-            </button>
+-            {categories.map((c) => (
+-              <button
+-                key={c.slug}
+-                type="button"
+-                className={category === c.slug ? 'sr-chip on' : 'sr-chip'}
+-                onClick={() => setCategory(category === c.slug ? null : c.slug)}
+-              >
+-                {c.name} <span className="n">{c.count}</span>
+-              </button>
+-            ))}
+-          </Carousel>
+-        ) : null}
+-        {lock !== 'brand' && brands.length > 1 ? (
+-          <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
+-            <button
+-              type="button"
+-              className={!brand ? 'sr-chip on' : 'sr-chip'}
+-              onClick={() => setBrand(null)}
+-            >
+-              {t('brandsLabel')} · {t('all')}
+-            </button>
+-            {brands.map((b) => (
+-              <button
+-                key={b.slug}
+-                type="button"
+-                className={brand === b.slug ? 'sr-chip on' : 'sr-chip'}
+-                onClick={() => setBrand(brand === b.slug ? null : b.slug)}
+-              >
+-                {b.name} <span className="n">{b.count}</span>
+-              </button>
+-            ))}
+-          </Carousel>
+-        ) : null}
+-
+-        <div
+-          style={{
+-            display: 'flex',
+-            flexWrap: 'wrap',
+-            gap: 10,
+-            alignItems: 'center',
+-            marginTop: 6,
+-          }}
+-        >
+-          <span className="sr-search" style={{ flex: '1 1 220px', maxWidth: 360 }}>
+-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+-              <circle cx="11" cy="11" r="7" />
+-              <path d="m21 21-4.3-4.3" />
+-            </svg>
+-            <input
+-              className="sr-input"
+-              type="search"
+-              value={q}
+-              onChange={(e) => setQ(e.target.value)}
+-              placeholder={t('searchPlaceholder')}
+-              aria-label={t('searchPlaceholder')}
+-            />
+-          </span>
+-          <select
+-            className="sr-select"
+-            style={{ width: 'auto' }}
+-            value={sort}
+-            onChange={(e) => setSort(e.target.value as typeof sort)}
+-            aria-label={t('sort')}
+-          >
+-            <option value="featured">{t('sortFeatured')}</option>
+-            <option value="az">{t('sortAz')}</option>
+-            <option value="za">{t('sortZa')}</option>
+-          </select>
+-          <span className="sr-mono" style={{ marginInlineStart: 'auto' }}>
+-            {t('results', { count: filtered.length })}
+-            {totalPages > 1 ? (
+-              <>
+-                {' · '}
+-                <span dir="ltr">{t('page', { n: `${safePage} / ${totalPages}` })}</span>
+-              </>
+-            ) : null}
+-          </span>
+-        </div>
+-      </div>
+-
+-      {pageItems.length === 0 ? (
+-        <div className="sr-empty" style={{ marginTop: 26 }}>
+-          <p>{t('noResults')}</p>
+-          {hasFilter ? (
+-            <button
+-              type="button"
+-              className="sr-btn sr-btn-ghost"
+-              style={{ marginTop: 14 }}
+-              onClick={() => {
+-                setBrand(null)
+-                setCategory(null)
+-                setQ('')
+-              }}
+-            >
+-              {t('reset')}
+-            </button>
+-          ) : null}
+-        </div>
+-      ) : (
+-        <div className="sr-grid" style={{ marginTop: 26 }} key={`${filterKey}|${safePage}`}>
+-          {pageItems.map((p, i) => (
+-            <ShowroomCard key={p.slug} product={p} index={i} priority={safePage === 1 && i < 4} />
+-          ))}
+-        </div>
+-      )}
+-
+-      {totalPages > 1 ? (
+-        <nav className="sr-pages" style={{ marginTop: 34 }} aria-label="Pagination">
+-          <button type="button" className="sr-page" disabled={safePage === 1} onClick={() => goto(safePage - 1)} aria-label={t('prevPage')}>
+-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+-              <path d="M15 18l-6-6 6-6" />
+-            </svg>
+-          </button>
+-          {Array.from({ length: totalPages }, (_, i) => i + 1)
+-            .filter((n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 2)
+-            .reduce<(number | '…')[]>((acc, n, i, arr) => {
+-              if (i > 0 && typeof arr[i - 1] === 'number' && n - (arr[i - 1] as number) > 1) acc.push('…')
+-              acc.push(n)
+-              return acc
+-            }, [])
+-            .map((n, i) =>
+-              n === '…' ? (
+-                <span key={`e${i}`} className="sr-mono">…</span>
+-              ) : (
+-                <button
+-                  key={n}
+-                  type="button"
+-                  className={n === safePage ? 'sr-page on' : 'sr-page'}
+-                  onClick={() => goto(n)}
+-                  aria-current={n === safePage ? 'page' : undefined}
+-                >
+-                  {n}
+-                </button>
+-              )
+-            )}
+-          <button type="button" className="sr-page" disabled={safePage === totalPages} onClick={() => goto(safePage + 1)} aria-label={t('nextPage')}>
+-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+-              <path d="M9 6l6 6-6 6" />
+-            </svg>
+-          </button>
+-        </nav>
+-      ) : null}
+-    </div>
+-  )
+-}
+diff --git a/src/components/showroom/ProductsBrowser.tsx b/src/components/showroom/ProductsBrowser.tsx
+index c5aa0cf..8e62375 100644
+--- a/src/components/showroom/ProductsBrowser.tsx
++++ b/src/components/showroom/ProductsBrowser.tsx
+@@ -23,20 +23,36 @@ export async function ProductsBrowser({
+   query,
+   result,
+   basePath = '/products',
++  lock = 'none',
+ }: {
+   query: ProductQuery
+   result: ProductQueryResult
+   basePath?: string
++  /**
++   * On /categories/x and /brands/x the facet is fixed by the ROUTE, not the
++   * query. Locking it hides that lane and keeps the slug out of the query
++   * string, so the canonical URL stays `/categories/x?brand=hp` rather than
++   * `/categories/x?category=x&brand=hp`.
++   */
++  lock?: 'none' | 'brand' | 'category'
+ }) {
+   const t = await getTranslations('showroom.filters')
++  // Never serialise the locked facet — the path already carries it.
++  const linkQuery: ProductQuery = {
++    ...query,
++    ...(lock === 'category' ? { category: null } : {}),
++    ...(lock === 'brand' ? { brand: null } : {}),
++  }
+   const href = (patch: Partial<ProductQuery>) =>
+-    `${basePath}${productQueryToSearch(query, { page: 1, ...patch })}`
++    `${basePath}${productQueryToSearch(linkQuery, { page: 1, ...patch })}`
+   const pageHref = (n: number) =>
+-    `${basePath}${productQueryToSearch(query, { page: n })}`
++    `${basePath}${productQueryToSearch(linkQuery, { page: n })}`
+ 
+   const { items, total, totalPages, page, categories, brands, featuredCount } =
+     result
+-  const active = hasActiveFilters(query)
++  // The locked facet isn't a "filter the visitor applied", so it must not make
++  // the reset row appear on an otherwise-unfiltered category page.
++  const active = hasActiveFilters(linkQuery)
+ 
+   // Windowed page list: 1 … p-1 p p+1 … N
+   const pageNums: (number | '…')[] = []
+@@ -53,18 +69,19 @@ export async function ProductsBrowser({
+   // excludes the other's selection, so BOTH lookups miss and neither removal
+   // pill would render — leaving the visitor an empty grid and only a blanket
+   // "reset". Falling back to the slug keeps both pills clickable.
+-  const activeCategoryLabel = query.category
+-    ? (categories.find((c) => c.slug === query.category)?.name ?? query.category)
++  const activeCategoryLabel = linkQuery.category
++    ? (categories.find((c) => c.slug === linkQuery.category)?.name ??
++      linkQuery.category)
+     : null
+-  const activeBrandLabel = query.brand
+-    ? (brands.find((b) => b.slug === query.brand)?.name ?? query.brand)
++  const activeBrandLabel = linkQuery.brand
++    ? (brands.find((b) => b.slug === linkQuery.brand)?.name ?? linkQuery.brand)
+     : null
+ 
+   return (
+     <div className="sr-browser">
+       {/* ── filter lanes ─────────────────────────────────────────── */}
+       <div className="sr-filterbar">
+-        {categories.length > 1 ? (
++        {lock !== 'category' && categories.length > 1 ? (
+           <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
+             <Link
+               href={href({ category: null })}
+@@ -89,7 +106,7 @@ export async function ProductsBrowser({
+           </Carousel>
+         ) : null}
+ 
+-        {brands.length > 1 ? (
++        {lock !== 'brand' && brands.length > 1 ? (
+           <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
+             <Link
+               href={href({ brand: null })}
+@@ -115,7 +132,7 @@ export async function ProductsBrowser({
+         <div className="sr-toolbar">
+           <ProductSearchField
+             basePath={basePath}
+-            query={query}
++            query={linkQuery}
+             placeholder={t('searchPlaceholder')}
+           />
+           {featuredCount > 0 ? (
+@@ -131,7 +148,7 @@ export async function ProductsBrowser({
+               {t('featuredOnly')} <span className="n">{featuredCount}</span>
+             </Link>
+           ) : null}
+-          <ProductSortSelect basePath={basePath} query={query} />
++          <ProductSortSelect basePath={basePath} query={linkQuery} />
+           <span className="sr-count sr-mono">
+             {t('results', { count: total })}
+             {totalPages > 1 ? (
+diff --git a/src/lib/product-filters.ts b/src/lib/product-filters.ts
+index ac42fbd..52bc005 100644
+--- a/src/lib/product-filters.ts
++++ b/src/lib/product-filters.ts
+@@ -13,7 +13,7 @@
+  * `generateMetadata` and components can all share it.
+  */
+ 
+-import type { ExplorerProduct, FacetOption } from '@/components/showroom/ProductExplorer'
++import type { ExplorerProduct, FacetOption } from '@/types/catalog'
+ 
+ export const PRODUCTS_PER_PAGE = 24
+ 
+diff --git a/src/lib/showroom-data.ts b/src/lib/showroom-data.ts
+index dcec50f..58014e6 100644
+--- a/src/lib/showroom-data.ts
++++ b/src/lib/showroom-data.ts
+@@ -1,9 +1,6 @@
+ import { imgOr } from '@/lib/img'
+ import type { ProductWithRelations } from '@/db/schema'
+-import type {
+-  ExplorerProduct,
+-  FacetOption,
+-} from '@/components/showroom/ProductExplorer'
++import type { ExplorerProduct } from '@/types/catalog'
+ 
+ export function toExplorerProducts(
+   products: ProductWithRelations[]
+@@ -22,18 +19,3 @@ export function toExplorerProducts(
+     createdAt: p.createdAt ? new Date(p.createdAt).getTime() : undefined,
+   }))
+ }
+-
+-export function facetFromProducts(
+-  products: ExplorerProduct[],
+-  key: 'brand' | 'category'
+-): FacetOption[] {
+-  const map = new Map<string, FacetOption>()
+-  for (const p of products) {
+-    const slug = key === 'brand' ? p.brandSlug : p.categorySlug
+-    const name = key === 'brand' ? p.brandName : p.categoryName
+-    const f = map.get(slug)
+-    if (f) f.count++
+-    else map.set(slug, { slug, name, count: 1 })
+-  }
+-  return [...map.values()].sort((a, b) => b.count - a.count)
+-}
+diff --git a/src/types/catalog.ts b/src/types/catalog.ts
+new file mode 100644
+index 0000000..fb4774b
+--- /dev/null
++++ b/src/types/catalog.ts
+@@ -0,0 +1,25 @@
++/**
++ * Shared catalogue view types.
++ *
++ * These used to live in `ProductExplorer.tsx` — a `'use client'` component —
++ * which meant every server module that needed the shape (the filter engine,
++ * the data mappers, route files) imported from a client component. That worked
++ * only because they were type-only imports; one accidental value import would
++ * have pulled a client module into the server graph.
++ */
++
++import type { ShowroomProduct } from '@/components/showroom/ShowroomCard'
++
++export interface ExplorerProduct extends ShowroomProduct {
++  brandSlug: string
++  categorySlug: string
++  featured: boolean
++  /** Epoch ms — powers the "newest first" sort on /products. */
++  createdAt?: number
++}
++
++export interface FacetOption {
++  slug: string
++  name: string
++  count: number
++}

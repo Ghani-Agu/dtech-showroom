@@ -9,6 +9,8 @@ export interface ExplorerProduct extends ShowroomProduct {
   brandSlug: string
   categorySlug: string
   featured: boolean
+  /** Epoch ms — powers the "newest first" sort on /products. */
+  createdAt?: number
 }
 
 export interface FacetOption {
@@ -206,7 +208,9 @@ export function ProductExplorer({
       {totalPages > 1 ? (
         <nav className="sr-pages" style={{ marginTop: 34 }} aria-label="Pagination">
           <button type="button" className="sr-page" disabled={safePage === 1} onClick={() => goto(safePage - 1)} aria-label={t('prevPage')}>
-            ←
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1)
             .filter((n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 2)
@@ -231,7 +235,9 @@ export function ProductExplorer({
               )
             )}
           <button type="button" className="sr-page" disabled={safePage === totalPages} onClick={() => goto(safePage + 1)} aria-label={t('nextPage')}>
-            →
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
           </button>
         </nav>
       ) : null}

@@ -720,7 +720,9 @@
       "search": "Rechercher",
       "cart": "Panier",
       "menu": "Menu",
-      "close": "Fermer"
+      "close": "Fermer",
+      "newsletter": "Newsletter",
+      "chat": "Assistant D-Tech"
     },
     "footer": {
       "blurb": "Distributeur officiel HP, Dell, Lenovo, ASUS, TP-Link, Canon et Epson en Algérie depuis 2006. 393 produits, livrés dans les 58 wilayas.",
@@ -758,7 +760,15 @@
       "prevPage": "Page précédente",
       "nextPage": "Page suivante",
       "brandsLabel": "Marques",
-      "categoriesLabel": "Catégories"
+      "categoriesLabel": "Catégories",
+      "featuredOnly": "En vedette",
+      "clearFilter": "Retirer ce filtre",
+      "sortNewest": "Plus récents",
+      "filtersTitle": "Filtres",
+      "refine": "Affiner",
+      "categoriesTitle": "Catégorie",
+      "brandsTitle": "Marque",
+      "activeCount": "{n} filtre(s) actif(s)"
     },
     "product": {
       "addToCart": "Ajouter au panier",
@@ -805,7 +815,28 @@
       "kicker": "{count} produits · {cats} catégories · {brands} marques",
       "title1": "Le catalogue",
       "title2": "complet.",
-      "sub": "Filtrez par catégorie ou marque, triez, et commandez directement sur WhatsApp."
+      "sub": "Filtrez par catégorie ou marque, triez, et commandez directement sur WhatsApp.",
+      "breadcrumb": "Catalogue",
+      "titleCategory": "{category} — Catalogue D-Tech",
+      "titleBrand": "{brand} — Catalogue D-Tech",
+      "titleBrandCategory": "{brand} {category} — Catalogue D-Tech",
+      "titleSearch": "Recherche « {q} » — Catalogue",
+      "titlePaged": "{title} — Page {page}",
+      "subFiltered": "{scope} — parcourez la sélection D-Tech Algérie, filtrez, comparez et commandez sur WhatsApp."
+    },
+    "featured": {
+      "seeAll": "Voir les {count} produits",
+      "browseAll": "Explorer tout le catalogue",
+      "note": "{count} produits · filtres par catégorie, marque et recherche"
+    },
+    "partner": {
+      "eyebrow": "Partenaire {brand}",
+      "partnerLine": "D-Tech Algérie × {brand}",
+      "title1": "La gamme professionnelle {brand},",
+      "title2": "chez votre distributeur.",
+      "sub": "Postes de travail, écrans et impression {brand} pour entreprises et administrations — avec devis, facture et garantie officielle, livrés dans les 58 wilayas.",
+      "cta": "Découvrir la gamme {brand}",
+      "tileSub": "{count} produits"
     }
   },
   "newsletter": {
@@ -824,5 +855,27 @@
     "alreadyTitle": "Déjà inscrit·e.",
     "invalidTitle": "Lien invalide ou expiré.",
     "errorTitle": "Erreur technique."
+  },
+  "nlPopup": {
+    "kicker": "Newsletter D-Tech",
+    "title": "Des offres exclusives, avant tout le monde.",
+    "sub": "Rejoignez la liste D-Tech : remises abonnés, nouveautés et ventes flash — directement dans votre boîte mail.",
+    "point1": "Remises réservées aux abonnés",
+    "point2": "Nouveautés PC, gaming & impression en avant-première",
+    "point3": "Ventes flash annoncées par e-mail",
+    "emailPh": "votre@email.com",
+    "cta": "Je m'abonne",
+    "ctaBusy": "Envoi…",
+    "micro": "Désinscription en un clic, à tout moment. Jamais de spam.",
+    "okTitle": "Presque terminé !",
+    "okSub": "Un e-mail de confirmation vient de vous être envoyé — cliquez sur le lien pour activer votre inscription.",
+    "alreadyTitle": "Vous êtes déjà abonné(e) !",
+    "alreadySub": "Vos offres et nouveautés continuent d'arriver dans votre boîte mail.",
+    "doneBtn": "Parfait",
+    "close": "Fermer",
+    "visualTag": "Le club des bonnes affaires",
+    "errInvalid": "Adresse e-mail invalide.",
+    "errRateLimited": "Trop de tentatives — réessayez plus tard.",
+    "errGeneric": "Une erreur s'est produite. Réessayez."
   }
 }

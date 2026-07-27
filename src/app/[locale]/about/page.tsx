@@ -6,6 +6,8 @@ import { Heading } from '@/components/ui/Heading'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { getPublishedPage, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { EdAbout } from '@/components/editorial/EditorialCollections'
 import { BrandAbout } from '@/components/brand/BrandSections'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { EditProvider, Editable } from '@/components/site-edit/edit-context'
@@ -23,12 +25,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
   // New "dtech Brand" design — brand-styled about section.
-  if ((await getPublishedDesign()) === 'brand') {
+  const skinDesign = await getPublishedDesign()
+  if (skinDesign === 'brand') {
     const locale = await getLocale()
-    return (
+        return (
       <BrandPageShell locale={locale}>
         <BrandAbout />
       </BrandPageShell>
+    )
+  }
+  if (skinDesign === 'editorial') {
+    const locale = await getLocale()
+        return (
+      <EditorialPageShell locale={locale}>
+        <EdAbout />
+      </EditorialPageShell>
     )
   }
 

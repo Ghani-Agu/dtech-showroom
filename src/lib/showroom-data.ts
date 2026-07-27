@@ -1,9 +1,6 @@
 import { imgOr } from '@/lib/img'
 import type { ProductWithRelations } from '@/db/schema'
-import type {
-  ExplorerProduct,
-  FacetOption,
-} from '@/components/showroom/ProductExplorer'
+import type { ExplorerProduct } from '@/types/catalog'
 
 export function toExplorerProducts(
   products: ProductWithRelations[]
@@ -19,20 +16,6 @@ export function toExplorerProducts(
     cardImagePath: imgOr(p.cardImagePath),
     specs: p.specs,
     featured: p.featured,
+    createdAt: p.createdAt ? new Date(p.createdAt).getTime() : undefined,
   }))
-}
-
-export function facetFromProducts(
-  products: ExplorerProduct[],
-  key: 'brand' | 'category'
-): FacetOption[] {
-  const map = new Map<string, FacetOption>()
-  for (const p of products) {
-    const slug = key === 'brand' ? p.brandSlug : p.categorySlug
-    const name = key === 'brand' ? p.brandName : p.categoryName
-    const f = map.get(slug)
-    if (f) f.count++
-    else map.set(slug, { slug, name, count: 1 })
-  }
-  return [...map.values()].sort((a, b) => b.count - a.count)
 }

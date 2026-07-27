@@ -162,10 +162,13 @@ export function NewsletterSignup({
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: '-9999px',
           width: '1px',
           height: '1px',
           overflow: 'hidden',
+          clipPath: 'inset(50%)',
+          whiteSpace: 'nowrap',
+          opacity: 0,
+          pointerEvents: 'none',
         }}
       >
         <label htmlFor={`nl-website-${variant}`}>Website</label>

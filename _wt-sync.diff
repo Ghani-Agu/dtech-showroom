@@ -1,0 +1,1167 @@
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 2b3690d..b700be8 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -16,7 +16,7 @@
+      v2's "quiet" value (slightly lighter, marginally more chroma). */
+   --color-text-primary: oklch(0.97 0.005 80);
+   --color-text-secondary: oklch(0.78 0.008 80);
+-  --color-text-muted: oklch(0.58 0.010 80);
++  --color-text-muted: oklch(0.635 0.010 80); /* was 0.58 — ~4.0:1 on elevated; lifted to pass AA */
+   --color-text-disabled: oklch(0.42 0.012 80);
+ 
+   /* Product material tones (for 3D shading) — not in v2 spec; preserved. */
+@@ -109,7 +109,7 @@
+      the Hero v2 pass + component audit are run. */
+   --color-text-warm-primary: oklch(0.97 0.005 80);
+   --color-text-warm-secondary: oklch(0.78 0.008 80);
+-  --color-text-warm-tertiary: oklch(0.58 0.010 80);
++  --color-text-warm-tertiary: oklch(0.635 0.010 80); /* was 0.58 — lifted to pass AA */
+   --color-text-warm-quiet: oklch(0.42 0.012 80);
+ 
+   /* v2 — the Dtech color. Brighter and more saturated than v1's
+@@ -312,7 +312,7 @@ samp {
+   --admin-overlay: rgba(5, 10, 8, 0.65);
+   --admin-text-primary: #ffffff;
+   --admin-text-secondary: #9db3ac;
+-  --admin-text-tertiary: #69807a;
++  --admin-text-tertiary: #83988f; /* was #69807a (~4.4:1) — lifted for AA on glass */
+   --admin-blur: blur(24px) saturate(180%);
+   --admin-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+ }
+@@ -355,7 +355,7 @@ html[data-admin-theme='light'] .admin-shell {
+   /* ── Text ───────────────────────────────────────────────────── */
+   --admin-text-primary: #181410;     /* warm near-black */
+   --admin-text-secondary: #4d4438;
+-  --admin-text-tertiary: #847762;
++  --admin-text-tertiary: #6a6152; /* was #847762 (~4.4:1) — deepened for AA on cream */
+ 
+   /* ── Vivid section accents ──────────────────────────────────── */
+   --c-mint:    #0aa17a;
+@@ -692,3 +692,65 @@ body[data-home-theme='light'][data-home-chrome='showcase'] {
+   background: #eef1f0;
+   color-scheme: light;
+ }
++
++/* ═══════════════════════════════════════════════════════════════
++   UI/UX PASS (2026-07) — light theme for the classic content pages.
++   about / legal / inquiry / newsletter / error / not-found style
++   themselves with the Tailwind --color-* tokens (dark-only). They
++   render inside .sr-root, so when the global light theme is on, flip
++   those tokens here. Scoped to .sr-root so admin (.admin-shell) and
++   the home/brand skins are untouched.
++   ═══════════════════════════════════════════════════════════════ */
++body[data-home-theme='light'] .sr-root {
++  --color-surface-void: #e6eae7;
++  --color-surface-base: #eef1f0;
++  --color-surface-base-plus: #f4f6f5;
++  --color-surface-elevated: #ffffff;
++  --color-surface-overlay: #ffffff;
++  --color-surface-overlay-plus: #ffffff;
++  --color-text-primary: #13211c;
++  --color-text-secondary: #35433d;
++  --color-text-muted: #566661;
++  --color-text-disabled: #8b938f;
++  --color-accent: #0a7057;
++}
++
++/* ═══════════════════════════════════════════════════════════════
++   ADMIN responsive nav — the sidebar was a fixed 268px rail that
++   crushed content on tablets/phones. Below 1024px it becomes an
++   off-canvas drawer opened by a floating menu button (with scrim +
++   focus trap in AdminSidebar). Desktop is unchanged.
++   ═══════════════════════════════════════════════════════════════ */
++.admin-navfab, .admin-navclose, .admin-navscrim { display: none; }
++@media (max-width: 1023px) {
++  .admin-shell aside.glass-surface {
++    position: fixed; inset-block: 0; inset-inline-start: 0;
++    z-index: 60; width: 280px; max-width: 86vw;
++    transform: translateX(-100%);
++    transition: transform 0.28s var(--admin-ease, ease);
++  }
++  [dir='rtl'] .admin-shell aside.glass-surface { transform: translateX(100%); }
++  .admin-shell aside.glass-surface[data-open='true'] { transform: translateX(0); }
++  .admin-navfab {
++    display: inline-grid; place-items: center;
++    position: fixed; inset-inline-start: 16px; inset-block-end: 16px; z-index: 56;
++    width: 52px; height: 52px; border-radius: 999px;
++    background: var(--c-mint); color: var(--admin-on-accent);
++    border: 1px solid color-mix(in oklab, var(--c-mint) 60%, transparent);
++    box-shadow: 0 10px 26px -8px color-mix(in oklab, var(--c-mint) 55%, transparent);
++  }
++  .admin-navclose {
++    display: inline-grid; place-items: center;
++    position: absolute; inset-block-start: 14px; inset-inline-end: 14px; z-index: 2;
++    width: 40px; height: 40px; border-radius: 999px;
++    color: var(--admin-text-secondary); background: var(--admin-soft);
++    border: 1px solid var(--admin-glass-border);
++  }
++  .admin-navscrim[data-open='true'] {
++    display: block; position: fixed; inset: 0; z-index: 58;
++    background: var(--admin-overlay);
++  }
++}
++@media (prefers-reduced-motion: reduce) {
++  .admin-shell aside.glass-surface { transition: none; }
++}
+diff --git a/src/components/admin/AdminSidebar.tsx b/src/components/admin/AdminSidebar.tsx
+index 49ef33d..18ed1fe 100644
+--- a/src/components/admin/AdminSidebar.tsx
++++ b/src/components/admin/AdminSidebar.tsx
+@@ -1,6 +1,7 @@
+ 'use client'
+ 
+ // Icon library: lucide-react (already installed in package.json).
++import { useEffect, useState } from 'react'
+ import Link from 'next/link'
+ import { usePathname, useRouter } from 'next/navigation'
+ import {
+@@ -11,6 +12,7 @@ import {
+   LogOut,
+   Mail,
+   Megaphone,
++  Menu,
+   MessageSquare,
+   Package,
+   Paintbrush,
+@@ -18,10 +20,12 @@ import {
+   Settings,
+   Tag,
+   Users,
++  X,
+   type LucideIcon,
+ } from 'lucide-react'
+ import { PulsingDot } from './PulsingDot'
+ import { authClient } from '@/lib/auth-client'
++import { useFocusTrap } from '@/hooks/useFocusTrap'
+ import { cn } from '@/lib/utils'
+ 
+ interface NavItem {
+@@ -140,6 +144,17 @@ export interface AdminSidebarProps {
+ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
+   const pathname = usePathname()
+   const router = useRouter()
++  const [open, setOpen] = useState(false)
++  // eslint-disable-next-line react-hooks/set-state-in-effect -- close the drawer on navigation
++  useEffect(() => setOpen(false), [pathname])
++  const trapRef = useFocusTrap<HTMLElement>(open, () => setOpen(false))
++  useEffect(() => {
++    if (!open) return
++    document.body.style.overflow = 'hidden'
++    return () => {
++      document.body.style.overflow = ''
++    }
++  }, [open])
+ 
+   function isActive(href: string): boolean {
+     if (href === '/admin') return pathname === '/admin'
+@@ -158,14 +173,40 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
+   }
+ 
+   return (
+-    <aside
+-      className={cn(
+-        'glass-surface sticky top-0 flex h-screen w-[268px] shrink-0 flex-col overflow-y-auto',
+-        'rounded-none border-y-0 border-l-0',
+-        className
+-      )}
+-      style={{ borderRight: '1px solid var(--admin-glass-border)' }}
+-    >
++    <>
++      <button
++        type="button"
++        className="admin-navfab"
++        aria-label="Ouvrir le menu"
++        aria-expanded={open}
++        onClick={() => setOpen(true)}
++      >
++        <Menu size={22} strokeWidth={1.9} />
++      </button>
++      <div
++        className="admin-navscrim"
++        data-open={open}
++        aria-hidden="true"
++        onClick={() => setOpen(false)}
++      />
++      <aside
++        ref={trapRef}
++        data-open={open}
++        className={cn(
++          'glass-surface sticky top-0 flex h-screen w-[268px] shrink-0 flex-col overflow-y-auto',
++          'rounded-none border-y-0 border-l-0',
++          className
++        )}
++        style={{ borderRight: '1px solid var(--admin-glass-border)' }}
++      >
++        <button
++          type="button"
++          className="admin-navclose"
++          aria-label="Fermer le menu"
++          onClick={() => setOpen(false)}
++        >
++          <X size={18} />
++        </button>
+       {/* Wordmark — same language as the public site header */}
+       <div className="px-5 pb-5 pt-6">
+         <Link
+@@ -336,7 +377,8 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
+           </li>
+         </ul>
+       </nav>
+-    </aside>
++      </aside>
++    </>
+   )
+ }
+ 
+diff --git a/src/components/admin/CommandPalette.tsx b/src/components/admin/CommandPalette.tsx
+index f3c9a18..2771122 100644
+--- a/src/components/admin/CommandPalette.tsx
++++ b/src/components/admin/CommandPalette.tsx
+@@ -16,6 +16,7 @@ import {
+   X,
+ } from 'lucide-react'
+ import { cn } from '@/lib/utils'
++import { useFocusTrap } from '@/hooks/useFocusTrap'
+ 
+ interface CommandItem {
+   id: string
+@@ -39,6 +40,7 @@ export function CommandPalette({
+   const [query, setQuery] = useState('')
+   const [selectedIndex, setSelectedIndex] = useState(0)
+   const inputRef = useRef<HTMLInputElement>(null)
++  const trapRef = useFocusTrap<HTMLDivElement>(open, () => onOpenChange(false))
+ 
+   const items: CommandItem[] = [
+     {
+@@ -165,33 +167,42 @@ export function CommandPalette({
+       <div className="absolute inset-0 bg-[var(--admin-canvas)]/80 backdrop-blur-sm" />
+ 
+       <div
+-        className="relative w-full max-w-xl overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-2xl"
++        ref={trapRef}
++        role="dialog"
++        aria-modal="true"
++        aria-label="Recherche rapide"
++        className="relative w-full max-w-xl overflow-hidden rounded-lg border border-[var(--admin-glass-border)] bg-[var(--admin-glass-bg)] shadow-2xl"
+         onClick={(e) => e.stopPropagation()}
+       >
+-        <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3">
++        <div className="flex items-center gap-3 border-b border-[var(--admin-glass-border)] px-4 py-3">
+           <Search size={18} className="flex-shrink-0 text-[var(--admin-text-tertiary)]" />
+           <input
+             ref={inputRef}
+             type="text"
++            role="combobox"
++            aria-expanded="true"
++            aria-controls="cmdk-list"
++            aria-activedescendant={filtered[selectedIndex] ? `cmdk-opt-${selectedIndex}` : undefined}
++            aria-label="Rechercher dans l'admin"
+             value={query}
+             onChange={(e) => {
+               setQuery(e.target.value)
+               setSelectedIndex(0)
+             }}
+             placeholder="Rechercher dans l'admin…"
+-            className="flex-1 bg-transparent font-body text-base text-white outline-none placeholder:text-[var(--admin-text-tertiary)]"
++            className="flex-1 bg-transparent font-body text-base text-[var(--admin-text-primary)] outline-none placeholder:text-[var(--admin-text-tertiary)]"
+           />
+           <button
+             type="button"
+             onClick={() => onOpenChange(false)}
+-            className="p-1 text-[var(--admin-text-tertiary)] transition-colors hover:text-white"
++            className="p-1 text-[var(--admin-text-tertiary)] transition-colors hover:text-[var(--admin-text-primary)]"
+             aria-label="Fermer"
+           >
+             <X size={16} />
+           </button>
+         </div>
+ 
+-        <ul className="max-h-[400px] overflow-y-auto">
++        <ul id="cmdk-list" role="listbox" aria-label="Actions" className="max-h-[400px] overflow-y-auto">
+           {filtered.length === 0 ? (
+             <li className="px-4 py-8 text-center font-body text-sm text-[var(--admin-text-tertiary)]">
+               Aucun résultat pour « {query} »
+@@ -201,9 +212,10 @@ export function CommandPalette({
+               const Icon = item.icon
+               const isSelected = idx === selectedIndex
+               return (
+-                <li key={item.id}>
++                <li key={item.id} id={`cmdk-opt-${idx}`} role="option" aria-selected={isSelected}>
+                   <button
+                     type="button"
++                    tabIndex={-1}
+                     onMouseEnter={() => setSelectedIndex(idx)}
+                     onClick={() => {
+                       item.action()
+@@ -212,8 +224,8 @@ export function CommandPalette({
+                     className={cn(
+                       'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
+                       isSelected
+-                        ? 'bg-white/[0.06]'
+-                        : 'hover:bg-white/[0.04]'
++                        ? 'bg-[var(--admin-soft-2)]'
++                        : 'hover:bg-[var(--admin-soft)]'
+                     )}
+                   >
+                     <Icon
+@@ -223,7 +235,7 @@ export function CommandPalette({
+                       )}
+                     />
+                     <div className="min-w-0 flex-1">
+-                      <p className="font-body text-sm text-white">
++                      <p className="font-body text-sm text-[var(--admin-text-primary)]">
+                         {item.label}
+                       </p>
+                       {item.description && (
+@@ -239,7 +251,7 @@ export function CommandPalette({
+           )}
+         </ul>
+ 
+-        <div className="flex items-center justify-between border-t border-white/[0.08] px-4 py-2 text-[var(--admin-text-tertiary)]">
++        <div className="flex items-center justify-between border-t border-[var(--admin-glass-border)] px-4 py-2 text-[var(--admin-text-tertiary)]">
+           <p className="font-mono text-xs">
+             ↑↓ naviguer · ↵ sélectionner · échap fermer
+           </p>
+diff --git a/src/components/admin/products/BilingualField.tsx b/src/components/admin/products/BilingualField.tsx
+index f41a2b1..1a5cd7a 100644
+--- a/src/components/admin/products/BilingualField.tsx
++++ b/src/components/admin/products/BilingualField.tsx
+@@ -48,11 +48,12 @@ export function BilingualField({
+       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+         <div className="space-y-1">
+           <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+-            English{' '}
+-            {required && <span className="text-[var(--admin-cyan)]">(required)</span>}
++            Anglais{' '}
++            {required && <span className="text-[var(--admin-cyan)]">(requis)</span>}
+           </p>
+           {type === 'input' ? (
+             <Input
++              aria-label={`${label} (anglais)`}
+               value={enValue}
+               onChange={(e) => onEnChange(e.target.value)}
+               error={enError}
+@@ -60,6 +61,7 @@ export function BilingualField({
+             />
+           ) : (
+             <Textarea
++              aria-label={`${label} (anglais)`}
+               value={enValue}
+               onChange={(e) => onEnChange(e.target.value)}
+               error={enError}
+@@ -71,27 +73,29 @@ export function BilingualField({
+ 
+         <div className="space-y-1">
+           <p className="font-mono text-xs uppercase tracking-wider text-[var(--admin-text-tertiary)]">
+-            FranÃ§ais <span className="text-[var(--admin-text-tertiary)]">(optional)</span>
++            Français <span className="text-[var(--admin-text-tertiary)]">(optionnel)</span>
+           </p>
+           {type === 'input' ? (
+             <Input
++              aria-label={`${label} (français)`}
+               value={frValue}
+               onChange={(e) => onFrChange(e.target.value)}
+               error={frError}
+               placeholder={
+                 enValue
+-                  ? `(falls back to: ${enValue.slice(0, 40)}...)`
++                  ? `(par défaut : ${enValue.slice(0, 40)}…)`
+                   : ''
+               }
+             />
+           ) : (
+             <Textarea
++              aria-label={`${label} (français)`}
+               value={frValue}
+               onChange={(e) => onFrChange(e.target.value)}
+               error={frError}
+               rows={rows}
+               placeholder={
+-                enValue ? '(falls back to English when empty)' : ''
++                enValue ? "(par défaut : l'anglais si vide)" : ''
+               }
+             />
+           )}
+diff --git a/src/components/admin/products/ImageUpload.tsx b/src/components/admin/products/ImageUpload.tsx
+index 672d9d1..ad4a3e3 100644
+--- a/src/components/admin/products/ImageUpload.tsx
++++ b/src/components/admin/products/ImageUpload.tsx
+@@ -76,7 +76,7 @@ export function ImageUpload({
+ 
+   function handleDelete() {
+     if (!value) return
+-    if (!confirm(`Delete the ${variant} image?`)) return
++    if (!confirm(`Supprimer l'image ${variant} ?`)) return
+ 
+     startDelete(async () => {
+       const result = await deleteEntityImage(value)
+@@ -171,10 +171,19 @@ export function ImageUpload({
+         </div>
+       ) : (
+         <div
++          role="button"
++          tabIndex={isPending ? -1 : 0}
++          aria-label={label}
+           onDragOver={handleDragOver}
+           onDragLeave={handleDragLeave}
+           onDrop={handleDrop}
+           onClick={() => !isPending && inputRef.current?.click()}
++          onKeyDown={(e) => {
++            if ((e.key === 'Enter' || e.key === ' ') && !isPending) {
++              e.preventDefault()
++              inputRef.current?.click()
++            }
++          }}
+           className={cn(
+             'relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed transition-colors',
+             variant === 'hero'
+@@ -195,7 +204,7 @@ export function ImageUpload({
+                 Optimisation de la photo…
+               </p>
+               <p className="font-mono text-xs text-[var(--admin-text-tertiary)]">
+-                Generating WebP + AVIF variants
++                Génération des variantes WebP + AVIF
+               </p>
+             </>
+           ) : (
+@@ -207,13 +216,13 @@ export function ImageUpload({
+                 </p>
+                 <p className="mt-1 font-mono text-xs text-[var(--admin-text-tertiary)]">
+                   {variant === 'hero'
+-                    ? '2400Ã—1350'
++                    ? '2400×1350'
+                     : variant === 'card'
+-                      ? '800Ã—600'
++                      ? '800×600'
+                       : variant === 'logo'
+-                        ? '600Ã—600'
+-                        : '1600Ã—1200'}{' '}
+-                  Â· WebP + AVIF
++                        ? '600×600'
++                        : '1600×1200'}{' '}
++                  · WebP + AVIF
+                 </p>
+               </div>
+             </>
+diff --git a/src/components/brand/BrandChrome.tsx b/src/components/brand/BrandChrome.tsx
+index dcab3c9..9f50282 100644
+--- a/src/components/brand/BrandChrome.tsx
++++ b/src/components/brand/BrandChrome.tsx
+@@ -12,6 +12,7 @@ import Image from 'next/image'
+ import { useRouter, usePathname, Link } from '@/i18n/routing'
+ import { useBrand } from './brand-context'
+ import { useCart } from '@/lib/cart'
++import { useFocusTrap } from '@/hooks/useFocusTrap'
+ import type { BrandLang } from './brand-i18n'
+ import { BRAND_LANGS } from './brand-i18n'
+ import {
+@@ -183,7 +184,7 @@ function HeaderSearch() {
+         </svg>
+       </button>
+       {open && q.trim().length >= 2 ? (
+-        <div className="bs-pop" role="listbox" aria-label={SEARCH_PH[lang]}>
++        <div className="bs-pop" aria-label={SEARCH_PH[lang]}>
+           {hits.length === 0 ? (
+             <div className="bs-empty">{busy ? '···' : SEARCH_EMPTY[lang]}</div>
+           ) : (
+@@ -266,44 +267,92 @@ export function BrandHeader() {
+   const onHome = pathname === '/'
+   const items = useNavItems()
+   const [scrolled, setScrolled] = useState(false)
++  const [menuOpen, setMenuOpen] = useState(false)
+   useEffect(() => {
+     const on = () => setScrolled(window.scrollY > 16)
+     on()
+     window.addEventListener('scroll', on, { passive: true })
+     return () => window.removeEventListener('scroll', on)
+   }, [])
++  // eslint-disable-next-line react-hooks/set-state-in-effect -- close the mobile menu on route change
++  useEffect(() => setMenuOpen(false), [pathname])
++  const menuTrapRef = useFocusTrap<HTMLDivElement>(menuOpen, () => setMenuOpen(false))
++  useEffect(() => {
++    if (!menuOpen) return
++    document.body.style.overflow = 'hidden'
++    return () => {
++      document.body.style.overflow = ''
++    }
++  }, [menuOpen])
++
++  const menuLabel = lang === 'ar' ? 'القائمة' : 'Menu'
++  const closeLabel = lang === 'ar' ? 'إغلاق' : lang === 'fr' ? 'Fermer' : 'Close'
++
++  const renderNavLink = (
++    it: { label: string; hash: string; to?: string },
++    onClick?: () => void,
++  ) => {
++    const active = onHome ? it.hash === 'products' : it.to ? pathname.startsWith(it.to) : false
++    const cls = active ? 'on' : undefined
++    if (onHome) return <a key={it.hash} href={`#${it.hash}`} className={cls} onClick={onClick}>{it.label}</a>
++    if (it.to) return <Link key={it.hash} href={it.to} className={cls} onClick={onClick}>{it.label}</Link>
++    return <a key={it.hash} href={`/${lang}#${it.hash}`} className={cls} onClick={onClick}>{it.label}</a>
++  }
++
+   return (
+-    <header className={`site ${scrolled ? 'shrink' : ''}`}>
+-      <div className="wrap hdr">
+-        <BrandWordmark />
+-        <nav className="primary">
+-          {items.map((it) => {
+-            const active = onHome ? it.hash === 'products' : it.to ? pathname.startsWith(it.to) : false
+-            const cls = active ? 'on' : undefined
+-            if (onHome) return <a key={it.hash} href={`#${it.hash}`} className={cls}>{it.label}</a>
+-            if (it.to) return <Link key={it.hash} href={it.to} className={cls}>{it.label}</Link>
+-            return <a key={it.hash} href={`/${lang}#${it.hash}`} className={cls}>{it.label}</a>
+-          })}
+-        </nav>
+-        <div className="hdr-right">
+-          <HeaderSearch />
+-          <LangSwitch />
+-          <ThemeToggle />
+-          <HeaderCartButton />
+-          {onHome ? (
+-            <a className="btn btn-teal btn-sm" href="#products">
+-              {t('nav.explore')}
+-              <Arrow s={13} />
+-            </a>
+-          ) : (
+-            <Link className="btn btn-teal btn-sm" href="/products">
+-              {t('nav.explore')}
+-              <Arrow s={13} />
+-            </Link>
+-          )}
++    <>
++      <header className={`site ${scrolled ? 'shrink' : ''}`}>
++        <div className="wrap hdr">
++          <BrandWordmark />
++          <nav className="primary">{items.map((it) => renderNavLink(it))}</nav>
++          <div className="hdr-right">
++            <HeaderSearch />
++            <LangSwitch />
++            <ThemeToggle />
++            <HeaderCartButton />
++            <button
++              type="button"
++              className="icn b-burger"
++              aria-label={menuLabel}
++              aria-expanded={menuOpen}
++              onClick={() => setMenuOpen(true)}
++            >
++              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
++                <path d="M4 7h16M4 12h16M4 17h16" />
++              </svg>
++            </button>
++            {onHome ? (
++              <a className="btn btn-teal btn-sm b-explore" href="#products">
++                {t('nav.explore')}
++                <Arrow s={13} />
++              </a>
++            ) : (
++              <Link className="btn btn-teal btn-sm b-explore" href="/products">
++                {t('nav.explore')}
++                <Arrow s={13} />
++              </Link>
++            )}
++          </div>
+         </div>
+-      </div>
+-    </header>
++      </header>
++      {menuOpen ? (
++        <div ref={menuTrapRef} className="b-mobile" role="dialog" aria-modal="true" aria-label={menuLabel}>
++          <div className="b-mobile-head">
++            <BrandWordmark />
++            <button type="button" className="icn" aria-label={closeLabel} onClick={() => setMenuOpen(false)}>
++              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
++                <path d="M6 6l12 12M18 6L6 18" />
++              </svg>
++            </button>
++          </div>
++          <nav className="b-mobile-nav">{items.map((it) => renderNavLink(it, () => setMenuOpen(false)))}</nav>
++          <div className="b-mobile-foot">
++            <LangSwitch />
++            <ThemeToggle />
++          </div>
++        </div>
++      ) : null}
++    </>
+   )
+ }
+ 
+@@ -357,9 +406,9 @@ export function BrandFooter() {
+             <h4>{t('footer.c4')}</h4>
+             <ul>
+               <li><a>{t('footer.c4a')}</a></li>
+-              <li><a>0560 99 05 06</a></li>
+-              <li><a>0561 616 911</a></li>
+-              <li><a>contact@dtech.dz</a></li>
++              <li><a href="tel:+213560990506">0560 99 05 06</a></li>
++              <li><a href="tel:+213561616911">0561 616 911</a></li>
++              <li><a href="mailto:contact@dtech.dz">contact@dtech.dz</a></li>
+             </ul>
+           </div>
+         </div>
+diff --git a/src/components/home/HomeShowcase.tsx b/src/components/home/HomeShowcase.tsx
+index 505e325..c63fe3b 100644
+--- a/src/components/home/HomeShowcase.tsx
++++ b/src/components/home/HomeShowcase.tsx
+@@ -211,6 +211,10 @@ function Counter({
+         entries.forEach((e) => {
+           if (e.isIntersecting && !started.current) {
+             started.current = true
++            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
++              setV(to)
++              return
++            }
+             const start = performance.now()
+             const dur = 1600
+             const tick = (t: number) => {
+@@ -255,13 +259,30 @@ function HeroSlider({
+   config?: HeroConfig | null
+ }) {
+   const t = useTranslations('showcase.hero')
++  const locale = useLocale()
+   const [idx, setIdx] = useState(0)
++  const [paused, setPaused] = useState(false)
++  const [reduced, setReduced] = useState(false)
+   const real = slides.length > 0 ? slides : [{ src: '', alt: '' }]
+   useEffect(() => {
+-    if (real.length <= 1) return
++    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
++    setReduced(mq.matches)
++    const on = () => setReduced(mq.matches)
++    mq.addEventListener?.('change', on)
++    return () => mq.removeEventListener?.('change', on)
++  }, [])
++  // Auto-advance only when there are multiple slides, the visitor hasn't
++  // paused, and reduced-motion isn't requested (WCAG 2.2.2).
++  useEffect(() => {
++    if (real.length <= 1 || paused || reduced) return
+     const id = setInterval(() => setIdx((v) => (v + 1) % real.length), 4500)
+     return () => clearInterval(id)
+-  }, [real.length])
++  }, [real.length, paused, reduced])
++  const slideLabel = (n: number) =>
++    locale === 'ar' ? `الشريحة ${n}` : locale === 'fr' ? `Diapositive ${n}` : `Slide ${n}`
++  const carouselLabel = locale === 'ar' ? 'لافتة' : locale === 'fr' ? 'Bannière' : 'Banner'
++  const pauseLabel = locale === 'ar' ? 'إيقاف مؤقت' : locale === 'fr' ? 'Mettre en pause' : 'Pause'
++  const playLabel = locale === 'ar' ? 'تشغيل' : locale === 'fr' ? 'Lecture' : 'Play'
+ 
+   const title1 = config?.title1 ?? t('title1')
+   const title2 = config?.title2 ?? t('title2')
+@@ -323,7 +344,16 @@ function HeroSlider({
+           </div>
+         </div>
+ 
+-        <div className="hero-slider" aria-roledescription="carousel">
++        <div
++          className="hero-slider"
++          role="group"
++          aria-roledescription="carousel"
++          aria-label={carouselLabel}
++          onMouseEnter={() => setPaused(true)}
++          onMouseLeave={() => setPaused(false)}
++          onFocusCapture={() => setPaused(true)}
++          onBlurCapture={() => setPaused(false)}
++        >
+           {real.map((sl, i) => (
+             <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
+               {sl.src ? (
+@@ -348,13 +378,27 @@ function HeroSlider({
+           <div className="hero-slider-veil" />
+           {real.length > 1 && (
+             <div className="hero-slider-dots">
++              <button
++                type="button"
++                className="hero-slider-play"
++                aria-label={paused ? playLabel : pauseLabel}
++                aria-pressed={paused}
++                onClick={() => setPaused((p) => !p)}
++              >
++                {paused ? (
++                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
++                ) : (
++                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" /></svg>
++                )}
++              </button>
+               {real.map((_, i) => (
+                 <button
+                   key={i}
+                   type="button"
+                   className={i === idx ? 'is-active' : ''}
+                   onClick={() => setIdx(i)}
+-                  aria-label={`Image ${i + 1}`}
++                  aria-label={slideLabel(i + 1)}
++                  aria-current={i === idx ? 'true' : undefined}
+                 />
+               ))}
+             </div>
+diff --git a/src/components/home/home-showcase.css b/src/components/home/home-showcase.css
+index ff4f5dc..65d39a6 100644
+--- a/src/components/home/home-showcase.css
++++ b/src/components/home/home-showcase.css
+@@ -2270,3 +2270,71 @@ body[data-home-theme='light'] .home-showcase-root .prod .wa-mini:hover { backgro
+ /* ─── catalog cards adapt to the picture (no cropping) ───────── */
+ .home-showcase-root .prod .canvas { background: #ffffff; }
+ .home-showcase-root .prod .canvas > img { object-fit: contain !important; padding: 12px; }
++
++/* ═══════════════════════════════════════════════════════════════
++   UI/UX PASS (2026-07) — RTL, accessibility, motion, touch, contrast.
++   Appended last so it overrides earlier rules where needed. Scoped to
++   .home-showcase-root so it never bleeds into admin/other skins.
++   ═══════════════════════════════════════════════════════════════ */
++
++/* Motion — honour prefers-reduced-motion across the whole homepage
++   (drifting orbs, pulsing dots, map pings, parallax, scroll reveals). */
++@media (prefers-reduced-motion: reduce) {
++  .home-showcase-root *, .home-showcase-root *::before, .home-showcase-root *::after {
++    animation-duration: 0.001ms !important;
++    animation-iteration-count: 1 !important;
++    transition-duration: 0.001ms !important;
++    scroll-behavior: auto !important;
++  }
++  /* keep scroll-reveal content visible even with transitions off */
++  .home-showcase-root .fade { opacity: 1 !important; transform: none !important; }
++}
++
++/* Contrast — near-white ink on the mint accent fails ~3:1 in light mode.
++   Use a dark ink on the filled primary button / active chip / active page. */
++body[data-home-theme='light'] .home-showcase-root .btn-primary,
++body[data-home-theme='light'] .home-showcase-root .cat-chip.on,
++body[data-home-theme='light'] .home-showcase-root .page-btn.on {
++  color: #04140e;
++}
++/* the text-accent token (kickers, small labels, years) needs AA on white */
++body[data-home-theme='light'] .home-showcase-root { --ice: #0a6a50; }
++
++/* RTL — physical-side props that carry directional meaning. */
++.home-showcase-root .brand { text-align: start; }
++.home-showcase-root .cat .arr { inset-inline-end: 22px; right: auto; }
++.home-showcase-root .icn .dot { inset-inline-end: 5px; right: auto; }
++[dir='rtl'] .home-showcase-root .cat .arr svg,
++[dir='rtl'] .home-showcase-root .btn-explore svg,
++[dir='rtl'] .home-showcase-root .hs-all svg { transform: scaleX(-1); }
++
++/* Focus — a clear keyboard ring on interactive homepage controls (the
++   file shipped none; the UA outline is faint on the accent surfaces). */
++.home-showcase-root :is(a, button, input, .cat-chip, .page-btn, .lang-opt, .contact-tab, .hero-slider-dots button):focus-visible {
++  outline: 2px solid var(--cyan);
++  outline-offset: 2px;
++  border-radius: 8px;
++}
++
++/* Touch — meet ~44px targets on coarse pointers without resizing the
++   visible dots (an invisible ::after enlarges the hit area). */
++@media (pointer: coarse) {
++  .home-showcase-root .hero-slider-dots button { position: relative; }
++  .home-showcase-root .hero-slider-dots button::after { content: ''; position: absolute; inset: -12px; }
++  .home-showcase-root .qd-item-qty button { width: 36px; height: 36px; }
++  .home-showcase-root .lang-opt { padding: 8px 8px; }
++  .home-showcase-root .hero-slider-play { width: 30px; height: 30px; }
++}
++
++/* Hero pause/play control (added for WCAG 2.2.2 — auto-advancing carousel). */
++.home-showcase-root .hero-slider-play {
++  display: inline-grid; place-items: center;
++  width: 22px; height: 22px; border-radius: 999px;
++  background: rgba(0, 0, 0, 0.42); border: 1px solid rgba(255, 255, 255, 0.5);
++  color: #fff; cursor: pointer; margin-inline-end: 6px;
++  transition: background 0.2s, transform 0.15s;
++}
++.home-showcase-root .hero-slider-play:hover { background: rgba(0, 0, 0, 0.62); }
++body[data-home-theme='light'] .home-showcase-root .hero-slider-play {
++  background: rgba(255, 255, 255, 0.82); border-color: rgba(18, 32, 27, 0.25); color: #13211c;
++}
+diff --git a/src/components/product/SpecsToggle.tsx b/src/components/product/SpecsToggle.tsx
+index 16ecec5..ad58a21 100644
+--- a/src/components/product/SpecsToggle.tsx
++++ b/src/components/product/SpecsToggle.tsx
+@@ -15,14 +15,17 @@ const TONES = {
+     onAccent: '#04121f',
+     btnBg: 'var(--sr-surface, rgba(255,255,255,0.08))',
+   },
++  // "light" is the Brand skin's tone; drive it from the brand theme tokens
++  // so it stays readable in the brand DARK theme too (was a hardcoded white
++  // panel + near-white --ink text = invisible in dark mode).
+   light: {
+-    panelBg: '#ffffff',
+-    line: 'rgba(18,18,40,0.10)',
++    panelBg: 'var(--surface, #ffffff)',
++    line: 'var(--line, rgba(18,18,40,0.12))',
+     text: 'var(--ink, #16162e)',
+-    muted: 'var(--muted, #6a6a82)',
+-    accent: 'var(--accent, #12b3a6)',
++    muted: 'var(--mute, #6a6a82)',
++    accent: 'var(--teal-deep, #0b7e8c)',
+     onAccent: '#ffffff',
+-    btnBg: 'rgba(18,18,40,0.05)',
++    btnBg: 'var(--surface-2, rgba(18,18,40,0.05))',
+   },
+ } as const
+ 
+@@ -54,6 +57,7 @@ export function SpecsToggle({
+       : locale === 'en'
+         ? 'Technical specifications'
+         : 'Caractéristiques techniques'
++  const closeLabel = locale === 'ar' ? 'إغلاق' : locale === 'en' ? 'Close' : 'Fermer'
+ 
+   const openPanel = (e: React.MouseEvent) => {
+     e.preventDefault()
+@@ -149,7 +153,7 @@ export function SpecsToggle({
+             </span>
+             <button
+               type="button"
+-              aria-label="Fermer"
++              aria-label={closeLabel}
+               onClick={(e) => {
+                 e.preventDefault()
+                 e.stopPropagation()
+diff --git a/src/components/showroom/CartDrawer.tsx b/src/components/showroom/CartDrawer.tsx
+index 511ca41..8f69631 100644
+--- a/src/components/showroom/CartDrawer.tsx
++++ b/src/components/showroom/CartDrawer.tsx
+@@ -5,31 +5,30 @@ import Image from 'next/image'
+ import { useTranslations } from 'next-intl'
+ import { imgOr } from '@/lib/img'
+ import { useCart, whatsappOrderUrl } from '@/lib/cart'
++import { useFocusTrap } from '@/hooks/useFocusTrap'
+ 
+ export function CartDrawer() {
+   const t = useTranslations('showroom.cart')
+   const { items, open, setOpen, setQty, remove, clear } = useCart()
+   const count = items.reduce((a, i) => a + i.qty, 0)
++  const canOrder = items.length > 0
++  const trapRef = useFocusTrap<HTMLElement>(open, () => setOpen(false))
+ 
++  // Lock body scroll while open; focus trap + Escape live in useFocusTrap.
+   useEffect(() => {
+     if (!open) return
+-    const onKey = (e: KeyboardEvent) => {
+-      if (e.key === 'Escape') setOpen(false)
+-    }
+-    document.addEventListener('keydown', onKey)
+     document.body.style.overflow = 'hidden'
+     return () => {
+-      document.removeEventListener('keydown', onKey)
+       document.body.style.overflow = ''
+     }
+-  }, [open, setOpen])
++  }, [open])
+ 
+   if (!open) return null
+ 
+   return (
+     <>
+       <div className="sr-overlay" onClick={() => setOpen(false)} />
+-      <aside className="sr-drawer" role="dialog" aria-modal="true" aria-label={t('title')}>
++      <aside ref={trapRef} className="sr-drawer" role="dialog" aria-modal="true" aria-label={t('title')}>
+         <div className="head">
+           <strong style={{ fontSize: 17, letterSpacing: '-0.02em' }}>{t('title')}</strong>
+           <span className="sr-mono">{t('count', { count })}</span>
+@@ -65,8 +64,7 @@ export function CartDrawer() {
+                 </span>
+                 <button
+                   type="button"
+-                  className="sr-icn"
+-                  style={{ width: 30, height: 30 }}
++                  className="sr-icn sr-cart-remove"
+                   aria-label={t('remove', { name: i.name })}
+                   onClick={() => remove(i.slug)}
+                 >
+@@ -84,10 +82,12 @@ export function CartDrawer() {
+           </p>
+           <a
+             className="sr-btn sr-btn-wa"
+-            style={{ justifyContent: 'center', pointerEvents: items.length ? 'auto' : 'none', opacity: items.length ? 1 : 0.45 }}
+-            href={whatsappOrderUrl(items, t('waIntro'))}
+-            target="_blank"
+-            rel="noopener noreferrer"
++            style={{ justifyContent: 'center', pointerEvents: canOrder ? 'auto' : 'none', opacity: canOrder ? 1 : 0.45 }}
++            href={canOrder ? whatsappOrderUrl(items, t('waIntro')) : undefined}
++            target={canOrder ? '_blank' : undefined}
++            rel={canOrder ? 'noopener noreferrer' : undefined}
++            aria-disabled={!canOrder}
++            tabIndex={canOrder ? undefined : -1}
+           >
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M17.5 14.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07a8.2 8.2 0 01-2.4-1.49 9 9 0 01-1.66-2.07c-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.5 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.21 5.1 4.5.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.58-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.5h-.01a9.4 9.4 0 01-4.8-1.32l-.34-.2-3.56.93.95-3.47-.22-.36a9.42 9.42 0 1117.46-4.99 9.4 9.4 0 01-9.48 9.41zm8.03-17.43A11.32 11.32 0 0012.03.75C5.83.75.78 5.8.78 12a11.2 11.2 0 001.5 5.62L.69 23.25l5.77-1.51a11.27 11.27 0 005.57 1.47h.01c6.2 0 11.25-5.05 11.25-11.25 0-3.01-1.17-5.83-3.22-7.89z" />
+diff --git a/src/components/showroom/ProductExplorer.tsx b/src/components/showroom/ProductExplorer.tsx
+index 6d7256d..f7dbc1b 100644
+--- a/src/components/showroom/ProductExplorer.tsx
++++ b/src/components/showroom/ProductExplorer.tsx
+@@ -206,7 +206,9 @@ export function ProductExplorer({
+       {totalPages > 1 ? (
+         <nav className="sr-pages" style={{ marginTop: 34 }} aria-label="Pagination">
+           <button type="button" className="sr-page" disabled={safePage === 1} onClick={() => goto(safePage - 1)} aria-label={t('prevPage')}>
+-            ←
++            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
++              <path d="M15 18l-6-6 6-6" />
++            </svg>
+           </button>
+           {Array.from({ length: totalPages }, (_, i) => i + 1)
+             .filter((n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 2)
+@@ -231,7 +233,9 @@ export function ProductExplorer({
+               )
+             )}
+           <button type="button" className="sr-page" disabled={safePage === totalPages} onClick={() => goto(safePage + 1)} aria-label={t('nextPage')}>
+-            →
++            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
++              <path d="M9 6l6 6-6 6" />
++            </svg>
+           </button>
+         </nav>
+       ) : null}
+diff --git a/src/components/showroom/ReviewsSection.tsx b/src/components/showroom/ReviewsSection.tsx
+index 871550d..cb793a8 100644
+--- a/src/components/showroom/ReviewsSection.tsx
++++ b/src/components/showroom/ReviewsSection.tsx
+@@ -126,7 +126,7 @@ export function ReviewsSection({ slug }: { slug: string }) {
+               {t('submit')}
+             </button>
+             {thanks ? (
+-              <p className="sr-mono" style={{ color: 'var(--sr-cyan)', textTransform: 'none', letterSpacing: '0.02em' }}>
++              <p className="sr-mono" role="status" style={{ color: 'var(--sr-ice)', textTransform: 'none', letterSpacing: '0.02em' }}>
+                 {t('thanks')}
+               </p>
+             ) : null}
+@@ -146,7 +146,7 @@ export function ReviewsSection({ slug }: { slug: string }) {
+                     <div className="nm">
+                       {r.author}
+                       {r.mine ? (
+-                        <span className="sr-mono" style={{ color: 'var(--sr-cyan)', marginInlineStart: 8 }}>
++                        <span className="sr-mono" style={{ color: 'var(--sr-ice)', marginInlineStart: 8 }}>
+                           · {t('mine')}
+                         </span>
+                       ) : null}
+diff --git a/src/components/showroom/SiteNav.tsx b/src/components/showroom/SiteNav.tsx
+index e5805d7..7c8c743 100644
+--- a/src/components/showroom/SiteNav.tsx
++++ b/src/components/showroom/SiteNav.tsx
+@@ -21,6 +21,7 @@ import { useLocale, useTranslations } from 'next-intl'
+ import { Link, usePathname, useRouter } from '@/i18n/routing'
+ import { locales, type Locale } from '@/i18n/config'
+ import { useCart } from '@/lib/cart'
++import { useFocusTrap } from '@/hooks/useFocusTrap'
+ import '@/components/home/home-showcase.css'
+ import '@/components/home/site-themes.css'
+ 
+@@ -209,7 +210,7 @@ function HeaderSearch() {
+         </svg>
+       </button>
+       {showPop ? (
+-        <div className="hs-pop" role="listbox" aria-label={t('searchAria')}>
++        <div className="hs-pop" aria-label={t('searchAria')}>
+           {hits.length === 0 ? (
+             <div className="hs-pop-empty">
+               {busy ? '···' : t('searchNoResults')}
+@@ -278,6 +279,16 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
+   // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on route change
+   useEffect(() => setMenu(false), [pathname])
+ 
++  // focus trap + Escape for the mobile menu, and lock body scroll while open
++  const menuTrapRef = useFocusTrap<HTMLDivElement>(menu, () => setMenu(false))
++  useEffect(() => {
++    if (!menu) return
++    document.body.style.overflow = 'hidden'
++    return () => {
++      document.body.style.overflow = ''
++    }
++  }, [menu])
++
+   const routeLinks = [
+     { href: '/products' as const, label: t('products') },
+     { href: '/categories' as const, label: t('catalogue') },
+@@ -386,7 +397,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
+       {menu
+         ? createPortal(
+         <div className="home-showcase-root" style={{ display: 'contents' }}>
+-        <div className="sr-mobile-menu" role="dialog" aria-modal="true">
++        <div ref={menuTrapRef} className="sr-mobile-menu" role="dialog" aria-modal="true">
+           <div style={{ display: 'flex', alignItems: 'center' }}>
+             <Logo home={variant === 'home'} />
+             <button
+diff --git a/src/components/showroom/Stars.tsx b/src/components/showroom/Stars.tsx
+index c974d05..20afd52 100644
+--- a/src/components/showroom/Stars.tsx
++++ b/src/components/showroom/Stars.tsx
+@@ -45,8 +45,12 @@ export function Stars({
+   tone?: StarTone
+ }) {
+   return (
+-    <span className="sr-stars">
+-      <span className="s">
++    <span
++      className="sr-stars"
++      role="img"
++      aria-label={`${value.toFixed(1)} / 5${count !== undefined ? ` · ${count}` : ''}`}
++    >
++      <span className="s" aria-hidden="true">
+         {[1, 2, 3, 4, 5].map((i) => (
+           <Star key={i} size={size} fill={value - i + 1} tone={tone} />
+         ))}
+diff --git a/src/styles/brand-design.css b/src/styles/brand-design.css
+index f77ce04..6da5a8a 100644
+--- a/src/styles/brand-design.css
++++ b/src/styles/brand-design.css
+@@ -885,3 +885,87 @@
+   background: color-mix(in srgb, var(--bg) 86%, transparent);
+   backdrop-filter: blur(10px);
+ }
++
++/* ═══════════════════════════════════════════════════════════════
++   UI/UX PASS (2026-07) — RTL, accessibility, motion, touch, contrast.
++   Appended last; scoped under .brand-root so it can't affect other skins.
++   ═══════════════════════════════════════════════════════════════ */
++
++/* RTL — shared Carousel arrows read var(--sr-flip); expose --muted as an
++   alias of --mute (some shared components read var(--muted)). */
++.brand-root[dir='rtl'], .brand-root[lang='ar'] { --sr-flip: scaleX(-1); }
++.brand-root { --muted: var(--mute); }
++
++/* Contrast — white on the mid-teal fills is only ~2–3:1 in BOTH themes.
++   Dark ink on the teal reads 5.5:1 (light) / 8:1 (dark). */
++.brand-root .btn-teal,
++.brand-root .chip.on,
++.brand-root .seg button.on,
++.brand-root .cat-pill.on,
++.brand-root .shop-tab.on,
++.brand-root .pg-btn.on,
++.brand-root .sr-buybar .add { color: #04181c; }
++/* Light-theme muted body text was #7c8b91 (~3.5:1) → darker; keep dark ok. */
++.brand-root { --mute: #5f6f75; }
++.brand-root[data-theme='dark'] { --mute: #90a7ad; }
++/* WhatsApp buttons: #25d366 + white ≈ 2:1 → AA-passing green. */
++.brand-root .wa-btn, .brand-root .pdp-wa { background: #0f7a41; }
++.brand-root .wa-btn:hover, .brand-root .pdp-wa:hover { background: #0c6837; }
++
++/* Motion — honour prefers-reduced-motion (looping map pin, transitions;
++   hero autoplay is gated in JS). */
++@media (prefers-reduced-motion: reduce) {
++  .brand-root *, .brand-root *::before, .brand-root *::after {
++    animation-duration: 0.001ms !important;
++    animation-iteration-count: 1 !important;
++    transition-duration: 0.001ms !important;
++    scroll-behavior: auto !important;
++  }
++}
++
++/* Focus — visible keyboard ring (the search input suppressed its outline). */
++.brand-root :is(a, button, input, select, textarea, .chip, .cat-pill, .shop-tab, .pg-btn, .seg button):focus-visible {
++  outline: 2px solid var(--teal-deep);
++  outline-offset: 2px;
++  border-radius: 8px;
++}
++
++/* Touch — ~44px targets on coarse pointers (dots keep their small visual
++   size; an invisible ::after enlarges the hit area). */
++@media (pointer: coarse) {
++  .brand-root .hs-arrow { width: 44px; height: 44px; }
++  .brand-root .seg button { padding: 9px 12px; }
++  .brand-root .hs-dots button { position: relative; }
++  .brand-root .hs-dots button::after { content: ''; position: absolute; inset: -14px; }
++}
++
++/* RTL — the text-button hover arrow slid the wrong way in Arabic. */
++.brand-root[lang='ar'] .btn-text:hover svg.flip { transform: scaleX(-1) translateX(3px); }
++
++/* ── Mobile navigation — was entirely missing below 980px ─────────── */
++.brand-root .b-burger { display: none; }
++@media (max-width: 980px) {
++  .brand-root .b-burger { display: inline-grid; place-items: center; }
++  .brand-root .hdr .b-explore { display: none; }
++}
++@media (max-width: 720px) {
++  .brand-root .hdr-right .seg { display: none; } /* lang moves into the sheet */
++}
++.brand-root .b-mobile {
++  position: fixed; inset: 0; z-index: 200;
++  background: var(--bg); color: var(--ink);
++  display: flex; flex-direction: column;
++  padding: 18px var(--pad) 32px; overflow-y: auto;
++}
++.brand-root .b-mobile-head {
++  display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
++}
++.brand-root .b-mobile-nav { display: flex; flex-direction: column; }
++.brand-root .b-mobile-nav a {
++  font-family: var(--disp); font-weight: 800; font-size: clamp(22px, 6vw, 30px);
++  padding: 14px 0; border-bottom: 1px solid var(--line); color: var(--ink);
++}
++.brand-root .b-mobile-nav a.on { color: var(--teal-deep); }
++.brand-root .b-mobile-foot {
++  display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap;
++}
+diff --git a/src/styles/showroom.css b/src/styles/showroom.css
+index 2e0e9b5..059efd5 100644
+--- a/src/styles/showroom.css
++++ b/src/styles/showroom.css
+@@ -702,3 +702,69 @@ body[data-home-theme='light'] .sr-root .sr-wamini:hover { background: #1da851; c
+ .pg-main { background: #ffffff; }
+ .pg-main > img { object-fit: contain !important; padding: 14px; }
+ .pg-thumb img { object-fit: contain !important; padding: 4px; }
++
++/* ═══════════════════════════════════════════════════════════════
++   UI/UX PASS (2026-07) — RTL, accessibility, motion, touch, contrast.
++   Appended last so it overrides earlier rules where needed. Scoped
++   to .sr-root / .sr-* / [dir='rtl'] so it never bleeds into admin.
++   ═══════════════════════════════════════════════════════════════ */
++
++/* RTL — carousel & chip-row arrow GLYPHS mirror (the button positions
++   already flip via inset-inline). Carousel.tsx renders each chevron with
++   `transform: var(--sr-flip, none)`, so defining the var in RTL flips it. */
++[dir='rtl'] .sr-arrow { --sr-flip: scaleX(-1); }
++
++/* RTL — pagination prev/next chevrons mirror. */
++[dir='rtl'] .sr-pages svg { transform: scaleX(-1); }
++
++/* Motion — honour prefers-reduced-motion across the whole classic skin,
++   not just the .sr-in entrance. Neutralises entrance/slide/fade/float and
++   hover transforms; keeps content fully visible. */
++@media (prefers-reduced-motion: reduce) {
++  .sr-root *, .sr-root *::before, .sr-root *::after,
++  .sr-mobile-menu, .sr-mobile-menu *,
++  .sr-drawer, .sr-overlay, .sr-toast, .sr-fab, .sr-buybar {
++    animation-duration: 0.001ms !important;
++    animation-iteration-count: 1 !important;
++    transition-duration: 0.001ms !important;
++    scroll-behavior: auto !important;
++  }
++  .sr-card, .sr-card:hover { transform: none !important; }
++  .sr-card:hover .imgbox img { transform: none !important; }
++}
++
++/* Touch — meet the ~44px minimum target on coarse pointers (phones/
++   tablets) without enlarging the desktop layout. */
++@media (pointer: coarse) {
++  .sr-icn { width: 44px; height: 44px; }
++  .sr-arrow { width: 40px; height: 40px; }
++  .sr-carousel .sr-arrow { width: 44px; height: 44px; }
++  .sr-page { min-width: 44px; height: 44px; }
++  .sr-qty button { width: 36px; height: 36px; }
++  .sr-cart-remove { width: 40px; height: 40px; }
++  .sr-lang button { padding: 8px 7px; }
++  .sr-starpick button { padding: 6px; }
++}
++
++/* Focus — a clear keyboard ring on every interactive control (several
++   relied only on the faint UA outline over the dark accent surfaces). */
++.sr-root :is(.sr-chip, .sr-page, .sr-arrow, .sr-cartbtn, .sr-wamini, .sr-icn, .sr-btn, .sr-starpick button, .sr-qty button):focus-visible,
++.sr-drawer a:focus-visible, .sr-mobile-menu a:focus-visible {
++  outline: 2px solid var(--sr-cyan);
++  outline-offset: 2px;
++  border-radius: 10px;
++}
++
++/* Contrast — the mint accent (#0e9b78 in light mode) fails 4.5:1 as
++   small text; use a darker mint for text-sized labels. */
++body[data-home-theme='light'] .sr-root .sr-cartbtn { color: #0a6a50; }
++body[data-home-theme='light'] .sr-root .sr-cartbtn:hover,
++body[data-home-theme='light'] .sr-root .sr-cartbtn.added { color: #ffffff; }
++body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
++
++/* RTL — cart-count bubble was pinned with a physical `right`. */
++.sr-icn .count { inset-inline-end: -5px; right: auto; }
++
++/* The floating cart bubble must never overlap the sticky buy bar (both
++   mount on product pages once scrolled); hide it while the bar shows. */
++.sr-root:has(.sr-buybar) .sr-fab { display: none; }

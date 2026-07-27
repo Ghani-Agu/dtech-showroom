@@ -937,7 +937,37 @@ export function SectionList({
     ...customSections.map((c) => c.id),
   ]
   const saved = (sections.order || []).filter((id) => present.includes(id))
-  const order = [...saved, ...present.filter((id) => !saved.includes(id))]
+  // Sections the SAVED order predates (it was published before they existed —
+  // e.g. 'services'/'partner' added in later rounds) used to be appended at
+  // the END of the page, so a stale `sections.order` in the DB silently sank
+  // the HP partner band below the contact section. Instead, slot every
+  // missing id at its DEFAULT position: right after its nearest preceding
+  // default-order sibling that survived into the saved order (or before its
+  // nearest following one).
+  const order = [...saved]
+  for (const id of present) {
+    if (order.includes(id)) continue
+    const di = present.indexOf(id)
+    let at = -1
+    for (let k = di - 1; k >= 0; k--) {
+      const idx = order.indexOf(present[k]!)
+      if (idx !== -1) {
+        at = idx + 1
+        break
+      }
+    }
+    if (at === -1) {
+      at = order.length
+      for (let k = di + 1; k < present.length; k++) {
+        const idx = order.indexOf(present[k]!)
+        if (idx !== -1) {
+          at = idx
+          break
+        }
+      }
+    }
+    order.splice(at, 0, id)
+  }
 
   function onDropOn(targetId: string) {
     const from = dragId.current

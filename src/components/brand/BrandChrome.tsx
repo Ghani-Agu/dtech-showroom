@@ -12,6 +12,9 @@ import Image from 'next/image'
 import { useRouter, usePathname, Link } from '@/i18n/routing'
 import { useBrand } from './brand-context'
 import { useCart } from '@/lib/cart'
+import { useNlPopup } from '@/lib/newsletter-popup'
+import { useChatPanel } from '@/lib/chat-panel'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import type { BrandLang } from './brand-i18n'
 import { BRAND_LANGS } from './brand-i18n'
 import {
@@ -23,6 +26,8 @@ import {
   InstagramIcon,
   LinkedInIcon,
 } from './brand-icons'
+import { BRAND_WHATSAPP } from './brand-types'
+import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
 
 function BrandWordmark() {
   const { t } = useBrand()
@@ -183,7 +188,7 @@ function HeaderSearch() {
         </svg>
       </button>
       {open && q.trim().length >= 2 ? (
-        <div className="bs-pop" role="listbox" aria-label={SEARCH_PH[lang]}>
+        <div className="bs-pop" aria-label={SEARCH_PH[lang]}>
           {hits.length === 0 ? (
             <div className="bs-empty">{busy ? '···' : SEARCH_EMPTY[lang]}</div>
           ) : (
@@ -229,6 +234,83 @@ function HeaderCartButton() {
   )
 }
 
+/* ROUND 16 — newsletter pop-up trigger (no customer accounts). */
+const NL_LABEL: Record<BrandLang, string> = {
+  fr: 'Newsletter',
+  en: 'Newsletter',
+  ar: 'النشرة البريدية',
+}
+
+function HeaderNewsletterButton() {
+  const { lang } = useBrand()
+  const setOpen = useNlPopup((s) => s.setOpen)
+  return (
+    <button
+      className="icn"
+      type="button"
+      aria-label={NL_LABEL[lang]}
+      title={NL_LABEL[lang]}
+      onClick={() => setOpen(true)}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3 7 9 6 9-6" />
+      </svg>
+    </button>
+  )
+}
+
+/* ROUND 17 — D-Tech AI assistant trigger (same store as the floating bubble). */
+const CHAT_LABEL: Record<BrandLang, string> = {
+  fr: 'Assistant D-Tech',
+  en: 'D-Tech Assistant',
+  ar: 'مساعد D-Tech',
+}
+
+function BotGlyph({ s = 18 }: { s?: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="7.5" width="17" height="12" rx="4" />
+      <path d="M12 7.5V4.4M9.6 13h.01M14.4 13h.01M9.6 16.3c1.5.8 3.3.8 4.8 0" />
+      <circle cx="12" cy="3.1" r="1.35" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function HeaderChatButton() {
+  const { lang } = useBrand()
+  const setOpen = useChatPanel((s) => s.setOpen)
+  return (
+    <button
+      className="icn"
+      type="button"
+      aria-label={CHAT_LABEL[lang]}
+      title={CHAT_LABEL[lang]}
+      onClick={() => setOpen(true)}
+    >
+      <BotGlyph s={18} />
+    </button>
+  )
+}
+
+/** Anchor (not button) so the mobile menu's `nav a` styling applies. */
+function MobileChatLink({ onDone }: { onDone: () => void }) {
+  const { lang } = useBrand()
+  const setOpen = useChatPanel((s) => s.setOpen)
+  return (
+    <a
+      href="#chat"
+      onClick={(e) => {
+        e.preventDefault()
+        onDone()
+        setOpen(true)
+      }}
+    >
+      {CHAT_LABEL[lang]}
+    </a>
+  )
+}
+
 function ThemeToggle() {
   const { theme, setTheme, t } = useBrand()
   const dark = theme === 'dark'
@@ -260,50 +342,122 @@ function useNavItems() {
   ] as { label: string; hash: string; to?: string }[]
 }
 
+/** Anchor (not button) so the mobile menu's `nav a` styling applies. */
+function MobileNewsletterLink({ onDone }: { onDone: () => void }) {
+  const { lang } = useBrand()
+  const setOpen = useNlPopup((s) => s.setOpen)
+  return (
+    <a
+      href="#newsletter"
+      onClick={(e) => {
+        e.preventDefault()
+        onDone()
+        setOpen(true)
+      }}
+    >
+      {NL_LABEL[lang]}
+    </a>
+  )
+}
+
 export function BrandHeader() {
   const { t, lang } = useBrand()
   const pathname = usePathname()
   const onHome = pathname === '/'
   const items = useNavItems()
   const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 16)
     on()
     window.addEventListener('scroll', on, { passive: true })
     return () => window.removeEventListener('scroll', on)
   }, [])
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- close the mobile menu on route change
+  useEffect(() => setMenuOpen(false), [pathname])
+  const menuTrapRef = useFocusTrap<HTMLDivElement>(menuOpen, () => setMenuOpen(false))
+  useEffect(() => {
+    if (!menuOpen) return
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [menuOpen])
+
+  const menuLabel = lang === 'ar' ? 'القائمة' : 'Menu'
+  const closeLabel = lang === 'ar' ? 'إغلاق' : lang === 'fr' ? 'Fermer' : 'Close'
+
+  const renderNavLink = (
+    it: { label: string; hash: string; to?: string },
+    onClick?: () => void,
+  ) => {
+    const active = onHome ? it.hash === 'products' : it.to ? pathname.startsWith(it.to) : false
+    const cls = active ? 'on' : undefined
+    if (onHome) return <a key={it.hash} href={`#${it.hash}`} className={cls} onClick={onClick}>{it.label}</a>
+    if (it.to) return <Link key={it.hash} href={it.to} prefetch className={cls} onClick={onClick}>{it.label}</Link>
+    return <a key={it.hash} href={`/${lang}#${it.hash}`} className={cls} onClick={onClick}>{it.label}</a>
+  }
+
   return (
-    <header className={`site ${scrolled ? 'shrink' : ''}`}>
-      <div className="wrap hdr">
-        <BrandWordmark />
-        <nav className="primary">
-          {items.map((it) => {
-            const active = onHome ? it.hash === 'products' : it.to ? pathname.startsWith(it.to) : false
-            const cls = active ? 'on' : undefined
-            if (onHome) return <a key={it.hash} href={`#${it.hash}`} className={cls}>{it.label}</a>
-            if (it.to) return <Link key={it.hash} href={it.to} className={cls}>{it.label}</Link>
-            return <a key={it.hash} href={`/${lang}#${it.hash}`} className={cls}>{it.label}</a>
-          })}
-        </nav>
-        <div className="hdr-right">
-          <HeaderSearch />
-          <LangSwitch />
-          <ThemeToggle />
-          <HeaderCartButton />
-          {onHome ? (
-            <a className="btn btn-teal btn-sm" href="#products">
-              {t('nav.explore')}
-              <Arrow s={13} />
-            </a>
-          ) : (
-            <Link className="btn btn-teal btn-sm" href="/products">
-              {t('nav.explore')}
-              <Arrow s={13} />
-            </Link>
-          )}
+    <>
+      <header className={`site ${scrolled ? 'shrink' : ''}`}>
+        <div className="wrap hdr">
+          <BrandWordmark />
+          <nav className="primary">{items.map((it) => renderNavLink(it))}</nav>
+          <div className="hdr-right">
+            <HeaderSearch />
+            <LangSwitch />
+            <ThemeToggle />
+            <HeaderChatButton />
+            <HeaderNewsletterButton />
+            <HeaderCartButton />
+            <button
+              type="button"
+              className="icn b-burger"
+              aria-label={menuLabel}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(true)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+            {onHome ? (
+              <a className="btn btn-teal btn-sm b-explore" href="#products">
+                {t('nav.explore')}
+                <Arrow s={13} />
+              </a>
+            ) : (
+              <Link className="btn btn-teal btn-sm b-explore" href="/products">
+                {t('nav.explore')}
+                <Arrow s={13} />
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      {menuOpen ? (
+        <div ref={menuTrapRef} className="b-mobile" role="dialog" aria-modal="true" aria-label={menuLabel}>
+          <div className="b-mobile-head">
+            <BrandWordmark />
+            <button type="button" className="icn" aria-label={closeLabel} onClick={() => setMenuOpen(false)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <nav className="b-mobile-nav">
+            {items.map((it) => renderNavLink(it, () => setMenuOpen(false)))}
+            <MobileChatLink onDone={() => setMenuOpen(false)} />
+            <MobileNewsletterLink onDone={() => setMenuOpen(false)} />
+          </nav>
+          <div className="b-mobile-foot">
+            <LangSwitch />
+            <ThemeToggle />
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }
 
@@ -320,55 +474,56 @@ export function BrandFooter() {
             <div className="tag">{t('b.tag')}</div>
             <p>{t('footer.tagline')}</p>
             <div className="ft-soc">
-              <a aria-label="Facebook"><FacebookIcon /></a>
-              <a aria-label="Instagram"><InstagramIcon /></a>
-              <a aria-label="LinkedIn"><LinkedInIcon /></a>
+              <a aria-label="Facebook" href="https://www.facebook.com/DtechDZ/" target="_blank" rel="noopener noreferrer"><FacebookIcon /></a>
+              <a aria-label="Instagram" href="https://www.instagram.com/dtechdz/" target="_blank" rel="noopener noreferrer"><InstagramIcon /></a>
+              <a aria-label="LinkedIn" href="https://www.linkedin.com/company/d-techalgerie" target="_blank" rel="noopener noreferrer"><LinkedInIcon /></a>
             </div>
+            <FooterNewsletter source="footer-brand" />
           </div>
           <div className="ft-col">
             <h4>{t('footer.c1')}</h4>
             <ul>
-              <li><a>{t('footer.c1a')}</a></li>
-              <li><a>{t('footer.c1b')}</a></li>
-              <li><a>{t('footer.c1c')}</a></li>
-              <li><a>{t('footer.c1d')}</a></li>
-              <li><a>{t('footer.c1e')}</a></li>
+              <li><Link href={{ pathname: '/products', query: { category: 'desktops' } }}>{t('footer.c1a')}</Link></li>
+              <li><Link href={{ pathname: '/products', query: { category: 'laptops' } }}>{t('footer.c1b')}</Link></li>
+              <li><Link href={{ pathname: '/products', query: { category: 'all-in-one' } }}>{t('footer.c1c')}</Link></li>
+              <li><Link href={{ pathname: '/products', query: { category: 'tablets' } }}>{t('footer.c1d')}</Link></li>
+              <li><Link href={{ pathname: '/products', query: { category: 'printers' } }}>{t('footer.c1e')}</Link></li>
             </ul>
           </div>
           <div className="ft-col">
             <h4>{t('footer.c2')}</h4>
             <ul>
-              <li><a>HP · Dell · Lenovo</a></li>
-              <li><a>ASUS · TUF Gaming</a></li>
-              <li><a>TP-Link</a></li>
-              <li><a>Canon · Epson</a></li>
+              <li><Link href={{ pathname: '/products', query: { brand: 'hp' } }}>HP · Dell · Lenovo</Link></li>
+              <li><Link href={{ pathname: '/products', query: { brand: 'asus' } }}>ASUS · TUF Gaming</Link></li>
+              <li><Link href={{ pathname: '/products', query: { brand: 'tp-link' } }}>TP-Link</Link></li>
+              <li><Link href="/brands">Canon · Epson</Link></li>
             </ul>
           </div>
           <div className="ft-col">
             <h4>{t('footer.c3')}</h4>
             <ul>
-              <li><a>{t('footer.c3a')}</a></li>
-              <li><a>{t('footer.c3b')}</a></li>
-              <li><a>{t('footer.c3c')}</a></li>
-              <li><a>{t('footer.c3d')}</a></li>
+              <li><a href={`https://wa.me/${BRAND_WHATSAPP}`} target="_blank" rel="noopener noreferrer">{t('footer.c3a')}</a></li>
+              <li><a href="tel:+213561616911">{t('footer.c3b')}</a></li>
+              <li><Link href="/about">{t('footer.c3c')}</Link></li>
+              <li><Link href="/about">{t('footer.c3d')}</Link></li>
             </ul>
           </div>
           <div className="ft-col">
             <h4>{t('footer.c4')}</h4>
             <ul>
-              <li><a>{t('footer.c4a')}</a></li>
-              <li><a>0560 99 05 06</a></li>
-              <li><a>0561 616 911</a></li>
-              <li><a>contact@dtech.dz</a></li>
+              <li>{t('footer.c4a')}</li>
+              <li><a href="tel:+213560990506">0560 99 05 06</a></li>
+              <li><a href="tel:+213561616911">0561 616 911</a></li>
+              <li><a href="mailto:contact@dtech.dz">contact@dtech.dz</a></li>
             </ul>
           </div>
         </div>
         <div className="ft-bottom">
           <span>© 2026 DTECH Algérie · {t('b.tag')}</span>
           <span className="lks">
-            <a>{t('footer.legal')}</a>
-            <a>{t('footer.cgv')}</a>
-            <a>{t('footer.privacy')}</a>
+            <Link href="/legal#mentions">{t('footer.legal')}</Link>
+            <Link href="/legal#cgv">{t('footer.cgv')}</Link>
+            <Link href="/legal#privacy">{t('footer.privacy')}</Link>
           </span>
           <span>{t('footer.madein')}</span>
         </div>

@@ -48,6 +48,10 @@ export const productFormSchema = z.object({
 
   seoTitle: z.string().max(120).optional().default(''),
   seoDescription: z.string().max(300).optional().default(''),
+
+  /** Raw HTML block shown under the description on the product page.
+   *  Sanitized at render time (scripts/handlers stripped). */
+  customHtml: z.string().max(30000).optional().default(''),
 })
 
 export type ProductFormValues = z.infer<typeof productFormSchema>

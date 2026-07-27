@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { desc } from 'drizzle-orm'
 import { Mail } from 'lucide-react'
 import { GlassCard } from '@/components/admin/GlassCard'
-import { SectionTitle } from '@/components/admin/SectionTitle'
 import { db } from '@/db/client'
 import { campaigns } from '@/db/schema'
+import { getSessionUser } from '@/lib/auth-helpers'
+import { hasAccess } from '@/lib/permissions'
 import { CreateCampaignButton } from '@/components/admin/campaigns/CreateCampaignButton'
 import { CampaignStatusBadge } from '@/components/admin/campaigns/CampaignStatusBadge'
 
@@ -17,6 +19,9 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function CampaignsPage() {
+  const user = await getSessionUser()
+  if (!user || !hasAccess(user, 'newsletter')) redirect('/admin')
+
   const rows = await db
     .select()
     .from(campaigns)
@@ -84,6 +89,18 @@ export default async function CampaignsPage() {
                           {c.sentCount} envoyés · {c.openCount} ouverts · {c.clickCount} clics
                         </span>
                       )}
+                      {c.status === 'sending' && (
+                        <span className="font-mono text-[11px] text-[var(--c-amber)]">
+                          {c.sentCount} envoyés · en cours
+                        </span>
+                      )}
+                      {c.status === 'scheduled' &&
+                        c.scheduledFor &&
+                        c.scheduledFor.getTime() < Date.now() && (
+                          <span className="rounded-full border border-[color-mix(in_oklab,var(--c-amber)_45%,transparent)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--c-amber)]">
+                            en retard
+                          </span>
+                        )}
                       <CampaignStatusBadge status={c.status} />
                     </div>
                   </div>
@@ -93,6 +110,16 @@ export default async function CampaignsPage() {
                       month: 'short',
                       year: 'numeric',
                     })}
+                    {c.status === 'scheduled' && c.scheduledFor && (
+                      <>
+                        {' · '}
+                        programmée le{' '}
+                        {new Date(c.scheduledFor).toLocaleString('fr-FR', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </>
+                    )}
                     {c.sentAt && (
                       <>
                         {' · '}

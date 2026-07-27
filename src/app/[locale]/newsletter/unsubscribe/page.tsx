@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
+import { getLocale } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
+import { SkinShell } from '@/components/skin/SkinShell'
 import { unsubscribeByToken } from '@/server/newsletter-actions'
 
 export const dynamic = 'force-dynamic'
@@ -22,10 +24,11 @@ export const metadata: Metadata = {
 export default async function NewsletterUnsubscribePage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>
+  searchParams: Promise<{ token?: string; s?: string }>
 }) {
-  const { token } = await searchParams
-  const result = await unsubscribeByToken(token ?? '')
+  const locale = await getLocale()
+  const { token, s } = await searchParams
+  const result = await unsubscribeByToken(token ?? '', s)
 
   const TITLES = {
     unsubscribed: 'Désinscription confirmée.',
@@ -48,6 +51,7 @@ export default async function NewsletterUnsubscribePage({
   } as const
 
   return (
+    <SkinShell locale={locale}>
     <div className="mx-auto max-w-2xl px-6 py-24 md:px-12">
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
         D-Tech · Newsletter
@@ -78,5 +82,6 @@ export default async function NewsletterUnsubscribePage({
         </Link>
       </div>
     </div>
+    </SkinShell>
   )
 }

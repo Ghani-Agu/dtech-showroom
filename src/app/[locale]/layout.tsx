@@ -5,6 +5,11 @@ import { ScrollProvider } from '@/components/layout/ScrollProvider'
 import { ShowroomShell } from '@/components/showroom/ShowroomShell'
 import { SiteTheme } from '@/components/site-theme'
 import { getSiteTheme, getPublishedDesign } from '@/server/editor-page-data'
+import { pokeCampaignScheduler } from '@/server/campaign-send-core'
+import { getSiteIntegrations } from '@/lib/site-integrations'
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
+import { AiChat } from '@/components/chat/AiChat'
+import { NewsletterPopup } from '@/components/showroom/NewsletterPopup'
 import { locales, isValidLocale } from '@/i18n/config'
 
 interface LocaleLayoutProps {
@@ -26,10 +31,15 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale)
 
-  const [messages, siteTheme, design] = await Promise.all([
+  // Round 15: visitor traffic advances due scheduled campaigns (throttled,
+  // runs after the response — zero cost for the visitor).
+  pokeCampaignScheduler()
+
+  const [messages, siteTheme, design, integrations] = await Promise.all([
     getMessages(),
     getSiteTheme(),
     getPublishedDesign(),
+    getSiteIntegrations(),
   ])
   const t = await getTranslations('common')
 
@@ -42,6 +52,13 @@ export default async function LocaleLayout({
       >
         {t('skipToContent')}
       </a>
+      {/* GA first: its inline stub defines window.gtag synchronously, and
+          React flushes effects in tree order — mounting it after the page
+          would mean every view/search event on a direct landing fired into
+          an undefined gtag and was lost. */}
+      {integrations.ga.enabled && integrations.ga.measurementId ? (
+        <GoogleAnalytics measurementId={integrations.ga.measurementId} />
+      ) : null}
       <ScrollProvider>
         <div
           className="flex min-h-screen flex-col"
@@ -50,6 +67,30 @@ export default async function LocaleLayout({
           data-design={design}
         >
           <ShowroomShell design={design}>{children}</ShowroomShell>
+          {/* Inside the dir/data-design wrapper (so RTL mirroring and the
+              brand palette apply) but OUTSIDE .sr-root — the shell's
+              `:has(.brand-root)` guard hides its own direct children on brand
+              pages, and .sr-root doesn't exist on the homepage at all. One
+              mount covers every storefront route in all three skins, never
+              admin.
+
+              ROUND 17: mounted UNCONDITIONALLY. Credentials are handed over
+              only when the integration is fully configured AND switched on;
+              without them the panel opens in handoff mode (WhatsApp / phone)
+              rather than disappearing. A chat icon that lives in three
+              headers must not vanish because a settings row is empty — and a
+              visitor who clicks it must always reach a human. */}
+          <AiChat
+            baseUrl={integrations.aiChat.enabled ? integrations.aiChat.baseUrl : null}
+            widgetKey={
+              integrations.aiChat.enabled ? integrations.aiChat.widgetKey : null
+            }
+            title={integrations.aiChat.title}
+          />
+          {/* Round 16: the newsletter capture pop-up — one mount for every
+              storefront route in all three skins (auto-open + header
+              buttons), never on admin routes. */}
+          <NewsletterPopup />
         </div>
       </ScrollProvider>
     </NextIntlClientProvider>

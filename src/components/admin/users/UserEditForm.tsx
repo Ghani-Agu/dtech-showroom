@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { KeyRound, Shield, UserX, UserCheck, Users } from 'lucide-react'
+import { KeyRound, Shield, ShoppingBag, UserX, UserCheck, Users } from 'lucide-react'
 import { Button } from '@/components/admin/ui/Button'
 import { Input } from '@/components/admin/ui/Input'
 import { PermissionPicker } from './PermissionPicker'
@@ -115,6 +115,7 @@ export function UserEditForm({
             [
               { role: 'staff' as const, icon: Users, color: 'var(--c-blue)', title: 'Équipe', desc: 'Gère uniquement les sections cochées.' },
               { role: 'admin' as const, icon: Shield, color: 'var(--c-mint)', title: 'Admin', desc: 'Accès total à cet espace.' },
+              { role: 'customer' as const, icon: ShoppingBag, color: 'var(--c-violet)', title: 'Client', desc: 'Compte boutique — aucun accès à cet espace.' },
             ]
           ).map((r) => {
             const selected = values.role === r.role

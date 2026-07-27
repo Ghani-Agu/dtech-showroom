@@ -29,6 +29,8 @@ export interface BrandProductDetailData {
   catSlug: string
   tagline: string
   description: string
+  /** Pre-sanitized HTML block (see lib/custom-html) shown under the description. */
+  customHtml?: string
   image: string
   specs?: Record<string, string | number | string[]>
   images?: string[]
@@ -93,7 +95,7 @@ export function BrandProductDetail({
           <span className="sep">/</span>
           <Link href="/products">{t('nav.catalogue')}</Link>
           <span className="sep">/</span>
-          <Link href={`/categories/${product.catSlug}`}>{product.catName}</Link>
+          <Link href={{ pathname: '/products', query: { category: product.catSlug } }}>{product.catName}</Link>
           <span className="sep">/</span>
           <span className="cur">{product.name}</span>
         </nav>
@@ -106,9 +108,9 @@ export function BrandProductDetail({
 
           <div className="pdp-info">
             <span className="pdp-eyebrow">
-              <Link href={`/brands/${product.brandSlug}`}>{product.brandName}</Link>
+              <Link href={{ pathname: '/products', query: { brand: product.brandSlug } }}>{product.brandName}</Link>
               {' · '}
-              <Link href={`/categories/${product.catSlug}`}>{product.catName}</Link>
+              <Link href={{ pathname: '/products', query: { category: product.catSlug } }}>{product.catName}</Link>
             </span>
             <h1>{product.name}</h1>
             {product.tagline && <p className="pdp-tagline">{product.tagline}</p>}
@@ -151,6 +153,13 @@ export function BrandProductDetail({
                 ))}
               </div>
             )}
+
+            {product.customHtml ? (
+              <div
+                className="sr-customhtml"
+                dangerouslySetInnerHTML={{ __html: product.customHtml }}
+              />
+            ) : null}
           </div>
         </div>
 

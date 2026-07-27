@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPublishedCustomByPath } from '@/server/editor-page-data'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
+import { SkinShell } from '@/components/skin/SkinShell'
 import type { PageDoc } from '@/components/admin/editor/types'
 
 export const dynamic = 'force-dynamic'
@@ -28,9 +29,13 @@ export async function generateMetadata({
 }
 
 export default async function CustomPage({ params }: CustomPageProps) {
-  const { slug } = await params
+  const { locale, slug } = await params
   const path = '/' + (slug ?? []).join('/')
   const doc = await getPublishedCustomByPath(path)
   if (!doc) notFound()
-  return <PublishedPage doc={doc as unknown as PageDoc} />
+  return (
+    <SkinShell locale={locale}>
+      <PublishedPage doc={doc as unknown as PageDoc} />
+    </SkinShell>
+  )
 }

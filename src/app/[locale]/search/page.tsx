@@ -9,6 +9,8 @@ import { searchProducts } from '@/server/queries'
 import { Suspense } from 'react'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { EdGridPage } from '@/components/editorial/EditorialCollections'
 import { BrandGridPage } from '@/components/brand/BrandCollections'
 import { toBrandProducts } from '@/server/brand-data'
 
@@ -32,8 +34,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const rawResults = query.length >= 2 ? await searchProducts(query, locale) : []
 
   // New "dtech Brand" design — brand-styled search results.
-  if ((await getPublishedDesign()) === 'brand') {
-    return (
+  const skinDesign = await getPublishedDesign()
+  if (skinDesign === 'brand') {
+        return (
       <BrandPageShell locale={locale}>
         <BrandGridPage
           eyebrow={t('pageTitle')}
@@ -42,6 +45,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           emptyLabel={query ? t('noResults') : t('placeholder')}
         />
       </BrandPageShell>
+    )
+  }
+  if (skinDesign === 'editorial') {
+        return (
+      <EditorialPageShell locale={locale}>
+        <EdGridPage
+          eyebrow={t('pageTitle')}
+          title={query ? `« ${query} »` : t('pageTitle')}
+          products={toBrandProducts(rawResults)}
+          emptyLabel={query ? t('noResults') : t('placeholder')}
+        />
+      </EditorialPageShell>
     )
   }
 

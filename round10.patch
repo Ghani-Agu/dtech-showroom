@@ -1,0 +1,2456 @@
+diff --git a/messages/ar.json b/messages/ar.json
+index 7eeaa67..45448ab 100644
+--- a/messages/ar.json
++++ b/messages/ar.json
+@@ -761,7 +761,12 @@
+       "categoriesLabel": "الفئات",
+       "featuredOnly": "مميّزة",
+       "clearFilter": "إزالة هذا الفلتر",
+-      "sortNewest": "الأحدث أولاً"
++      "sortNewest": "الأحدث أولاً",
++      "filtersTitle": "الفلاتر",
++      "refine": "تحديد",
++      "categoriesTitle": "الفئة",
++      "brandsTitle": "العلامة",
++      "activeCount": "{n} فلتر نشط"
+     },
+     "product": {
+       "addToCart": "أضف إلى السلة",
+diff --git a/messages/en.json b/messages/en.json
+index 441a13f..56aca0d 100644
+--- a/messages/en.json
++++ b/messages/en.json
+@@ -761,7 +761,12 @@
+       "categoriesLabel": "Categories",
+       "featuredOnly": "Featured",
+       "clearFilter": "Remove this filter",
+-      "sortNewest": "Newest first"
++      "sortNewest": "Newest first",
++      "filtersTitle": "Filters",
++      "refine": "Refine",
++      "categoriesTitle": "Category",
++      "brandsTitle": "Brand",
++      "activeCount": "{n} active filter(s)"
+     },
+     "product": {
+       "addToCart": "Add to cart",
+diff --git a/messages/fr.json b/messages/fr.json
+index fe1faca..559350d 100644
+--- a/messages/fr.json
++++ b/messages/fr.json
+@@ -761,7 +761,12 @@
+       "categoriesLabel": "Catégories",
+       "featuredOnly": "En vedette",
+       "clearFilter": "Retirer ce filtre",
+-      "sortNewest": "Plus récents"
++      "sortNewest": "Plus récents",
++      "filtersTitle": "Filtres",
++      "refine": "Affiner",
++      "categoriesTitle": "Catégorie",
++      "brandsTitle": "Marque",
++      "activeCount": "{n} filtre(s) actif(s)"
+     },
+     "product": {
+       "addToCart": "Ajouter au panier",
+diff --git a/src/app/[locale]/products/page.tsx b/src/app/[locale]/products/page.tsx
+index 7e897ec..7192ae5 100644
+--- a/src/app/[locale]/products/page.tsx
++++ b/src/app/[locale]/products/page.tsx
+@@ -136,12 +136,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps)
+           brands: result.brands.length,
+         })}
+       </span>
+-      <h1 className="sr-h1" style={{ marginTop: 14 }}>
++      <h1 className="sr-h1">
+         {t('title1')} <span className="acc">{t('title2')}</span>
+       </h1>
+-      <p className="sr-sub" style={{ marginTop: 12 }}>
+-        {t('sub')}
+-      </p>
++      <p className="sr-sub">{t('sub')}</p>
+     </>
+   )
+ 
+@@ -172,9 +170,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps)
+         />
+       ) : null}
+ 
+-      <div className="sr-in" style={{ marginBottom: 26 }}>
+-        {header}
+-      </div>
++      <header className="sr-in sr-pagehead">{header}</header>
+       <div className="sr-in sr-in-2">
+         <ProductsBrowser query={query} result={result} />
+       </div>
+diff --git a/src/app/layout.tsx b/src/app/layout.tsx
+index cb2bb97..4780e7d 100644
+--- a/src/app/layout.tsx
++++ b/src/app/layout.tsx
+@@ -3,6 +3,21 @@ import { Analytics } from '@vercel/analytics/next'
+ import { SpeedInsights } from '@vercel/speed-insights/next'
+ import { displayFont, bodyFont, monoFont } from '@/lib/fonts'
+ import './globals.css'
++/**
++ * Storefront stylesheet, imported at the ROOT layout.
++ *
++ * It used to be imported only by ShowroomShell — a `'use client'` component
++ * rendered from the [locale] layout — and in a PRODUCTION build Next emitted
++ * it into a CSS chunk that no page ever linked. `next dev` injects styles
++ * differently and hid this completely, so it only broke once built: /products,
++ * /categories/*, /brands/*, /search and every product page shipped with none
++ * of their `.sr-*` rules — no max-width, chips rendering as inline text, and
++ * the carousels losing `display:flex` so they stacked into one tall column.
++ *
++ * Importing here guarantees it is linked on every route. It is fully scoped to
++ * `.sr-*` / `.sr-root`, so it cannot bleed into the admin.
++ */
++import '@/styles/showroom.css'
+ 
+ export const metadata: Metadata = {
+   metadataBase: new URL(
+diff --git a/src/app/login/login.css b/src/app/login/login.css
+index e6f5233..b9aec73 100644
+--- a/src/app/login/login.css
++++ b/src/app/login/login.css
+@@ -7,15 +7,15 @@
+   display: flex; align-items: center; justify-content: center;
+   padding: 32px 20px; overflow: hidden;
+   background:
+-    radial-gradient(1100px 700px at 80% -10%, rgba(124,224,195,0.07), transparent 60%),
++    radial-gradient(1100px 700px at 80% -10%, rgba(79,157,255,0.07), transparent 60%),
+     radial-gradient(900px 700px at -10% 110%, rgba(74,139,168,0.08), transparent 60%),
+     linear-gradient(180deg, #04060c 0%, #070d18 50%, #04060c 100%);
+ }
+ .lg-grid {
+   position: absolute; inset: 0; pointer-events: none;
+   background-image:
+-    linear-gradient(rgba(124,224,195,0.045) 1px, transparent 1px),
+-    linear-gradient(90deg, rgba(124,224,195,0.045) 1px, transparent 1px);
++    linear-gradient(rgba(79,157,255,0.045) 1px, transparent 1px),
++    linear-gradient(90deg, rgba(79,157,255,0.045) 1px, transparent 1px);
+   background-size: 56px 56px;
+   mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 0%, transparent 75%);
+   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, black 0%, transparent 75%);
+@@ -25,7 +25,7 @@
+   filter: blur(90px); opacity: 0.3; mix-blend-mode: screen;
+ }
+ .lg-orb.a { width: 480px; height: 480px; top: -8%; left: -6%;
+-  background: radial-gradient(circle, rgba(124,224,195,0.5), transparent 60%);
++  background: radial-gradient(circle, rgba(79,157,255,0.5), transparent 60%);
+   animation: lgDrift 18s ease-in-out infinite alternate;
+ }
+ .lg-orb.b { width: 520px; height: 520px; bottom: -12%; right: -8%;
+@@ -47,7 +47,7 @@
+   padding: 40px 38px 36px;
+   background: linear-gradient(180deg, rgba(13,21,34,0.92), rgba(7,12,22,0.96));
+   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+-  border: 1px solid rgba(124,224,195,0.16);
++  border: 1px solid rgba(79,157,255,0.16);
+   animation: lgBreathe 4.6s ease-in-out infinite;
+ }
+ /* rotating gradient seam riding the border */
+@@ -56,9 +56,9 @@
+   padding: 1.5px; pointer-events: none;
+   background: conic-gradient(
+     from var(--lg-ang),
+-    rgba(124,224,195,0) 0%, rgba(124,224,195,0.95) 10%, rgba(74,139,168,0.55) 22%,
+-    rgba(124,224,195,0) 38%, rgba(124,224,195,0) 55%,
+-    rgba(124,224,195,0.75) 68%, rgba(74,139,168,0.45) 80%, rgba(124,224,195,0) 95%
++    rgba(79,157,255,0) 0%, rgba(79,157,255,0.95) 10%, rgba(74,139,168,0.55) 22%,
++    rgba(79,157,255,0) 38%, rgba(79,157,255,0) 55%,
++    rgba(79,157,255,0.75) 68%, rgba(74,139,168,0.45) 80%, rgba(79,157,255,0) 95%
+   );
+   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+   -webkit-mask-composite: xor; mask-composite: exclude;
+@@ -68,13 +68,13 @@
+ .lg-card::after {
+   content: ''; position: absolute; inset: -2px; border-radius: inherit;
+   pointer-events: none; z-index: -1;
+-  box-shadow: 0 0 80px -10px rgba(124,224,195,0.35);
++  box-shadow: 0 0 80px -10px rgba(79,157,255,0.35);
+   animation: lgHalo 4.6s ease-in-out infinite;
+ }
+ @keyframes lgSpin { to { --lg-ang: 360deg; } }
+ @keyframes lgBreathe {
+-  0%, 100% { border-color: rgba(124,224,195,0.14); box-shadow: 0 0 22px -8px rgba(124,224,195,0.20), 0 36px 90px -38px rgba(0,0,0,0.9); }
+-  50%      { border-color: rgba(124,224,195,0.50); box-shadow: 0 0 56px -8px rgba(124,224,195,0.42), 0 36px 90px -38px rgba(0,0,0,0.9); }
++  0%, 100% { border-color: rgba(79,157,255,0.14); box-shadow: 0 0 22px -8px rgba(79,157,255,0.20), 0 36px 90px -38px rgba(0,0,0,0.9); }
++  50%      { border-color: rgba(79,157,255,0.50); box-shadow: 0 0 56px -8px rgba(79,157,255,0.42), 0 36px 90px -38px rgba(0,0,0,0.9); }
+ }
+ @keyframes lgHalo { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.8; } }
+ 
+@@ -83,19 +83,19 @@
+ .lg-kicker {
+   text-align: center; font-family: var(--font-geist-mono), 'JetBrains Mono', monospace;
+   font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
+-  color: #7ce0c3; opacity: 0.85; margin-bottom: 12px;
++  color: #4f9dff; opacity: 0.85; margin-bottom: 12px;
+   display: flex; align-items: center; justify-content: center; gap: 8px;
+ }
+ .lg-kicker::before, .lg-kicker::after {
+   content: ''; height: 1px; width: 34px;
+-  background: linear-gradient(90deg, transparent, rgba(124,224,195,0.5));
++  background: linear-gradient(90deg, transparent, rgba(79,157,255,0.5));
+ }
+-.lg-kicker::after { background: linear-gradient(90deg, rgba(124,224,195,0.5), transparent); }
++.lg-kicker::after { background: linear-gradient(90deg, rgba(79,157,255,0.5), transparent); }
+ .lg-title {
+   text-align: center; font-size: 38px; font-weight: 700; letter-spacing: -0.035em;
+   color: #f4f7f5; line-height: 1.05;
+ }
+-.lg-title span { color: #7ce0c3; text-shadow: 0 0 18px rgba(124,224,195,0.6); }
++.lg-title span { color: #4f9dff; text-shadow: 0 0 18px rgba(79,157,255,0.6); }
+ .lg-sub { text-align: center; font-size: 14px; line-height: 1.6; color: #93a1b0; margin: 12px 0 30px; }
+ 
+ /* google + divider */
+@@ -106,7 +106,7 @@
+   color: #f4f7f5; font-size: 14px; font-weight: 550;
+   transition: border-color .25s, background .25s, box-shadow .25s;
+ }
+-.lg-google:hover { border-color: rgba(124,224,195,0.5); background: rgba(124,224,195,0.06); box-shadow: 0 0 18px rgba(124,224,195,0.15); }
++.lg-google:hover { border-color: rgba(79,157,255,0.5); background: rgba(79,157,255,0.06); box-shadow: 0 0 18px rgba(79,157,255,0.15); }
+ .lg-google:disabled { opacity: .5; cursor: not-allowed; }
+ .lg-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+ .lg-divider span {
+@@ -115,7 +115,7 @@
+ }
+ .lg-divider::before, .lg-divider::after {
+   content: ''; height: 1px; flex: 1;
+-  background: linear-gradient(90deg, transparent, rgba(124,224,195,0.18), transparent);
++  background: linear-gradient(90deg, transparent, rgba(79,157,255,0.18), transparent);
+ }
+ 
+ /* fields */
+@@ -124,7 +124,7 @@
+ .lg-label { display: block; font-size: 13px; font-weight: 550; color: #c2ccd6; }
+ .lg-field > .lg-label { margin-bottom: 8px; }
+ .lg-link { font-size: 12.5px; color: #7d8a99; text-decoration: none; transition: color .2s; }
+-.lg-link:hover { color: #7ce0c3; }
++.lg-link:hover { color: #4f9dff; }
+ .lg-input {
+   width: 100%; padding: 12px 16px; border-radius: 12px;
+   background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.09);
+@@ -133,9 +133,9 @@
+ }
+ .lg-input::placeholder { color: #5d6a78; }
+ .lg-input:focus {
+-  border-color: rgba(124,224,195,0.65);
+-  box-shadow: 0 0 0 3px rgba(124,224,195,0.10), 0 0 22px rgba(124,224,195,0.18);
+-  background: rgba(124,224,195,0.03);
++  border-color: rgba(79,157,255,0.65);
++  box-shadow: 0 0 0 3px rgba(79,157,255,0.10), 0 0 22px rgba(79,157,255,0.18);
++  background: rgba(79,157,255,0.03);
+ }
+ .lg-error { font-size: 13px; color: #ff9d9d; margin-bottom: 14px; }
+ 
+@@ -144,12 +144,12 @@
+   position: relative; overflow: hidden;
+   display: flex; width: 100%; align-items: center; justify-content: center; gap: 9px;
+   padding: 13px 16px; border-radius: 12px; border: 0; cursor: pointer;
+-  background: linear-gradient(135deg, #7ce0c3, #4fc3a1);
++  background: linear-gradient(135deg, #4f9dff, #4fc3a1);
+   color: #04110c; font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em;
+-  box-shadow: 0 0 28px -6px rgba(124,224,195,0.55);
++  box-shadow: 0 0 28px -6px rgba(79,157,255,0.55);
+   transition: box-shadow .3s, transform .2s;
+ }
+-.lg-submit:hover { box-shadow: 0 0 44px -6px rgba(124,224,195,0.8); transform: translateY(-1px); }
++.lg-submit:hover { box-shadow: 0 0 44px -6px rgba(79,157,255,0.8); transform: translateY(-1px); }
+ .lg-submit:active { transform: scale(.98); }
+ .lg-submit:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+ .lg-submit .shine {
+@@ -169,13 +169,13 @@
+ /* Dev-only skip-login link (testing phase) */
+ .lg-dev-skip {
+   display: block; text-align: center; margin-top: 18px; padding: 10px 16px;
+-  border: 1px dashed rgba(124,224,195,0.35); border-radius: 12px;
+-  font-size: 13px; color: #7ce0c3; text-decoration: none;
++  border: 1px dashed rgba(79,157,255,0.35); border-radius: 12px;
++  font-size: 13px; color: #4f9dff; text-decoration: none;
+   transition: background .2s, border-color .2s;
+ }
+ .lg-dev-skip:hover {
+-  background: rgba(124,224,195,0.08);
+-  border-color: rgba(124,224,195,0.65);
++  background: rgba(79,157,255,0.08);
++  border-color: rgba(79,157,255,0.65);
+ }
+ 
+ @media (prefers-reduced-motion: reduce) {
+@@ -198,12 +198,12 @@
+ .lg-hello-kicker {
+   font-family: var(--font-geist-mono), 'JetBrains Mono', monospace;
+   font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+-  color: #7ce0c3; display: flex; align-items: center; gap: 10px;
++  color: #4f9dff; display: flex; align-items: center; gap: 10px;
+   animation: lgEnter .8s cubic-bezier(.22,1,.36,1) .05s both;
+ }
+ .lg-hello-kicker::before {
+   content: ''; width: 8px; height: 8px; border-radius: 50%;
+-  background: #7ce0c3; box-shadow: 0 0 12px rgba(124,224,195,0.9);
++  background: #4f9dff; box-shadow: 0 0 12px rgba(79,157,255,0.9);
+   animation: lgPulseDot 2.4s ease-in-out infinite;
+ }
+ @keyframes lgPulseDot { 0%,100% { opacity: .5; transform: scale(.85);} 50% { opacity: 1; transform: scale(1.15);} }
+@@ -214,7 +214,7 @@
+   animation: lgEnter .8s cubic-bezier(.22,1,.36,1) .12s both;
+ }
+ .lg-hello-title span {
+-  background: linear-gradient(90deg, #7ce0c3, #b8efdc, #4a8ba8, #7ce0c3);
++  background: linear-gradient(90deg, #4f9dff, #a9d2ff, #4a8ba8, #4f9dff);
+   background-size: 300% 100%;
+   -webkit-background-clip: text; background-clip: text; color: transparent;
+   animation: lgGradientSlide 6s linear infinite;
+@@ -237,7 +237,7 @@
+ .lg-hello-points li:nth-child(3) { animation-delay: .44s; }
+ .lg-hello-points li::before {
+   content: ''; width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+-  background: rgba(124,224,195,0.14); border: 1px solid rgba(124,224,195,0.45);
++  background: rgba(79,157,255,0.14); border: 1px solid rgba(79,157,255,0.45);
+   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237ce0c3' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l5 5L20 7'/%3E%3C/svg%3E");
+   background-size: 9px; background-position: center; background-repeat: no-repeat;
+ }
+@@ -247,8 +247,8 @@
+   position: absolute; inset: -30%; pointer-events: none; opacity: 0.5;
+   background: conic-gradient(
+     from 0deg at 50% 50%,
+-    transparent 0deg, rgba(124,224,195,0.05) 60deg, rgba(74,139,168,0.07) 120deg,
+-    transparent 180deg, rgba(124,224,195,0.04) 260deg, transparent 360deg
++    transparent 0deg, rgba(79,157,255,0.05) 60deg, rgba(74,139,168,0.07) 120deg,
++    transparent 180deg, rgba(79,157,255,0.04) 260deg, transparent 360deg
+   );
+   filter: blur(60px);
+   animation: lgAurora 26s linear infinite;
+@@ -259,7 +259,7 @@
+ .lg-dust { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+ .lg-dust span {
+   position: absolute; bottom: -3%; width: 3px; height: 3px; border-radius: 50%;
+-  background: rgba(124,224,195,0.7); box-shadow: 0 0 8px rgba(124,224,195,0.6);
++  background: rgba(79,157,255,0.7); box-shadow: 0 0 8px rgba(79,157,255,0.6);
+   opacity: 0;
+   animation-name: lgRise; animation-timing-function: linear; animation-iteration-count: infinite;
+ }
+diff --git a/src/components/admin/editor/WebEditor.tsx b/src/components/admin/editor/WebEditor.tsx
+index cc4a8cc..0a9e42d 100644
+--- a/src/components/admin/editor/WebEditor.tsx
++++ b/src/components/admin/editor/WebEditor.tsx
+@@ -1161,7 +1161,7 @@ function LiveEditor({
+     }))
+     const layout: Layout = preset?.layout ?? 'stack'
+     // current rendered order of editable sections (real + custom)
+-    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact'] : []
++    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact'] : []
+     const curCustoms = dataRef.current.customSections.map((c) => c.id)
+     const present = [...real, ...curCustoms]
+     const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
+@@ -1190,7 +1190,7 @@ function LiveEditor({
+   function addBlockSection(kind: BlockKind, atIndex?: number) {
+     const id = `custom:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`
+     const blocks: PresetBlock[] = [{ id: 'b' + Math.random().toString(36).slice(2, 8), kind }]
+-    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact'] : []
++    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact'] : []
+     const curCustoms = dataRef.current.customSections.map((c) => c.id)
+     const present = [...real, ...curCustoms]
+     const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
+@@ -1235,7 +1235,7 @@ function LiveEditor({
+   }
+   const hideHelp = () => setHelp(null)
+ 
+-  const DEF_HOME_ORDER = ['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact']
++  const DEF_HOME_ORDER = ['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact']
+   const presentReal = isHome ? DEF_HOME_ORDER : []
+   const customIds = customSections.map((c) => c.id)
+   const savedOrder = (sections.order || []).filter((id) => presentReal.includes(id) || customIds.includes(id))
+@@ -1876,7 +1876,7 @@ function LibHelpCard({ info }: { info: HelpInfo }) {
+ }
+ 
+ const SEC_LABELS: Record<string, string> = {
+-  hero: 'Hero', categories: 'Catégories', catalog: 'Produits en vedette', services: 'Services', brands: 'Marques', partner: 'Partenaire HP', about: 'À propos', contact: 'Contact',
++  hero: 'Hero', categories: 'Catégories', catalog: 'Produits en vedette', services: 'Services', partner: 'Partenaire HP', brands: 'Marques', about: 'À propos', contact: 'Contact',
+ }
+ const LAYOUT_LABELS: Record<Layout, string> = {
+   stack: 'Pile', center: 'Centré', cols2: '2 colonnes', cols3: '3 colonnes', cols4: '4 colonnes', row: 'Ligne',
+diff --git a/src/components/brand/BrandHome.tsx b/src/components/brand/BrandHome.tsx
+index 29ca0cb..a056fa0 100644
+--- a/src/components/brand/BrandHome.tsx
++++ b/src/components/brand/BrandHome.tsx
+@@ -39,8 +39,8 @@ export function BrandHome({
+         categories={data.categories}
+       />
+       <BrandServices />
+-      <BrandBrands brands={data.brands} />
+       <BrandPartnerSection partner={partner} />
++      <BrandBrands brands={data.brands} />
+       <BrandAbout />
+       <BrandContact />
+     </BrandPageShell>
+diff --git a/src/components/brand/BrandInquiry.tsx b/src/components/brand/BrandInquiry.tsx
+index 021130e..2672b91 100644
+--- a/src/components/brand/BrandInquiry.tsx
++++ b/src/components/brand/BrandInquiry.tsx
+@@ -82,7 +82,7 @@ export function BrandInquiry({ product }: { product: BrandInquiryProduct }) {
+           <input type="hidden" name="locale" value={locale} />
+ 
+           {/* Honeypot */}
+-          <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}>
++          <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap', opacity: 0, pointerEvents: 'none' }}>
+             <label htmlFor="website">Website (leave empty)</label>
+             <input type="text" id="website" name="website" tabIndex={-1} autoComplete="off" />
+           </div>
+diff --git a/src/components/chat/ai-chat.css b/src/components/chat/ai-chat.css
+index a91a835..e00b7d8 100644
+--- a/src/components/chat/ai-chat.css
++++ b/src/components/chat/ai-chat.css
+@@ -16,7 +16,7 @@
+ 
+ :where(.dt-chat-fab, .dt-chat-panel) {
+   /* classic (Nightline) — dark surfaces, mint accent */
+-  --dtc-accent: #7ce0c3;
++  --dtc-accent: #4f9dff;
+   --dtc-on-accent: #04110c;
+   --dtc-bg: #0a1322;
+   --dtc-bg-2: rgba(255, 255, 255, 0.05);
+diff --git a/src/components/forms/FooterNewsletter.tsx b/src/components/forms/FooterNewsletter.tsx
+index 45f2cdf..54fbdd7 100644
+--- a/src/components/forms/FooterNewsletter.tsx
++++ b/src/components/forms/FooterNewsletter.tsx
+@@ -87,15 +87,25 @@ export function FooterNewsletter({ source = 'footer' }: { source?: string }) {
+     <form action={formAction} className="sr-nl" noValidate>
+       <p className="sr-nl-title">{title}</p>
+ 
+-      {/* Honeypot */}
++      {/* Honeypot — hidden without an off-screen offset.
++
++          `inset-inline-start: -9999px` (and plain `left: -9999px`) resolves to
++          `right: -9999px` under RTL, which pushes the field 9 999px past the
++          right edge and grows document scrollWidth to ~11 300px. That gave
++          every Arabic page a huge phantom horizontal scrollbar. Clipping in
++          place keeps the field in the DOM for bots with zero layout effect in
++          either direction. */}
+       <div
+         aria-hidden="true"
+         style={{
+           position: 'absolute',
+-          insetInlineStart: '-9999px',
+           width: 1,
+           height: 1,
+           overflow: 'hidden',
++          clipPath: 'inset(50%)',
++          whiteSpace: 'nowrap',
++          opacity: 0,
++          pointerEvents: 'none',
+         }}
+       >
+         <label htmlFor={hpId}>Website</label>
+diff --git a/src/components/forms/InquiryForm.tsx b/src/components/forms/InquiryForm.tsx
+index b57c44d..5294b3b 100644
+--- a/src/components/forms/InquiryForm.tsx
++++ b/src/components/forms/InquiryForm.tsx
+@@ -52,10 +52,13 @@ export function InquiryForm({ productSlug }: InquiryFormProps) {
+         aria-hidden="true"
+         style={{
+           position: 'absolute',
+-          left: '-9999px',
+           width: '1px',
+           height: '1px',
+           overflow: 'hidden',
++          clipPath: 'inset(50%)',
++          whiteSpace: 'nowrap',
++          opacity: 0,
++          pointerEvents: 'none',
+         }}
+       >
+         <label htmlFor="website">Website (leave empty)</label>
+diff --git a/src/components/forms/NewsletterSignup.tsx b/src/components/forms/NewsletterSignup.tsx
+index b454306..abd4a72 100644
+--- a/src/components/forms/NewsletterSignup.tsx
++++ b/src/components/forms/NewsletterSignup.tsx
+@@ -162,10 +162,13 @@ export function NewsletterSignup({
+         aria-hidden="true"
+         style={{
+           position: 'absolute',
+-          left: '-9999px',
+           width: '1px',
+           height: '1px',
+           overflow: 'hidden',
++          clipPath: 'inset(50%)',
++          whiteSpace: 'nowrap',
++          opacity: 0,
++          pointerEvents: 'none',
+         }}
+       >
+         <label htmlFor={`nl-website-${variant}`}>Website</label>
+diff --git a/src/components/home/HomeShowcase.tsx b/src/components/home/HomeShowcase.tsx
+index a0ab563..6e91499 100644
+--- a/src/components/home/HomeShowcase.tsx
++++ b/src/components/home/HomeShowcase.tsx
+@@ -123,7 +123,7 @@ export function HomeShowcase({
+       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
+       <div role="presentation">
+         <SectionList
+-          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact']}
++          defaultOrder={['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact']}
+           nodes={{
+             hero: <HeroSlider slides={heroSlides} />,
+             categories: <CategoriesSection categories={categories} />,
+@@ -1163,13 +1163,13 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
+         <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+           <circle cx="22" cy="22" r="20" stroke="rgba(184,239,220,0.25)" />
+           <circle cx="22" cy="22" r="14" stroke="rgba(184,239,220,0.15)" />
+-          <text x="22" y="9" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#7ce0c3" fontWeight="600">N</text>
++          <text x="22" y="9" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#4f9dff" fontWeight="600">N</text>
+           <text x="22" y="40" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">S</text>
+           <text x="6" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">W</text>
+           <text x="38" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">E</text>
+-          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="#7ce0c3" />
+-          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="none" stroke="rgba(124,224,195,0.5)" />
+-          <circle cx="22" cy="22" r="1.5" fill="#7ce0c3" />
++          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="#4f9dff" />
++          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="none" stroke="rgba(79,157,255,0.5)" />
++          <circle cx="22" cy="22" r="1.5" fill="#4f9dff" />
+         </svg>
+       </div>
+ 
+@@ -1216,9 +1216,9 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
+             <stop offset="100%" stopColor="#0f1116" />
+           </linearGradient>
+           <radialGradient id="m2-aura" cx="0.5" cy="0.5" r="0.5">
+-            <stop offset="0%" stopColor="rgba(124,224,195,0.28)" />
+-            <stop offset="60%" stopColor="rgba(124,224,195,0.06)" />
+-            <stop offset="100%" stopColor="rgba(124,224,195,0)" />
++            <stop offset="0%" stopColor="rgba(79,157,255,0.28)" />
++            <stop offset="60%" stopColor="rgba(79,157,255,0.06)" />
++            <stop offset="100%" stopColor="rgba(79,157,255,0)" />
+           </radialGradient>
+         </defs>
+ 
+@@ -1235,7 +1235,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
+         />
+         <ellipse cx="500" cy="390" rx="170" ry="120" fill="url(#m2-aura)" />
+ 
+-        <g fill="rgba(124,224,195,0.05)" stroke="rgba(124,224,195,0.10)" strokeWidth="0.5">
++        <g fill="rgba(79,157,255,0.05)" stroke="rgba(79,157,255,0.10)" strokeWidth="0.5">
+           <path d="M 260 460 C 240 450, 230 480, 250 500 C 280 514, 320 504, 326 480 C 332 460, 296 446, 260 460 Z" />
+           <path d="M 600 240 C 590 232, 578 254, 590 268 C 612 280, 638 270, 638 252 C 638 238, 616 232, 600 240 Z" />
+         </g>
+@@ -1271,7 +1271,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
+         <g fill="none" strokeLinecap="round">
+           <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(0,0,0,0.7)" strokeWidth="6" />
+           <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(255,255,255,0.16)" strokeWidth="3.2" />
+-          <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(124,224,195,0.20)" strokeWidth="1" strokeDasharray="6 6" />
++          <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(79,157,255,0.20)" strokeWidth="1" strokeDasharray="6 6" />
+           <path d="M 0 232 C 200 224, 400 244, 800 228" stroke="rgba(0,0,0,0.5)" strokeWidth="4" />
+           <path d="M 0 232 C 200 224, 400 244, 800 228" stroke="rgba(255,255,255,0.10)" strokeWidth="2" />
+           <path d="M 0 460 C 200 456, 400 472, 800 458" stroke="rgba(0,0,0,0.5)" strokeWidth="4" />
+@@ -1290,7 +1290,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
+         <g fontFamily="JetBrains Mono" fontSize="9" fill="rgba(255,255,255,0.32)" letterSpacing="3">
+           <text x="400" y="80" textAnchor="middle">{t('map.sea')}</text>
+         </g>
+-        <g fontFamily="JetBrains Mono" fontSize="8" fill="rgba(124,224,195,0.45)" letterSpacing="1.5">
++        <g fontFamily="JetBrains Mono" fontSize="8" fill="rgba(79,157,255,0.45)" letterSpacing="1.5">
+           <text x="120" y="316" textAnchor="middle">A1</text>
+         </g>
+         <g fontFamily="JetBrains Mono" fontSize="9" fill="rgba(255,255,255,0.22)" letterSpacing="2">
+@@ -1353,23 +1353,23 @@ function ContactPanel({
+                 <stop offset="100%" stopColor="#0d0e12" />
+               </linearGradient>
+             </defs>
+-            <rect x="50" y="40" width="300" height="20" fill="url(#store-grad)" stroke="rgba(124,224,195,0.3)" />
+-            <text x="200" y="56" textAnchor="middle" fontFamily="Inter" fontSize="14" fontWeight="700" fill="#7ce0c3" letterSpacing="2">D-TECH</text>
+-            <rect x="50" y="60" width="300" height="140" fill="url(#store-grad)" stroke="rgba(124,224,195,0.2)" />
+-            <rect x="74" y="76" width="116" height="100" fill="rgba(124,224,195,0.08)" stroke="rgba(124,224,195,0.4)" />
+-            <line x1="132" y1="76" x2="132" y2="176" stroke="rgba(124,224,195,0.3)" />
+-            <line x1="74" y1="126" x2="190" y2="126" stroke="rgba(124,224,195,0.2)" />
++            <rect x="50" y="40" width="300" height="20" fill="url(#store-grad)" stroke="rgba(79,157,255,0.3)" />
++            <text x="200" y="56" textAnchor="middle" fontFamily="Inter" fontSize="14" fontWeight="700" fill="#4f9dff" letterSpacing="2">D-TECH</text>
++            <rect x="50" y="60" width="300" height="140" fill="url(#store-grad)" stroke="rgba(79,157,255,0.2)" />
++            <rect x="74" y="76" width="116" height="100" fill="rgba(79,157,255,0.08)" stroke="rgba(79,157,255,0.4)" />
++            <line x1="132" y1="76" x2="132" y2="176" stroke="rgba(79,157,255,0.3)" />
++            <line x1="74" y1="126" x2="190" y2="126" stroke="rgba(79,157,255,0.2)" />
+             <rect x="82" y="88" width="42" height="28" rx="2" fill="rgba(184,239,220,0.18)" />
+             <rect x="140" y="88" width="42" height="28" rx="2" fill="rgba(184,239,220,0.10)" />
+             <rect x="82" y="138" width="42" height="28" rx="2" fill="rgba(184,239,220,0.10)" />
+             <rect x="140" y="138" width="42" height="28" rx="2" fill="rgba(184,239,220,0.18)" />
+-            <rect x="208" y="100" width="48" height="76" fill="rgba(124,224,195,0.06)" stroke="rgba(124,224,195,0.5)" />
+-            <circle cx="246" cy="138" r="1.5" fill="#7ce0c3" />
+-            <rect x="270" y="76" width="60" height="100" fill="rgba(124,224,195,0.06)" stroke="rgba(124,224,195,0.3)" />
+-            <line x1="300" y1="76" x2="300" y2="176" stroke="rgba(124,224,195,0.2)" />
+-            <line x1="270" y1="126" x2="330" y2="126" stroke="rgba(124,224,195,0.2)" />
+-            <rect x="282" y="86" width="36" height="14" rx="2" fill="rgba(124,224,195,0.2)" />
+-            <text x="300" y="96" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" fill="#7ce0c3" letterSpacing="1.5">2026</text>
++            <rect x="208" y="100" width="48" height="76" fill="rgba(79,157,255,0.06)" stroke="rgba(79,157,255,0.5)" />
++            <circle cx="246" cy="138" r="1.5" fill="#4f9dff" />
++            <rect x="270" y="76" width="60" height="100" fill="rgba(79,157,255,0.06)" stroke="rgba(79,157,255,0.3)" />
++            <line x1="300" y1="76" x2="300" y2="176" stroke="rgba(79,157,255,0.2)" />
++            <line x1="270" y1="126" x2="330" y2="126" stroke="rgba(79,157,255,0.2)" />
++            <rect x="282" y="86" width="36" height="14" rx="2" fill="rgba(79,157,255,0.2)" />
++            <text x="300" y="96" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" fill="#4f9dff" letterSpacing="1.5">2026</text>
+             <line x1="30" y1="200" x2="370" y2="200" stroke="rgba(184,239,220,0.4)" strokeWidth="1.5" />
+             <circle cx="100" cy="194" r="3" fill="rgba(184,239,220,0.55)" />
+             <rect x="98" y="194" width="4" height="6" rx="1" fill="rgba(184,239,220,0.55)" />
+diff --git a/src/components/home/home-showcase.css b/src/components/home/home-showcase.css
+index 13f9d00..b5bef20 100644
+--- a/src/components/home/home-showcase.css
++++ b/src/components/home/home-showcase.css
+@@ -18,15 +18,19 @@
+   --line-2: rgba(255, 255, 255, 0.12);
+   --text:   #fdfdfd;
+   --mute:   #8a8f99;
+-  /* primary accent (mint teal — CTAs, glows, active states) */
+-  --cyan:   #7ce0c3;
+-  --cyan-2: #5dccab;
+-  --ice:    #b8efdc;
++  /* primary accent — D-Tech blue (CTAs, glows, active states).
++     --cyan-rgb carries the same colour as a space-separated triplet so the
++     dozens of translucent tints below resolve from ONE source of truth
++     instead of a hardcoded rgba() each. */
++  --cyan:     #4f9dff;
++  --cyan-rgb: 79 157 255;
++  --cyan-2:   #2f86f0;
++  --ice:      #a9d2ff;
+   /* secondary accent (muted steel blue — borders, gradients) */
+   --blue:   #3a708a;
+   --blue-2: #4a8ba8;
+   --warn:   #d99461;
+-  --ok:     #7ce0c3;
++  --ok:     #4f9dff;
+ }
+ .home-showcase-root * { box-sizing: border-box; }
+ .home-showcase-root *::before, .home-showcase-root *::after { box-sizing: border-box; }
+@@ -65,9 +69,9 @@
+ .home-showcase-root .bg-ambient {
+   position: fixed; inset: 0; z-index: -1; pointer-events: none;
+   background:
+-    radial-gradient(1200px 800px at 80% -10%, rgba(124,224,195,0.05), transparent 60%),
++    radial-gradient(1200px 800px at 80% -10%, rgb(var(--cyan-rgb) / 0.05), transparent 60%),
+     radial-gradient(900px 700px at -10% 30%, rgba(58,112,138,0.04), transparent 60%),
+-    radial-gradient(1100px 900px at 50% 110%, rgba(124,224,195,0.03), transparent 60%),
++    radial-gradient(1100px 900px at 50% 110%, rgb(var(--cyan-rgb) / 0.03), transparent 60%),
+     linear-gradient(180deg, #0a0a0c 0%, #0c0d11 40%, #08090c 100%);
+ }
+ .home-showcase-root .bg-grid {
+@@ -84,7 +88,7 @@
+   filter: blur(96px); opacity: 0.22; mix-blend-mode: screen;
+ }
+ .home-showcase-root .bg-orb.a { width: 560px; height: 560px; top: 4%;  left: -10%;
+-  background: radial-gradient(circle, rgba(124,224,195,0.55), transparent 60%);
++  background: radial-gradient(circle, rgb(var(--cyan-rgb) / 0.55), transparent 60%);
+   animation: nl-drift 22s ease-in-out infinite alternate;
+ }
+ .home-showcase-root .bg-orb.b { width: 600px; height: 600px; top: 40%; right: -14%;
+@@ -205,8 +209,8 @@
+   animation: nl-pulseDot 3.4s ease-in-out infinite;
+ }
+ @keyframes nl-pulseDot {
+-  0%,100% { box-shadow: 0 0 6px var(--cyan), 0 0 12px rgba(124,224,195,0.5); transform: scale(1); }
+-  50%     { box-shadow: 0 0 14px var(--cyan), 0 0 28px rgba(124,224,195,0.8); transform: scale(1.15); }
++  0%,100% { box-shadow: 0 0 6px var(--cyan), 0 0 12px rgb(var(--cyan-rgb) / 0.5); transform: scale(1); }
++  50%     { box-shadow: 0 0 14px var(--cyan), 0 0 28px rgb(var(--cyan-rgb) / 0.8); transform: scale(1.15); }
+ }
+ .home-showcase-root .h-mega { font-family: 'Outfit', sans-serif; font-weight: 600; letter-spacing: -0.045em; line-height: 0.96; font-size: clamp(48px, 6.2vw, 98px); }
+ .home-showcase-root .h-big { font-family: 'Outfit', sans-serif; font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; font-size: clamp(34px, 4vw, 54px); }
+@@ -251,7 +255,7 @@
+ }
+ .home-showcase-root .stage-halo {
+   position: absolute; inset: -8%;
+-  background: radial-gradient(ellipse at center, rgba(124,224,195,0.45) 0%, rgba(124,224,195,0.12) 35%, transparent 65%);
++  background: radial-gradient(ellipse at center, rgb(var(--cyan-rgb) / 0.45) 0%, rgb(var(--cyan-rgb) / 0.12) 35%, transparent 65%);
+   filter: blur(36px);
+   z-index: 0;
+   animation: nl-haloPulse 5s ease-in-out infinite;
+@@ -273,7 +277,7 @@
+ .home-showcase-root .orbit-ring::before, .home-showcase-root .orbit-ring::after {
+   content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+   background: var(--cyan);
+-  box-shadow: 0 0 14px var(--cyan), 0 0 28px rgba(124,224,195,0.7);
++  box-shadow: 0 0 14px var(--cyan), 0 0 28px rgb(var(--cyan-rgb) / 0.7);
+ }
+ .home-showcase-root .orbit-ring::before { top: -3px; left: 50%; transform: translateX(-50%); }
+ .home-showcase-root .orbit-ring::after { bottom: -3px; left: 30%; }
+@@ -319,7 +323,7 @@
+   transform-style: preserve-3d;
+   transition: transform .25s cubic-bezier(.22,1,.36,1);
+   animation: nl-floatY 6s ease-in-out infinite;
+-  filter: drop-shadow(0 30px 40px rgba(124,224,195,0.25));
++  filter: drop-shadow(0 30px 40px rgb(var(--cyan-rgb) / 0.25));
+ }
+ @keyframes nl-floatY {
+   0%,100% { translate: 0 0; }
+@@ -336,7 +340,7 @@
+ .home-showcase-root .stage-floor {
+   position: absolute; left: 12%; right: 12%; bottom: 6%;
+   height: 18px; border-radius: 50%;
+-  background: radial-gradient(ellipse at center, rgba(124,224,195,0.55), transparent 70%);
++  background: radial-gradient(ellipse at center, rgb(var(--cyan-rgb) / 0.55), transparent 70%);
+   filter: blur(10px);
+   z-index: 2;
+ }
+@@ -377,7 +381,7 @@
+ }
+ .home-showcase-root .scroll-cue .line {
+   width: 1px; height: 40px;
+-  background: linear-gradient(180deg, rgba(124,224,195,0.7), transparent);
++  background: linear-gradient(180deg, rgb(var(--cyan-rgb) / 0.7), transparent);
+   animation: nl-scrollLine 2.2s ease-in-out infinite;
+   transform-origin: top;
+ }
+@@ -777,17 +781,17 @@
+ .home-showcase-root .pin-dot {
+   width: 16px; height: 16px; border-radius: 50%;
+   background: var(--cyan);
+-  box-shadow: 0 0 14px var(--cyan), 0 0 32px rgba(124,224,195,0.7);
++  box-shadow: 0 0 14px var(--cyan), 0 0 32px rgb(var(--cyan-rgb) / 0.7);
+   position: relative;
+   animation: nl-pinPulse 2.4s ease-in-out infinite;
+ }
+ @keyframes nl-pinPulse {
+-  0%,100% { transform: scale(1); box-shadow: 0 0 10px var(--cyan), 0 0 22px rgba(124,224,195,0.5); }
+-  50%     { transform: scale(1.18); box-shadow: 0 0 18px var(--cyan), 0 0 42px rgba(124,224,195,0.8); }
++  0%,100% { transform: scale(1); box-shadow: 0 0 10px var(--cyan), 0 0 22px rgb(var(--cyan-rgb) / 0.5); }
++  50%     { transform: scale(1.18); box-shadow: 0 0 18px var(--cyan), 0 0 42px rgb(var(--cyan-rgb) / 0.8); }
+ }
+ .home-showcase-root .pin-wrap .ring {
+   position: absolute; inset: -14px; border-radius: 50%;
+-  border: 1px solid rgba(124,224,195,0.7);
++  border: 1px solid rgb(var(--cyan-rgb) / 0.7);
+   animation: nl-ringExpand 3s ease-out infinite;
+ }
+ .home-showcase-root .pin-wrap .ring.r2 { animation-delay: 1s; }
+@@ -801,7 +805,7 @@
+   position: absolute; width: 9px; height: 9px;
+   border-radius: 50%;
+   background: rgba(184,239,220,0.7);
+-  box-shadow: 0 0 8px rgba(124,224,195,0.5);
++  box-shadow: 0 0 8px rgb(var(--cyan-rgb) / 0.5);
+   transform: translate(-50%, -50%);
+ }
+ /* ─── FOOTER ───────────────────────────── */
+@@ -844,7 +848,7 @@
+   width: 3px; height: 3px;
+   border-radius: 50%;
+   background: var(--cyan);
+-  box-shadow: 0 0 8px var(--cyan), 0 0 16px rgba(124,224,195,0.5);
++  box-shadow: 0 0 8px var(--cyan), 0 0 16px rgb(var(--cyan-rgb) / 0.5);
+   animation: nl-particleFloat linear infinite;
+   opacity: 0;
+ }
+@@ -879,7 +883,7 @@
+   background: radial-gradient(
+     circle 240px at var(--gx, 50%) var(--gy, 50%),
+     rgba(184,239,220,0.18) 0%,
+-    rgba(124,224,195,0.05) 30%,
++    rgb(var(--cyan-rgb) / 0.05) 30%,
+     transparent 60%
+   );
+   mix-blend-mode: screen;
+@@ -897,14 +901,14 @@
+   box-shadow:
+     0 1px 0 rgba(255,255,255,0.06) inset,
+     0 10px 30px rgba(0,0,0,0.5),
+-    0 0 16px rgba(124,224,195,0.10);
++    0 0 16px rgb(var(--cyan-rgb) / 0.10);
+   transition: box-shadow .3s, border-color .3s;
+ }
+ .home-showcase-root .orbit-chip::before {
+   content: '';
+   position: absolute; inset: -1px;
+   border-radius: 18px;
+-  background: linear-gradient(135deg, rgba(124,224,195,0.0), rgba(124,224,195,0.4), rgba(124,224,195,0.0));
++  background: linear-gradient(135deg, rgb(var(--cyan-rgb) / 0.0), rgb(var(--cyan-rgb) / 0.4), rgb(var(--cyan-rgb) / 0.0));
+   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+   -webkit-mask-composite: xor; mask-composite: exclude;
+   padding: 1px;
+@@ -938,7 +942,7 @@
+   content: '';
+   position: absolute; left: 0; right: 0;
+   top: 100%; height: 60%;
+-  background: linear-gradient(180deg, rgba(124,224,195,0.18), transparent 70%);
++  background: linear-gradient(180deg, rgb(var(--cyan-rgb) / 0.18), transparent 70%);
+   filter: blur(8px);
+   transform: scaleY(-1);
+   opacity: 0.5;
+@@ -1107,13 +1111,13 @@
+ }
+ .home-showcase-root .pin-target .crosshair {
+   position: absolute; inset: 0;
+-  border: 1px solid rgba(124,224,195,0.4);
++  border: 1px solid rgb(var(--cyan-rgb) / 0.4);
+   border-radius: 50%;
+ }
+ .home-showcase-root .pin-target .crosshair::before, .home-showcase-root .pin-target .crosshair::after {
+   content: '';
+   position: absolute;
+-  background: rgba(124,224,195,0.5);
++  background: rgb(var(--cyan-rgb) / 0.5);
+ }
+ .home-showcase-root .pin-target .crosshair::before {
+   left: 50%; top: -8px; bottom: -8px; width: 1px;
+@@ -1128,13 +1132,13 @@
+   width: 14px; height: 14px;
+   border-radius: 50%;
+   background: var(--cyan);
+-  box-shadow: 0 0 18px var(--cyan), 0 0 36px rgba(124,224,195,0.7);
++  box-shadow: 0 0 18px var(--cyan), 0 0 36px rgb(var(--cyan-rgb) / 0.7);
+   animation: nl-pinPulse 2.4s ease-in-out infinite;
+ }
+ .home-showcase-root .pin-target .pulse {
+   position: absolute; inset: -16px;
+   border-radius: 50%;
+-  border: 1px solid rgba(124,224,195,0.6);
++  border: 1px solid rgb(var(--cyan-rgb) / 0.6);
+   animation: nl-ringExpand 3s ease-out infinite;
+ }
+ .home-showcase-root .pin-target .pulse.r2 { animation-delay: 1s; }
+@@ -1143,7 +1147,7 @@
+   position: absolute; top: 70%; left: 50%;
+   transform: translate(-50%, 16px);
+   white-space: nowrap;
+-  background: rgba(124,224,195,0.95);
++  background: rgb(var(--cyan-rgb) / 0.95);
+   color: var(--bg-0);
+   padding: 4px 10px;
+   border-radius: 8px;
+@@ -1151,14 +1155,14 @@
+   font-size: 10px;
+   font-weight: 700;
+   letter-spacing: 0.1em;
+-  box-shadow: 0 6px 20px rgba(124,224,195,0.4);
++  box-shadow: 0 6px 20px rgb(var(--cyan-rgb) / 0.4);
+ }
+ .home-showcase-root .pin-target .label::before {
+   content: '';
+   position: absolute; left: 50%; top: -5px;
+   transform: translateX(-50%) rotate(45deg);
+   width: 10px; height: 10px;
+-  background: rgba(124,224,195,0.95);
++  background: rgb(var(--cyan-rgb) / 0.95);
+ }
+ /* POI markers on map */
+ .home-showcase-root .poi-marker {
+@@ -1171,7 +1175,7 @@
+   width: 10px; height: 10px;
+   border-radius: 50%;
+   background: rgba(184,239,220,0.7);
+-  border: 1px solid rgba(124,224,195,0.5);
++  border: 1px solid rgb(var(--cyan-rgb) / 0.5);
+ }
+ .home-showcase-root .poi-marker .name {
+   font-family: 'JetBrains Mono', monospace;
+@@ -1396,7 +1400,7 @@
+ /* deep ambient halo behind everything */
+ .home-showcase-root .hero-stage .halo-mint {
+   position: absolute; inset: -12%;
+-  background: radial-gradient(ellipse at 30% 30%, rgba(124,224,195,0.10) 0%, rgba(124,224,195,0.02) 40%, transparent 70%);
++  background: radial-gradient(ellipse at 30% 30%, rgb(var(--cyan-rgb) / 0.10) 0%, rgb(var(--cyan-rgb) / 0.02) 40%, transparent 70%);
+   filter: blur(56px);
+   z-index: 0;
+   animation: nl-haloPulse 9s ease-in-out infinite;
+@@ -1415,13 +1419,13 @@
+   position: absolute;
+   left: 50%; top: 50%;
+   border-radius: 50%;
+-  border: 1px solid rgba(124,224,195,0.10);
++  border: 1px solid rgb(var(--cyan-rgb) / 0.10);
+   transform: translate(-50%, -50%) rotateX(72deg);
+   pointer-events: none;
+   z-index: 1;
+ }
+ .home-showcase-root .hero-stage .ring.r1 { width: 86%;  height: 86%;  animation: nl-ringSpin 28s linear infinite; }
+-.home-showcase-root .hero-stage .ring.r2 { width: 64%;  height: 64%;  border-color: rgba(124,224,195,0.06); transform: translate(-50%, -50%) rotateX(68deg) rotateZ(30deg); animation: nl-ringSpin 40s linear reverse infinite; }
++.home-showcase-root .hero-stage .ring.r2 { width: 64%;  height: 64%;  border-color: rgb(var(--cyan-rgb) / 0.06); transform: translate(-50%, -50%) rotateX(68deg) rotateZ(30deg); animation: nl-ringSpin 40s linear reverse infinite; }
+ .home-showcase-root .hero-stage .ring.r3 { width: 110%; height: 110%; border-color: rgba(58,112,138,0.10); transform: translate(-50%, -50%) rotateX(74deg); animation: nl-ringSpin 60s linear infinite; }
+ .home-showcase-root .hero-stage .ring::before, .home-showcase-root .hero-stage .ring::after { display: none; }
+ @keyframes nl-ringSpin { to { transform: translate(-50%,-50%) rotateX(72deg) rotateZ(360deg); } }
+@@ -1433,10 +1437,10 @@
+   transform: translate(-50%, -50%);
+   border-radius: 50%;
+   background:
+-    radial-gradient(circle at 38% 36%, rgba(255,255,255,0.85) 0%, rgba(184,239,220,0.45) 12%, rgba(124,224,195,0.35) 35%, rgba(58,112,138,0.20) 70%, transparent 100%);
++    radial-gradient(circle at 38% 36%, rgba(255,255,255,0.85) 0%, rgba(184,239,220,0.45) 12%, rgb(var(--cyan-rgb) / 0.35) 35%, rgba(58,112,138,0.20) 70%, transparent 100%);
+   box-shadow:
+-    0 0 60px rgba(124,224,195,0.40),
+-    0 0 120px rgba(124,224,195,0.20),
++    0 0 60px rgb(var(--cyan-rgb) / 0.40),
++    0 0 120px rgb(var(--cyan-rgb) / 0.20),
+     inset 0 0 30px rgba(255,255,255,0.18);
+   z-index: 2;
+   animation: nl-corePulse 4.5s ease-in-out infinite;
+@@ -1445,19 +1449,19 @@
+   content: '';
+   position: absolute; inset: 18%;
+   border-radius: 50%;
+-  border: 1px dashed rgba(124,224,195,0.5);
++  border: 1px dashed rgb(var(--cyan-rgb) / 0.5);
+   animation: nl-spin 14s linear infinite;
+ }
+ .home-showcase-root .hero-stage .core-sphere::after {
+   content: '';
+   position: absolute; inset: 34%;
+   border-radius: 50%;
+-  background: radial-gradient(circle, rgba(255,255,255,0.85), rgba(124,224,195,0.25) 60%, transparent 100%);
++  background: radial-gradient(circle, rgba(255,255,255,0.85), rgb(var(--cyan-rgb) / 0.25) 60%, transparent 100%);
+   filter: blur(2px);
+ }
+ @keyframes nl-corePulse {
+-  0%,100% { box-shadow: 0 0 60px rgba(124,224,195,0.40), 0 0 120px rgba(124,224,195,0.20), inset 0 0 30px rgba(255,255,255,0.18); }
+-  50%     { box-shadow: 0 0 80px rgba(124,224,195,0.55), 0 0 160px rgba(124,224,195,0.28), inset 0 0 40px rgba(255,255,255,0.28); }
++  0%,100% { box-shadow: 0 0 60px rgb(var(--cyan-rgb) / 0.40), 0 0 120px rgb(var(--cyan-rgb) / 0.20), inset 0 0 30px rgba(255,255,255,0.18); }
++  50%     { box-shadow: 0 0 80px rgb(var(--cyan-rgb) / 0.55), 0 0 160px rgb(var(--cyan-rgb) / 0.28), inset 0 0 40px rgba(255,255,255,0.28); }
+ }
+ /* the floating glass device stack — three translucent cards in 3D */
+ .home-showcase-root .hero-stack {
+@@ -1473,7 +1477,7 @@
+   position: absolute;
+   left: 18%; top: 12%; right: 18%; bottom: 22%;
+   border-radius: 50%;
+-  background: radial-gradient(ellipse at 30% 40%, rgba(124,224,195,0.30), rgba(124,224,195,0.10) 38%, transparent 70%);
++  background: radial-gradient(ellipse at 30% 40%, rgb(var(--cyan-rgb) / 0.30), rgb(var(--cyan-rgb) / 0.10) 38%, transparent 70%);
+   filter: blur(46px);
+   z-index: 3;
+   pointer-events: none;
+@@ -1496,7 +1500,7 @@
+     0 1px 0 rgba(255,255,255,0.12) inset,
+     0 -1px 0 rgba(0,0,0,0.4) inset,
+     0 30px 60px -20px rgba(0,0,0,0.6),
+-    0 0 0 1px rgba(124,224,195,0.06);
++    0 0 0 1px rgb(var(--cyan-rgb) / 0.06);
+   padding: 22px 24px;
+   transform-style: preserve-3d;
+   overflow: hidden;
+@@ -1507,7 +1511,7 @@
+   position: absolute; inset: 0;
+   border-radius: 22px;
+   background:
+-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,224,195,0.18), transparent 60%),
++    radial-gradient(ellipse 80% 60% at 50% 0%, rgb(var(--cyan-rgb) / 0.18), transparent 60%),
+     radial-gradient(ellipse 80% 60% at 50% 100%, rgba(58,112,138,0.14), transparent 65%);
+   pointer-events: none;
+ }
+@@ -1636,7 +1640,7 @@
+   display: inline-flex; align-items: center; gap: 8px;
+   padding: 8px 13px;
+   background: rgba(20, 22, 28, 0.65);
+-  border: 1px solid rgba(124,224,195,0.25);
++  border: 1px solid rgb(var(--cyan-rgb) / 0.25);
+   border-radius: 999px;
+   backdrop-filter: blur(14px) saturate(160%);
+   -webkit-backdrop-filter: blur(14px) saturate(160%);
+@@ -1645,7 +1649,7 @@
+   color: var(--text);
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+-  box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 14px rgba(124,224,195,0.10);
++  box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 14px rgb(var(--cyan-rgb) / 0.10);
+   animation: nl-floatY 5s ease-in-out infinite;
+ }
+ .home-showcase-root .float-chip .dot {
+@@ -1673,12 +1677,12 @@
+   z-index: 2; pointer-events: none;
+ }
+ .home-showcase-root .conn-lines line {
+-  stroke: rgba(124,224,195,0.22);
++  stroke: rgb(var(--cyan-rgb) / 0.22);
+   stroke-width: 0.14;
+   stroke-dasharray: 1.4 1.2;
+   stroke-linecap: round;
+   animation: nl-dashFlow 6s linear infinite;
+-  filter: drop-shadow(0 0 1px rgba(124,224,195,0.4));
++  filter: drop-shadow(0 0 1px rgb(var(--cyan-rgb) / 0.4));
+ }
+ .home-showcase-root .conn-lines circle { fill: var(--cyan); filter: drop-shadow(0 0 3px var(--cyan)); }
+ /* responsive — keep new hero usable on mobile */
+@@ -1754,28 +1758,29 @@
+    LIGHT ("white") THEME
+    ════════════════════════════════════════════════════════════════ */
+ body[data-home-theme='light'] .home-showcase-root {
+-  --bg-0: #eef1f0;
+-  --bg-1: #f4f6f5;
++  --bg-0: #eef2f7;
++  --bg-1: #f5f8fc;
+   --bg-2: #ffffff;
+   --bg-3: #ffffff;
+-  --line:   rgba(18, 32, 27, 0.10);
+-  --line-2: rgba(18, 32, 27, 0.16);
+-  --text:   #13211c;
+-  --mute:   #5a6661;
+-  --cyan:   #0e9b78;
+-  --cyan-2: #0b8466;
+-  --ice:    #0c7d60;
++  --line:   rgba(16, 28, 44, 0.10);
++  --line-2: rgba(16, 28, 44, 0.16);
++  --text:   #111c2b;
++  --mute:   #5b6675;
++  --cyan:     #0b5fd0;
++  --cyan-rgb: 11 95 208;
++  --cyan-2:   #0a4fae;
++  --ice:      #0a4aa0;
+   --blue:   #356b84;
+   --blue-2: #2c6076;
+   --warn:   #c1763f;
+-  --ok:     #0e9b78;
++  --ok:     #0b5fd0;
+ }
+ body[data-home-theme='light'] .home-showcase-root .bg-ambient {
+   background:
+-    radial-gradient(1200px 800px at 80% -10%, rgba(14,155,120,0.08), transparent 60%),
++    radial-gradient(1200px 800px at 80% -10%, rgb(var(--cyan-rgb) / 0.08), transparent 60%),
+     radial-gradient(900px 700px at -10% 30%, rgba(53,107,132,0.06), transparent 60%),
+-    radial-gradient(1100px 900px at 50% 110%, rgba(14,155,120,0.05), transparent 60%),
+-    linear-gradient(180deg, #f3f6f4 0%, #eef1f0 45%, #e8ece9 100%);
++    radial-gradient(1100px 900px at 50% 110%, rgb(var(--cyan-rgb) / 0.05), transparent 60%),
++    linear-gradient(180deg, #f5f8fc 0%, #eef2f7 45%, #e7edf5 100%);
+ }
+ body[data-home-theme='light'] .home-showcase-root .bg-grid {
+   background-image:
+@@ -1788,7 +1793,7 @@ body[data-home-theme='light'] .home-showcase-root header { background: rgba(255,
+ body[data-home-theme='light'] .home-showcase-root header.shrink { background: rgba(255,255,255,0.92); box-shadow: 0 10px 32px -16px rgba(18,40,33,0.28); }
+ body[data-home-theme='light'] .home-showcase-root nav.primary a:hover { background: rgba(18,32,27,0.05); border-color: var(--line); }
+ body[data-home-theme='light'] .home-showcase-root .lang-switch { background: #ffffff; }
+-body[data-home-theme='light'] .home-showcase-root .lang-opt.on { background: rgba(14,155,120,0.12); box-shadow: 0 0 10px rgba(14,155,120,0.16); }
++body[data-home-theme='light'] .home-showcase-root .lang-opt.on { background: rgb(var(--cyan-rgb) / 0.12); box-shadow: 0 0 10px rgb(var(--cyan-rgb) / 0.16); }
+ /* generic surfaces */
+ body[data-home-theme='light'] .home-showcase-root .cat, body[data-home-theme='light'] .home-showcase-root .prod {
+   background: linear-gradient(180deg, #ffffff, #fbfdfc);
+@@ -1801,12 +1806,12 @@ body[data-home-theme='light'] .home-showcase-root .brand, body[data-home-theme='
+ body[data-home-theme='light'] .home-showcase-root .brand { box-shadow: 0 1px 2px rgba(18,40,33,0.04), 0 10px 26px -20px rgba(18,40,33,0.18); }
+ /* surface hovers */
+ body[data-home-theme='light'] .home-showcase-root .cat-chip:hover, body[data-home-theme='light'] .home-showcase-root .page-btn:hover:not(:disabled):not(.on), body[data-home-theme='light'] .home-showcase-root .contact-tab:hover { background: rgba(18,32,27,0.05); color: var(--text); }
+-body[data-home-theme='light'] .home-showcase-root .brand:hover { background: rgba(14,155,120,0.05); }
+-body[data-home-theme='light'] .home-showcase-root .about-stat:hover { background: rgba(14,155,120,0.05); }
++body[data-home-theme='light'] .home-showcase-root .brand:hover { background: rgb(var(--cyan-rgb) / 0.05); }
++body[data-home-theme='light'] .home-showcase-root .about-stat:hover { background: rgb(var(--cyan-rgb) / 0.05); }
+ /* about visual panel */
+ body[data-home-theme='light'] .home-showcase-root .about-visual {
+   background:
+-    radial-gradient(ellipse at 50% 40%, rgba(14,155,120,0.08), transparent 60%),
++    radial-gradient(ellipse at 50% 40%, rgb(var(--cyan-rgb) / 0.08), transparent 60%),
+     #ffffff;
+   border-color: var(--line);
+ }
+@@ -1817,20 +1822,20 @@ body[data-home-theme='light'] .home-showcase-root .glass-card {
+   box-shadow:
+     0 1px 0 rgba(255,255,255,0.7) inset,
+     0 30px 60px -22px rgba(18,40,33,0.28),
+-    0 0 0 1px rgba(14,155,120,0.05);
++    0 0 0 1px rgb(var(--cyan-rgb) / 0.05);
+ }
+ body[data-home-theme='light'] .home-showcase-root .glass-card::after { opacity: 0.2; }
+ body[data-home-theme='light'] .home-showcase-root .gc-head { color: var(--mute); }
+ body[data-home-theme='light'] .home-showcase-root .float-chip {
+   background: rgba(255,255,255,0.86);
+   color: var(--text);
+-  border-color: rgba(14,155,120,0.3);
+-  box-shadow: 0 8px 24px rgba(18,40,33,0.16), 0 0 12px rgba(14,155,120,0.08);
++  border-color: rgb(var(--cyan-rgb) / 0.3);
++  box-shadow: 0 8px 24px rgba(18,40,33,0.16), 0 0 12px rgb(var(--cyan-rgb) / 0.08);
+ }
+ /* contact panel surfaces (map + storefront stay dark on purpose) */
+ body[data-home-theme='light'] .home-showcase-root .contact-panel { background: #ffffff; border-color: var(--line); }
+ body[data-home-theme='light'] .home-showcase-root .contact-tabs { border-bottom-color: var(--line); }
+-body[data-home-theme='light'] .home-showcase-root .contact-tab.on { background: rgba(14,155,120,0.10); border-color: rgba(14,155,120,0.3); }
++body[data-home-theme='light'] .home-showcase-root .contact-tab.on { background: rgb(var(--cyan-rgb) / 0.10); border-color: rgb(var(--cyan-rgb) / 0.3); }
+ body[data-home-theme='light'] .home-showcase-root .hours { background: #fbfdfc; }
+ /* inputs */
+ body[data-home-theme='light'] .home-showcase-root .contact-form input, body[data-home-theme='light'] .home-showcase-root .contact-form textarea { background: #ffffff; border-color: var(--line-2); }
+@@ -2099,12 +2104,12 @@ body[data-home-theme='light'] .home-showcase-root .quote-overlay {
+ 
+ /* ─── light theme for the additions ─────────────────────────── */
+ body[data-home-theme='light'] .home-showcase-root .hs-search .hs-input { background: #ffffff; }
+-body[data-home-theme='light'] .home-showcase-root .hs-search .hs-input:focus { box-shadow: 0 0 16px rgba(14,155,120,0.18); }
++body[data-home-theme='light'] .home-showcase-root .hs-search .hs-input:focus { box-shadow: 0 0 16px rgb(var(--cyan-rgb) / 0.18); }
+ body[data-home-theme='light'] .home-showcase-root .hs-pop {
+   background: rgba(255,255,255,0.98);
+-  box-shadow: 0 24px 60px -18px rgba(18,40,33,0.3), 0 0 0 1px rgba(14,155,120,0.05);
++  box-shadow: 0 24px 60px -18px rgba(18,40,33,0.3), 0 0 0 1px rgb(var(--cyan-rgb) / 0.05);
+ }
+-body[data-home-theme='light'] .home-showcase-root .hs-hit:hover { background: rgba(14,155,120,0.07); }
++body[data-home-theme='light'] .home-showcase-root .hs-hit:hover { background: rgb(var(--cyan-rgb) / 0.07); }
+ body[data-home-theme='light'] .home-showcase-root .hs-all:hover { text-shadow: none; }
+ body[data-home-theme='light'] .home-showcase-root .cat-lane .sr-arrow,
+ body[data-home-theme='light'] .home-showcase-root .brand-lane .sr-arrow { background: #ffffff; }
+@@ -2138,9 +2143,9 @@ body[data-home-theme='light'] .home-showcase-root .brand-lane .sr-arrow { backgr
+ .home-showcase-root .prod .cart-btn:hover { background: var(--cyan); color: var(--bg-0); box-shadow: 0 0 22px color-mix(in srgb, var(--cyan) 40%, transparent); }
+ .home-showcase-root .prod .cart-btn:active { transform: scale(0.97); }
+ .home-showcase-root .prod .cart-btn.added { background: var(--cyan); color: var(--bg-0); box-shadow: 0 0 22px color-mix(in srgb, var(--cyan) 40%, transparent); }
+-body[data-home-theme='light'] .home-showcase-root .prod .cart-btn { background: rgba(14,155,120,0.08); }
++body[data-home-theme='light'] .home-showcase-root .prod .cart-btn { background: rgb(var(--cyan-rgb) / 0.08); }
+ body[data-home-theme='light'] .home-showcase-root .prod .cart-btn:hover,
+-body[data-home-theme='light'] .home-showcase-root .prod .cart-btn.added { background: var(--cyan); color: #ffffff; box-shadow: 0 8px 22px -8px rgba(14,155,120,0.5); }
++body[data-home-theme='light'] .home-showcase-root .prod .cart-btn.added { background: var(--cyan); color: #ffffff; box-shadow: 0 8px 22px -8px rgb(var(--cyan-rgb) / 0.5); }
+ 
+ /* ════════════════════════════════════════════════════════════════
+    FRENCH TYPE SCALE — FR copy runs long; tame the display sizes
+@@ -2298,12 +2303,16 @@ body[data-home-theme='light'] .home-showcase-root .page-btn.on {
+   color: #04140e;
+ }
+ /* the text-accent token (kickers, small labels, years) needs AA on white */
+-body[data-home-theme='light'] .home-showcase-root { --ice: #0a6a50; }
++body[data-home-theme='light'] .home-showcase-root { --ice: #083f8c; }
+ 
+ /* RTL — physical-side props that carry directional meaning. */
+ .home-showcase-root .brand { text-align: start; }
+-.home-showcase-root .cat .arr { inset-inline-end: 22px; right: auto; }
+-.home-showcase-root .icn .dot { inset-inline-end: 5px; right: auto; }
++/* `inset-inline-end` and `right` are the SAME property in LTR, so declaring
++   `right: auto` after it cancelled the offset and dropped these badges back to
++   their static position (the category card's arrow landed next to the index
++   text instead of the top-right corner). Reset the OPPOSITE physical side. */
++.home-showcase-root .cat .arr { inset-inline-end: 22px; inset-inline-start: auto; }
++.home-showcase-root .icn .dot { inset-inline-end: 5px; inset-inline-start: auto; }
+ [dir='rtl'] .home-showcase-root .cat .arr svg,
+ [dir='rtl'] .home-showcase-root .btn-explore svg,
+ [dir='rtl'] .home-showcase-root .hs-all svg { transform: scaleX(-1); }
+@@ -2336,7 +2345,7 @@ body[data-home-theme='light'] .home-showcase-root { --ice: #0a6a50; }
+ }
+ .home-showcase-root .hero-slider-play:hover { background: rgba(0, 0, 0, 0.62); }
+ body[data-home-theme='light'] .home-showcase-root .hero-slider-play {
+-  background: rgba(255, 255, 255, 0.82); border-color: rgba(18, 32, 27, 0.25); color: #13211c;
++  background: rgba(255, 255, 255, 0.82); border-color: rgba(16, 28, 44, 0.25); color: #111c2b;
+ }
+ 
+ /* ═══════════ ROUND 8 — FULL-PAGE HERO ═══════════
+@@ -2424,7 +2433,7 @@ body[data-home-theme='light'] .home-showcase-root .hero-slider-play {
+ body[data-home-theme='light'] .home-showcase-root .hero-slider-arrow {
+   background: rgba(255, 255, 255, 0.84);
+   border-color: rgba(18, 32, 27, 0.22);
+-  color: #13211c;
++  color: #111c2b;
+ }
+ body[data-home-theme='light'] .home-showcase-root .hero-slider-arrow:hover {
+   background: #fff;
+@@ -2466,3 +2475,77 @@ body[data-home-theme='light'] .home-showcase-root .hero-slider-arrow:hover {
+ @media (max-width: 720px) {
+   .home-showcase-root .hs-seeall-top { display: none; }
+ }
++
++/* ═══════════ ROUND 10 — UI/UX POLISH ═══════════ */
++
++/* Footer links were 16px-tall line boxes — too small to hit reliably. */
++.home-showcase-root .ft-col li { display: flex; }
++.home-showcase-root .ft-col a {
++  display: inline-flex;
++  align-items: center;
++  min-height: 26px;
++}
++
++/* Visible, consistent focus ring — the homepage relied on the UA default,
++   which all but disappears on the dark surface. */
++.home-showcase-root a:focus-visible,
++.home-showcase-root button:focus-visible,
++.home-showcase-root input:focus-visible,
++.home-showcase-root select:focus-visible {
++  outline: 2px solid var(--cyan);
++  outline-offset: 2px;
++  border-radius: 8px;
++}
++
++/* The featured teaser's "see all" row sat tight against the grid. */
++.home-showcase-root .hs-seeall { margin-top: clamp(28px, 3.5vw, 42px); }
++
++/* ── category cards ──────────────────────────────────────────────
++   235px was too narrow for the real French labels: "Ordinateurs
++   portables" and "Ordinateurs de bureau" ran past the padding and were
++   cut by `overflow: hidden`. And the "01 / 20" index sat underneath the
++   absolutely-positioned arrow badge. */
++.home-showcase-root .cat-lane .cat { width: 268px; }
++.home-showcase-root .cat .ix {
++  /* clear the 30px arrow + its 22px inset */
++  padding-inline-end: 46px;
++}
++.home-showcase-root .cat .name {
++  font-size: 16px;
++  line-height: 1.3;
++  /* wrap rather than clip; two lines is the tallest real label */
++  overflow-wrap: anywhere;
++  display: -webkit-box;
++  -webkit-line-clamp: 2;
++  -webkit-box-orient: vertical;
++  overflow: hidden;
++}
++
++/* ── product cards: equal-height rows ────────────────────────────
++   Titles run to one or two lines, which pushed the specs toggle and the
++   add-to-cart row to different heights across a row — the buttons never
++   lined up. Clamp the title and let the actions sit on a common baseline. */
++.home-showcase-root .prod { display: flex; flex-direction: column; }
++.home-showcase-root .prod .info {
++  display: flex;
++  flex-direction: column;
++  flex: 1 1 auto;
++  min-height: 0;
++}
++.home-showcase-root .prod .info .name {
++  display: -webkit-box;
++  -webkit-line-clamp: 2;
++  -webkit-box-orient: vertical;
++  overflow: hidden;
++  min-height: 2.6em;
++}
++.home-showcase-root .prod .info .specs {
++  display: -webkit-box;
++  -webkit-line-clamp: 2;
++  -webkit-box-orient: vertical;
++  overflow: hidden;
++  min-height: 2.8em;
++}
++/* everything from the rating down is pinned to the bottom of the card */
++.home-showcase-root .prod .price-row { margin-top: auto; }
++.home-showcase-root .prod .card-actions { margin-top: 12px; }
+diff --git a/src/components/showroom/ProductSearchField.tsx b/src/components/showroom/ProductSearchField.tsx
+index ec41519..f26757b 100644
+--- a/src/components/showroom/ProductSearchField.tsx
++++ b/src/components/showroom/ProductSearchField.tsx
+@@ -78,10 +78,7 @@ export function ProductSearchField({
+   }
+ 
+   return (
+-    <span
+-      className={isPending ? 'sr-search sr-search-busy' : 'sr-search'}
+-      style={{ flex: '1 1 220px', maxWidth: 360 }}
+-    >
++    <span className={isPending ? 'sr-search sr-search-busy' : 'sr-search'}>
+       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+         <circle cx="11" cy="11" r="7" />
+         <path d="m21 21-4.3-4.3" />
+diff --git a/src/components/showroom/ProductsBrowser.tsx b/src/components/showroom/ProductsBrowser.tsx
+index 8e62375..d022c05 100644
+--- a/src/components/showroom/ProductsBrowser.tsx
++++ b/src/components/showroom/ProductsBrowser.tsx
+@@ -14,10 +14,16 @@ import {
+ /**
+  * Catalogue browser — a SERVER component.
+  *
+- * Every filter is a real `<Link>`, so: no client-side filter state, no
+- * 393-row payload, the URL is the state (shareable / bookmarkable / crawlable),
+- * and search engines can walk the facets. Only the search box and the sort
+- * dropdown need interactivity, and those are two tiny client islands.
++ * Layout: brands run across the TOP (there are ~21, and they're the coarsest
++ * cut a shopper makes), everything else lives in a RIGHT-hand rail beside the
++ * grid. On narrow screens the rail moves above the results and the category
++ * list turns into a horizontal scroller, so filters stay reachable without
++ * scrolling past 24 cards.
++ *
++ * Every filter is a real `<Link>`: no client-side filter state, no 393-row
++ * payload, the URL is the state (shareable / bookmarkable / crawlable), and
++ * search engines can walk the facets. Only the search box and the sort select
++ * need interactivity, and those are two tiny client islands.
+  */
+ export async function ProductsBrowser({
+   query,
+@@ -30,7 +36,7 @@ export async function ProductsBrowser({
+   basePath?: string
+   /**
+    * On /categories/x and /brands/x the facet is fixed by the ROUTE, not the
+-   * query. Locking it hides that lane and keeps the slug out of the query
++   * query. Locking it hides that control and keeps the slug out of the query
+    * string, so the canonical URL stays `/categories/x?brand=hp` rather than
+    * `/categories/x?category=x&brand=hp`.
+    */
+@@ -53,6 +59,11 @@ export async function ProductsBrowser({
+   // The locked facet isn't a "filter the visitor applied", so it must not make
+   // the reset row appear on an otherwise-unfiltered category page.
+   const active = hasActiveFilters(linkQuery)
++  const activeCount =
++    (linkQuery.category ? 1 : 0) +
++    (linkQuery.brand ? 1 : 0) +
++    (linkQuery.q ? 1 : 0) +
++    (linkQuery.featuredOnly ? 1 : 0)
+ 
+   // Windowed page list: 1 … p-1 p p+1 … N
+   const pageNums: (number | '…')[] = []
+@@ -65,7 +76,7 @@ export async function ProductsBrowser({
+   }
+ 
+   // Resolve display names defensively: for a contradictory pair (e.g.
+-  // ?category=printers&brand=dell where Dell makes no printers) each lane
++  // ?category=printers&brand=dell where Dell makes no printers) each facet list
+   // excludes the other's selection, so BOTH lookups miss and neither removal
+   // pill would render — leaving the visitor an empty grid and only a blanket
+   // "reset". Falling back to the slug keeps both pills clickable.
+@@ -77,194 +88,239 @@ export async function ProductsBrowser({
+     ? (brands.find((b) => b.slug === linkQuery.brand)?.name ?? linkQuery.brand)
+     : null
+ 
++  const pill = (label: string, to: Partial<ProductQuery>, key: string) => (
++    <Link key={key} href={href(to)} className="sr-pill" scroll={false}>
++      {label}
++      <span aria-hidden>×</span>
++      <span className="sr-only">{t('clearFilter')}</span>
++    </Link>
++  )
++
+   return (
+     <div className="sr-browser">
+-      {/* ── filter lanes ─────────────────────────────────────────── */}
+-      <div className="sr-filterbar">
+-        {lock !== 'category' && categories.length > 1 ? (
++      {/* ── brands across the top ─────────────────────────────────── */}
++      {lock !== 'brand' && brands.length > 1 ? (
++        <section className="sr-brandbar" aria-label={t('brandsTitle')}>
++          <h2 className="sr-barlabel">{t('brandsTitle')}</h2>
+           <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
+             <Link
+-              href={href({ category: null })}
+-              className={!query.category ? 'sr-chip on' : 'sr-chip'}
++              href={href({ brand: null })}
++              className={!linkQuery.brand ? 'sr-chip on' : 'sr-chip'}
+               scroll={false}
+             >
+-              {t('categoriesLabel')} · {t('all')}
++              {t('all')}
+             </Link>
+-            {categories.map((c) => (
++            {brands.map((b) => (
+               <Link
+-                key={c.slug}
++                key={b.slug}
+                 href={href({
+-                  category: query.category === c.slug ? null : c.slug,
++                  brand: linkQuery.brand === b.slug ? null : b.slug,
+                 })}
+-                className={query.category === c.slug ? 'sr-chip on' : 'sr-chip'}
++                className={linkQuery.brand === b.slug ? 'sr-chip on' : 'sr-chip'}
+                 scroll={false}
+-                aria-current={query.category === c.slug ? 'true' : undefined}
++                aria-current={linkQuery.brand === b.slug ? 'true' : undefined}
+               >
+-                {c.name} <span className="n">{c.count}</span>
++                {b.name} <span className="n">{b.count}</span>
+               </Link>
+             ))}
+           </Carousel>
+-        ) : null}
++        </section>
++      ) : null}
+ 
+-        {lock !== 'brand' && brands.length > 1 ? (
+-          <Carousel variant="chips" prevLabel={t('prev')} nextLabel={t('next')}>
+-            <Link
+-              href={href({ brand: null })}
+-              className={!query.brand ? 'sr-chip on' : 'sr-chip'}
+-              scroll={false}
+-            >
+-              {t('brandsLabel')} · {t('all')}
+-            </Link>
+-            {brands.map((b) => (
++      <div className="sr-layout">
++        {/* ── results ─────────────────────────────────────────────── */}
++        <div className="sr-results">
++          <div className="sr-resultbar">
++            <p className="sr-count sr-mono">
++              {t('results', { count: total })}
++              {totalPages > 1 ? (
++                <>
++                  {' · '}
++                  <span dir="ltr">
++                    {t('page', { n: `${page} / ${totalPages}` })}
++                  </span>
++                </>
++              ) : null}
++            </p>
++            <ProductSortSelect basePath={basePath} query={linkQuery} />
++          </div>
++
++          {active ? (
++            <div className="sr-activefilters">
++              {activeCategoryLabel
++                ? pill(activeCategoryLabel, { category: null }, 'cat')
++                : null}
++              {activeBrandLabel
++                ? pill(activeBrandLabel, { brand: null }, 'brand')
++                : null}
++              {linkQuery.q ? pill(`“${linkQuery.q}”`, { q: '' }, 'q') : null}
++              {linkQuery.featuredOnly
++                ? pill(t('featuredOnly'), { featuredOnly: false }, 'feat')
++                : null}
+               <Link
+-                key={b.slug}
+-                href={href({ brand: query.brand === b.slug ? null : b.slug })}
+-                className={query.brand === b.slug ? 'sr-chip on' : 'sr-chip'}
++                href={basePath}
++                className="sr-pill sr-pill-reset"
+                 scroll={false}
+-                aria-current={query.brand === b.slug ? 'true' : undefined}
+               >
+-                {b.name} <span className="n">{b.count}</span>
++                {t('reset')}
+               </Link>
+-            ))}
+-          </Carousel>
+-        ) : null}
++            </div>
++          ) : null}
++
++          {items.length === 0 ? (
++            <div className="sr-empty">
++              <p>{t('noResults')}</p>
++              {active ? (
++                <Link href={basePath} className="sr-btn sr-btn-ghost">
++                  {t('reset')}
++                </Link>
++              ) : null}
++            </div>
++          ) : (
++            <div className="sr-grid">
++              {items.map((p, i) => (
++                <ShowroomCard
++                  key={p.slug}
++                  product={p}
++                  index={i}
++                  priority={page === 1 && i < 4}
++                />
++              ))}
++            </div>
++          )}
++
++          {/* pagination — real links, so crawlable and prefetched */}
++          {totalPages > 1 ? (
++            <nav className="sr-pages" aria-label="Pagination">
++              {page > 1 ? (
++                <Link
++                  href={pageHref(page - 1)}
++                  className="sr-page"
++                  aria-label={t('prevPage')}
++                  rel="prev"
++                >
++                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
++                    <path d="M15 18l-6-6 6-6" />
++                  </svg>
++                </Link>
++              ) : (
++                <span className="sr-page is-disabled" aria-hidden>
++                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
++                    <path d="M15 18l-6-6 6-6" />
++                  </svg>
++                </span>
++              )}
++              {pageNums.map((n, i) =>
++                n === '…' ? (
++                  <span key={`e${i}`} className="sr-mono">…</span>
++                ) : (
++                  <Link
++                    key={n}
++                    href={pageHref(n)}
++                    className={n === page ? 'sr-page on' : 'sr-page'}
++                    aria-current={n === page ? 'page' : undefined}
++                  >
++                    {n}
++                  </Link>
++                )
++              )}
++              {page < totalPages ? (
++                <Link
++                  href={pageHref(page + 1)}
++                  className="sr-page"
++                  aria-label={t('nextPage')}
++                  rel="next"
++                >
++                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
++                    <path d="M9 6l6 6-6 6" />
++                  </svg>
++                </Link>
++              ) : (
++                <span className="sr-page is-disabled" aria-hidden>
++                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
++                    <path d="M9 6l6 6-6 6" />
++                  </svg>
++                </span>
++              )}
++            </nav>
++          ) : null}
++        </div>
++
++        {/* ── filter rail (right on desktop, above results on mobile) ─ */}
++        <aside className="sr-rail" aria-label={t('filtersTitle')}>
++          <div className="sr-railhead">
++            <h2 className="sr-barlabel">{t('filtersTitle')}</h2>
++            {activeCount > 0 ? (
++              <Link href={basePath} className="sr-railreset" scroll={false}>
++                {t('reset')}
++              </Link>
++            ) : null}
++          </div>
+ 
+-        <div className="sr-toolbar">
+           <ProductSearchField
+             basePath={basePath}
+             query={linkQuery}
+             placeholder={t('searchPlaceholder')}
+           />
++
+           {featuredCount > 0 ? (
+             <Link
+-              href={href({ featuredOnly: !query.featuredOnly })}
+-              className={query.featuredOnly ? 'sr-chip on sr-chip-flag' : 'sr-chip sr-chip-flag'}
++              href={href({ featuredOnly: !linkQuery.featuredOnly })}
++              className={
++                linkQuery.featuredOnly
++                  ? 'sr-railtoggle on'
++                  : 'sr-railtoggle'
++              }
+               scroll={false}
+-              aria-pressed={query.featuredOnly}
++              aria-pressed={linkQuery.featuredOnly}
+             >
+-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
++              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                 <path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17l-6 3.3L7.3 13.6l-5-4.6 6.8-.8z" />
+               </svg>
+-              {t('featuredOnly')} <span className="n">{featuredCount}</span>
++              {t('featuredOnly')}
++              <span className="n">{featuredCount}</span>
+             </Link>
+           ) : null}
+-          <ProductSortSelect basePath={basePath} query={linkQuery} />
+-          <span className="sr-count sr-mono">
+-            {t('results', { count: total })}
+-            {totalPages > 1 ? (
+-              <>
+-                {' · '}
+-                <span dir="ltr">{t('page', { n: `${page} / ${totalPages}` })}</span>
+-              </>
+-            ) : null}
+-          </span>
+-        </div>
+ 
+-        {active ? (
+-          <div className="sr-activefilters">
+-            {activeCategoryLabel ? (
+-              <Link href={href({ category: null })} className="sr-pill" scroll={false}>
+-                {activeCategoryLabel}
+-                <span aria-hidden>×</span>
+-                <span className="sr-only">{t('clearFilter')}</span>
+-              </Link>
+-            ) : null}
+-            {activeBrandLabel ? (
+-              <Link href={href({ brand: null })} className="sr-pill" scroll={false}>
+-                {activeBrandLabel}
+-                <span aria-hidden>×</span>
+-                <span className="sr-only">{t('clearFilter')}</span>
+-              </Link>
+-            ) : null}
+-            {query.q ? (
+-              <Link href={href({ q: '' })} className="sr-pill" scroll={false}>
+-                “{query.q}”
+-                <span aria-hidden>×</span>
+-                <span className="sr-only">{t('clearFilter')}</span>
+-              </Link>
+-            ) : null}
+-            {query.featuredOnly ? (
+-              <Link href={href({ featuredOnly: false })} className="sr-pill" scroll={false}>
+-                {t('featuredOnly')}
+-                <span aria-hidden>×</span>
+-                <span className="sr-only">{t('clearFilter')}</span>
+-              </Link>
+-            ) : null}
+-            <Link href={basePath} className="sr-pill sr-pill-reset" scroll={false}>
+-              {t('reset')}
+-            </Link>
+-          </div>
+-        ) : null}
+-      </div>
+-
+-      {/* ── results ──────────────────────────────────────────────── */}
+-      {items.length === 0 ? (
+-        <div className="sr-empty" style={{ marginTop: 26 }}>
+-          <p>{t('noResults')}</p>
+-          {active ? (
+-            <Link href={basePath} className="sr-btn sr-btn-ghost" style={{ marginTop: 14 }}>
+-              {t('reset')}
+-            </Link>
++          {lock !== 'category' && categories.length > 1 ? (
++            <div className="sr-railgroup">
++              <h3 className="sr-railtitle">{t('categoriesTitle')}</h3>
++              {/* Vertical list on desktop; CSS turns it into a horizontal
++                  scroller on narrow screens so it stays one tap away. */}
++              <div className="sr-railcats">
++                <Link
++                  href={href({ category: null })}
++                  className={!linkQuery.category ? 'sr-railcat on' : 'sr-railcat'}
++                  scroll={false}
++                >
++                  <span className="lbl">{t('all')}</span>
++                  <span className="n">{total}</span>
++                </Link>
++                {categories.map((c) => (
++                  <Link
++                    key={c.slug}
++                    href={href({
++                      category: linkQuery.category === c.slug ? null : c.slug,
++                    })}
++                    className={
++                      linkQuery.category === c.slug
++                        ? 'sr-railcat on'
++                        : 'sr-railcat'
++                    }
++                    scroll={false}
++                    aria-current={
++                      linkQuery.category === c.slug ? 'true' : undefined
++                    }
++                  >
++                    <span className="lbl">{c.name}</span>
++                    <span className="n">{c.count}</span>
++                  </Link>
++                ))}
++              </div>
++            </div>
+           ) : null}
+-        </div>
+-      ) : (
+-        <div className="sr-grid" style={{ marginTop: 24 }}>
+-          {items.map((p, i) => (
+-            <ShowroomCard
+-              key={p.slug}
+-              product={p}
+-              index={i}
+-              priority={page === 1 && i < 4}
+-            />
+-          ))}
+-        </div>
+-      )}
+-
+-      {/* ── pagination (real links → crawlable + prefetched) ─────── */}
+-      {totalPages > 1 ? (
+-        <nav className="sr-pages" style={{ marginTop: 34 }} aria-label="Pagination">
+-          {page > 1 ? (
+-            <Link href={pageHref(page - 1)} className="sr-page" aria-label={t('prevPage')} rel="prev">
+-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+-                <path d="M15 18l-6-6 6-6" />
+-              </svg>
+-            </Link>
+-          ) : (
+-            <span className="sr-page is-disabled" aria-hidden>
+-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+-                <path d="M15 18l-6-6 6-6" />
+-              </svg>
+-            </span>
+-          )}
+-          {pageNums.map((n, i) =>
+-            n === '…' ? (
+-              <span key={`e${i}`} className="sr-mono">…</span>
+-            ) : (
+-              <Link
+-                key={n}
+-                href={pageHref(n)}
+-                className={n === page ? 'sr-page on' : 'sr-page'}
+-                aria-current={n === page ? 'page' : undefined}
+-              >
+-                {n}
+-              </Link>
+-            )
+-          )}
+-          {page < totalPages ? (
+-            <Link href={pageHref(page + 1)} className="sr-page" aria-label={t('nextPage')} rel="next">
+-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+-                <path d="M9 6l6 6-6 6" />
+-              </svg>
+-            </Link>
+-          ) : (
+-            <span className="sr-page is-disabled" aria-hidden>
+-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+-                <path d="M9 6l6 6-6 6" />
+-              </svg>
+-            </span>
+-          )}
+-        </nav>
+-      ) : null}
++        </aside>
++      </div>
+     </div>
+   )
+ }
+diff --git a/src/components/showroom/Stars.tsx b/src/components/showroom/Stars.tsx
+index 20afd52..28b2075 100644
+--- a/src/components/showroom/Stars.tsx
++++ b/src/components/showroom/Stars.tsx
+@@ -2,7 +2,7 @@ const STAR = 'M12 2l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.2 1.3-6.6L2.5 9l6
+ 
+ /** Star colors per surface tone (dark showroom vs light brand skin). */
+ const STAR_TONES = {
+-  dark: { on: '#7ce0c3', off: 'rgba(255,255,255,0.16)' },
++  dark: { on: '#4f9dff', off: 'rgba(255,255,255,0.16)' },
+   light: { on: '#10a396', off: 'rgba(127,138,148,0.35)' },
+ } as const
+ 
+diff --git a/src/lib/email-templates/index.ts b/src/lib/email-templates/index.ts
+index 889ce70..0b2b28e 100644
+--- a/src/lib/email-templates/index.ts
++++ b/src/lib/email-templates/index.ts
+@@ -14,7 +14,7 @@ const BRAND = {
+   bg: '#0a0a0d',
+   fg: '#f5f5f3',
+   accent: '#3ec5e0',
+-  mint: '#7ce0c3',
++  mint: '#4f9dff',
+   muted: 'rgba(245,245,243,0.78)',
+   faint: 'rgba(245,245,243,0.5)',
+   panel: '#11121a',
+diff --git a/src/styles/showroom.css b/src/styles/showroom.css
+index 81eee2d..c7c6d41 100644
+--- a/src/styles/showroom.css
++++ b/src/styles/showroom.css
+@@ -7,12 +7,13 @@
+   --sr-bg0: #04060c;
+   --sr-bg1: #071120;
+   --sr-bg2: #0f1b30;
+-  --sr-cyan: #7ce0c3;
+-  --sr-ice: #b8efdc;
++  --sr-cyan: #4f9dff;
++  --sr-cyan-rgb: 79 157 255;
++  --sr-ice: #a9d2ff;
+   --sr-text: #f4f7f5;
+   --sr-muted: #93a1b0;
+-  --sr-line: rgba(124, 224, 195, 0.14);
+-  --sr-line2: rgba(124, 224, 195, 0.28);
++  --sr-line: rgb(var(--sr-cyan-rgb) / 0.16);
++  --sr-line2: rgb(var(--sr-cyan-rgb) / 0.3);
+   --sr-glass: rgba(255, 255, 255, 0.035);
+   color: var(--sr-text);
+   font-family: var(--font-geist-sans), Inter, system-ui, sans-serif;
+@@ -20,21 +21,21 @@
+   position: relative;
+   min-height: 100vh;
+ }
+-.sr-root ::selection { background: rgba(124, 224, 195, 0.3); }
++.sr-root ::selection { background: rgb(var(--sr-cyan-rgb) / 0.3); }
+ 
+ /* ambient background */
+ .sr-bg {
+   position: fixed; inset: 0; z-index: -2; pointer-events: none;
+   background:
+-    radial-gradient(1100px 700px at 85% -10%, rgba(124,224,195,0.07), transparent 60%),
+-    radial-gradient(900px 700px at -10% 35%, rgba(124,224,195,0.05), transparent 60%),
++    radial-gradient(1100px 700px at 85% -10%, rgb(var(--sr-cyan-rgb) / 0.07), transparent 60%),
++    radial-gradient(900px 700px at -10% 35%, rgb(var(--sr-cyan-rgb) / 0.05), transparent 60%),
+     linear-gradient(180deg, #04060c 0%, #060b16 45%, #04060c 100%);
+ }
+ .sr-grid-bg {
+   position: fixed; inset: 0; z-index: -1; pointer-events: none;
+   background-image:
+-    linear-gradient(rgba(124,224,195,0.04) 1px, transparent 1px),
+-    linear-gradient(90deg, rgba(124,224,195,0.04) 1px, transparent 1px);
++    linear-gradient(rgb(var(--sr-cyan-rgb) / 0.04) 1px, transparent 1px),
++    linear-gradient(90deg, rgb(var(--sr-cyan-rgb) / 0.04) 1px, transparent 1px);
+   background-size: 64px 64px;
+   mask-image: radial-gradient(ellipse 85% 55% at 50% 18%, black 0%, transparent 72%);
+   -webkit-mask-image: radial-gradient(ellipse 85% 55% at 50% 18%, black 0%, transparent 72%);
+@@ -52,7 +53,7 @@
+ }
+ .sr-kicker::before {
+   content: ''; width: 7px; height: 7px; border-radius: 50%;
+-  background: var(--sr-cyan); box-shadow: 0 0 10px rgba(124,224,195,0.8);
++  background: var(--sr-cyan); box-shadow: 0 0 10px rgb(var(--sr-cyan-rgb) / 0.8);
+ }
+ .sr-h1 {
+   font-size: clamp(34px, 5vw, 58px); font-weight: 800;
+@@ -89,14 +90,14 @@
+ .sr-btn:active { transform: scale(0.97); }
+ .sr-btn-primary {
+   background: var(--sr-cyan); color: #04110c;
+-  box-shadow: 0 0 24px rgba(124,224,195,0.25);
++  box-shadow: 0 0 24px rgb(var(--sr-cyan-rgb) / 0.25);
+ }
+-.sr-btn-primary:hover { box-shadow: 0 0 36px rgba(124,224,195,0.45); transform: translateY(-1px); }
++.sr-btn-primary:hover { box-shadow: 0 0 36px rgb(var(--sr-cyan-rgb) / 0.45); transform: translateY(-1px); }
+ .sr-btn-ghost {
+   background: var(--sr-glass); color: var(--sr-text);
+   border-color: var(--sr-line2);
+ }
+-.sr-btn-ghost:hover { border-color: var(--sr-cyan); background: rgba(124,224,195,0.08); }
++.sr-btn-ghost:hover { border-color: var(--sr-cyan); background: rgb(var(--sr-cyan-rgb) / 0.08); }
+ .sr-btn-wa {
+   background: #25d366; color: #06281a;
+   box-shadow: 0 0 24px rgba(37,211,102,0.22);
+@@ -112,7 +113,7 @@
+   color: var(--sr-text); cursor: pointer; position: relative;
+   transition: border-color 0.25s, background 0.25s, transform 0.2s;
+ }
+-.sr-icn:hover { border-color: var(--sr-cyan); background: rgba(124,224,195,0.08); }
++.sr-icn:hover { border-color: var(--sr-cyan); background: rgb(var(--sr-cyan-rgb) / 0.08); }
+ .sr-icn .count {
+   position: absolute; top: -5px; right: -5px;
+   min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+@@ -149,7 +150,7 @@
+ .sr-nav a.on { color: var(--sr-text); }
+ .sr-nav a.on::after {
+   content: ''; position: absolute; bottom: -2px; inset-inline: 0; height: 2px;
+-  border-radius: 2px; background: var(--sr-cyan); box-shadow: 0 0 8px rgba(124,224,195,0.7);
++  border-radius: 2px; background: var(--sr-cyan); box-shadow: 0 0 8px rgb(var(--sr-cyan-rgb) / 0.7);
+ }
+ .sr-header .actions { margin-inline-start: auto; display: flex; align-items: center; gap: 9px; }
+ .sr-lang { display: flex; gap: 2px; font-family: var(--font-geist-mono), monospace; font-size: 10.5px; }
+@@ -195,8 +196,8 @@
+ }
+ .sr-chip:hover { border-color: var(--sr-line2); color: var(--sr-text); transform: translateY(-1px); }
+ .sr-chip.on {
+-  background: rgba(124,224,195,0.14); border-color: var(--sr-cyan);
+-  color: var(--sr-text); box-shadow: 0 0 16px rgba(124,224,195,0.18);
++  background: rgb(var(--sr-cyan-rgb) / 0.14); border-color: var(--sr-cyan);
++  color: var(--sr-text); box-shadow: 0 0 16px rgb(var(--sr-cyan-rgb) / 0.18);
+ }
+ .sr-chip .n {
+   font-family: var(--font-geist-mono), monospace; font-size: 10px;
+@@ -234,8 +235,8 @@
+ }
+ .sr-card:hover {
+   transform: translateY(-4px);
+-  border-color: rgba(124,224,195,0.35);
+-  box-shadow: 0 22px 48px -16px rgba(0,0,0,0.55), 0 0 0 1px rgba(124,224,195,0.10);
++  border-color: rgb(var(--sr-cyan-rgb) / 0.35);
++  box-shadow: 0 22px 48px -16px rgba(0,0,0,0.55), 0 0 0 1px rgb(var(--sr-cyan-rgb) / 0.10);
+ }
+ .sr-card .imgbox { position: relative; aspect-ratio: 4 / 3; background: #0a1322; border-bottom: 1px solid var(--sr-line); overflow: hidden; }
+ .sr-card .imgbox img { transition: transform 0.45s cubic-bezier(0.22,1,0.36,1); object-fit: cover; }
+@@ -257,7 +258,7 @@
+   transition: opacity 0.3s, transform 0.3s, background 0.25s, box-shadow 0.25s;
+ }
+ .sr-card:hover .addbtn, .sr-card .addbtn:focus-visible { opacity: 1; transform: translateY(0); }
+-.sr-card .addbtn:hover { background: var(--sr-cyan); box-shadow: 0 0 18px rgba(124,224,195,0.5); }
++.sr-card .addbtn:hover { background: var(--sr-cyan); box-shadow: 0 0 18px rgb(var(--sr-cyan-rgb) / 0.5); }
+ .sr-card .addbtn.added { background: var(--sr-cyan); opacity: 1; transform: translateY(0); }
+ .sr-card .info { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+ .sr-card .cat { font-family: var(--font-geist-mono), monospace; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sr-muted); }
+@@ -301,7 +302,7 @@
+   cursor: pointer; transition: border-color 0.2s, color 0.2s;
+ }
+ .sr-page:hover:not(:disabled) { border-color: var(--sr-cyan); color: var(--sr-text); }
+-.sr-page.on { background: rgba(124,224,195,0.16); border-color: var(--sr-cyan); color: var(--sr-text); }
++.sr-page.on { background: rgb(var(--sr-cyan-rgb) / 0.16); border-color: var(--sr-cyan); color: var(--sr-text); }
+ .sr-page:disabled { opacity: 0.35; cursor: not-allowed; }
+ 
+ /* drawer (cart) */
+@@ -348,7 +349,7 @@
+   transition: border-color 0.2s, box-shadow 0.2s;
+ }
+ .sr-input:focus, .sr-textarea:focus, .sr-select:focus {
+-  border-color: var(--sr-cyan); box-shadow: 0 0 0 3px rgba(124,224,195,0.12);
++  border-color: var(--sr-cyan); box-shadow: 0 0 0 3px rgb(var(--sr-cyan-rgb) / 0.12);
+ }
+ .sr-input::placeholder, .sr-textarea::placeholder { color: var(--sr-muted); }
+ .sr-select option { background: #0a1322; }
+@@ -379,7 +380,7 @@
+ .sr-review .who { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+ .sr-review .avatar {
+   width: 34px; height: 34px; border-radius: 50%;
+-  background: rgba(124,224,195,0.14); border: 1px solid var(--sr-line2);
++  background: rgb(var(--sr-cyan-rgb) / 0.14); border: 1px solid var(--sr-line2);
+   display: flex; align-items: center; justify-content: center;
+   font-family: var(--font-geist-mono), monospace; font-size: 12px; color: var(--sr-ice);
+ }
+@@ -411,7 +412,7 @@
+   position: fixed; bottom: 24px; inset-inline-start: 50%; transform: translateX(-50%); z-index: 99;
+   background: rgba(10, 18, 32, 0.95); border: 1px solid var(--sr-cyan);
+   color: var(--sr-text); border-radius: 999px; padding: 11px 22px;
+-  font-size: 13.5px; box-shadow: 0 0 30px rgba(124,224,195,0.25);
++  font-size: 13.5px; box-shadow: 0 0 30px rgb(var(--sr-cyan-rgb) / 0.25);
+   animation: srIn 0.3s ease both;
+ }
+ [dir='rtl'] .sr-toast { transform: translateX(50%); }
+@@ -430,23 +431,24 @@
+    toggle in the shared header covers every page.
+    ════════════════════════════════════════════════════════════════ */
+ body[data-home-theme='light'] .sr-root {
+-  --sr-bg0: #eef1f0;
+-  --sr-bg1: #f4f6f5;
++  --sr-bg0: #eef2f7;
++  --sr-bg1: #f5f8fc;
+   --sr-bg2: #ffffff;
+-  --sr-cyan: #0e9b78;
+-  --sr-ice: #0c7d60;
+-  --sr-text: #13211c;
+-  --sr-muted: #5a6661;
+-  --sr-line: rgba(18, 32, 27, 0.10);
+-  --sr-line2: rgba(18, 32, 27, 0.20);
++  --sr-cyan: #0b5fd0;
++  --sr-cyan-rgb: 11 95 208;
++  --sr-ice: #0a4aa0;
++  --sr-text: #111c2b;
++  --sr-muted: #5b6675;
++  --sr-line: rgba(16, 28, 44, 0.10);
++  --sr-line2: rgba(16, 28, 44, 0.20);
+   --sr-glass: #ffffff;
+ }
+-body[data-home-theme='light'] .sr-root ::selection { background: rgba(14,155,120,0.25); }
++body[data-home-theme='light'] .sr-root ::selection { background: rgb(var(--sr-cyan-rgb) / 0.25); }
+ body[data-home-theme='light'] .sr-bg {
+   background:
+-    radial-gradient(1100px 700px at 85% -10%, rgba(14,155,120,0.07), transparent 60%),
+-    radial-gradient(900px 700px at -10% 35%, rgba(14,155,120,0.05), transparent 60%),
+-    linear-gradient(180deg, #f3f6f4 0%, #eef1f0 45%, #e8ece9 100%);
++    radial-gradient(1100px 700px at 85% -10%, rgb(var(--sr-cyan-rgb) / 0.07), transparent 60%),
++    radial-gradient(900px 700px at -10% 35%, rgb(var(--sr-cyan-rgb) / 0.05), transparent 60%),
++    linear-gradient(180deg, #f5f8fc 0%, #eef2f7 45%, #e7edf5 100%);
+ }
+ body[data-home-theme='light'] .sr-grid-bg {
+   background-image:
+@@ -454,65 +456,67 @@ body[data-home-theme='light'] .sr-grid-bg {
+     linear-gradient(90deg, rgba(18,40,33,0.05) 1px, transparent 1px);
+ }
+ /* kicker dot glow tone-down */
+-body[data-home-theme='light'] .sr-kicker::before { box-shadow: 0 0 8px rgba(14,155,120,0.5); }
++body[data-home-theme='light'] .sr-kicker::before { box-shadow: 0 0 8px rgb(var(--sr-cyan-rgb) / 0.5); }
+ /* buttons */
+-body[data-home-theme='light'] .sr-btn-primary { color: #ffffff; box-shadow: 0 6px 22px -8px rgba(14,155,120,0.55); }
+-body[data-home-theme='light'] .sr-btn-primary:hover { box-shadow: 0 10px 28px -8px rgba(14,155,120,0.6); }
+-body[data-home-theme='light'] .sr-btn-ghost:hover { background: rgba(14,155,120,0.08); }
+-body[data-home-theme='light'] .sr-icn:hover { background: rgba(14,155,120,0.08); }
++body[data-home-theme='light'] .sr-btn-primary { color: #ffffff; box-shadow: 0 6px 22px -8px rgb(var(--sr-cyan-rgb) / 0.55); }
++body[data-home-theme='light'] .sr-btn-primary:hover { box-shadow: 0 10px 28px -8px rgb(var(--sr-cyan-rgb) / 0.6); }
++body[data-home-theme='light'] .sr-btn-ghost:hover { background: rgb(var(--sr-cyan-rgb) / 0.08); }
++body[data-home-theme='light'] .sr-icn:hover { background: rgb(var(--sr-cyan-rgb) / 0.08); }
+ body[data-home-theme='light'] .sr-icn .count { color: #ffffff; }
+ /* chips + arrows + pagination */
+-body[data-home-theme='light'] .sr-chip.on { background: rgba(14,155,120,0.12); box-shadow: 0 0 14px rgba(14,155,120,0.15); }
++body[data-home-theme='light'] .sr-chip.on { background: rgb(var(--sr-cyan-rgb) / 0.12); box-shadow: 0 0 14px rgb(var(--sr-cyan-rgb) / 0.15); }
+ body[data-home-theme='light'] .sr-arrow { background: rgba(255,255,255,0.94); }
+-body[data-home-theme='light'] .sr-page.on { background: rgba(14,155,120,0.14); }
++body[data-home-theme='light'] .sr-page.on { background: rgb(var(--sr-cyan-rgb) / 0.14); }
+ /* cards */
+ body[data-home-theme='light'] .sr-card {
+   background: #ffffff;
+   box-shadow: 0 1px 2px rgba(18,40,33,0.04), 0 12px 30px -22px rgba(18,40,33,0.2);
+ }
+ body[data-home-theme='light'] .sr-card:hover {
+-  border-color: rgba(14,155,120,0.45);
+-  box-shadow: 0 22px 48px -20px rgba(18,40,33,0.28), 0 0 0 1px rgba(14,155,120,0.08);
++  border-color: rgb(var(--sr-cyan-rgb) / 0.45);
++  box-shadow: 0 22px 48px -20px rgba(18,40,33,0.28), 0 0 0 1px rgb(var(--sr-cyan-rgb) / 0.08);
+ }
+ body[data-home-theme='light'] .sr-card .imgbox { background: #eef2f0; }
+ body[data-home-theme='light'] .sr-card .brand-tag { background: rgba(255,255,255,0.88); }
+-body[data-home-theme='light'] .sr-card .addbtn { background: #13211c; color: #ffffff; }
++body[data-home-theme='light'] .sr-card .addbtn { background: #111c2b; color: #ffffff; }
+ body[data-home-theme='light'] .sr-card .addbtn:hover,
+-body[data-home-theme='light'] .sr-card .addbtn.added { background: var(--sr-cyan); color: #ffffff; box-shadow: 0 0 18px rgba(14,155,120,0.4); }
++body[data-home-theme='light'] .sr-card .addbtn.added { background: var(--sr-cyan); color: #ffffff; box-shadow: 0 0 18px rgb(var(--sr-cyan-rgb) / 0.4); }
+ /* drawer */
+-body[data-home-theme='light'] .sr-overlay { background: rgba(18,32,27,0.35); }
++body[data-home-theme='light'] .sr-overlay { background: rgba(16,28,44,0.35); }
+ body[data-home-theme='light'] .sr-drawer { background: #ffffff; box-shadow: -30px 0 80px rgba(18,40,33,0.25); }
+ body[data-home-theme='light'] .sr-cart-item .thumb { background: #eef2f0; }
+ /* inputs */
+ body[data-home-theme='light'] .sr-input, body[data-home-theme='light'] .sr-textarea, body[data-home-theme='light'] .sr-select { background: #ffffff; }
+-body[data-home-theme='light'] .sr-input:focus, body[data-home-theme='light'] .sr-textarea:focus, body[data-home-theme='light'] .sr-select:focus { box-shadow: 0 0 0 3px rgba(14,155,120,0.12); }
++body[data-home-theme='light'] .sr-input:focus, body[data-home-theme='light'] .sr-textarea:focus, body[data-home-theme='light'] .sr-select:focus { box-shadow: 0 0 0 3px rgb(var(--sr-cyan-rgb) / 0.12); }
+ body[data-home-theme='light'] .sr-select option { background: #ffffff; }
+ /* reviews */
+ body[data-home-theme='light'] .sr-review { background: #ffffff; }
+-body[data-home-theme='light'] .sr-review .avatar { background: rgba(14,155,120,0.12); }
+-body[data-home-theme='light'] .sr-ratingbar .track { background: rgba(18,32,27,0.08); }
++body[data-home-theme='light'] .sr-review .avatar { background: rgb(var(--sr-cyan-rgb) / 0.12); }
++body[data-home-theme='light'] .sr-ratingbar .track { background: rgba(16,28,44,0.08); }
+ /* footer + toast */
+ body[data-home-theme='light'] .sr-footer { background: linear-gradient(180deg, rgba(18,40,33,0.03), rgba(18,40,33,0.06)); }
+-body[data-home-theme='light'] .sr-toast { background: #ffffff; color: #13211c; box-shadow: 0 12px 30px rgba(18,40,33,0.22); }
++body[data-home-theme='light'] .sr-toast { background: #ffffff; color: #111c2b; box-shadow: 0 12px 30px rgba(18,40,33,0.22); }
+ 
+ /* mobile menu — standalone (used by the shared header on every page),
+    so it carries its own theme tokens */
+ .sr-mobile-menu {
+   --sr-text: #f4f7f5;
+-  --sr-cyan: #7ce0c3;
++  --sr-cyan: #4f9dff;
++  --sr-cyan-rgb: 79 157 255;
+   --sr-muted: #93a1b0;
+-  --sr-line: rgba(124, 224, 195, 0.14);
+-  --sr-line2: rgba(124, 224, 195, 0.28);
++  --sr-line: rgb(var(--sr-cyan-rgb) / 0.16);
++  --sr-line2: rgb(var(--sr-cyan-rgb) / 0.3);
+   --sr-glass: rgba(255, 255, 255, 0.035);
+ }
+ body[data-home-theme='light'] .sr-mobile-menu {
+-  --sr-text: #13211c;
+-  --sr-cyan: #0e9b78;
+-  --sr-muted: #5a6661;
+-  --sr-line: rgba(18, 32, 27, 0.12);
+-  --sr-line2: rgba(18, 32, 27, 0.22);
++  --sr-text: #111c2b;
++  --sr-cyan: #0b5fd0;
++  --sr-cyan-rgb: 11 95 208;
++  --sr-muted: #5b6675;
++  --sr-line: rgba(16, 28, 44, 0.12);
++  --sr-line2: rgba(16, 28, 44, 0.22);
+   --sr-glass: #ffffff;
+-  background: rgba(242, 245, 244, 0.96);
++  background: rgba(243, 246, 251, 0.96);
+ }
+ 
+ /* near-opaque menu veil (backdrop blur isn't universal) */
+@@ -525,18 +529,18 @@ body[data-home-theme='light'] .sr-mobile-menu { background: rgba(242, 245, 244,
+   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+   padding: 10px 14px; border-radius: 999px;
+   position: relative; z-index: 2; cursor: pointer;
+-  background: rgba(124,224,195,0.10);
+-  border: 1px solid rgba(124,224,195,0.38);
++  background: rgb(var(--sr-cyan-rgb) / 0.10);
++  border: 1px solid rgb(var(--sr-cyan-rgb) / 0.38);
+   color: var(--sr-cyan);
+   font-size: 13px; font-weight: 600; font-family: inherit; letter-spacing: -0.01em;
+   transition: background .22s, color .22s, border-color .22s, box-shadow .25s, transform .15s;
+ }
+-.sr-cartbtn:hover { background: var(--sr-cyan); color: #04110c; box-shadow: 0 0 22px rgba(124,224,195,0.4); }
++.sr-cartbtn:hover { background: var(--sr-cyan); color: #04110c; box-shadow: 0 0 22px rgb(var(--sr-cyan-rgb) / 0.4); }
+ .sr-cartbtn:active { transform: scale(0.97); }
+-.sr-cartbtn.added { background: var(--sr-cyan); color: #04110c; box-shadow: 0 0 22px rgba(124,224,195,0.4); }
+-body[data-home-theme='light'] .sr-root .sr-cartbtn { background: rgba(14,155,120,0.08); }
++.sr-cartbtn.added { background: var(--sr-cyan); color: #04110c; box-shadow: 0 0 22px rgb(var(--sr-cyan-rgb) / 0.4); }
++body[data-home-theme='light'] .sr-root .sr-cartbtn { background: rgb(var(--sr-cyan-rgb) / 0.08); }
+ body[data-home-theme='light'] .sr-root .sr-cartbtn:hover,
+-body[data-home-theme='light'] .sr-root .sr-cartbtn.added { background: var(--sr-cyan); color: #ffffff; box-shadow: 0 8px 22px -8px rgba(14,155,120,0.5); }
++body[data-home-theme='light'] .sr-root .sr-cartbtn.added { background: var(--sr-cyan); color: #ffffff; box-shadow: 0 8px 22px -8px rgb(var(--sr-cyan-rgb) / 0.5); }
+ 
+ /* French type scale — FR copy runs long; tame the display sizes */
+ [lang='fr'] .sr-h1 { font-size: clamp(28px, 3.6vw, 44px); }
+@@ -755,7 +759,7 @@ body[data-home-theme='light'] .sr-root .sr-wamini:hover { background: #1da851; c
+   border-radius: 10px;
+ }
+ 
+-/* Contrast — the mint accent (#0e9b78 in light mode) fails 4.5:1 as
++/* Contrast — the mint accent (var(--sr-cyan) in light mode) fails 4.5:1 as
+    small text; use a darker mint for text-sized labels. */
+ body[data-home-theme='light'] .sr-root .sr-cartbtn { color: #0a6a50; }
+ body[data-home-theme='light'] .sr-root .sr-cartbtn:hover,
+@@ -763,7 +767,7 @@ body[data-home-theme='light'] .sr-root .sr-cartbtn.added { color: #ffffff; }
+ body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
+ 
+ /* RTL — cart-count bubble was pinned with a physical `right`. */
+-.sr-icn .count { inset-inline-end: -5px; right: auto; }
++.sr-icn .count { inset-inline-end: -5px; inset-inline-start: auto; }
+ 
+ /* The floating cart bubble must never overlap the sticky buy bar (both
+    mount on product pages once scrolled); hide it while the bar shows. */
+@@ -848,8 +852,8 @@ body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
+ }
+ .sr-nl-input::placeholder { color: var(--sr-muted, var(--mute, #8a8f99)); }
+ .sr-nl-input:focus-visible {
+-  border-color: var(--sr-cyan, var(--cyan, #7ce0c3));
+-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sr-cyan, var(--cyan, #7ce0c3)) 25%, transparent);
++  border-color: var(--sr-cyan, var(--cyan, var(--sr-cyan)));
++  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sr-cyan, var(--cyan, var(--sr-cyan))) 25%, transparent);
+ }
+ .sr-nl-btn {
+   flex-shrink: 0;
+@@ -859,18 +863,18 @@ body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
+   font-weight: 650;
+   font-size: 13px;
+   cursor: pointer;
+-  background: var(--sr-cyan, var(--cyan, #7ce0c3));
++  background: var(--sr-cyan, var(--cyan, var(--sr-cyan)));
+   color: #08131c;
+   transition: transform .18s ease, filter .18s ease;
+ }
+ .sr-nl-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+ .sr-nl-btn:disabled { opacity: .6; cursor: default; transform: none; }
+ .sr-nl-btn:focus-visible {
+-  outline: 2px solid var(--sr-cyan, var(--cyan, #7ce0c3));
++  outline: 2px solid var(--sr-cyan, var(--cyan, var(--sr-cyan)));
+   outline-offset: 2px;
+ }
+ .sr-nl-msg { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; }
+-.sr-nl-msg.is-ok { color: var(--sr-cyan, var(--cyan, #7ce0c3)); }
++.sr-nl-msg.is-ok { color: var(--sr-cyan, var(--cyan, var(--sr-cyan))); }
+ .sr-nl-msg.is-err { color: #f08a8a;
+ }
+ /* brand skin: solid surfaces, darker ink on teal button */
+@@ -886,90 +890,198 @@ body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
+   .sr-nl-btn { padding: 11px 18px; }
+ }
+ 
+-/* ═══════════ ROUND 9 — CATALOGUE BROWSER ═══════════
+-   /products is server-rendered: every filter is a real link, so these
+-   selectors have to style anchors as well as the buttons they replaced. */
+-.sr-browser { scroll-margin-top: 90px; }
+ 
+-.sr-filterbar {
++/* ═══════════ ROUND 10 — CATALOGUE BROWSER ═══════════
++   /products is server-rendered, so every filter is an anchor: these selectors
++   style links, not buttons. Layout is brands-on-top + a right-hand filter rail
++   that becomes a top strip on narrow screens. */
++
++.sr-browser {
++  --sr-gap: 22px;
++  --sr-rail-w: 268px;
++  scroll-margin-top: 90px;
++}
++
++/* ── brands across the top ───────────────────────────────────────── */
++.sr-brandbar {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+-  position: sticky;
+-  /* The site header is sticky at top:0 and shrinks on scroll (72→56 classic,
+-     78→66 brand). Pin to the SHRUNK height so the bar never leaves a band of
+-     scrolling content visible between itself and the header. A couple of px of
+-     overlap while unshrunk is invisible; a gap is not. */
+-  top: 56px;
+-  z-index: 20;
+-  padding: 12px 0 14px;
+-  /* clip, not hidden: `hidden` here would create a scroll container and
+-     silently kill position:sticky (learned the hard way in an earlier round) */
+-  overflow-x: clip;
+-  background: linear-gradient(
+-    to bottom,
+-    var(--sr-bg0, #04060c) 0%,
+-    var(--sr-bg0, #04060c) 72%,
+-    transparent 100%
+-  );
+-}
+-.brand-root .sr-filterbar {
+-  top: 66px;
+-  background: linear-gradient(
+-    to bottom,
+-    var(--bg, #fff) 0%,
+-    var(--bg, #fff) 72%,
+-    transparent 100%
+-  );
+-}
+-@media (max-width: 720px) {
+-  /* Two class selectors so this also beats `.brand-root .sr-filterbar`, which
+-     would otherwise keep a gradient band over a now-static bar. */
+-  .sr-browser .sr-filterbar,
+-  .brand-root .sr-filterbar {
+-    position: static;
+-    background: none;
+-    padding-top: 0;
+-  }
++  padding-bottom: 20px;
++  margin-bottom: var(--sr-gap);
++  border-bottom: 1px solid var(--sr-line);
++}
++.sr-barlabel {
++  margin: 0;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 10.5px;
++  font-weight: 600;
++  letter-spacing: 0.18em;
++  text-transform: uppercase;
++  color: var(--sr-muted);
+ }
+ 
+-a.sr-chip { text-decoration: none; }
+-.sr-chip-flag { gap: 6px; }
+-.sr-chip-flag svg { opacity: 0.8; }
+-.sr-chip-flag.on svg { opacity: 1; }
++/* ── two-column shell ────────────────────────────────────────────── */
++.sr-layout {
++  display: grid;
++  grid-template-columns: minmax(0, 1fr) var(--sr-rail-w);
++  gap: clamp(20px, 3vw, 40px);
++  align-items: start;
++}
++.sr-results { min-width: 0; }
+ 
+-.sr-toolbar {
++/* count + sort sit on one line above the grid */
++.sr-resultbar {
+   display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: 14px;
+   flex-wrap: wrap;
++  min-height: 38px;
++  margin-bottom: 14px;
++}
++.sr-resultbar .sr-count { margin: 0; }
++.sr-browser .sr-grid { margin-top: 0; }
++.sr-browser .sr-pages { margin-top: 30px; }
++.sr-browser .sr-empty {
++  margin-top: 0;
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  gap: 14px;
++}
++
++/* ── filter rail ─────────────────────────────────────────────────── */
++.sr-rail {
++  position: sticky;
++  /* Pinned to the SHRUNK header height — a few px of overlap is invisible,
++     a gap that shows scrolling content through it is not. */
++  top: 72px;
++  display: flex;
++  flex-direction: column;
++  gap: 16px;
++  padding: 18px;
++  border-radius: 16px;
++  border: 1px solid var(--sr-line);
++  background: var(--sr-glass);
++  max-height: calc(100vh - 96px);
++  overflow-y: auto;
++  overscroll-behavior: contain;
++}
++.brand-root .sr-rail {
++  background: var(--surface, #fff);
++  box-shadow: 0 10px 30px -22px rgba(10, 40, 60, 0.5);
++}
++.sr-railhead {
++  display: flex;
++  align-items: baseline;
++  justify-content: space-between;
+   gap: 10px;
++}
++.sr-railreset {
++  font-size: 12px;
++  color: var(--sr-cyan);
++  text-decoration: none;
++  border-bottom: 1px solid transparent;
++}
++.sr-railreset:hover { border-bottom-color: currentColor; }
++
++.sr-rail .sr-search { max-width: none; width: 100%; }
++.sr-rail .sr-input { width: 100%; }
++
++.sr-railgroup { display: flex; flex-direction: column; gap: 8px; }
++.sr-railtitle {
++  margin: 0;
++  font-size: 12.5px;
++  font-weight: 700;
++  letter-spacing: 0.01em;
++  color: var(--sr-text);
++}
++
++.sr-railcats { display: flex; flex-direction: column; gap: 2px; }
++.sr-railcat {
++  display: flex;
+   align-items: center;
+-  margin-top: 6px;
++  justify-content: space-between;
++  gap: 10px;
++  /* 40px tall — comfortably above the 24px minimum target size and it makes
++     the list scannable as rows rather than cramped text. */
++  min-height: 40px;
++  padding: 8px 11px;
++  border-radius: 9px;
++  font-size: 13.5px;
++  line-height: 1.3;
++  color: var(--sr-muted);
++  text-decoration: none;
++  border: 1px solid transparent;
++  transition: background 0.15s, color 0.15s, border-color 0.15s;
+ }
+-.sr-count { margin-inline-start: auto; }
+-@media (max-width: 560px) {
+-  .sr-count { margin-inline-start: 0; width: 100%; }
++.sr-railcat .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
++.sr-railcat .n {
++  flex: 0 0 auto;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 11px;
++  color: var(--sr-muted);
++  opacity: 0.8;
++}
++.sr-railcat:hover {
++  background: rgb(var(--sr-cyan-rgb) / 0.08);
++  color: var(--sr-text);
+ }
++.sr-railcat.on {
++  background: rgb(var(--sr-cyan-rgb) / 0.14);
++  border-color: rgb(var(--sr-cyan-rgb) / 0.4);
++  color: var(--sr-text);
++  font-weight: 600;
++}
++.sr-railcat.on .n { color: var(--sr-cyan); opacity: 1; }
+ 
+-/* subtle "working" state while the debounced search navigates */
+-.sr-search-busy .sr-input { opacity: 0.72; }
+-.sr-search-busy svg { animation: srPulse 1s ease-in-out infinite; }
+-@keyframes srPulse { 50% { opacity: 0.35; } }
++.sr-railtoggle {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  min-height: 40px;
++  padding: 9px 12px;
++  border-radius: 10px;
++  border: 1px solid var(--sr-line2);
++  background: transparent;
++  color: var(--sr-muted);
++  font-size: 13px;
++  font-weight: 600;
++  text-decoration: none;
++  transition: background 0.15s, color 0.15s, border-color 0.15s;
++}
++.sr-railtoggle svg { opacity: 0.65; flex: 0 0 auto; }
++.sr-railtoggle .n {
++  margin-inline-start: auto;
++  font-family: var(--font-geist-mono), monospace;
++  font-size: 11px;
++}
++.sr-railtoggle:hover { color: var(--sr-text); border-color: var(--sr-cyan); }
++.sr-railtoggle.on {
++  background: rgb(var(--sr-cyan-rgb) / 0.14);
++  border-color: rgb(var(--sr-cyan-rgb) / 0.45);
++  color: var(--sr-text);
++}
++.sr-railtoggle.on svg { opacity: 1; color: var(--sr-cyan); }
+ 
+-/* active-filter pills — each one removes itself */
++/* ── active-filter pills ─────────────────────────────────────────── */
+ .sr-activefilters {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   align-items: center;
++  margin-bottom: 16px;
+ }
+ .sr-pill {
+   display: inline-flex;
+   align-items: center;
+   gap: 8px;
+-  padding: 6px 12px;
++  min-height: 32px;
++  padding: 5px 12px;
+   border-radius: 999px;
+-  border: 1px solid color-mix(in srgb, var(--sr-cyan) 42%, transparent);
+-  background: color-mix(in srgb, var(--sr-cyan) 12%, transparent);
++  border: 1px solid rgb(var(--sr-cyan-rgb) / 0.42);
++  background: rgb(var(--sr-cyan-rgb) / 0.12);
+   color: var(--sr-text);
+   font-size: 12.5px;
+   font-weight: 600;
+@@ -978,15 +1090,12 @@ a.sr-chip { text-decoration: none; }
+ }
+ .sr-pill:hover {
+   border-color: var(--sr-cyan);
+-  background: color-mix(in srgb, var(--sr-cyan) 20%, transparent);
+-}
+-.sr-pill span[aria-hidden] {
+-  font-size: 15px;
+-  line-height: 1;
+-  opacity: 0.7;
++  background: rgb(var(--sr-cyan-rgb) / 0.2);
+ }
++.sr-pill span[aria-hidden] { font-size: 15px; line-height: 1; opacity: 0.7; }
+ .sr-pill-reset {
+   border-style: dashed;
++  border-color: var(--sr-line2);
+   background: transparent;
+   color: var(--sr-muted);
+ }
+@@ -994,6 +1103,7 @@ a.sr-chip { text-decoration: none; }
+ 
+ /* pagination links share the .sr-page look; disabled ends are inert spans */
+ a.sr-page { text-decoration: none; }
++a.sr-chip { text-decoration: none; }
+ .sr-page.is-disabled {
+   opacity: 0.3;
+   cursor: not-allowed;
+@@ -1001,10 +1111,8 @@ a.sr-page { text-decoration: none; }
+   place-items: center;
+ }
+ 
+-/* screen-reader-only helper (was only available as a Tailwind utility, which
+-   the storefront CSS layer can't reach) */
+-.sr-browser .sr-only,
+-.sr-filterbar .sr-only {
++/* screen-reader-only helper (the Tailwind utility can't reach this layer) */
++.sr-browser .sr-only {
+   position: absolute;
+   width: 1px;
+   height: 1px;
+@@ -1015,3 +1123,104 @@ a.sr-page { text-decoration: none; }
+   white-space: nowrap;
+   border: 0;
+ }
++
++/* ── narrow screens: rail moves above the grid ───────────────────── */
++@media (max-width: 1000px) {
++  .sr-layout { grid-template-columns: minmax(0, 1fr); }
++  .sr-rail {
++    order: -1;
++    position: static;
++    max-height: none;
++    overflow: visible;
++    padding: 14px;
++  }
++  /* Category list becomes a horizontal scroller so it costs one row, not ten */
++  .sr-railcats {
++    flex-direction: row;
++    gap: 8px;
++    overflow-x: auto;
++    scrollbar-width: none;
++    padding-bottom: 2px;
++    /* bleed to the card edges so the row reads as scrollable */
++    margin-inline: -14px;
++    padding-inline: 14px;
++  }
++  .sr-railcats::-webkit-scrollbar { display: none; }
++  .sr-railcat {
++    flex: 0 0 auto;
++    border: 1px solid var(--sr-line2);
++    border-radius: 999px;
++    padding: 8px 14px;
++  }
++  .sr-railcat .lbl { white-space: nowrap; }
++}
++@media (max-width: 560px) {
++  .sr-resultbar { gap: 10px; }
++  .sr-resultbar .sr-select { width: 100%; }
++}
++
++/* subtle "working" state while the debounced search navigates */
++.sr-search-busy .sr-input { opacity: 0.72; }
++.sr-search-busy svg { animation: srPulse 1s ease-in-out infinite; }
++@keyframes srPulse { 50% { opacity: 0.35; } }
++@media (prefers-reduced-motion: reduce) {
++  .sr-search-busy svg { animation: none; }
++}
++
++/* Page header block — one spacing rhythm instead of per-element inline margins */
++.sr-pagehead { display: block; margin-bottom: clamp(22px, 3vw, 34px); }
++.sr-pagehead .sr-h1 { margin-top: 12px; }
++.sr-pagehead .sr-sub { margin-top: 10px; }
++
++/* The search field used to carry `flex: 1 1 220px` inline — written for the
++   old horizontal toolbar. Inside the vertical rail, flex-basis applies to the
++   BLOCK axis, so it rendered as a 220px-tall empty box with the icon floating
++   in the middle of it. Layout now belongs to the rail, not the component. */
++.sr-rail .sr-search { display: block; width: 100%; }
++.sr-rail .sr-search .sr-input {
++  width: 100%;
++  min-height: 40px;
++  padding-inline-start: 38px;
++}
++
++/* ═══════════ ROUND 10 — UI/UX POLISH ═══════════ */
++
++/* `aspect-ratio: 16/6` + `min-height: 220px` with no definite width let the
++   RATIO drive the width once min-height won: on a 390px phone the hero solved
++   to 220 × 16/6 = 587px and pushed the page sideways. Making the width
++   definite means the ratio is ignored instead of the container. */
++.sr-hero { width: 100%; }
++@media (max-width: 640px) {
++  .sr-hero { min-height: 168px; border-radius: 16px; }
++  .sr-hero .inner { padding: 18px 18px 20px; }
++}
++
++/* Form controls were 23px tall — below the 24px minimum target size, and
++   cramped next to 40px buttons. */
++.sr-input,
++.sr-textarea,
++.sr-select { min-height: 44px; }
++.sr-textarea { min-height: 96px; }
++
++/* Text links in dense rows need a real hit area, not just their line box. */
++.sr-crumbs a,
++.sr-footer a {
++  display: inline-flex;
++  align-items: center;
++  min-height: 24px;
++}
++.sr-footer li { display: flex; }
++
++/* Consistent focus ring across every interactive element in the storefront —
++   several relied on the UA default, which is invisible on dark surfaces. */
++.sr-root a:focus-visible,
++.sr-root button:focus-visible,
++.sr-root select:focus-visible,
++.sr-root input:focus-visible,
++.sr-root textarea:focus-visible,
++.sr-browser a:focus-visible,
++.sr-browser button:focus-visible {
++  outline: 2px solid var(--sr-cyan);
++  outline-offset: 2px;
++  border-radius: 6px;
++}

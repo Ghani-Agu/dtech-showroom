@@ -15,12 +15,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import NextLink from 'next/link'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { locales, type Locale } from '@/i18n/config'
 import { useCart } from '@/lib/cart'
+import { useNlPopup } from '@/lib/newsletter-popup'
+import { useChatPanel } from '@/lib/chat-panel'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import '@/components/home/home-showcase.css'
 import '@/components/home/site-themes.css'
 
@@ -209,7 +211,7 @@ function HeaderSearch() {
         </svg>
       </button>
       {showPop ? (
-        <div className="hs-pop" role="listbox" aria-label={t('searchAria')}>
+        <div className="hs-pop" aria-label={t('searchAria')}>
           {hits.length === 0 ? (
             <div className="hs-pop-empty">
               {busy ? '···' : t('searchNoResults')}
@@ -262,6 +264,8 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
   const [theme, toggleTheme] = useGlobalTheme()
   const cartItems = useCart((st) => st.items)
   const openCart = useCart((st) => st.setOpen)
+  const openNlPopup = useNlPopup((st) => st.setOpen)
+  const openChat = useChatPanel((st) => st.setOpen)
   const [hydrated, setHydrated] = useState(false)
   // eslint-disable-next-line react-hooks/set-state-in-effect -- cart badge renders only after hydration (persisted store)
   useEffect(() => setHydrated(true), [])
@@ -278,9 +282,20 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on route change
   useEffect(() => setMenu(false), [pathname])
 
+  // focus trap + Escape for the mobile menu, and lock body scroll while open
+  const menuTrapRef = useFocusTrap<HTMLDivElement>(menu, () => setMenu(false))
+  useEffect(() => {
+    if (!menu) return
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [menu])
+
+  // ROUND 13: the categories-overview page is gone — ONE catalogue surface
+  // (/products) carries the filters, so "Catalogue" points straight at it.
   const routeLinks = [
-    { href: '/products' as const, label: t('products') },
-    { href: '/categories' as const, label: t('catalogue') },
+    { href: '/products' as const, label: t('catalogue') },
     { href: '/brands' as const, label: t('brands') },
     { href: '/about' as const, label: t('about'), secondary: true },
     { href: '/inquiry' as const, label: t('contact'), secondary: true },
@@ -304,6 +319,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
               <Link
                 key={l.href}
                 href={l.href}
+                prefetch
                 className={pathname?.startsWith(l.href) ? 'on' : undefined}
                 {...(l.secondary ? { 'data-h': '' } : {})}
               >
@@ -334,13 +350,36 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
             )}
           </button>
           <HeaderSearch />
-          {/* /login lives outside the locale tree — next/link, not i18n Link */}
-          <NextLink className="icn icn-mq" aria-label={t('accountAria')} href="/login">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-7 8-7s8 3 8 7" />
+          {/* ROUND 17: opens the D-Tech AI assistant panel (same store as the
+              floating bubble). `icn-mq` keeps it off the cramped phone header
+              — the bubble and the burger entry cover mobile. */}
+          <button
+            className="icn icn-mq icn-chat"
+            aria-label={tSr('chat')}
+            title={tSr('chat')}
+            type="button"
+            onClick={() => openChat(true)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3.5" y="7.5" width="17" height="12" rx="4" />
+              <path d="M12 7.5V4.4M9.6 13h.01M14.4 13h.01M9.6 16.3c1.5.8 3.3.8 4.8 0" />
+              <circle cx="12" cy="3.1" r="1.35" fill="currentColor" stroke="none" />
             </svg>
-          </NextLink>
+          </button>
+          {/* ROUND 16: no customer accounts — the icon opens the newsletter
+              pop-up (subscribe to offers & discounts by e-mail). */}
+          <button
+            className="icn icn-mq"
+            aria-label={tSr('newsletter')}
+            title={tSr('newsletter')}
+            type="button"
+            onClick={() => openNlPopup(true)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 7 9 6 9-6" />
+            </svg>
+          </button>
           <button
             className="icn"
             aria-label={t('cartAria')}
@@ -386,7 +425,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
       {menu
         ? createPortal(
         <div className="home-showcase-root" style={{ display: 'contents' }}>
-        <div className="sr-mobile-menu" role="dialog" aria-modal="true">
+        <div ref={menuTrapRef} className="sr-mobile-menu" role="dialog" aria-modal="true">
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Logo home={variant === 'home'} />
             <button
@@ -410,6 +449,27 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
                 {l.label}
               </Link>
             ))}
+            {/* anchors (not buttons) so the menu's `nav a` styling applies */}
+            <a
+              href="#chat"
+              onClick={(e) => {
+                e.preventDefault()
+                setMenu(false)
+                openChat(true)
+              }}
+            >
+              {tSr('chat')}
+            </a>
+            <a
+              href="#newsletter"
+              onClick={(e) => {
+                e.preventDefault()
+                setMenu(false)
+                openNlPopup(true)
+              }}
+            >
+              {tSr('newsletter')}
+            </a>
           </nav>
           <div style={{ marginTop: 24 }}>
             <NavLocaleSwitcher />

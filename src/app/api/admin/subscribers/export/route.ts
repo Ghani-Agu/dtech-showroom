@@ -1,24 +1,26 @@
 import { NextResponse } from 'next/server'
-import { headers } from 'next/headers'
 import { eq, ilike, or, sql, type SQL } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth-helpers'
+import { hasAccess } from '@/lib/permissions'
 import { db } from '@/db/client'
 import { subscribers, type SubscriberStatus } from '@/db/schema'
 
 /**
- * CSV export — protected by the better-auth session (same gate as the
- * admin pages). Filters mirror the list page's `status` and `q`
- * query params so "export current view" matches what the admin sees.
+ * CSV export — gated on the 'newsletter' section permission (subscriber
+ * emails are PII; a plain session check let any staff account dump the
+ * list). Filters mirror the list page's `status` and `q` query params so
+ * "export current view" matches what the admin sees.
  *
  * Output: text/csv; charset=utf-8 with UTF-8 BOM so Excel opens it
  * with the right encoding by default.
  */
 export async function GET(req: Request) {
-  const session = await auth.api
-    .getSession({ headers: await headers() })
-    .catch(() => null)
-  if (!session) {
+  const user = await getSessionUser()
+  if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+  if (!hasAccess(user, 'newsletter')) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
 
   const url = new URL(req.url)

@@ -26,7 +26,9 @@ export const userCreateSchema = z.object({
 
 export const userUpdateSchema = z.object({
   name: z.string().min(2).max(120),
-  role: z.enum(['admin', 'staff']),
+  // 'customer' = compte boutique (public sign-up) — editable so an admin can
+  // promote a customer to the team (or park a team member as customer).
+  role: z.enum(['admin', 'staff', 'customer']),
   permissions: permissionsSchema.default([]),
 })
 

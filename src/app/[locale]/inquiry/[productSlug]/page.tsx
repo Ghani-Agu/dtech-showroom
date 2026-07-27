@@ -12,6 +12,8 @@ import { getProductBySlug } from '@/server/queries'
 import { imgOr } from '@/lib/img'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
+import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { EdInquiry } from '@/components/editorial/EditorialCollections'
 import { BrandInquiry } from '@/components/brand/BrandInquiry'
 
 export const dynamic = 'force-dynamic'
@@ -43,8 +45,9 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
   if (!product) notFound()
 
   // New "dtech Brand" design — brand-styled quote form (same submitInquiry action).
-  if ((await getPublishedDesign()) === 'brand') {
-    return (
+  const skinDesign = await getPublishedDesign()
+  if (skinDesign === 'brand') {
+        return (
       <BrandPageShell locale={locale}>
         <BrandInquiry
           product={{
@@ -58,6 +61,23 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
           }}
         />
       </BrandPageShell>
+    )
+  }
+  if (skinDesign === 'editorial') {
+        return (
+      <EditorialPageShell locale={locale}>
+        <EdInquiry
+          product={{
+            slug: product.slug,
+            name: product.name,
+            brandName: product.brand.name,
+            brandSlug: product.brand.slug,
+            catName: product.category.name,
+            image: imgOr(product.cardImagePath),
+            spec: product.cardSpec ?? '',
+          }}
+        />
+      </EditorialPageShell>
     )
   }
 

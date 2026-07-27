@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { imgOr } from '@/lib/img'
+import { sanitizeCustomHtml } from '@/lib/custom-html'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StickyBuyBar } from '@/components/product/StickyBuyBar'
 import { notFound } from 'next/navigation'
@@ -21,7 +22,17 @@ import { buildProductData } from '@/server/template-data'
 import type { PageDoc } from '@/components/admin/editor/types'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { BrandProductDetail } from '@/components/brand/BrandProductDetail'
+import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { EditorialProductDetail } from '@/components/editorial/EditorialProductDetail'
 import { toBrandProducts } from '@/server/brand-data'
+import { TrackProductView } from '@/components/analytics/TrackView'
+import {
+  alternatesFor,
+  openGraphFor,
+  breadcrumbLd,
+  productLd,
+  jsonLdScript,
+} from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,7 +46,20 @@ export async function generateMetadata({
   const { locale, productSlug } = await params
   const product = await getProductBySlug(productSlug, locale as Locale)
   if (!product) notFound()
-  return { title: product.name, description: product.tagline }
+
+  // seoTitle / seoDescription are edited in admin → Produit → "SEO & avancé".
+  // They were being written to the DB, round-tripped in the form, and read by
+  // nothing — the <title> always used name/tagline. Now they win when set.
+  const title = product.seoTitle?.trim() || product.name
+  const description = product.seoDescription?.trim() || product.tagline
+  const path = `/products/${product.slug}`
+
+  return {
+    title,
+    description,
+    alternates: alternatesFor(locale, path),
+    openGraph: openGraphFor(locale as Locale, path, title, description),
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -47,6 +71,50 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProductBySlug(productSlug, locale)
   if (!product) notFound()
 
+  // Product + breadcrumb structured data. Rendered on every skin/template
+  // branch below, because rich results shouldn't depend on which design is
+  // published.
+  //
+  // Deliberately NO `offers` and NO `aggregateRating`:
+  //  - there is no price column, and an Offer without a price is a Search
+  //    Console error;
+  //  - the star ratings on this site come from `seededRating`, which is
+  //    synthetic placeholder data until the reviews API lands. Publishing
+  //    invented review counts as structured data is a policy violation
+  //    (fake review markup) and risks a manual action. Wire it here only
+  //    once real reviews are persisted.
+  const productJsonLd = jsonLdScript([
+    productLd(locale, {
+      slug: product.slug,
+      name: product.name,
+      description: product.seoDescription?.trim() || product.tagline,
+      brandName: product.brand.name,
+      categoryName: product.category.name,
+      image: imgOr(product.cardImagePath),
+    }),
+    breadcrumbLd(locale, [
+      { name: t('nav.home'), path: '' },
+      { name: t('productsPage.breadcrumb'), path: '/products' },
+      { name: product.name, path: `/products/${product.slug}` },
+    ]),
+  ])
+  const jsonLd = (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: productJsonLd }}
+      />
+      <TrackProductView
+        product={{
+          slug: product.slug,
+          name: product.name,
+          brandName: product.brand.name,
+          categoryName: product.category.name,
+        }}
+      />
+    </>
+  )
+
   // New "dtech Brand" design — brand-styled product page, same data.
   const design = await getPublishedDesign()
   if (design === 'brand') {
@@ -55,6 +123,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ).filter((p) => p.slug !== product.slug)
     return (
       <BrandPageShell locale={locale}>
+        {jsonLd}
         <BrandProductDetail
           product={{
             slug: product.slug,
@@ -65,6 +134,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             catSlug: product.category.slug,
             tagline: product.tagline ?? '',
             description: product.description ?? '',
+            customHtml: product.customHtml
+              ? sanitizeCustomHtml(product.customHtml)
+              : '',
             image: imgOr(product.cardImagePath),
             specs: product.specs,
             images: (product.photoCarouselPaths ?? []).map(imgOr),
@@ -72,6 +144,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
           similar={toBrandProducts(similarRaw)}
         />
       </BrandPageShell>
+    )
+  }
+
+  // Éditorial design (skin #3) — editorial product page, same data.
+  if (design === 'editorial') {
+    const similarRaw = (
+      await getProductsByCategory(product.category.slug, locale)
+    ).filter((p) => p.slug !== product.slug)
+    return (
+      <EditorialPageShell locale={locale}>
+        {jsonLd}
+        <EditorialProductDetail
+          product={{
+            slug: product.slug,
+            name: product.name,
+            brandName: product.brand.name,
+            brandSlug: product.brand.slug,
+            catName: product.category.name,
+            catSlug: product.category.slug,
+            tagline: product.tagline ?? '',
+            description: product.description ?? '',
+            customHtml: product.customHtml
+              ? sanitizeCustomHtml(product.customHtml)
+              : '',
+            image: imgOr(product.cardImagePath),
+            specs: product.specs,
+            images: (product.photoCarouselPaths ?? []).map(imgOr),
+          }}
+          similar={toBrandProducts(similarRaw)}
+        />
+      </EditorialPageShell>
     )
   }
 
@@ -83,10 +186,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       await getProductsByCategory(product.category.slug, locale)
     ).filter((rp) => rp.slug !== product.slug)
     return (
-      <PublishedPage
-        doc={tmpl as unknown as PageDoc}
-        data={buildProductData(product, relatedRaw.slice(0, 12))}
-      />
+      <>
+        {jsonLd}
+        <PublishedPage
+          doc={tmpl as unknown as PageDoc}
+          data={buildProductData(product, relatedRaw.slice(0, 12))}
+        />
+      </>
     )
   }
 
@@ -102,47 +208,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
+      {jsonLd}
       <nav className="sr-crumbs sr-in" style={{ marginBottom: 20 }}>
         <Link href="/">{t('nav.home')}</Link>
         <span className="sep">/</span>
         <Link href="/products">{t('nav.catalog')}</Link>
         <span className="sep">/</span>
-        <Link href={`/categories/${product.category.slug}`}>
+        <Link href={{ pathname: '/products', query: { category: product.category.slug } }}>
           {product.category.name}
         </Link>
         <span className="sep">/</span>
         <span className="cur">{product.name}</span>
       </nav>
 
-      <div
-        className="sr-in"
-        style={{
-          display: 'grid',
-          gap: 34,
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          alignItems: 'start',
-        }}
-      >
-        {/* image + gallery thumbnails */}
-        <ProductGallery
-          images={[imgOr(product.cardImagePath), ...galleryImages.map(imgOr)]}
-          alt={product.name}
-        />
+      <div className="sr-in sr-pdgrid">
+        {/* image + gallery thumbnails — sticky on desktop so the visual stays
+            in view while the visitor reads specs/description */}
+        <div className="sr-pdmedia">
+          <ProductGallery
+            images={[imgOr(product.cardImagePath), ...galleryImages.map(imgOr)]}
+            alt={product.name}
+          />
+        </div>
 
         {/* info */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <span className="sr-kicker">
-            <Link
-              href={`/brands/${product.brand.slug}`}
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
+        <div className="sr-pdinfo">
+          <span className="sr-kicker sr-pdkicker">
+            <Link href={{ pathname: '/products', query: { brand: product.brand.slug } }}>
               {product.brand.name}
             </Link>
             {' · '}
-            <Link
-              href={`/categories/${product.category.slug}`}
-              style={{ color: 'inherit', textDecoration: 'none' }}
-            >
+            <Link href={{ pathname: '/products', query: { category: product.category.slug } }}>
               {product.category.name}
             </Link>
           </span>
@@ -151,22 +247,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <span className="acc">.</span>
           </h1>
           <p className="sr-sub" style={{ fontSize: 17 }}>{product.tagline}</p>
-          <span
-            className="sr-mono"
-            style={{ color: 'var(--sr-cyan)', display: 'inline-flex', alignItems: 'center', gap: 7 }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-              <path d="M5 13l5 5L20 6" />
-            </svg>
-            {t('product.availability')}
-          </span>
 
-          <ProductActions
-            slug={product.slug}
-            name={product.name}
-            brand={product.brand.name}
-            image={imgOr(product.cardImagePath)}
-          />
+          {/* buy zone — availability + actions grouped in one card */}
+          <div className="sr-buycard">
+            <span className="sr-stock">{t('product.availability')}</span>
+            <ProductActions
+              slug={product.slug}
+              name={product.name}
+              brand={product.brand.name}
+              image={imgOr(product.cardImagePath)}
+            />
+            <Link
+              href={`/inquiry/${product.slug}`}
+              className="sr-btn sr-btn-ghost"
+              style={{ alignSelf: 'flex-start' }}
+            >
+              {t('product.inquire')} →
+            </Link>
+          </div>
 
           <div style={{ borderTop: '1px solid var(--sr-line)', paddingTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {paragraphs.map((p, i) => (
@@ -176,13 +274,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
             ))}
           </div>
 
-          <Link
-            href={`/inquiry/${product.slug}`}
-            className="sr-btn sr-btn-ghost"
-            style={{ alignSelf: 'flex-start' }}
-          >
-            {t('product.inquire')} →
-          </Link>
+          {product.customHtml ? (
+            <div
+              className="sr-customhtml"
+              dangerouslySetInnerHTML={{
+                __html: sanitizeCustomHtml(product.customHtml),
+              }}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -192,18 +291,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {specsTitle}
             <span className="acc">.</span>
           </h2>
-          <div style={{ border: '1px solid var(--sr-line)', borderRadius: 18, overflow: 'hidden' }}>
-            {specsEntries.map(([key, value], i) => (
-              <div
-                key={key}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(140px, 220px) 1fr',
-                  gap: 16,
-                  padding: '14px 20px',
-                  borderTop: i === 0 ? 'none' : '1px solid var(--sr-line)',
-                }}
-              >
+          <div className="sr-spectable">
+            {specsEntries.map(([key, value]) => (
+              <div key={key} className="row">
                 <span
                   className="sr-mono"
                   style={{ color: 'var(--sr-mute)', textTransform: 'uppercase', fontSize: 13, letterSpacing: '.04em' }}
@@ -227,7 +317,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <span className="acc">.</span>
             </h2>
             <Link
-              href={`/categories/${product.category.slug}`}
+              href={{ pathname: '/products', query: { category: product.category.slug } }}
               className="sr-mono"
               style={{ color: 'var(--sr-cyan)', textDecoration: 'none' }}
             >

@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
 import { imgOr } from '@/lib/img'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
+import {
+  alternatesFor,
+  openGraphFor,
+  organizationLd,
+  jsonLdScript,
+} from '@/lib/seo'
 import {
   HomeShowcase,
   type HomeBrand,
@@ -12,15 +19,38 @@ import {
   getAllBrands,
   getAllCategories,
   getAllProducts,
+  pickFeatured,
 } from '@/server/queries'
 import { getPublishedHome, getHomeHero, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
 import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { buildHomeData } from '@/server/template-data'
 import type { PageDoc } from '@/components/admin/editor/types'
 import { BrandHome } from '@/components/brand/BrandHome'
+import { EditorialHome } from '@/components/editorial/EditorialHome'
+import { buildEditorialData } from '@/server/editorial-data'
 import { buildBrandData } from '@/server/brand-data'
+import { buildPartnerBand } from '@/server/partner-band'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * The homepage had NO generateMetadata — it inherited the root layout's
+ * hardcoded English title/description for all three locales, and emitted no
+ * canonical or hreflang. The `metadata` i18n namespace already existed and
+ * was read by nothing.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = (await getLocale()) as Locale
+  const t = await getTranslations('metadata')
+  const title = t('defaultTitle')
+  const description = t('defaultDescription')
+  return {
+    title,
+    description,
+    alternates: alternatesFor(locale, ''),
+    openGraph: openGraphFor(locale, '', title, description),
+  }
+}
 
 /** Real-catalogue icon for each category family. */
 const CATEGORY_ICON: Record<string, IconKind> = {
@@ -67,13 +97,42 @@ export default async function HomePage() {
     countByBrand.set(p.brand.slug, (countByBrand.get(p.brand.slug) ?? 0) + 1)
   }
 
+  // HP partner spotlight — derived from the live catalogue (round 9). The
+  // wiring was lost in the éditorial-port rewrite of this file, which is why
+  // the band silently vanished from BOTH the classic and brand homepages.
+  const partner = buildPartnerBand(productsRaw, brandsRaw)
+
+  const orgJsonLd = (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationLd()) }}
+    />
+  )
+
   // ── New "dtech Brand" design — same catalogue, different interface. ──
   if (design === 'brand') {
     return (
-      <BrandHome
-        locale={locale}
-        data={buildBrandData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
-      />
+      <>
+        {orgJsonLd}
+        <BrandHome
+          locale={locale}
+          data={buildBrandData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
+          partner={partner}
+        />
+      </>
+    )
+  }
+
+  // ── Éditorial design (skin #3) — same catalogue, editorial interface. ──
+  if (design === 'editorial') {
+    return (
+      <>
+        {orgJsonLd}
+        <EditorialHome
+          locale={locale}
+          data={buildEditorialData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
+        />
+      </>
     )
   }
 
@@ -81,14 +140,20 @@ export default async function HomePage() {
   // with the real catalog so the rails/grid show live products.
   if (publishedHome) {
     return (
-      <PublishedPage
-        doc={publishedHome as unknown as PageDoc}
-        data={buildHomeData(productsRaw, categoriesRaw, brandsRaw)}
-      />
+      <>
+        {orgJsonLd}
+        <PublishedPage
+          doc={publishedHome as unknown as PageDoc}
+          data={buildHomeData(productsRaw, categoriesRaw, brandsRaw)}
+        />
+      </>
     )
   }
 
-  const products: HomeProduct[] = productsRaw.map((p) => ({
+  // Only the featured shortlist crosses the wire. Serialising all 393 rows
+  // into the RSC payload on every request was the homepage's dominant cost;
+  // the full catalogue now lives on /products with server-side paging.
+  const products: HomeProduct[] = pickFeatured(productsRaw, 8).map((p) => ({
     slug: p.slug,
     name: p.name,
     brandName: p.brand.name,
@@ -114,6 +179,17 @@ export default async function HomePage() {
   }))
 
   return (
-    <HomeShowcase products={products} categories={categories} brands={brands} heroConfig={heroConfig} content={contentOverrides} />
+    <>
+      {orgJsonLd}
+      <HomeShowcase
+        products={products}
+        productCount={productsRaw.length}
+        categories={categories}
+        brands={brands}
+        partner={partner}
+        heroConfig={heroConfig}
+        content={contentOverrides}
+      />
+    </>
   )
 }

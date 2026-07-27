@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { asc, desc } from 'drizzle-orm'
-import { Mail, Plus, Shield, UserPlus, Users as UsersIcon } from 'lucide-react'
+import { asc, eq } from 'drizzle-orm'
+import { Mail, Plus, Shield, ShoppingBag, UserPlus, Users as UsersIcon } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { Badge } from '@/components/admin/ui/Badge'
 import { Button } from '@/components/admin/ui/Button'
 import { GlassCard } from '@/components/admin/GlassCard'
 import { EmptyState } from '@/components/admin/ui/EmptyState'
+import { DeleteUserButton } from '@/components/admin/users/DeleteUserButton'
 import { db } from '@/db/client'
-import { users } from '@/db/schema'
+import { subscribers, users } from '@/db/schema'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { DEFAULT_STAFF_PERMISSIONS, SECTIONS } from '@/lib/permissions'
 
@@ -27,6 +28,10 @@ function lastSeen(d: Date | null): string {
   return `Connecté il y a ${days} j`
 }
 
+function joinedOn(d: Date): string {
+  return d.toLocaleDateString('fr-FR', { dateStyle: 'medium' })
+}
+
 export default async function UsersListPage() {
   let admin
   try {
@@ -35,13 +40,18 @@ export default async function UsersListPage() {
     redirect('/admin')
   }
 
+  // LEFT JOIN on the newsletter list: a customer who opted in at sign-up
+  // shows an « Abonné newsletter » chip — that's the campaign audience.
   const rows = await db
-    .select()
+    .select({ user: users, newsletterStatus: subscribers.status })
     .from(users)
-    .orderBy(desc(users.role), asc(users.name))
+    .leftJoin(subscribers, eq(subscribers.email, users.email))
+    .orderBy(asc(users.name))
 
-  const admins = rows.filter((u) => u.role === 'admin').length
-  const staff = rows.length - admins
+  const team = rows.filter((r) => r.user.role !== 'customer')
+  const customers = rows.filter((r) => r.user.role === 'customer')
+  const admins = team.filter((r) => r.user.role === 'admin').length
+  const staff = team.length - admins
 
   return (
     <div className="space-y-6">
@@ -52,12 +62,12 @@ export default async function UsersListPage() {
             Utilisateurs
           </p>
           <h1 className="font-display text-3xl tracking-tight text-white">
-            Accès de l&apos;équipe<span className="text-[var(--admin-cyan)]">.</span>
+            Comptes du site<span className="text-[var(--admin-cyan)]">.</span>
           </h1>
           <p className="mt-2 font-body text-[13.5px]" style={{ color: 'var(--admin-text-secondary)' }}>
-            {admins} admin{admins > 1 ? 's' : ''} · {staff} membre{staff > 1 ? 's' : ''} d&apos;équipe —
-            chaque compte se connecte avec e-mail + mot de passe, ou avec Google
-            sur la même adresse.
+            {admins} admin{admins > 1 ? 's' : ''} · {staff} membre{staff > 1 ? 's' : ''} d&apos;équipe ·{' '}
+            {customers.length} client{customers.length > 1 ? 's' : ''} — le site ne crée plus de comptes
+            clients : les visiteurs s&apos;abonnent à la newsletter (pop-up + pied de page), gérée dans Abonnés.
           </p>
         </div>
         <Link href="/admin/users/new">
@@ -69,7 +79,7 @@ export default async function UsersListPage() {
       </div>
 
       {/* Team grid */}
-      {rows.length === 0 ? (
+      {team.length === 0 ? (
         <GlassCard>
           <EmptyState
             icon={UsersIcon}
@@ -80,7 +90,7 @@ export default async function UsersListPage() {
         </GlassCard>
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {rows.map((u, i) => {
+          {team.map(({ user: u }, i) => {
             const color = AVATAR_COLORS[i % AVATAR_COLORS.length] ?? 'var(--c-mint)'
             const isDeactivated = u.deactivatedAt !== null
             const isSelf = u.id === admin.id
@@ -173,7 +183,8 @@ export default async function UsersListPage() {
                   })}
                 </div>
 
-                <div className="mt-auto flex items-center justify-end">
+                <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
+                  {!isSelf && <DeleteUserButton userId={u.id} userName={u.name} />}
                   <Link
                     href={`/admin/users/${u.id}/edit`}
                     className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 font-body text-[12.5px] font-semibold transition-colors hover:border-[color-mix(in_oklab,_var(--c-mint)_50%,_transparent)] hover:text-white"
@@ -184,6 +195,101 @@ export default async function UsersListPage() {
                   >
                     Gérer le compte
                   </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── Customers (public sign-ups from the storefront) ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div>
+          <p className="inline-flex items-center gap-2 font-body text-[15px] font-bold text-white">
+            <ShoppingBag size={15} style={{ color: 'var(--c-violet)' }} />
+            Clients
+            <span
+              className="rounded-full px-2 py-0.5 font-mono text-[10.5px]"
+              style={{ background: 'color-mix(in oklab, var(--c-violet) 14%, transparent)', color: 'var(--c-violet)' }}
+            >
+              {customers.length}
+            </span>
+          </p>
+          <p className="mt-1 font-body text-[12.5px]" style={{ color: 'var(--admin-text-tertiary)' }}>
+            Comptes visiteurs résiduels (rôle « client » — aucun accès à cet espace).
+            L&apos;inscription publique est désactivée ; supprimez-les librement.
+          </p>
+        </div>
+      </div>
+
+      {customers.length === 0 ? (
+        <GlassCard>
+          <EmptyState
+            icon={ShoppingBag}
+            title="Aucun compte client — c'est normal."
+            description="Les visiteurs s'abonnent à la newsletter via le pop-up du site ; retrouvez-les dans Abonnés. L'inscription publique de comptes est désactivée."
+          />
+        </GlassCard>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {customers.map(({ user: u, newsletterStatus }) => {
+            const isSubscribed = newsletterStatus === 'subscribed'
+            return (
+              <div key={u.id} className="glass-surface flex flex-col gap-3 p-4">
+                <div className="flex items-start gap-3">
+                  <span
+                    className="flex size-10 shrink-0 items-center justify-center rounded-xl font-display text-base font-bold"
+                    style={{
+                      background: 'color-mix(in oklab, var(--c-violet) 13%, transparent)',
+                      border: '1px solid color-mix(in oklab, var(--c-violet) 38%, transparent)',
+                      color: 'var(--c-violet)',
+                    }}
+                  >
+                    {u.name.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate font-body text-[14.5px] font-bold text-white">{u.name}</p>
+                      <span
+                        className="rounded-full px-2 py-0.5 font-body text-[10px] font-bold uppercase tracking-wide"
+                        style={{ background: 'color-mix(in oklab, var(--c-violet) 14%, transparent)', color: 'var(--c-violet)' }}
+                      >
+                        Client
+                      </span>
+                    </div>
+                    <p
+                      className="mt-0.5 flex items-center gap-1.5 truncate font-body text-[12px]"
+                      style={{ color: 'var(--admin-text-secondary)' }}
+                    >
+                      <Mail size={11} />
+                      {u.email}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[10px]" style={{ color: 'var(--admin-text-tertiary)' }}>
+                      Inscrit le {joinedOn(u.createdAt)} · {lastSeen(u.lastLoginAt)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  {isSubscribed ? (
+                    <span
+                      className="rounded-full border px-2 py-0.5 font-body text-[10.5px] font-semibold"
+                      style={{
+                        background: 'color-mix(in oklab, var(--c-mint) 11%, transparent)',
+                        borderColor: 'color-mix(in oklab, var(--c-mint) 38%, transparent)',
+                        color: 'var(--c-mint)',
+                      }}
+                    >
+                      Abonné newsletter
+                    </span>
+                  ) : (
+                    <span
+                      className="rounded-full border px-2 py-0.5 font-body text-[10.5px] font-semibold"
+                      style={{ borderColor: 'var(--admin-line)', color: 'var(--admin-text-tertiary)' }}
+                    >
+                      Sans newsletter
+                    </span>
+                  )}
+                  <DeleteUserButton userId={u.id} userName={u.name} />
                 </div>
               </div>
             )
@@ -206,7 +312,8 @@ export default async function UsersListPage() {
           <p className="mt-1 font-body text-[12.5px] leading-relaxed" style={{ color: 'var(--admin-text-secondary)' }}>
             Si le compte est créé avec une adresse Gmail, l&apos;employé peut aussi
             se connecter via « Continuer avec Google » — les deux méthodes mènent
-            au même compte, avec les mêmes accès.
+            au même compte, avec les mêmes accès. Un visiteur qui s&apos;inscrit
+            avec Google depuis le site devient automatiquement un compte client.
           </p>
         </div>
       </GlassCard>

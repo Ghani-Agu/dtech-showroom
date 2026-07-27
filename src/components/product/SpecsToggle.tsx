@@ -1,37 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 type SpecValue = string | number | string[]
 
-const TONES = {
-  dark: {
-    panelBg: 'var(--sr-bg, #0b1220)',
-    line: 'var(--sr-line, rgba(255,255,255,0.12))',
-    text: 'var(--sr-text, #e9eef7)',
-    muted: 'var(--sr-mute, #93a4ba)',
-    accent: 'var(--sr-cyan, #57d0bf)',
-    onAccent: '#04121f',
-    btnBg: 'var(--sr-surface, rgba(255,255,255,0.08))',
-  },
-  light: {
-    panelBg: '#ffffff',
-    line: 'rgba(18,18,40,0.10)',
-    text: 'var(--ink, #16162e)',
-    muted: 'var(--muted, #6a6a82)',
-    accent: 'var(--accent, #12b3a6)',
-    onAccent: '#ffffff',
-    btnBg: 'rgba(18,18,40,0.05)',
-  },
-} as const
-
 /**
- * "+" technical-specs feature on product cards.
- * - variant="inline": a full-width row button meant to sit between the short
- *   description and the card's action button(s).
+ * "Fiche technique" feature on product cards.
+ * - variant="inline": full-width row button between the short description and
+ *   the card's action buttons — the main variant, used by all skins.
  * - variant="corner": legacy floating button at the top corner of the card.
- * Either way the panel opens as an overlay covering the card.
+ *
+ * The panel opens as an animated overlay covering the card. All styling lives
+ * in showroom.css (.sr-specsbtn / .sr-specspanel — ROUND 13 block) on --sr-*
+ * tokens, so the one component follows each skin's palette through the
+ * existing `.brand-root` / `.editorial-root` / light-theme token remaps.
+ * The `tone` prop is kept for call-site compatibility and exposed as
+ * data-tone for skin-specific fine-tuning.
  */
 export function SpecsToggle({
   specs,
@@ -46,19 +31,36 @@ export function SpecsToggle({
   const tSpec = useTranslations('products.specLabels')
   const locale = useLocale()
   const entries = Object.entries(specs ?? {})
+
+  // Escape closes the overlay (it covers the whole card, so make sure
+  // keyboard users are never stuck in it).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   if (entries.length === 0) return null
-  const c = TONES[tone]
   const title =
     locale === 'ar'
       ? 'المواصفات التقنية'
       : locale === 'en'
         ? 'Technical specifications'
         : 'Caractéristiques techniques'
+  const closeLabel = locale === 'ar' ? 'إغلاق' : locale === 'en' ? 'Close' : 'Fermer'
 
   const openPanel = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setOpen(true)
+  }
+  const closePanel = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setOpen(false)
   }
 
   return (
@@ -66,59 +68,33 @@ export function SpecsToggle({
       {variant === 'inline' ? (
         <button
           type="button"
-          aria-label={title}
+          className="sr-specsbtn"
+          data-tone={tone}
+          aria-expanded={open}
           onClick={openPanel}
-          style={{
-            position: 'relative',
-            zIndex: 5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 8,
-            width: '100%',
-            marginTop: 8,
-            padding: '7px 12px',
-            borderRadius: 999,
-            background: c.btnBg,
-            border: '1px solid ' + c.line,
-            color: c.muted,
-            fontSize: 12,
-            fontWeight: 600,
-            fontFamily: 'inherit',
-            cursor: 'pointer',
-            textAlign: 'start',
-          }}
         >
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {title}
-          </span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2.6" strokeLinecap="round" style={{ flexShrink: 0 }}>
-            <path d="M12 5v14M5 12h14" />
+          <svg className="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 6h10M4 12h16M4 18h7" />
+            <circle cx="17.5" cy="6" r="1.6" fill="currentColor" stroke="none" />
+            <circle cx="13.5" cy="18" r="1.6" fill="currentColor" stroke="none" />
           </svg>
+          <span className="lb">{title}</span>
+          <span className="pl" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
         </button>
       ) : (
         <button
           type="button"
+          className="sr-specsbtn-c"
+          data-tone={tone}
           aria-label={title}
+          aria-expanded={open}
           onClick={openPanel}
-          style={{
-            position: 'absolute',
-            top: 10,
-            insetInlineEnd: 10,
-            zIndex: 5,
-            width: 30,
-            height: 30,
-            borderRadius: 999,
-            display: 'grid',
-            placeItems: 'center',
-            cursor: 'pointer',
-            background: c.btnBg,
-            border: '1px solid ' + c.line,
-            color: c.text,
-            backdropFilter: 'blur(4px)',
-          }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14" />
           </svg>
         </button>
@@ -126,62 +102,32 @@ export function SpecsToggle({
 
       {open && (
         <div
+          className="sr-specspanel"
+          data-tone={tone}
+          role="dialog"
+          aria-label={title}
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
           }}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 7,
-            background: c.panelBg,
-            border: '1px solid ' + c.line,
-            borderRadius: 'inherit',
-            padding: '15px 17px',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'auto',
-          }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ color: c.accent, fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {title}
-            </span>
-            <button
-              type="button"
-              aria-label="Fermer"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setOpen(false)
-              }}
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 999,
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-                background: c.accent,
-                color: c.onAccent,
-                border: 'none',
-                flexShrink: 0,
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+          <div className="hd">
+            <span className="tt">{title}</span>
+            <button type="button" className="cl" aria-label={closeLabel} onClick={closePanel}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
           </div>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {entries.map(([k, v]) => (
-              <li key={k} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.4 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+          <ul className="ls">
+            {entries.map(([k, v], i) => (
+              <li key={k} style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M5 13l4 4L19 7" />
                 </svg>
                 <span>
-                  <strong style={{ color: c.text, fontWeight: 600 }}>{tSpec(k)}</strong>{' '}
-                  <span style={{ color: c.muted }} dir="ltr">
+                  <strong>{tSpec(k)}</strong>{' '}
+                  <span className="vl" dir="ltr">
                     {Array.isArray(v) ? v.join(', ') : String(v)}
                   </span>
                 </span>

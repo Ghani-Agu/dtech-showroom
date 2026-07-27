@@ -25,6 +25,7 @@ import { BilingualField } from './BilingualField'
 import { ImageManager } from './ImageManager'
 import { ImageUpload } from './ImageUpload'
 import { SpecsEditor } from './SpecsEditor'
+import { SerpPreview } from './SerpPreview'
 import {
   archiveProduct,
   createProduct,
@@ -33,6 +34,7 @@ import {
   updateProduct,
 } from '@/server/admin-product-actions'
 import { toast } from '@/lib/toast'
+import { SITE_URL } from '@/lib/seo'
 import type { ProductFormValues } from '@/lib/validations/product'
 
 interface ProductFormProps {
@@ -68,6 +70,7 @@ const defaultValues: ProductFormValues = {
   photoCarouselPaths: [],
   seoTitle: '',
   seoDescription: '',
+  customHtml: '',
 }
 
 type FieldErrors = Record<string, string[] | undefined>
@@ -112,6 +115,7 @@ const FIELD_TAB: Record<string, TabId> = {
   cardSpecFr: 'contenu',
   description: 'contenu',
   descriptionFr: 'contenu',
+  customHtml: 'contenu',
   searchKeywords: 'contenu',
   searchKeywordsFr: 'contenu',
   heroImagePath: 'photos',
@@ -417,6 +421,35 @@ export function ProductForm({
                 type="textarea"
                 rows={6}
               />
+              <div>
+                <label
+                  htmlFor="product-custom-html"
+                  className="font-body text-sm font-medium text-white"
+                >
+                  Code HTML (optionnel)
+                </label>
+                <p className="mt-0.5 font-body text-xs text-[var(--admin-text-tertiary)]">
+                  Affiché tel quel sous la description, sur la page du
+                  produit (toutes les langues). Tableaux, images et vidéos
+                  intégrées (iframe) autorisés — les balises{' '}
+                  <code>&lt;script&gt;</code> sont supprimées.
+                </p>
+                <textarea
+                  id="product-custom-html"
+                  value={values.customHtml}
+                  onChange={(e) => update('customHtml', e.target.value)}
+                  rows={8}
+                  spellCheck={false}
+                  placeholder={'<h3>Points forts</h3>\n<ul>\n  <li>…</li>\n</ul>'}
+                  className="mt-2 w-full rounded-xl border border-white/[0.08] bg-black/30 px-4 py-2.5 font-mono text-[13px] leading-relaxed text-white outline-none placeholder:text-white/25 focus:border-[color-mix(in_oklab,_var(--c-violet)_50%,_transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklab,_var(--c-violet)_45%,_transparent)]"
+                  dir="ltr"
+                />
+                {errors.customHtml ? (
+                  <p className="mt-1 font-body text-xs text-red-400">
+                    {errors.customHtml[0]}
+                  </p>
+                ) : null}
+              </div>
               <BilingualField
                 label="Mots-clés de recherche"
                 description="Séparés par des espaces. Invisibles pour les clients."
@@ -559,16 +592,26 @@ export function ProductForm({
               />
               <Input
                 label="Titre SEO"
-                description="120 caractères max. Par défaut : le nom du produit."
+                description="Idéalement 60 caractères (120 max). Par défaut : le nom du produit."
                 value={values.seoTitle}
                 onChange={(e) => update('seoTitle', e.target.value)}
+                error={errors.seoTitle?.[0]}
               />
               <Textarea
                 label="Description SEO"
-                description="300 caractères max. Par défaut : l'accroche."
-                rows={2}
+                description="Idéalement 155 caractères (300 max). Par défaut : l'accroche."
+                rows={3}
                 value={values.seoDescription}
                 onChange={(e) => update('seoDescription', e.target.value)}
+                error={errors.seoDescription?.[0]}
+              />
+              <SerpPreview
+                seoTitle={values.seoTitle}
+                seoDescription={values.seoDescription}
+                name={values.name}
+                tagline={values.tagline}
+                slug={values.slug}
+                siteUrl={SITE_URL}
               />
             </div>
           )}

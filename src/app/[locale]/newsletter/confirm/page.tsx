@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { confirmSubscriptionByToken } from '@/server/newsletter-actions'
+import { SkinShell } from '@/components/skin/SkinShell'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export default async function NewsletterConfirmPage({
 }: {
   searchParams: Promise<{ token?: string }>
 }) {
+  const locale = await getLocale()
   const { token } = await searchParams
   const result = await confirmSubscriptionByToken(token ?? '')
   const t = await getTranslations('newsletter')
@@ -39,6 +41,7 @@ export default async function NewsletterConfirmPage({
   }
 
   return (
+    <SkinShell locale={locale}>
     <div className="mx-auto max-w-2xl px-6 py-24 md:px-12">
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
         D-Tech · Newsletter
@@ -69,5 +72,6 @@ export default async function NewsletterConfirmPage({
         </Link>
       </div>
     </div>
+    </SkinShell>
   )
 }

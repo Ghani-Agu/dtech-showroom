@@ -1,14 +1,13 @@
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Toaster } from 'sonner'
 import { AmbientBackground } from '@/components/admin/AmbientBackground'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { AdminTopbar } from '@/components/admin/AdminTopbar'
 import { CommandPaletteProvider } from '@/components/admin/CommandPaletteProvider'
-import { auth } from '@/lib/auth'
 import { getSessionUser } from '@/lib/auth-helpers'
 import { allowedSections } from '@/lib/permissions'
+import { pokeCampaignScheduler } from '@/server/campaign-send-core'
 
 export const metadata: Metadata = {
   title: 'Admin · Dtech',
@@ -29,16 +28,25 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth.api
-    .getSession({ headers: await headers() })
-    .catch(() => null)
+  // One request-cached lookup covers both the auth guard and permissions —
+  // pages/components below reuse the same result via React cache().
+  const sessionUser = await getSessionUser()
 
-  if (!session) {
+  if (!sessionUser) {
     redirect('/login?redirect=/admin')
   }
 
-  const sessionUser = await getSessionUser()
-  const allowed = sessionUser ? allowedSections(sessionUser) : []
+  // Round 16: customers cannot reach the back-office in any way — any
+  // stray customer-role session goes straight back to the storefront.
+  if (sessionUser.role === 'customer') {
+    redirect('/')
+  }
+
+  // Round 15: back-office navigation also advances due scheduled campaigns
+  // (throttled, after the response) — an admin waiting on a send helps it.
+  pokeCampaignScheduler()
+
+  const allowed = allowedSections(sessionUser)
 
   return (
     <div
@@ -50,7 +58,7 @@ export default async function AdminLayout({
         <div className="relative z-10 flex min-h-screen">
           <AdminSidebar allowed={allowed} />
           <div className="flex min-w-0 flex-1 flex-col">
-            <AdminTopbar userName={session.user?.name ?? undefined} />
+            <AdminTopbar userName={sessionUser.name ?? undefined} />
             <main className="flex-1 px-8 pb-10 pt-6">{children}</main>
           </div>
         </div>

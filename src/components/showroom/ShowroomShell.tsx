@@ -31,7 +31,7 @@ export function ShowroomShell({
   children,
 }: {
   children: ReactNode
-  design?: 'classic' | 'brand'
+  design?: 'classic' | 'brand' | 'editorial'
 }) {
   const pathname = usePathname()
 

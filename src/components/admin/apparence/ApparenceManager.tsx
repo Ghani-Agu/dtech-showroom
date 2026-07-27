@@ -43,11 +43,7 @@ export function ApparenceManager({ live, initialSelected }: ApparenceManagerProp
       const r = await publishDesign(selected)
       if (r.ok) {
         setLiveDesign(selected)
-        toast.success(
-          selected === 'brand'
-            ? 'Nouveau design en ligne sur le site.'
-            : 'Design actuel en ligne sur le site.'
-        )
+        toast.success(`${DESIGN_META[selected].label} — en ligne sur le site.`)
         router.refresh()
       } else {
         toast.error(r.error ?? 'Échec de la mise en ligne')
@@ -59,7 +55,7 @@ export function ApparenceManager({ live, initialSelected }: ApparenceManagerProp
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {DESIGN_IDS.map((id) => (
           <DesignCard
             key={id}
@@ -94,9 +90,9 @@ export function ApparenceManager({ live, initialSelected }: ApparenceManagerProp
           >
             Voir le site <ExternalLink className="size-3.5" />
           </a>
-          <Button variant="primary" onClick={goLive} loading={pending} disabled={!dirty}>
+          <Button variant="primary" onClick={goLive} loading={pending}>
             <Rocket className="size-4" />
-            Mettre en ligne
+            {dirty ? 'Mettre en ligne' : 'Remettre en ligne'}
           </Button>
         </div>
       </div>
@@ -131,7 +127,7 @@ function DesignCard({
     >
       {/* mini preview */}
       <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/[0.06]">
-        {id === 'brand' ? <BrandPreview /> : <ClassicPreview />}
+        {id === 'brand' ? <BrandPreview /> : id === 'editorial' ? <EditorialPreview /> : <ClassicPreview />}
       </div>
 
       <div className="flex items-start justify-between gap-3 px-5 py-4">
@@ -219,6 +215,36 @@ function ClassicPreview() {
             <span key={i} className="aspect-square rounded-md border border-white/10 bg-white/[0.04]" />
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function EditorialPreview() {
+  return (
+    <div className="absolute inset-0 bg-[#f7f5f1] p-3">
+      <div className="mx-auto flex w-[86%] items-center justify-between rounded-full bg-white/80 px-3 py-1.5 shadow-sm ring-1 ring-[#e3ded4]">
+        <span className="font-display text-[11px] font-bold tracking-tight text-[#17211f]">
+          d<span className="text-[#0f8b86]">tech</span>
+        </span>
+        <div className="flex items-center gap-1">
+          <span className="h-1.5 w-4 rounded-full bg-[#ded8cd]" />
+          <span className="h-1.5 w-4 rounded-full bg-[#ded8cd]" />
+          <span className="h-3 w-3 rounded-full bg-[#17211f]" />
+        </div>
+      </div>
+      <div className="mt-2.5 rounded-lg bg-[#17211f] p-2.5">
+        <span className="block h-2 w-3/5 rounded bg-white/85" />
+        <span className="mt-1.5 block h-2 w-2/5 rounded bg-[#e8b93c]" />
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <span key={i} className="aspect-[4/3] rounded bg-white/10" />
+          ))}
+        </div>
+      </div>
+      <div className="mt-2 flex gap-1.5">
+        <span className="h-1.5 flex-1 rounded bg-[#ded8cd]" />
+        <span className="h-1.5 w-8 rounded bg-[#0f8b86]" />
       </div>
     </div>
   )

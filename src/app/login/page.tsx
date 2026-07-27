@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { auth } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth-helpers'
 import { Logo } from '@/components/brand/Logo'
 import LoginForm from './LoginForm'
 import './login.css'
@@ -15,13 +14,12 @@ export const metadata: Metadata = {
 }
 
 export default async function LoginPage() {
-  // Redirect if already signed in.
-  const session = await auth.api
-    .getSession({ headers: await headers() })
-    .catch(() => null)
+  // Redirect if already signed in — team members to the back-office; a
+  // stray customer-role session (legacy) simply goes back to the site.
+  const sessionUser = await getSessionUser()
 
-  if (session) {
-    redirect('/admin')
+  if (sessionUser) {
+    redirect(sessionUser.role === 'customer' ? '/' : '/admin')
   }
 
   // Dev-only skip-login (testing phase) — mirrors /api/dev-login gating.

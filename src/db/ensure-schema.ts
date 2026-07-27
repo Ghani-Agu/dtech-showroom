@@ -17,6 +17,19 @@ export async function ensureSchema(): Promise<void> {
     await db.execute(
       sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "permissions" jsonb`
     )
+    // ── Round 15 — customer accounts (public sign-up on all skins) ──
+    // New role value + new default: a self-registered visitor becomes a
+    // 'customer' (zero admin access — hasAccess() only grants sections to
+    // 'staff'). Admin-created accounts set staff/admin explicitly right
+    // after creation and ADMIN_EMAILS still auto-promotes on first sign-in.
+    // NB: ADD VALUE must run outside an explicit transaction — each
+    // db.execute here is its own autocommitted statement, so this is safe.
+    await db.execute(
+      sql`ALTER TYPE "user_role" ADD VALUE IF NOT EXISTS 'customer'`
+    )
+    await db.execute(
+      sql`ALTER TABLE "users" ALTER COLUMN "role" SET DEFAULT 'customer'`
+    )
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "image_blobs" (
         "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,6 +135,47 @@ export async function ensureSchema(): Promise<void> {
     `)
     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_campaign_id_idx" ON "campaign_sends" ("campaign_id")`)
     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_subscriber_id_idx" ON "campaign_sends" ("subscriber_id")`)
+
+    // ── Round 11 — email marketing fixes/upgrades ──
+    // created_by was uuid but better-auth ids are TEXT → every campaign
+    // INSERT with a creator failed. Convert in place (values, if any, cast).
+    await db.execute(sql`
+      DO $$ BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'campaigns' AND column_name = 'created_by'
+            AND data_type = 'uuid'
+        ) THEN
+          ALTER TABLE "campaigns" ALTER COLUMN "created_by" TYPE text USING "created_by"::text;
+        END IF;
+      END $$;
+    `)
+    // Composer block state (email-blocks.ts).
+    await db.execute(sql`ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "body_blocks" jsonb`)
+    // Resumable sending needs exactly one row per campaign × subscriber.
+    // Dedupe legacy duplicates (keep one arbitrary row), then enforce.
+    await db.execute(sql`
+      DELETE FROM "campaign_sends" a USING "campaign_sends" b
+      WHERE a."campaign_id" = b."campaign_id"
+        AND a."subscriber_id" = b."subscriber_id"
+        AND a.ctid < b.ctid
+    `)
+    await db.execute(sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS "campaign_sends_campaign_subscriber_uq"
+        ON "campaign_sends" ("campaign_id", "subscriber_id")
+    `)
+
+    // ── Round 8 — free-form HTML block on the product page ──
+    await db.execute(sql`ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "custom_html" text`)
+
+    // ── Round 8 — app settings KV (Brevo key, integrations…) ──
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "app_settings" (
+        "key" text PRIMARY KEY,
+        "value" text,
+        "updated_at" timestamptz NOT NULL DEFAULT now()
+      )
+    `)
 
     // ── Arabic catalogue (Phase 8) — additive AR columns + one-shot fill ──
     await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "name_ar" text`)

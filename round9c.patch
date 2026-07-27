@@ -1,0 +1,929 @@
+diff --git a/messages/ar.json b/messages/ar.json
+index 76cd1b3..7eeaa67 100644
+--- a/messages/ar.json
++++ b/messages/ar.json
+@@ -821,6 +821,15 @@
+       "seeAll": "شاهد كل المنتجات ({count})",
+       "browseAll": "استكشف الكتالوج الكامل",
+       "note": "{count} منتج · فلترة حسب الفئة والعلامة والبحث"
++    },
++    "partner": {
++      "eyebrow": "شريك {brand}",
++      "partnerLine": "دي-تاك الجزائر × {brand}",
++      "title1": "تشكيلة {brand} الاحترافية،",
++      "title2": "عند موزّعكم المعتمد.",
++      "sub": "محطات عمل وشاشات وطابعات {brand} للمؤسسات والإدارات — مع تسعيرة وفاتورة وضمان رسمي، والتوصيل إلى 58 ولاية.",
++      "cta": "اكتشف تشكيلة {brand}",
++      "tileSub": "{count} منتج"
+     }
+   },
+   "newsletter": {
+diff --git a/messages/en.json b/messages/en.json
+index 0cc57d5..441a13f 100644
+--- a/messages/en.json
++++ b/messages/en.json
+@@ -821,6 +821,15 @@
+       "seeAll": "See all {count} products",
+       "browseAll": "Browse the full catalog",
+       "note": "{count} products · filter by category, brand and search"
++    },
++    "partner": {
++      "eyebrow": "{brand} partner",
++      "partnerLine": "D-Tech Algeria × {brand}",
++      "title1": "The professional {brand} range,",
++      "title2": "from your distributor.",
++      "sub": "{brand} workstations, displays and printing for businesses and public bodies — with a written quote, invoice and official warranty, delivered across all 58 wilayas.",
++      "cta": "Explore the {brand} range",
++      "tileSub": "{count} products"
+     }
+   },
+   "newsletter": {
+diff --git a/messages/fr.json b/messages/fr.json
+index 97bd008..fe1faca 100644
+--- a/messages/fr.json
++++ b/messages/fr.json
+@@ -821,6 +821,15 @@
+       "seeAll": "Voir les {count} produits",
+       "browseAll": "Explorer tout le catalogue",
+       "note": "{count} produits · filtres par catégorie, marque et recherche"
++    },
++    "partner": {
++      "eyebrow": "Partenaire {brand}",
++      "partnerLine": "D-Tech Algérie × {brand}",
++      "title1": "La gamme professionnelle {brand},",
++      "title2": "chez votre distributeur.",
++      "sub": "Postes de travail, écrans et impression {brand} pour entreprises et administrations — avec devis, facture et garantie officielle, livrés dans les 58 wilayas.",
++      "cta": "Découvrir la gamme {brand}",
++      "tileSub": "{count} produits"
+     }
+   },
+   "newsletter": {
+diff --git a/src/app/[locale]/page.tsx b/src/app/[locale]/page.tsx
+index dc83f6e..219bf6c 100644
+--- a/src/app/[locale]/page.tsx
++++ b/src/app/[locale]/page.tsx
+@@ -27,6 +27,7 @@ import { buildHomeData } from '@/server/template-data'
+ import type { PageDoc } from '@/components/admin/editor/types'
+ import { BrandHome } from '@/components/brand/BrandHome'
+ import { buildBrandData } from '@/server/brand-data'
++import { buildPartnerBand } from '@/server/partner-band'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+@@ -94,6 +95,11 @@ export default async function HomePage() {
+     countByBrand.set(p.brand.slug, (countByBrand.get(p.brand.slug) ?? 0) + 1)
+   }
+ 
++  // Partner spotlight — tiles derived from the live catalogue (see
++  // buildPartnerBand). Returns null if the brand has no products, which hides
++  // the whole section rather than rendering an empty band.
++  const partner = buildPartnerBand(productsRaw, brandsRaw)
++
+   const orgJsonLd = (
+     <script
+       type="application/ld+json"
+@@ -109,6 +115,7 @@ export default async function HomePage() {
+         <BrandHome
+           locale={locale}
+           data={buildBrandData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
++          partner={partner}
+         />
+       </>
+     )
+@@ -164,6 +171,7 @@ export default async function HomePage() {
+         productCount={productsRaw.length}
+         categories={categories}
+         brands={brands}
++        partner={partner}
+         heroConfig={heroConfig}
+         content={contentOverrides}
+       />
+diff --git a/src/components/admin/editor/WebEditor.tsx b/src/components/admin/editor/WebEditor.tsx
+index 209752a..cc4a8cc 100644
+--- a/src/components/admin/editor/WebEditor.tsx
++++ b/src/components/admin/editor/WebEditor.tsx
+@@ -1161,7 +1161,7 @@ function LiveEditor({
+     }))
+     const layout: Layout = preset?.layout ?? 'stack'
+     // current rendered order of editable sections (real + custom)
+-    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact'] : []
++    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact'] : []
+     const curCustoms = dataRef.current.customSections.map((c) => c.id)
+     const present = [...real, ...curCustoms]
+     const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
+@@ -1190,7 +1190,7 @@ function LiveEditor({
+   function addBlockSection(kind: BlockKind, atIndex?: number) {
+     const id = `custom:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`
+     const blocks: PresetBlock[] = [{ id: 'b' + Math.random().toString(36).slice(2, 8), kind }]
+-    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact'] : []
++    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact'] : []
+     const curCustoms = dataRef.current.customSections.map((c) => c.id)
+     const present = [...real, ...curCustoms]
+     const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
+@@ -1235,7 +1235,7 @@ function LiveEditor({
+   }
+   const hideHelp = () => setHelp(null)
+ 
+-  const DEF_HOME_ORDER = ['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']
++  const DEF_HOME_ORDER = ['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact']
+   const presentReal = isHome ? DEF_HOME_ORDER : []
+   const customIds = customSections.map((c) => c.id)
+   const savedOrder = (sections.order || []).filter((id) => presentReal.includes(id) || customIds.includes(id))
+@@ -1876,7 +1876,7 @@ function LibHelpCard({ info }: { info: HelpInfo }) {
+ }
+ 
+ const SEC_LABELS: Record<string, string> = {
+-  hero: 'Hero', categories: 'Catégories', catalog: 'Produits en vedette', services: 'Services', brands: 'Marques', about: 'À propos', contact: 'Contact',
++  hero: 'Hero', categories: 'Catégories', catalog: 'Produits en vedette', services: 'Services', brands: 'Marques', partner: 'Partenaire HP', about: 'À propos', contact: 'Contact',
+ }
+ const LAYOUT_LABELS: Record<Layout, string> = {
+   stack: 'Pile', center: 'Centré', cols2: '2 colonnes', cols3: '3 colonnes', cols4: '4 colonnes', row: 'Ligne',
+diff --git a/src/components/brand/BrandHome.tsx b/src/components/brand/BrandHome.tsx
+index 10b6c42..29ca0cb 100644
+--- a/src/components/brand/BrandHome.tsx
++++ b/src/components/brand/BrandHome.tsx
+@@ -18,8 +18,18 @@ import {
+   BrandContact,
+ } from './BrandSections'
+ import type { BrandData } from './brand-types'
++import { BrandPartnerSection } from './BrandPartnerSection'
++import type { PartnerBandData } from '@/server/partner-band'
+ 
+-export function BrandHome({ locale, data }: { locale: string; data: BrandData }) {
++export function BrandHome({
++  locale,
++  data,
++  partner = null,
++}: {
++  locale: string
++  data: BrandData
++  partner?: PartnerBandData | null
++}) {
+   return (
+     <BrandPageShell locale={locale}>
+       <BrandHero heroImages={data.heroImages} />
+@@ -30,6 +40,7 @@ export function BrandHome({ locale, data }: { locale: string; data: BrandData })
+       />
+       <BrandServices />
+       <BrandBrands brands={data.brands} />
++      <BrandPartnerSection partner={partner} />
+       <BrandAbout />
+       <BrandContact />
+     </BrandPageShell>
+diff --git a/src/components/brand/BrandPartnerSection.tsx b/src/components/brand/BrandPartnerSection.tsx
+new file mode 100644
+index 0000000..be6c3cc
+--- /dev/null
++++ b/src/components/brand/BrandPartnerSection.tsx
+@@ -0,0 +1,86 @@
++'use client'
++
++import { PartnerBand } from '@/components/home/PartnerBand'
++import type { PartnerBandData } from '@/server/partner-band'
++import { useBrand } from './brand-context'
++import { fmtNum } from './brand-i18n'
++
++/**
++ * Brand-skin wrapper for the partner spotlight.
++ *
++ * The brand skin doesn't use next-intl (it has its own `brand-i18n` record) and
++ * has no EditProvider, so the shared band receives plain strings here rather
++ * than `<Editable>` nodes. Same visual component either way — the band paints
++ * its own partner-coloured background, so it needs nothing from the skin.
++ */
++export function BrandPartnerSection({
++  partner,
++}: {
++  partner: PartnerBandData | null
++}) {
++  const { lang } = useBrand()
++  if (!partner) return null
++
++  const brand = partner.brandName
++  const c: Copy = COPY[lang] ?? FR
++
++  return (
++    <PartnerBand
++      brandSlug={partner.brandSlug}
++      brandName={brand}
++      logoPath={partner.logoPath}
++      accent={partner.accent}
++      accentDeep={partner.accentDeep}
++      eyebrow={c.eyebrow(brand)}
++      partnerLine={c.line(brand)}
++      heading={c.title(brand)}
++      sub={c.sub(brand)}
++      ctaLabel={c.cta(brand)}
++      tiles={partner.tiles.map((t) => ({
++        ...t,
++        sub: c.tileSub(fmtNum(Number(t.sub), lang)),
++      }))}
++    />
++  )
++}
++
++type Copy = {
++  eyebrow: (b: string) => string
++  line: (b: string) => string
++  title: (b: string) => string
++  sub: (b: string) => string
++  cta: (b: string) => string
++  tileSub: (n: string) => string
++}
++
++const FR: Copy = {
++  eyebrow: (b) => `Partenaire ${b}`,
++  line: (b) => `D-Tech Algérie × ${b}`,
++  title: (b) => `La gamme professionnelle ${b}, chez votre distributeur.`,
++  sub: (b) =>
++    `Postes de travail, écrans et impression ${b} pour entreprises et administrations — avec devis, facture et garantie officielle, livrés dans les 58 wilayas.`,
++  cta: (b) => `Découvrir la gamme ${b}`,
++  tileSub: (n) => `${n} produits`,
++}
++
++const COPY: Record<string, Copy> = {
++  fr: FR,
++  en: {
++    eyebrow: (b) => `${b} partner`,
++    line: (b) => `D-Tech Algeria × ${b}`,
++    title: (b) => `The professional ${b} range, from your distributor.`,
++    sub: (b) =>
++      `${b} workstations, displays and printing for businesses and public bodies — with a written quote, invoice and official warranty, delivered across all 58 wilayas.`,
++    cta: (b) => `Explore the ${b} range`,
++    tileSub: (n) => `${n} products`,
++  },
++  ar: {
++    eyebrow: (b) => `شريك ${b}`,
++    line: (b) => `دي-تاك الجزائر × ${b}`,
++    title: (b) => `تشكيلة ${b} الاحترافية، عند موزّعكم المعتمد.`,
++    sub: (b) =>
++      `محطات عمل وشاشات وطابعات ${b} للمؤسسات والإدارات — مع تسعيرة وفاتورة وضمان رسمي، والتوصيل إلى 58 ولاية.`,
++    cta: (b) => `اكتشف تشكيلة ${b}`,
++    tileSub: (n) => `${n} منتج`,
++  },
++}
+diff --git a/src/components/home/HomeShowcase.tsx b/src/components/home/HomeShowcase.tsx
+index 6fcd344..a0ab563 100644
+--- a/src/components/home/HomeShowcase.tsx
++++ b/src/components/home/HomeShowcase.tsx
+@@ -35,6 +35,8 @@ import { seededRating } from '@/lib/reviews'
+ import { Stars } from '@/components/showroom/Stars'
+ import { Carousel } from '@/components/showroom/Carousel'
+ import { SiteNav, Logo } from '@/components/showroom/SiteNav'
++import { PartnerBand } from './PartnerBand'
++import type { PartnerBandData } from '@/server/partner-band'
+ 
+ export type IconKind =
+   | 'desktop'
+@@ -81,6 +83,7 @@ export function HomeShowcase({
+   productCount,
+   categories,
+   brands,
++  partner = null,
+   heroConfig = null,
+   content = {},
+ }: {
+@@ -90,6 +93,8 @@ export function HomeShowcase({
+   productCount: number
+   categories: HomeCategory[]
+   brands: HomeBrand[]
++  /** Partner spotlight, derived from the catalogue. Null hides the section. */
++  partner?: PartnerBandData | null
+   heroConfig?: HeroConfig | null
+   content?: Partial<EditData>
+ }) {
+@@ -118,7 +123,7 @@ export function HomeShowcase({
+       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
+       <div role="presentation">
+         <SectionList
+-          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']}
++          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'partner', 'about', 'contact']}
+           nodes={{
+             hero: <HeroSlider slides={heroSlides} />,
+             categories: <CategoriesSection categories={categories} />,
+@@ -132,6 +137,7 @@ export function HomeShowcase({
+             ),
+             services: <ServicesStrip />,
+             brands: <BrandsSection brands={brands} />,
++            partner: <PartnerSection partner={partner} />,
+             about: <AboutSection productCount={productCount} brandCount={brands.length} categoryCount={categories.length} />,
+             contact: <ContactSection />,
+           }}
+@@ -692,6 +698,66 @@ function FeaturedSection({
+   )
+ }
+ 
++/* ─────────────────────────────────────────────────────────────────
++ * Partner spotlight (classic skin wrapper)
++ * ──────────────────────────────────────────────────────────────── */
++
++/**
++ * Wraps the shared band with `<Editable>` nodes so the headline, sub-text and
++ * button label are editable through the inline site editor. The tiles are NOT
++ * editable by design — they're generated from the catalogue, so editing them
++ * by hand is how they'd end up pointing at products that no longer exist.
++ */
++function PartnerSection({ partner }: { partner: PartnerBandData | null }) {
++  const t = useTranslations('showroom.partner')
++  if (!partner) return null
++  const brand = partner.brandName
++
++  return (
++    <PartnerBand
++      brandSlug={partner.brandSlug}
++      brandName={brand}
++      logoPath={partner.logoPath}
++      accent={partner.accent}
++      accentDeep={partner.accentDeep}
++      eyebrow={
++        <Editable id="home.partner.eyebrow" label="Sur-titre — Partenaire">
++          {t('eyebrow', { brand })}
++        </Editable>
++      }
++      partnerLine={
++        <Editable id="home.partner.line" label="Ligne partenaire">
++          {t('partnerLine', { brand })}
++        </Editable>
++      }
++      heading={
++        <>
++          <Editable id="home.partner.title1" label="Titre — Partenaire (ligne 1)">
++            {t('title1', { brand })}
++          </Editable>{' '}
++          <Editable id="home.partner.title2" label="Titre — Partenaire (ligne 2)">
++            {t('title2', { brand })}
++          </Editable>
++        </>
++      }
++      sub={
++        <Editable id="home.partner.sub" label="Texte — Partenaire">
++          {t('sub', { brand })}
++        </Editable>
++      }
++      ctaLabel={
++        <Editable id="home.partner.cta" label="Bouton — Partenaire">
++          {t('cta', { brand })}
++        </Editable>
++      }
++      tiles={partner.tiles.map((tile) => ({
++        ...tile,
++        sub: t('tileSub', { count: Number(tile.sub) }),
++      }))}
++    />
++  )
++}
++
+ function ProductCard({
+   product,
+   animationDelay,
+diff --git a/src/components/home/PartnerBand.tsx b/src/components/home/PartnerBand.tsx
+new file mode 100644
+index 0000000..5c494d1
+--- /dev/null
++++ b/src/components/home/PartnerBand.tsx
+@@ -0,0 +1,230 @@
++'use client'
++
++import type { ReactNode } from 'react'
++import Image from 'next/image'
++import { Link } from '@/i18n/routing'
++import './partner-band.css'
++
++/**
++ * Partner spotlight band — a full-bleed colour block for the distributor's
++ * flagship brand, with a 2×2 grid of product-family tiles.
++ *
++ * One component serves BOTH storefront skins. It can, because the band paints
++ * its own background in the PARTNER's colour rather than the site's accent —
++ * that contrast is the point of the section. Colours come from `--pb-*` tokens
++ * set inline from `accent`, so nothing here depends on `--sr-*` or the
++ * `.home-showcase-root` / `.brand-root` scopes.
++ *
++ * Text arrives as ReactNode so the classic skin can pass `<Editable>` nodes
++ * (inline site editor) while the brand skin passes plain strings — neither
++ * needs to know about the other's editing system.
++ */
++
++export interface PartnerTile {
++  /** Category slug — the tile links to this brand ∩ this category. */
++  categorySlug: string
++  /** Display title, e.g. "HP Écrans". */
++  title: string
++  /** Sub-line, e.g. "19 produits". */
++  sub: string
++  icon: PartnerIconKind
++}
++
++export type PartnerIconKind =
++  | 'laptop'
++  | 'monitor'
++  | 'aio'
++  | 'printer'
++  | 'desktop'
++  | 'network'
++  | 'gaming'
++  | 'parts'
++
++export function PartnerBand({
++  brandSlug,
++  brandName,
++  logoPath,
++  accent,
++  accentDeep,
++  eyebrow,
++  partnerLine,
++  heading,
++  sub,
++  ctaLabel,
++  tiles,
++}: {
++  brandSlug: string
++  brandName: string
++  /** Real partner logo when one has been uploaded; falls back to a wordmark. */
++  logoPath?: string | null
++  /** Partner brand colour. */
++  accent: string
++  accentDeep: string
++  eyebrow: ReactNode
++  partnerLine: ReactNode
++  heading: ReactNode
++  sub: ReactNode
++  ctaLabel: ReactNode
++  tiles: PartnerTile[]
++}) {
++  if (tiles.length === 0) return null
++
++  return (
++    <section
++      className="pb-band"
++      id="partner"
++      style={
++        {
++          '--pb-accent': accent,
++          '--pb-accent-deep': accentDeep,
++        } as React.CSSProperties
++      }
++    >
++      <div className="pb-inner">
++        <div className="pb-left">
++          <div className="pb-badge-row">
++            <span className="pb-logo" aria-hidden={logoPath ? undefined : true}>
++              {logoPath ? (
++                <Image
++                  src={logoPath}
++                  alt={brandName}
++                  width={44}
++                  height={44}
++                  sizes="44px"
++                  style={{ objectFit: 'contain' }}
++                />
++              ) : (
++                <span className="pb-logo-mark">{initials(brandName)}</span>
++              )}
++            </span>
++            <span className="pb-badge-text">
++              <strong>{eyebrow}</strong>
++              <small>{partnerLine}</small>
++            </span>
++          </div>
++
++          <h2 className="pb-title">{heading}</h2>
++          <p className="pb-sub">{sub}</p>
++
++          <Link
++            href={{ pathname: '/products', query: { brand: brandSlug } }}
++            className="pb-cta"
++          >
++            {ctaLabel}
++            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
++              <path d="M5 12h14M13 5l7 7-7 7" />
++            </svg>
++          </Link>
++        </div>
++
++        <ul className="pb-tiles">
++          {tiles.map((t) => (
++            <li key={t.categorySlug}>
++              <Link
++                className="pb-tile"
++                href={{
++                  pathname: '/products',
++                  query: { brand: brandSlug, category: t.categorySlug },
++                }}
++              >
++                <PartnerIcon kind={t.icon} />
++                <span className="pb-tile-title">{t.title}</span>
++                <span className="pb-tile-sub">{t.sub}</span>
++              </Link>
++            </li>
++          ))}
++        </ul>
++      </div>
++    </section>
++  )
++}
++
++/** "TP-Link" → "TP", "HP" → "HP". Used only when no logo has been uploaded. */
++function initials(name: string): string {
++  const cleaned = name.replace(/[^A-Za-z0-9]/g, '')
++  return cleaned.slice(0, 2).toUpperCase() || '·'
++}
++
++/**
++ * Self-contained line icons. Deliberately not reusing the storefront's CatIcon:
++ * that lives inside HomeShowcase, and importing it here would couple the band
++ * to the classic skin it also has to render outside of.
++ */
++function PartnerIcon({ kind }: { kind: PartnerIconKind }) {
++  const p = {
++    width: 24,
++    height: 24,
++    viewBox: '0 0 24 24',
++    fill: 'none',
++    stroke: 'currentColor',
++    strokeWidth: 1.6,
++    strokeLinecap: 'round' as const,
++    strokeLinejoin: 'round' as const,
++    'aria-hidden': true,
++    className: 'pb-tile-icon',
++  }
++  switch (kind) {
++    case 'laptop':
++      return (
++        <svg {...p}>
++          <rect x="4" y="5" width="16" height="10" rx="1.6" />
++          <path d="M2 19h20" />
++        </svg>
++      )
++    case 'monitor':
++      return (
++        <svg {...p}>
++          <rect x="3" y="4" width="18" height="12" rx="1.6" />
++          <path d="M9 20h6M12 16v4" />
++        </svg>
++      )
++    case 'aio':
++      return (
++        <svg {...p}>
++          <rect x="3" y="4" width="18" height="12" rx="1.6" />
++          <path d="M7 20h10M12 16v4" />
++          <path d="M6.5 13.5h5" />
++        </svg>
++      )
++    case 'printer':
++      return (
++        <svg {...p}>
++          <path d="M7 9V4h10v5" />
++          <rect x="4" y="9" width="16" height="7" rx="1.6" />
++          <path d="M7 14h10v6H7z" />
++        </svg>
++      )
++    case 'desktop':
++      return (
++        <svg {...p}>
++          <rect x="6" y="3" width="12" height="18" rx="1.8" />
++          <path d="M9.5 7h5M9.5 10.5h5" />
++          <circle cx="12" cy="16.5" r="1.2" />
++        </svg>
++      )
++    case 'network':
++      return (
++        <svg {...p}>
++          <rect x="3" y="13" width="18" height="7" rx="1.6" />
++          <path d="M12 13V8M7 8h10M7 8v2M17 8v2" />
++          <circle cx="7.5" cy="16.5" r=".9" />
++          <circle cx="11" cy="16.5" r=".9" />
++        </svg>
++      )
++    case 'gaming':
++      return (
++        <svg {...p}>
++          <path d="M7 11h4M9 9v4" />
++          <circle cx="15.5" cy="11" r="1" />
++          <path d="M6.2 7h11.6a3 3 0 0 1 2.95 2.46l.9 5A3 3 0 0 1 18.7 18c-1 0-1.6-.6-2.2-1.3L15.4 15H8.6l-1.1 1.7C6.9 17.4 6.3 18 5.3 18a3 3 0 0 1-2.95-3.54l.9-5A3 3 0 0 1 6.2 7z" />
++        </svg>
++      )
++    default:
++      return (
++        <svg {...p}>
++          <rect x="4" y="4" width="16" height="16" rx="2" />
++          <path d="M9 9h6v6H9z" />
++        </svg>
++      )
++  }
++}
+diff --git a/src/components/home/partner-band.css b/src/components/home/partner-band.css
+new file mode 100644
+index 0000000..d677525
+--- /dev/null
++++ b/src/components/home/partner-band.css
+@@ -0,0 +1,195 @@
++/**
++ * partner-band.css — full-bleed partner spotlight.
++ *
++ * Self-contained on purpose: the band renders in BOTH storefront skins, so it
++ * can't rely on `--sr-*` (scoped to `.sr-root`) or on the classic/brand root
++ * palettes. Everything derives from the two `--pb-accent*` values the component
++ * sets inline, which means swapping the featured brand's colour needs no CSS
++ * change at all.
++ *
++ * Full-bleed comes free: in BOTH skins a homepage `<section>` is already
++ * full-width and the max-width wrapper lives INSIDE it. An earlier version used
++ * the `margin-inline: calc(50% - 50vw)` breakout trick on top of that, which
++ * was not only redundant but produced a horizontal scrollbar on /ar — in RTL
++ * the negative start-side margin grows scrollWidth instead of being clipped.
++ */
++
++.pb-band {
++  position: relative;
++  padding: clamp(48px, 6vw, 88px) 0;
++  color: #fff;
++  background:
++    radial-gradient(
++      120% 140% at 82% 12%,
++      color-mix(in srgb, #fff 16%, transparent) 0%,
++      transparent 55%
++    ),
++    linear-gradient(
++      135deg,
++      var(--pb-accent, #3b8fd4) 0%,
++      var(--pb-accent-deep, #1f6fb2) 100%
++    );
++  /* isolate so the radial highlight can't blend with page-level orbs */
++  isolation: isolate;
++}
++
++.pb-inner {
++  max-width: 1320px;
++  margin: 0 auto;
++  padding-inline: clamp(20px, 4vw, 40px);
++  display: grid;
++  grid-template-columns: 1fr 1fr;
++  gap: clamp(28px, 4vw, 64px);
++  align-items: center;
++}
++
++/* ── left column ─────────────────────────────────────────────────── */
++
++.pb-badge-row {
++  display: flex;
++  align-items: center;
++  gap: 12px;
++  margin-bottom: clamp(18px, 2.4vw, 28px);
++}
++.pb-logo {
++  display: grid;
++  place-items: center;
++  flex: 0 0 auto;
++  width: 48px;
++  height: 48px;
++  border-radius: 999px;
++  background: #fff;
++  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.35);
++  overflow: hidden;
++}
++.pb-logo-mark {
++  font-weight: 800;
++  font-size: 17px;
++  letter-spacing: -0.03em;
++  color: var(--pb-accent-deep, #1f6fb2);
++}
++.pb-badge-text { display: flex; flex-direction: column; min-width: 0; }
++.pb-badge-text strong {
++  font-size: 14.5px;
++  font-weight: 700;
++  line-height: 1.25;
++}
++.pb-badge-text small {
++  font-size: 12.5px;
++  line-height: 1.35;
++  color: color-mix(in srgb, #fff 78%, transparent);
++}
++
++.pb-title {
++  margin: 0;
++  font-size: clamp(28px, 3.4vw, 46px);
++  line-height: 1.1;
++  letter-spacing: -0.03em;
++  font-weight: 800;
++  /* Near-black on the partner colour, matching the reference. Reads as the
++     brand's own typography rather than the site's. */
++  color: #0d1b26;
++  text-wrap: balance;
++}
++.pb-sub {
++  margin: clamp(14px, 1.8vw, 22px) 0 0;
++  max-width: 46ch;
++  font-size: clamp(14px, 1.15vw, 16px);
++  line-height: 1.65;
++  color: color-mix(in srgb, #fff 88%, transparent);
++}
++
++.pb-cta {
++  display: inline-flex;
++  align-items: center;
++  gap: 9px;
++  margin-top: clamp(22px, 2.6vw, 32px);
++  padding: 12px 22px;
++  border-radius: 999px;
++  border: 1px solid color-mix(in srgb, #fff 55%, transparent);
++  background: color-mix(in srgb, #fff 10%, transparent);
++  color: #fff;
++  font-size: 14.5px;
++  font-weight: 600;
++  text-decoration: none;
++  backdrop-filter: blur(3px);
++  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
++}
++.pb-cta:hover {
++  background: #fff;
++  border-color: #fff;
++  color: var(--pb-accent-deep, #1f6fb2);
++  transform: translateY(-1px);
++}
++.pb-cta:focus-visible {
++  outline: 2px solid #fff;
++  outline-offset: 3px;
++}
++[dir='rtl'] .pb-cta svg { transform: scaleX(-1); }
++
++/* ── tiles ───────────────────────────────────────────────────────── */
++
++.pb-tiles {
++  list-style: none;
++  margin: 0;
++  padding: 0;
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  gap: clamp(12px, 1.4vw, 18px);
++}
++.pb-tile {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++  height: 100%;
++  padding: clamp(16px, 1.8vw, 22px);
++  border-radius: 14px;
++  border: 1px solid color-mix(in srgb, #fff 30%, transparent);
++  background: color-mix(in srgb, #fff 12%, transparent);
++  color: #fff;
++  text-decoration: none;
++  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
++}
++.pb-tile:hover {
++  background: color-mix(in srgb, #fff 22%, transparent);
++  border-color: color-mix(in srgb, #fff 62%, transparent);
++  transform: translateY(-2px);
++}
++.pb-tile:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
++.pb-tile-icon { margin-bottom: clamp(14px, 2vw, 26px); opacity: 0.95; }
++.pb-tile-title { font-size: 15px; font-weight: 700; line-height: 1.25; }
++.pb-tile-sub {
++  font-size: 12.5px;
++  line-height: 1.4;
++  color: color-mix(in srgb, #fff 80%, transparent);
++}
++
++/* ── responsive ──────────────────────────────────────────────────── */
++
++@media (max-width: 900px) {
++  .pb-inner { grid-template-columns: 1fr; gap: 32px; }
++  .pb-sub { max-width: none; }
++}
++@media (max-width: 600px) {
++  /* Keep the 2×2 shape; just tighten it. Stacking to one column made the band
++     ~940px tall on a 390px phone, which is longer than the viewport. */
++  .pb-tile { padding: 14px; border-radius: 12px; }
++  .pb-tile-icon { margin-bottom: 10px; }
++  .pb-tile-title { font-size: 13.5px; }
++  .pb-tile-sub { font-size: 11.5px; }
++}
++@media (max-width: 340px) {
++  .pb-tiles { grid-template-columns: 1fr; }
++}
++
++@media (prefers-reduced-motion: reduce) {
++  .pb-cta,
++  .pb-tile { transition: none; }
++  .pb-cta:hover,
++  .pb-tile:hover { transform: none; }
++}
++
++/* Dark-on-accent stays legible if a future partner colour is very dark. */
++@supports (color: color-contrast(#000 vs #fff, #000)) {
++  .pb-title { color: color-contrast(var(--pb-accent) vs #0d1b26, #ffffff); }
++}
+diff --git a/src/server/partner-band.ts b/src/server/partner-band.ts
+new file mode 100644
+index 0000000..bad3ea4
+--- /dev/null
++++ b/src/server/partner-band.ts
+@@ -0,0 +1,108 @@
++import 'server-only'
++
++import { imgOr } from '@/lib/img'
++import type { getAllProducts, getAllBrands } from '@/server/queries'
++import type { PartnerIconKind, PartnerTile } from '@/components/home/PartnerBand'
++
++/**
++ * Data for the homepage partner spotlight.
++ *
++ * The tiles are DERIVED from the live catalogue — the featured brand's biggest
++ * product families, with real counts — rather than hand-written. That means a
++ * tile can never advertise a family the brand no longer stocks, and can never
++ * link to an empty filtered page. Reseeding or archiving products updates the
++ * band on the next request.
++ */
++
++type ProductsRaw = Awaited<ReturnType<typeof getAllProducts>>
++type BrandsRaw = Awaited<ReturnType<typeof getAllBrands>>
++
++/** Featured partner. Change the slug here to spotlight a different brand. */
++export const PARTNER_BRAND_SLUG = 'hp'
++
++/** Partner brand colours — HP's blue, matching their own identity. */
++const PARTNER_COLORS: Record<string, { accent: string; deep: string }> = {
++  hp: { accent: '#3d92d9', deep: '#0b6bb5' },
++  asus: { accent: '#3b4a8c', deep: '#1d2555' },
++  dell: { accent: '#1a7fd4', deep: '#0f4c8a' },
++  epson: { accent: '#2b4ea2', deep: '#16306b' },
++  lenovo: { accent: '#d6373b', deep: '#8f1f22' },
++  'tp-link': { accent: '#3aa0d8', deep: '#16688f' },
++  canon: { accent: '#cf2027', deep: '#8b1216' },
++}
++const DEFAULT_COLORS = { accent: '#3d92d9', deep: '#0b6bb5' }
++
++const CATEGORY_ICON: Record<string, PartnerIconKind> = {
++  laptops: 'laptop',
++  monitors: 'monitor',
++  'all-in-one': 'aio',
++  desktops: 'desktop',
++  printers: 'printer',
++  scanners: 'printer',
++  projectors: 'printer',
++  consumables: 'printer',
++  networking: 'network',
++  gaming: 'gaming',
++  'graphics-cards': 'gaming',
++  tablets: 'laptop',
++}
++
++export interface PartnerBandData {
++  brandSlug: string
++  brandName: string
++  logoPath: string | null
++  accent: string
++  accentDeep: string
++  productCount: number
++  tiles: PartnerTile[]
++}
++
++export function buildPartnerBand(
++  products: ProductsRaw,
++  brands: BrandsRaw,
++  brandSlug: string = PARTNER_BRAND_SLUG,
++  /** How many family tiles to show. The layout is a 2×2 grid. */
++  tileCount = 4
++): PartnerBandData | null {
++  const brand = brands.find((b) => b.slug === brandSlug)
++  if (!brand) return null
++
++  const mine = products.filter((p) => p.brand.slug === brandSlug)
++  if (mine.length === 0) return null
++
++  // Group into categories, then take the biggest families.
++  const byCategory = new Map<string, { name: string; count: number }>()
++  for (const p of mine) {
++    const slug = p.category.slug
++    const entry = byCategory.get(slug)
++    if (entry) entry.count++
++    else byCategory.set(slug, { name: p.category.name, count: 1 })
++  }
++
++  const tiles: PartnerTile[] = [...byCategory.entries()]
++    .sort(
++      // Count desc, then slug asc so the order is stable across requests and
++      // locales — an unstable tie-break would reshuffle the grid on refresh.
++      (a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0])
++    )
++    .slice(0, tileCount)
++    .map(([slug, { name, count }]) => ({
++      categorySlug: slug,
++      title: `${brand.name} ${name}`,
++      // Filled in by the caller, which has the translator.
++      sub: String(count),
++      icon: CATEGORY_ICON[slug] ?? 'parts',
++    }))
++
++  const colors = PARTNER_COLORS[brandSlug] ?? DEFAULT_COLORS
++
++  return {
++    brandSlug,
++    brandName: brand.name,
++    logoPath: brand.logoPath ? imgOr(brand.logoPath) : null,
++    accent: colors.accent,
++    accentDeep: colors.deep,
++    productCount: mine.length,
++    tiles,
++  }
++}

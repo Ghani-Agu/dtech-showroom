@@ -4,9 +4,11 @@
  * The storefront can render in one of two complete designs that share the
  * SAME backend, products, categories, brands and inquiry flow — only the
  * interface differs:
- *   - `classic` — the current/original D-Tech showroom design.
- *   - `brand`   — the new "dtech Brand" design (teal + yellow, light/dark,
- *                 FR/EN/AR), ported from the Claude design project.
+ *   - `classic`   — the current/original D-Tech showroom design.
+ *   - `brand`     — the "dtech Brand" design (teal + yellow, light/dark,
+ *                   FR/EN/AR), ported from the Claude design project.
+ *   - `editorial` — the "Éditorial" design (dark/light bands, Comfortaa,
+ *                   glass pill nav), ported from "D-Tech - Éditorial".
  *
  * The active design lives in the `site_pages` table under the key
  * `site:design` as `{ active: DesignId }`, with the same draft → published
@@ -16,7 +18,7 @@
  * UI) and server code, so it must stay free of any server-only imports.
  */
 
-export const DESIGN_IDS = ['classic', 'brand'] as const
+export const DESIGN_IDS = ['classic', 'brand', 'editorial'] as const
 export type DesignId = (typeof DESIGN_IDS)[number]
 
 /** Until an explicit choice is published, the site stays on the current design. */
@@ -50,5 +52,9 @@ export const DESIGN_META: Record<DesignId, DesignMeta> = {
   brand: {
     label: 'Nouveau design — dtech Brand',
     desc: 'Le nouveau design teal & jaune (clair/sombre, FR/EN/AR). Mêmes produits, même back-office.',
+  },
+  editorial: {
+    label: 'Design nº3 — Éditorial',
+    desc: 'Design éditorial en bandes sombres/claires : pill nav en verre, Comfortaa, motion soignée. Mêmes produits, même back-office.',
   },
 }

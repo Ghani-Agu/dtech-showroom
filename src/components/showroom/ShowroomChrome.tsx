@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
+import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
 
 export function ShowroomFooter() {
   const t = useTranslations('showroom.footer')
@@ -19,12 +20,12 @@ export function ShowroomFooter() {
               <small>Algérie · {new Date().getFullYear()}</small>
             </span>
             <p className="sr-sub" style={{ fontSize: 13.5, marginTop: 10 }}>{t('blurb')}</p>
+            <FooterNewsletter source="footer-pages" />
           </div>
           <div>
             <h4>{tNav('catalog')}</h4>
             <ul>
               <li><Link href="/products">{t('allProducts')}</Link></li>
-              <li><Link href="/categories">{tNav('categories')}</Link></li>
               <li><Link href="/brands">{tNav('brands')}</Link></li>
               <li><Link href="/search">{tNav('search')}</Link></li>
             </ul>

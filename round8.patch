@@ -1,0 +1,2739 @@
+diff --git a/next.config.ts b/next.config.ts
+index 720c292..08e5bcc 100644
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -58,6 +58,15 @@ const nextConfig: NextConfig = {
+     serverActions: {
+       bodySizeLimit: '25mb',
+     },
++    /**
++     * Client router cache: keep visited dynamic pages fresh-enough for 30 s
++     * so back/forward and revisits render instantly instead of refetching.
++     * Server actions still purge this via revalidatePath after mutations.
++     */
++    staleTimes: {
++      dynamic: 30,
++      static: 180,
++    },
+   },
+ 
+   compress: true,
+diff --git a/src/app/[locale]/products/[productSlug]/page.tsx b/src/app/[locale]/products/[productSlug]/page.tsx
+index 773fde4..18578b0 100644
+--- a/src/app/[locale]/products/[productSlug]/page.tsx
++++ b/src/app/[locale]/products/[productSlug]/page.tsx
+@@ -1,5 +1,6 @@
+ import type { Metadata } from 'next'
+ import { imgOr } from '@/lib/img'
++import { sanitizeCustomHtml } from '@/lib/custom-html'
+ import { ProductGallery } from '@/components/product/ProductGallery'
+ import { StickyBuyBar } from '@/components/product/StickyBuyBar'
+ import { notFound } from 'next/navigation'
+@@ -65,6 +66,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
+             catSlug: product.category.slug,
+             tagline: product.tagline ?? '',
+             description: product.description ?? '',
++            customHtml: product.customHtml
++              ? sanitizeCustomHtml(product.customHtml)
++              : '',
+             image: imgOr(product.cardImagePath),
+             specs: product.specs,
+             images: (product.photoCarouselPaths ?? []).map(imgOr),
+@@ -176,6 +180,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
+             ))}
+           </div>
+ 
++          {product.customHtml ? (
++            <div
++              className="sr-customhtml"
++              dangerouslySetInnerHTML={{
++                __html: sanitizeCustomHtml(product.customHtml),
++              }}
++            />
++          ) : null}
++
+           <Link
+             href={`/inquiry/${product.slug}`}
+             className="sr-btn sr-btn-ghost"
+diff --git a/src/app/admin/layout.tsx b/src/app/admin/layout.tsx
+index f306af5..dadc158 100644
+--- a/src/app/admin/layout.tsx
++++ b/src/app/admin/layout.tsx
+@@ -1,12 +1,10 @@
+ import type { Metadata } from 'next'
+-import { headers } from 'next/headers'
+ import { redirect } from 'next/navigation'
+ import { Toaster } from 'sonner'
+ import { AmbientBackground } from '@/components/admin/AmbientBackground'
+ import { AdminSidebar } from '@/components/admin/AdminSidebar'
+ import { AdminTopbar } from '@/components/admin/AdminTopbar'
+ import { CommandPaletteProvider } from '@/components/admin/CommandPaletteProvider'
+-import { auth } from '@/lib/auth'
+ import { getSessionUser } from '@/lib/auth-helpers'
+ import { allowedSections } from '@/lib/permissions'
+ 
+@@ -29,16 +27,15 @@ export default async function AdminLayout({
+ }: {
+   children: React.ReactNode
+ }) {
+-  const session = await auth.api
+-    .getSession({ headers: await headers() })
+-    .catch(() => null)
++  // One request-cached lookup covers both the auth guard and permissions —
++  // pages/components below reuse the same result via React cache().
++  const sessionUser = await getSessionUser()
+ 
+-  if (!session) {
++  if (!sessionUser) {
+     redirect('/login?redirect=/admin')
+   }
+ 
+-  const sessionUser = await getSessionUser()
+-  const allowed = sessionUser ? allowedSections(sessionUser) : []
++  const allowed = allowedSections(sessionUser)
+ 
+   return (
+     <div
+@@ -50,7 +47,7 @@ export default async function AdminLayout({
+         <div className="relative z-10 flex min-h-screen">
+           <AdminSidebar allowed={allowed} />
+           <div className="flex min-w-0 flex-1 flex-col">
+-            <AdminTopbar userName={session.user?.name ?? undefined} />
++            <AdminTopbar userName={sessionUser.name ?? undefined} />
+             <main className="flex-1 px-8 pb-10 pt-6">{children}</main>
+           </div>
+         </div>
+diff --git a/src/app/admin/products/[productId]/edit/page.tsx b/src/app/admin/products/[productId]/edit/page.tsx
+index fd80604..8bf8f4a 100644
+--- a/src/app/admin/products/[productId]/edit/page.tsx
++++ b/src/app/admin/products/[productId]/edit/page.tsx
+@@ -109,6 +109,7 @@ export default async function EditProductPage({ params }: PageProps) {
+           photoCarouselPaths: product.photoCarouselPaths ?? [],
+           seoTitle: product.seoTitle ?? '',
+           seoDescription: product.seoDescription ?? '',
++          customHtml: product.customHtml ?? '',
+         }}
+         isArchived={product.archivedAt !== null}
+         brands={brandList}
+diff --git a/src/app/admin/settings/page.tsx b/src/app/admin/settings/page.tsx
+index b67a8e9..6dee2d5 100644
+--- a/src/app/admin/settings/page.tsx
++++ b/src/app/admin/settings/page.tsx
+@@ -1,7 +1,7 @@
+ import type { Metadata } from 'next'
+ import { redirect } from 'next/navigation'
+-import { headers } from 'next/headers'
+-import { auth } from '@/lib/auth'
++import { getSessionUser } from '@/lib/auth-helpers'
++import { getBrevoSettingsView } from '@/server/admin-settings-actions'
+ import { SettingsTabs } from '@/components/admin/settings/SettingsTabs'
+ 
+ export const metadata: Metadata = {
+@@ -10,14 +10,14 @@ export const metadata: Metadata = {
+ }
+ 
+ export default async function AdminSettingsPage() {
+-  const session = await auth.api
+-    .getSession({ headers: await headers() })
+-    .catch(() => null)
++  const sessionUser = await getSessionUser()
+ 
+-  if (!session) {
++  if (!sessionUser) {
+     redirect('/login?redirect=/admin/settings')
+   }
+ 
++  const brevo = await getBrevoSettingsView()
++
+   return (
+     <div className="space-y-8">
+       <header>
+@@ -42,8 +42,10 @@ export default async function AdminSettingsPage() {
+       </header>
+ 
+       <SettingsTabs
+-        initialName={session.user.name ?? ''}
+-        email={session.user.email}
++        initialName={sessionUser.name ?? ''}
++        email={sessionUser.email}
++        isAdmin={sessionUser.role === 'admin'}
++        brevo={brevo}
+       />
+     </div>
+   )
+diff --git a/src/app/api/images/[...key]/route.ts b/src/app/api/images/[...key]/route.ts
+index 6a1cde7..9d7b7ba 100644
+--- a/src/app/api/images/[...key]/route.ts
++++ b/src/app/api/images/[...key]/route.ts
+@@ -4,7 +4,24 @@ import { imageBlobs } from '@/db/schema'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+-/** Serves DB-hosted images (admin uploads) with immutable caching. */
++/**
++ * In-process memo of recently served blobs. Image keys are content-hashed
++ * (products/<slug>/card-<hash>.webp), so an entry never changes — safe to
++ * hold. Caps keep a warm lambda under ~24 MB of image memory.
++ */
++const memo = new Map<string, { data: Uint8Array; contentType: string }>()
++const MEMO_MAX_ITEM = 1_500_000 // don't memoize blobs > ~1.5 MB
++const MEMO_MAX_ENTRIES = 48
++
++/**
++ * Serves DB-hosted images (admin uploads).
++ *
++ * `s-maxage` matters: the Vercel CDN only caches function responses when
++ * a shared-cache directive is present. Without it, EVERY visitor's hero
++ * slide / uploaded photo was a function invocation + a database read —
++ * a big contributor to slow first paints. Now the first hit per region
++ * primes the CDN and later visitors never reach the function.
++ */
+ export async function GET(
+   _req: Request,
+   { params }: { params: Promise<{ key: string[] }> }
+@@ -12,20 +29,38 @@ export async function GET(
+   const { key } = await params
+   const fullKey = key.join('/')
+ 
+-  const row = await db
+-    .select({ data: imageBlobs.data, contentType: imageBlobs.contentType })
+-    .from(imageBlobs)
+-    .where(eq(imageBlobs.key, fullKey))
+-    .limit(1)
+-    .then((rows) => rows[0])
+-    .catch(() => undefined)
++  let row = memo.get(fullKey)
++
++  if (!row) {
++    const dbRow = await db
++      .select({ data: imageBlobs.data, contentType: imageBlobs.contentType })
++      .from(imageBlobs)
++      .where(eq(imageBlobs.key, fullKey))
++      .limit(1)
++      .then((rows) => rows[0])
++      .catch(() => undefined)
++
++    if (!dbRow) return new Response('Not found', { status: 404 })
++
++    row = {
++      data: new Uint8Array(dbRow.data),
++      contentType: dbRow.contentType,
++    }
+ 
+-  if (!row) return new Response('Not found', { status: 404 })
++    if (row.data.byteLength <= MEMO_MAX_ITEM) {
++      if (memo.size >= MEMO_MAX_ENTRIES) {
++        const oldest = memo.keys().next().value
++        if (oldest !== undefined) memo.delete(oldest)
++      }
++      memo.set(fullKey, row)
++    }
++  }
+ 
+-  return new Response(new Uint8Array(row.data), {
++  return new Response(row.data.slice(), {
+     headers: {
+       'content-type': row.contentType,
+-      'cache-control': 'public, max-age=31536000, immutable',
++      'cache-control':
++        'public, max-age=31536000, s-maxage=31536000, immutable',
+     },
+   })
+ }
+diff --git a/src/components/admin/products/ProductForm.tsx b/src/components/admin/products/ProductForm.tsx
+index 4059822..65a6a29 100644
+--- a/src/components/admin/products/ProductForm.tsx
++++ b/src/components/admin/products/ProductForm.tsx
+@@ -68,6 +68,7 @@ const defaultValues: ProductFormValues = {
+   photoCarouselPaths: [],
+   seoTitle: '',
+   seoDescription: '',
++  customHtml: '',
+ }
+ 
+ type FieldErrors = Record<string, string[] | undefined>
+@@ -112,6 +113,7 @@ const FIELD_TAB: Record<string, TabId> = {
+   cardSpecFr: 'contenu',
+   description: 'contenu',
+   descriptionFr: 'contenu',
++  customHtml: 'contenu',
+   searchKeywords: 'contenu',
+   searchKeywordsFr: 'contenu',
+   heroImagePath: 'photos',
+@@ -417,6 +419,35 @@ export function ProductForm({
+                 type="textarea"
+                 rows={6}
+               />
++              <div>
++                <label
++                  htmlFor="product-custom-html"
++                  className="font-body text-sm font-medium text-white"
++                >
++                  Code HTML (optionnel)
++                </label>
++                <p className="mt-0.5 font-body text-xs text-[var(--admin-text-tertiary)]">
++                  Affiché tel quel sous la description, sur la page du
++                  produit (toutes les langues). Tableaux, images et vidéos
++                  intégrées (iframe) autorisés — les balises{' '}
++                  <code>&lt;script&gt;</code> sont supprimées.
++                </p>
++                <textarea
++                  id="product-custom-html"
++                  value={values.customHtml}
++                  onChange={(e) => update('customHtml', e.target.value)}
++                  rows={8}
++                  spellCheck={false}
++                  placeholder={'<h3>Points forts</h3>\n<ul>\n  <li>…</li>\n</ul>'}
++                  className="mt-2 w-full rounded-xl border border-white/[0.08] bg-black/30 px-4 py-2.5 font-mono text-[13px] leading-relaxed text-white outline-none placeholder:text-white/25 focus:border-[color-mix(in_oklab,_var(--c-violet)_50%,_transparent)] focus-visible:ring-2 focus-visible:ring-[color-mix(in_oklab,_var(--c-violet)_45%,_transparent)]"
++                  dir="ltr"
++                />
++                {errors.customHtml ? (
++                  <p className="mt-1 font-body text-xs text-red-400">
++                    {errors.customHtml[0]}
++                  </p>
++                ) : null}
++              </div>
+               <BilingualField
+                 label="Mots-clés de recherche"
+                 description="Séparés par des espaces. Invisibles pour les clients."
+diff --git a/src/components/admin/settings/SettingsTabs.tsx b/src/components/admin/settings/SettingsTabs.tsx
+index 1e83d65..df05e17 100644
+--- a/src/components/admin/settings/SettingsTabs.tsx
++++ b/src/components/admin/settings/SettingsTabs.tsx
+@@ -3,7 +3,10 @@
+ import { useState, useTransition } from 'react'
+ import { useRouter } from 'next/navigation'
+ import {
++  Eye,
++  EyeOff,
+   KeyRound,
++  Mail,
+   Monitor,
+   Palette,
+   ShieldCheck,
+@@ -15,11 +18,15 @@ import { Input } from '@/components/admin/ui/Input'
+ import { authClient } from '@/lib/auth-client'
+ import {
+   changePasswordAction,
++  clearBrevoKey,
++  saveBrevoSettings,
++  testBrevoConnection,
+   updateProfile,
++  type BrevoSettingsView,
+ } from '@/server/admin-settings-actions'
+ import { cn } from '@/lib/utils'
+ 
+-type TabId = 'profile' | 'password' | 'preferences' | 'sessions'
++type TabId = 'profile' | 'password' | 'preferences' | 'sessions' | 'integrations'
+ 
+ interface Tab {
+   id: TabId
+@@ -32,15 +39,27 @@ const TABS: Tab[] = [
+   { id: 'password', label: 'Mot de passe', icon: KeyRound },
+   { id: 'preferences', label: 'Préférences', icon: Palette },
+   { id: 'sessions', label: 'Sessions', icon: ShieldCheck },
++  { id: 'integrations', label: 'Intégrations', icon: Mail },
+ ]
+ 
+ export interface SettingsTabsProps {
+   initialName: string
+   email: string
++  /** Intégrations (Brevo) est réservé aux administrateurs. */
++  isAdmin?: boolean
++  brevo?: BrevoSettingsView | null
+ }
+ 
+-export function SettingsTabs({ initialName, email }: SettingsTabsProps) {
++export function SettingsTabs({
++  initialName,
++  email,
++  isAdmin = false,
++  brevo = null,
++}: SettingsTabsProps) {
+   const [active, setActive] = useState<TabId>('profile')
++  const visibleTabs = TABS.filter(
++    (tab) => tab.id !== 'integrations' || isAdmin
++  )
+ 
+   return (
+     <div className="space-y-6">
+@@ -49,7 +68,7 @@ export function SettingsTabs({ initialName, email }: SettingsTabsProps) {
+         role="tablist"
+         className="flex flex-wrap gap-2"
+       >
+-        {TABS.map((tab) => {
++        {visibleTabs.map((tab) => {
+           const Icon = tab.icon
+           const isActive = tab.id === active
+           return (
+@@ -87,6 +106,9 @@ export function SettingsTabs({ initialName, email }: SettingsTabsProps) {
+         {active === 'password' && <PasswordPanel />}
+         {active === 'preferences' && <PreferencesPanel />}
+         {active === 'sessions' && <SessionsPanel />}
++        {active === 'integrations' && isAdmin && (
++          <IntegrationsPanel brevo={brevo} />
++        )}
+       </div>
+     </div>
+   )
+@@ -432,7 +454,9 @@ function SessionsPanel() {
+         <h2 className="font-display text-xl text-white">Sessions actives</h2>
+         <p className="mt-1 font-body text-sm text-[var(--admin-text-secondary)]">
+           Déconnectez-vous de tous les autres appareils où ce compte est
+-          actuellement connecté. La session en cours est conservée.
++          actuellement connecté. La session en cours est conservée. La
++          déconnexion peut prendre jusqu'à 5 minutes sur les autres
++          appareils.
+         </p>
+ 
+         {error && (
+@@ -467,3 +491,210 @@ function SessionsPanel() {
+     </GlassCard>
+   )
+ }
++
++/* ------------------------------------------------------------------ */
++/* Intégrations — Brevo (email marketing)                              */
++/* ------------------------------------------------------------------ */
++
++function IntegrationsPanel({ brevo }: { brevo: BrevoSettingsView | null }) {
++  const router = useRouter()
++  const [apiKey, setApiKey] = useState('')
++  const [showKey, setShowKey] = useState(false)
++  const [listId, setListId] = useState(brevo?.listId ?? '')
++  const [fromEmail, setFromEmail] = useState(brevo?.fromEmail ?? '')
++  const [fromName, setFromName] = useState(brevo?.fromName ?? '')
++  const [error, setError] = useState<string | null>(null)
++  const [notice, setNotice] = useState<string | null>(null)
++  const [isPending, startTransition] = useTransition()
++  const [isTesting, startTesting] = useTransition()
++
++  const configured = brevo?.configured ?? false
++
++  function onSave(e: React.FormEvent<HTMLFormElement>) {
++    e.preventDefault()
++    setError(null)
++    setNotice(null)
++    startTransition(async () => {
++      const result = await saveBrevoSettings({
++        apiKey,
++        listId,
++        fromEmail,
++        fromName,
++      })
++      if (result.ok) {
++        setApiKey('')
++        setNotice('Paramètres Brevo enregistrés.')
++        router.refresh()
++      } else {
++        setError(result.error ?? 'Erreur inconnue')
++      }
++    })
++  }
++
++  function onTest() {
++    setError(null)
++    setNotice(null)
++    startTesting(async () => {
++      const result = await testBrevoConnection(apiKey || undefined)
++      if (result.ok) {
++        setNotice(result.message)
++      } else {
++        setError(result.message)
++      }
++    })
++  }
++
++  function onClear() {
++    setError(null)
++    setNotice(null)
++    startTransition(async () => {
++      const result = await clearBrevoKey()
++      if (result.ok) {
++        setNotice('Clé Brevo supprimée.')
++        router.refresh()
++      } else {
++        setError(result.error ?? 'Erreur inconnue')
++      }
++    })
++  }
++
++  return (
++    <GlassCard className="max-w-2xl">
++      <div className="px-2 py-2">
++        <div className="flex items-center justify-between gap-4">
++          <h2 className="font-display text-xl text-white">
++            Brevo — e-mail marketing
++          </h2>
++          <span
++            className={cn(
++              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10.5px] uppercase tracking-[1.5px]',
++              configured
++                ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
++                : 'border-white/[0.1] bg-white/[0.03] text-[var(--admin-text-tertiary)]'
++            )}
++          >
++            <span
++              aria-hidden
++              className={cn(
++                'size-1.5 rounded-full',
++                configured ? 'bg-emerald-300' : 'bg-white/30'
++              )}
++            />
++            {configured ? 'Connecté' : 'Non configuré'}
++          </span>
++        </div>
++        <p className="mt-1 font-body text-sm text-[var(--admin-text-secondary)]">
++          Collez votre clé API Brevo pour envoyer les campagnes, les
++          confirmations d'inscription à la newsletter et les e-mails de
++          réinitialisation via Brevo. Les abonnés confirmés sont aussi
++          synchronisés vers vos contacts Brevo. La clé se crée dans
++          Brevo&nbsp;: Profil → SMTP &amp; API → Clés API.
++        </p>
++        {configured && brevo?.keyMasked && (
++          <p className="mt-2 font-mono text-xs text-[var(--admin-text-tertiary)]">
++            Clé actuelle : {brevo.keyMasked}
++          </p>
++        )}
++
++        <form onSubmit={onSave} className="mt-6 space-y-5">
++          <div>
++            <label
++              htmlFor="brevo-api-key"
++              className="font-body text-sm font-medium text-white"
++            >
++              Clé API {configured ? '(laisser vide pour conserver)' : ''}
++            </label>
++            <div className="relative mt-2">
++              <input
++                id="brevo-api-key"
++                type={showKey ? 'text' : 'password'}
++                value={apiKey}
++                onChange={(e) => setApiKey(e.target.value)}
++                placeholder="xkeysib-…"
++                autoComplete="off"
++                spellCheck={false}
++                dir="ltr"
++                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 pr-11 font-mono text-sm text-white outline-none placeholder:text-white/25 focus:border-cyan-400/40 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
++                disabled={isPending}
++              />
++              <button
++                type="button"
++                onClick={() => setShowKey((v) => !v)}
++                aria-label={showKey ? 'Masquer la clé' : 'Afficher la clé'}
++                className="absolute inset-y-0 right-0 grid w-11 place-items-center text-[var(--admin-text-tertiary)] hover:text-white"
++              >
++                {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
++              </button>
++            </div>
++          </div>
++
++          <div className="grid gap-5 sm:grid-cols-2">
++            <Input
++              label="Expéditeur — nom"
++              value={fromName}
++              onChange={(e) => setFromName(e.target.value)}
++              placeholder="Dtech Algérie"
++              disabled={isPending}
++              description="Nom affiché dans la boîte de réception."
++            />
++            <Input
++              label="Expéditeur — e-mail"
++              type="email"
++              value={fromEmail}
++              onChange={(e) => setFromEmail(e.target.value)}
++              placeholder="contact@dtech.dz"
++              disabled={isPending}
++              description="Doit être un expéditeur validé dans Brevo."
++            />
++          </div>
++
++          <Input
++            label="Liste Brevo (ID) — optionnel"
++            value={listId}
++            onChange={(e) => setListId(e.target.value.replace(/[^0-9]/g, ''))}
++            placeholder="ex. 3"
++            inputMode="numeric"
++            disabled={isPending}
++            description="Les abonnés confirmés seront ajoutés à cette liste (Contacts → Listes dans Brevo)."
++          />
++
++          {error && (
++            <p role="alert" className="font-body text-sm text-rose-300" aria-live="polite">
++              {error}
++            </p>
++          )}
++          {notice && !error && (
++            <p className="font-body text-sm text-emerald-300" aria-live="polite">
++              {notice}
++            </p>
++          )}
++
++          <div className="flex flex-wrap items-center justify-end gap-3">
++            {configured && (
++              <Button
++                type="button"
++                variant="ghost"
++                onClick={onClear}
++                disabled={isPending || isTesting}
++              >
++                Supprimer la clé
++              </Button>
++            )}
++            <Button
++              type="button"
++              variant="secondary"
++              onClick={onTest}
++              loading={isTesting}
++              disabled={isPending || (!configured && !apiKey)}
++            >
++              Tester la connexion
++            </Button>
++            <Button type="submit" variant="primary" loading={isPending}>
++              Enregistrer
++            </Button>
++          </div>
++        </form>
++      </div>
++    </GlassCard>
++  )
++}
+diff --git a/src/components/brand/BrandChrome.tsx b/src/components/brand/BrandChrome.tsx
+index 9f50282..6525e95 100644
+--- a/src/components/brand/BrandChrome.tsx
++++ b/src/components/brand/BrandChrome.tsx
+@@ -24,6 +24,8 @@ import {
+   InstagramIcon,
+   LinkedInIcon,
+ } from './brand-icons'
++import { BRAND_WHATSAPP } from './brand-types'
++import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
+ 
+ function BrandWordmark() {
+   const { t } = useBrand()
+@@ -295,7 +297,7 @@ export function BrandHeader() {
+     const active = onHome ? it.hash === 'products' : it.to ? pathname.startsWith(it.to) : false
+     const cls = active ? 'on' : undefined
+     if (onHome) return <a key={it.hash} href={`#${it.hash}`} className={cls} onClick={onClick}>{it.label}</a>
+-    if (it.to) return <Link key={it.hash} href={it.to} className={cls} onClick={onClick}>{it.label}</Link>
++    if (it.to) return <Link key={it.hash} href={it.to} prefetch className={cls} onClick={onClick}>{it.label}</Link>
+     return <a key={it.hash} href={`/${lang}#${it.hash}`} className={cls} onClick={onClick}>{it.label}</a>
+   }
+ 
+@@ -369,43 +371,44 @@ export function BrandFooter() {
+             <div className="tag">{t('b.tag')}</div>
+             <p>{t('footer.tagline')}</p>
+             <div className="ft-soc">
+-              <a aria-label="Facebook"><FacebookIcon /></a>
+-              <a aria-label="Instagram"><InstagramIcon /></a>
+-              <a aria-label="LinkedIn"><LinkedInIcon /></a>
++              <a aria-label="Facebook" href="https://www.facebook.com/DtechDZ/" target="_blank" rel="noopener noreferrer"><FacebookIcon /></a>
++              <a aria-label="Instagram" href="https://www.instagram.com/dtechdz/" target="_blank" rel="noopener noreferrer"><InstagramIcon /></a>
++              <a aria-label="LinkedIn" href="https://www.linkedin.com/company/d-techalgerie" target="_blank" rel="noopener noreferrer"><LinkedInIcon /></a>
+             </div>
++            <FooterNewsletter source="footer-brand" />
+           </div>
+           <div className="ft-col">
+             <h4>{t('footer.c1')}</h4>
+             <ul>
+-              <li><a>{t('footer.c1a')}</a></li>
+-              <li><a>{t('footer.c1b')}</a></li>
+-              <li><a>{t('footer.c1c')}</a></li>
+-              <li><a>{t('footer.c1d')}</a></li>
+-              <li><a>{t('footer.c1e')}</a></li>
++              <li><Link href="/categories/desktops">{t('footer.c1a')}</Link></li>
++              <li><Link href="/categories/laptops">{t('footer.c1b')}</Link></li>
++              <li><Link href="/categories/all-in-one">{t('footer.c1c')}</Link></li>
++              <li><Link href="/categories/tablets">{t('footer.c1d')}</Link></li>
++              <li><Link href="/categories/printers">{t('footer.c1e')}</Link></li>
+             </ul>
+           </div>
+           <div className="ft-col">
+             <h4>{t('footer.c2')}</h4>
+             <ul>
+-              <li><a>HP · Dell · Lenovo</a></li>
+-              <li><a>ASUS · TUF Gaming</a></li>
+-              <li><a>TP-Link</a></li>
+-              <li><a>Canon · Epson</a></li>
++              <li><Link href="/brands/hp">HP · Dell · Lenovo</Link></li>
++              <li><Link href="/brands/asus">ASUS · TUF Gaming</Link></li>
++              <li><Link href="/brands/tp-link">TP-Link</Link></li>
++              <li><Link href="/brands">Canon · Epson</Link></li>
+             </ul>
+           </div>
+           <div className="ft-col">
+             <h4>{t('footer.c3')}</h4>
+             <ul>
+-              <li><a>{t('footer.c3a')}</a></li>
+-              <li><a>{t('footer.c3b')}</a></li>
+-              <li><a>{t('footer.c3c')}</a></li>
+-              <li><a>{t('footer.c3d')}</a></li>
++              <li><a href={`https://wa.me/${BRAND_WHATSAPP}`} target="_blank" rel="noopener noreferrer">{t('footer.c3a')}</a></li>
++              <li><a href="tel:+213561616911">{t('footer.c3b')}</a></li>
++              <li><Link href="/about">{t('footer.c3c')}</Link></li>
++              <li><Link href="/about">{t('footer.c3d')}</Link></li>
+             </ul>
+           </div>
+           <div className="ft-col">
+             <h4>{t('footer.c4')}</h4>
+             <ul>
+-              <li><a>{t('footer.c4a')}</a></li>
++              <li>{t('footer.c4a')}</li>
+               <li><a href="tel:+213560990506">0560 99 05 06</a></li>
+               <li><a href="tel:+213561616911">0561 616 911</a></li>
+               <li><a href="mailto:contact@dtech.dz">contact@dtech.dz</a></li>
+@@ -415,9 +418,9 @@ export function BrandFooter() {
+         <div className="ft-bottom">
+           <span>© 2026 DTECH Algérie · {t('b.tag')}</span>
+           <span className="lks">
+-            <a>{t('footer.legal')}</a>
+-            <a>{t('footer.cgv')}</a>
+-            <a>{t('footer.privacy')}</a>
++            <Link href="/legal#mentions">{t('footer.legal')}</Link>
++            <Link href="/legal#cgv">{t('footer.cgv')}</Link>
++            <Link href="/legal#privacy">{t('footer.privacy')}</Link>
+           </span>
+           <span>{t('footer.madein')}</span>
+         </div>
+diff --git a/src/components/brand/BrandProductDetail.tsx b/src/components/brand/BrandProductDetail.tsx
+index a7a7012..2f014e1 100644
+--- a/src/components/brand/BrandProductDetail.tsx
++++ b/src/components/brand/BrandProductDetail.tsx
+@@ -29,6 +29,8 @@ export interface BrandProductDetailData {
+   catSlug: string
+   tagline: string
+   description: string
++  /** Pre-sanitized HTML block (see lib/custom-html) shown under the description. */
++  customHtml?: string
+   image: string
+   specs?: Record<string, string | number | string[]>
+   images?: string[]
+@@ -151,6 +153,13 @@ export function BrandProductDetail({
+                 ))}
+               </div>
+             )}
++
++            {product.customHtml ? (
++              <div
++                className="sr-customhtml"
++                dangerouslySetInnerHTML={{ __html: product.customHtml }}
++              />
++            ) : null}
+           </div>
+         </div>
+ 
+diff --git a/src/components/forms/FooterNewsletter.tsx b/src/components/forms/FooterNewsletter.tsx
+new file mode 100644
+index 0000000..45f2cdf
+--- /dev/null
++++ b/src/components/forms/FooterNewsletter.tsx
+@@ -0,0 +1,134 @@
++'use client'
++
++/**
++ * FooterNewsletter — compact, skin-agnostic newsletter capture used in the
++ * three storefront footers (classic homepage, classic pages, brand skin).
++ *
++ * The full-page NewsletterSignup component was only mounted in the legacy
++ * (unused) SiteFooter, which made the newsletter unreachable on the live
++ * site — this brings signup back everywhere. Styling relies on the .sr-nl
++ * block in showroom.css, whose tokens fall back gracefully in each skin.
++ *
++ * Same server action + honeypot + double-opt-in as the original form; the
++ * confirmed subscribers flow into Brevo when a key is configured.
++ */
++
++import { useActionState } from 'react'
++import { useFormStatus } from 'react-dom'
++import { useLocale, useTranslations } from 'next-intl'
++import {
++  subscribeAction,
++  type NewsletterActionResult,
++} from '@/server/newsletter-actions'
++
++function tf(
++  t: ReturnType<typeof useTranslations>,
++  key: string,
++  fallback: string
++): string {
++  try {
++    const v = t(key)
++    return v && v !== `newsletter.${key}` ? v : fallback
++  } catch {
++    return fallback
++  }
++}
++
++function SubmitBtn({ label }: { label: string }) {
++  const { pending } = useFormStatus()
++  return (
++    <button type="submit" className="sr-nl-btn" disabled={pending}>
++      {pending ? '…' : label}
++    </button>
++  )
++}
++
++export function FooterNewsletter({ source = 'footer' }: { source?: string }) {
++  const t = useTranslations('newsletter')
++  const locale = useLocale()
++  const [state, formAction] = useActionState<
++    NewsletterActionResult | null,
++    FormData
++  >(subscribeAction, null)
++
++  const title = tf(t, 'headline', 'Restez au courant.')
++  const placeholder = tf(t, 'emailPlaceholder', 'votre@email.com')
++  const button = tf(t, 'submit', 'S’inscrire')
++
++  let statusText: string | null = null
++  let ok = false
++  if (state) {
++    ok = state.ok
++    if (state.ok) {
++      statusText =
++        state.status === 'already_subscribed'
++          ? tf(t, 'successAlready', 'Vous êtes déjà inscrit·e — merci !')
++          : tf(
++              t,
++              'successPending',
++              'Vérifiez votre boîte mail — un message de confirmation vient d’arriver.'
++            )
++    } else {
++      const code =
++        state.errors?.email?.[0] ?? state.errors?._form?.[0] ?? 'generic'
++      statusText =
++        code === 'invalid_email'
++          ? tf(t, 'errInvalid', 'Adresse e-mail invalide.')
++          : code === 'rate_limited'
++            ? tf(t, 'errRateLimited', 'Trop de tentatives. Réessayez dans une heure.')
++            : tf(t, 'errGeneric', 'Une erreur s’est produite. Réessayez.')
++    }
++  }
++
++  const hpId = `nl-hp-${source}`
++  const emailId = `nl-email-${source}`
++
++  return (
++    <form action={formAction} className="sr-nl" noValidate>
++      <p className="sr-nl-title">{title}</p>
++
++      {/* Honeypot */}
++      <div
++        aria-hidden="true"
++        style={{
++          position: 'absolute',
++          insetInlineStart: '-9999px',
++          width: 1,
++          height: 1,
++          overflow: 'hidden',
++        }}
++      >
++        <label htmlFor={hpId}>Website</label>
++        <input type="text" name="website" id={hpId} tabIndex={-1} autoComplete="off" />
++      </div>
++
++      <input type="hidden" name="locale" value={locale} />
++      <input type="hidden" name="source" value={source} />
++
++      <div className="sr-nl-row">
++        <label htmlFor={emailId} className="sr-only">
++          {placeholder}
++        </label>
++        <input
++          id={emailId}
++          type="email"
++          name="email"
++          required
++          autoComplete="email"
++          inputMode="email"
++          maxLength={254}
++          placeholder={placeholder}
++          className="sr-nl-input"
++          dir="ltr"
++        />
++        <SubmitBtn label={button} />
++      </div>
++
++      {statusText ? (
++        <p role="status" className={`sr-nl-msg ${ok ? 'is-ok' : 'is-err'}`}>
++          {statusText}
++        </p>
++      ) : null}
++    </form>
++  )
++}
+diff --git a/src/components/home/HomeShowcase.tsx b/src/components/home/HomeShowcase.tsx
+index c63fe3b..4e811dc 100644
+--- a/src/components/home/HomeShowcase.tsx
++++ b/src/components/home/HomeShowcase.tsx
+@@ -31,6 +31,7 @@ import { useCart, WHATSAPP_NUMBER } from '@/lib/cart'
+ import { SpecsToggle } from '@/components/product/SpecsToggle'
+ import { CartDrawer } from '@/components/showroom/CartDrawer'
+ import { FloatingCart } from '@/components/showroom/FloatingCart'
++import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
+ import { seededRating } from '@/lib/reviews'
+ import { Stars } from '@/components/showroom/Stars'
+ import { Carousel } from '@/components/showroom/Carousel'
+@@ -1586,6 +1587,7 @@ function Footer({ onSelectCat }: { onSelectCat: (c: string | 'all') => void }) {
+                 </svg>
+               </a>
+             </div>
++            <FooterNewsletter source="footer-home" />
+           </div>
+           <FootCol
+             title={t('cols.catalog.title')}
+diff --git a/src/components/home/home-showcase.css b/src/components/home/home-showcase.css
+index 65d39a6..ec296fd 100644
+--- a/src/components/home/home-showcase.css
++++ b/src/components/home/home-showcase.css
+@@ -2338,3 +2338,21 @@ body[data-home-theme='light'] .home-showcase-root { --ice: #0a6a50; }
+ body[data-home-theme='light'] .home-showcase-root .hero-slider-play {
+   background: rgba(255, 255, 255, 0.82); border-color: rgba(18, 32, 27, 0.25); color: #13211c;
+ }
++
++/* ═══════════ ROUND 8 — FULL-PAGE HERO ═══════════
++   The hero now fills the entire first screen (viewport minus the sticky
++   72px header), with its content vertically centered. svh keeps mobile
++   browser chrome from causing an overflow scrollbar; the vh line is the
++   fallback for older engines. */
++.home-showcase-root .hero {
++  min-height: calc(100vh - 72px);
++  min-height: calc(100svh - 72px);
++  padding: 44px 0 56px;
++}
++@media (max-width: 980px) {
++  .home-showcase-root .hero {
++    min-height: calc(100vh - 72px);
++    min-height: calc(100svh - 72px);
++    padding: 36px 0 64px;
++  }
++}
+diff --git a/src/components/showroom/ShowroomChrome.tsx b/src/components/showroom/ShowroomChrome.tsx
+index 7ff1acc..53c8e86 100644
+--- a/src/components/showroom/ShowroomChrome.tsx
++++ b/src/components/showroom/ShowroomChrome.tsx
+@@ -2,6 +2,7 @@
+ 
+ import { useTranslations } from 'next-intl'
+ import { Link } from '@/i18n/routing'
++import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
+ 
+ export function ShowroomFooter() {
+   const t = useTranslations('showroom.footer')
+@@ -19,6 +20,7 @@ export function ShowroomFooter() {
+               <small>Algérie · {new Date().getFullYear()}</small>
+             </span>
+             <p className="sr-sub" style={{ fontSize: 13.5, marginTop: 10 }}>{t('blurb')}</p>
++            <FooterNewsletter source="footer-pages" />
+           </div>
+           <div>
+             <h4>{tNav('catalog')}</h4>
+diff --git a/src/components/showroom/SiteNav.tsx b/src/components/showroom/SiteNav.tsx
+index 7c8c743..c06ba28 100644
+--- a/src/components/showroom/SiteNav.tsx
++++ b/src/components/showroom/SiteNav.tsx
+@@ -315,6 +315,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'page' }) {
+               <Link
+                 key={l.href}
+                 href={l.href}
++                prefetch
+                 className={pathname?.startsWith(l.href) ? 'on' : undefined}
+                 {...(l.secondary ? { 'data-h': '' } : {})}
+               >
+diff --git a/src/db/client.ts b/src/db/client.ts
+index 258d316..3210043 100644
+--- a/src/db/client.ts
++++ b/src/db/client.ts
+@@ -9,10 +9,33 @@ const globalForDb = globalThis as unknown as {
+ const connectionString =
+   process.env.DATABASE_URL ?? 'postgres://noop:noop@localhost:5432/noop'
+ 
+-const client = globalForDb.client ?? postgres(connectionString, { max: 1 })
++// Transaction-mode poolers (Supabase Supavisor :6543, Neon -pooler, pgbouncer)
++// don't support server-side prepared statements — disable them there.
++const isPooledEndpoint = /pooler|pgbouncer|:6543\//i.test(connectionString)
+ 
+-if (process.env.NODE_ENV !== 'production') {
+-  globalForDb.client = client
+-}
++/**
++ * Connection pool sizing. The previous `max: 1` serialized EVERY query in the
++ * process behind a single connection — with several people using the site and
++ * admin at once, session lookups and page queries queued behind each other
++ * (slow navigation, logins timing out when someone else was working).
++ * Pooled endpoints can take more concurrent connections; direct Postgres
++ * connections stay conservative so several serverless instances don't exhaust
++ * the server's connection limit.
++ */
++const poolMax = Number(
++  process.env.DB_POOL_MAX ?? (isPooledEndpoint ? 10 : 4)
++)
++
++const client =
++  globalForDb.client ??
++  postgres(connectionString, {
++    max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 4,
++    idle_timeout: 20, // close idle connections after 20s (serverless-friendly)
++    connect_timeout: 10,
++    ...(isPooledEndpoint ? { prepare: false } : {}),
++  })
++
++// Cache on globalThis so dev HMR and repeated imports reuse one pool.
++globalForDb.client = client
+ 
+ export const db = drizzle(client, { schema })
+diff --git a/src/db/ensure-schema.ts b/src/db/ensure-schema.ts
+index dabddb4..5ab4884 100644
+--- a/src/db/ensure-schema.ts
++++ b/src/db/ensure-schema.ts
+@@ -123,6 +123,18 @@ export async function ensureSchema(): Promise<void> {
+     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_campaign_id_idx" ON "campaign_sends" ("campaign_id")`)
+     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_subscriber_id_idx" ON "campaign_sends" ("subscriber_id")`)
+ 
++    // ── Round 8 — free-form HTML block on the product page ──
++    await db.execute(sql`ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "custom_html" text`)
++
++    // ── Round 8 — app settings KV (Brevo key, integrations…) ──
++    await db.execute(sql`
++      CREATE TABLE IF NOT EXISTS "app_settings" (
++        "key" text PRIMARY KEY,
++        "value" text,
++        "updated_at" timestamptz NOT NULL DEFAULT now()
++      )
++    `)
++
+     // ── Arabic catalogue (Phase 8) — additive AR columns + one-shot fill ──
+     await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "name_ar" text`)
+     await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "description_ar" text`)
+diff --git a/src/db/schema.ts b/src/db/schema.ts
+index 060c7cd..c35a426 100644
+--- a/src/db/schema.ts
++++ b/src/db/schema.ts
+@@ -156,6 +156,10 @@ export const products = pgTable(
+     taglineAr: text('tagline_ar'),
+     descriptionAr: text('description_ar'),
+ 
++    /** Raw HTML block (Round 8) shown under the description on the
++     *  product page — same content for all locales. Sanitized at render. */
++    customHtml: text('custom_html'),
++
+     // SEO overrides (Phase 7c) — null falls back to name/tagline
+     seoTitle: text('seo_title'),
+     seoDescription: text('seo_description'),
+@@ -382,6 +386,21 @@ export const sitePages = pgTable('site_pages', {
+ 
+ export type SitePageRow = InferSelectModel<typeof sitePages>
+ 
++/**
++ * Small key/value store for app-level configuration edited from the admin
++ * (e.g. the Brevo API key, Brevo list id). Created idempotently in
++ * ensure-schema.ts. Values are plain text — mask them in the UI.
++ */
++export const appSettings = pgTable('app_settings', {
++  key: text('key').primaryKey(),
++  value: text('value'),
++  updatedAt: timestamp('updated_at', { withTimezone: true })
++    .notNull()
++    .defaultNow(),
++})
++
++export type AppSettingRow = InferSelectModel<typeof appSettings>
++
+ /* ─────────────────────────────────────────────────────────────────
+  * NEWSLETTER — subscribers, campaigns, per-recipient sends
+  *
+diff --git a/src/lib/app-settings.ts b/src/lib/app-settings.ts
+new file mode 100644
+index 0000000..d27e57f
+--- /dev/null
++++ b/src/lib/app-settings.ts
+@@ -0,0 +1,53 @@
++import 'server-only'
++import { eq } from 'drizzle-orm'
++import { db } from '@/db/client'
++import { appSettings } from '@/db/schema'
++import { cachedData, bustDataCache } from './data-cache'
++
++/**
++ * app-settings.ts — typed access to the app_settings key/value table
++ * (created idempotently in ensure-schema.ts). Used for configuration the
++ * admin edits from the UI — e.g. the Brevo API key — so no redeploy or
++ * env-var change is needed.
++ */
++
++export const SETTING_KEYS = {
++  brevoApiKey: 'brevo:api_key',
++  brevoListId: 'brevo:list_id',
++  mailFromEmail: 'mail:from_email',
++  mailFromName: 'mail:from_name',
++} as const
++
++export async function getAppSetting(key: string): Promise<string | null> {
++  return cachedData(
++    `appSetting:${key}`,
++    async () => {
++      try {
++        const rows = await db
++          .select({ value: appSettings.value })
++          .from(appSettings)
++          .where(eq(appSettings.key, key))
++          .limit(1)
++        return rows[0]?.value ?? null
++      } catch {
++        // Table may not exist yet on first boot — behave as "not set".
++        return null
++      }
++    },
++    { cacheEmpty: true, ttlMs: 30_000 }
++  )
++}
++
++export async function setAppSetting(
++  key: string,
++  value: string | null
++): Promise<void> {
++  await db
++    .insert(appSettings)
++    .values({ key, value, updatedAt: new Date() })
++    .onConflictDoUpdate({
++      target: appSettings.key,
++      set: { value, updatedAt: new Date() },
++    })
++  bustDataCache('appSetting:')
++}
+diff --git a/src/lib/auth-helpers.ts b/src/lib/auth-helpers.ts
+index e8f5be3..435d0fa 100644
+--- a/src/lib/auth-helpers.ts
++++ b/src/lib/auth-helpers.ts
+@@ -1,4 +1,5 @@
+ import 'server-only'
++import { cache } from 'react'
+ import { headers } from 'next/headers'
+ import { eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+@@ -6,7 +7,16 @@ import { users } from '@/db/schema'
+ import { auth } from './auth'
+ import { hasAccess, type SectionKey } from './permissions'
+ 
+-export async function getSessionUser() {
++/**
++ * Session + user row for the current request. Wrapped in React cache() so
++ * the admin layout, the page and any server actions rendered in the same
++ * request share ONE lookup instead of each paying their own session +
++ * users queries. The session part itself is additionally served from the
++ * better-auth cookie cache (see auth.ts) — most admin renders now cost a
++ * single users-table query, and role/permission changes still apply
++ * immediately because that query never caches across requests.
++ */
++export const getSessionUser = cache(async () => {
+   const session = await auth.api
+     .getSession({ headers: await headers() })
+     .catch(() => null)
+@@ -28,7 +38,7 @@ export async function getSessionUser() {
+     .catch(() => null)
+ 
+   return user ?? null
+-}
++})
+ 
+ export async function requireSession() {
+   const user = await getSessionUser()
+diff --git a/src/lib/auth.ts b/src/lib/auth.ts
+index b41ba9a..5b12d17 100644
+--- a/src/lib/auth.ts
++++ b/src/lib/auth.ts
+@@ -14,7 +14,33 @@ import { eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import * as schema from '@/db/schema'
+ import { users } from '@/db/schema'
+-import { resend, getFromHeader } from './email'
++import { sendEmail } from './mailer'
++
++/** Every origin logins are allowed from. Multiple entries so the same
++ *  deployment accepts logins from the canonical domain, the vercel.app
++ *  URL and local dev — logging in "from many devices" previously broke
++ *  whenever a device reached the site through an origin that wasn't the
++ *  single configured BETTER_AUTH_URL (403 INVALID_ORIGIN). */
++function getTrustedOrigins(): string[] {
++  const origins = new Set<string>()
++  for (const raw of [
++    process.env.BETTER_AUTH_URL,
++    process.env.NEXT_PUBLIC_SITE_URL,
++    'https://dtech-showroom.vercel.app',
++    'http://localhost:3000',
++    'http://localhost:3100',
++  ]) {
++    const v = (raw ?? '').trim().replace(/\/+$/, '')
++    if (v) origins.add(v)
++  }
++  // Extra origins (e.g. a future custom domain) without a code change:
++  // AUTH_TRUSTED_ORIGINS=https://dtech.dz,https://www.dtech.dz
++  for (const extra of (process.env.AUTH_TRUSTED_ORIGINS ?? '').split(',')) {
++    const v = extra.trim().replace(/\/+$/, '')
++    if (v) origins.add(v)
++  }
++  return [...origins]
++}
+ 
+ function getAdminEmails(): string[] {
+   const raw = process.env.ADMIN_EMAILS ?? ''
+@@ -42,16 +68,10 @@ export const auth = betterAuth({
+     maxPasswordLength: 128,
+     autoSignIn: true,
+     sendResetPassword: async ({ user, url }) => {
+-      if (!resend) {
+-        console.error(
+-          '[auth] Cannot send reset email — Resend not configured. Reset URL:',
+-          url
+-        )
+-        return
+-      }
+-
+-      await resend.emails.send({
+-        from: getFromHeader(),
++      // Goes through the central mailer: Brevo when configured, else
++      // Resend, else the dev stub (logged + written to .next/dev-mail).
++      await sendEmail({
++        tag: 'password-reset',
+         to: user.email,
+         subject: 'Reset your Dtech admin password',
+         html: `
+@@ -81,6 +101,17 @@ export const auth = betterAuth({
+   session: {
+     expiresIn: 60 * 60 * 24 * 7, // 7 days
+     updateAge: 60 * 60 * 24, // 1 day
++    /**
++     * Short-lived signed cookie mirror of the session. getSession() calls
++     * within this window read the cookie instead of querying the sessions
++     * table — cutting a DB round-trip from every admin page render and
++     * server action. Role/permission checks still hit the users table
++     * fresh (see auth-helpers.getSessionUser).
++     */
++    cookieCache: {
++      enabled: true,
++      maxAge: 60 * 5, // 5 minutes
++    },
+   },
+ 
+   socialProviders: {
+@@ -121,7 +152,7 @@ export const auth = betterAuth({
+     },
+   },
+ 
+-  trustedOrigins: [process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'],
++  trustedOrigins: getTrustedOrigins(),
+ 
+   secret:
+     process.env.BETTER_AUTH_SECRET ?? 'dev-only-secret-change-in-production',
+diff --git a/src/lib/brevo.ts b/src/lib/brevo.ts
+new file mode 100644
+index 0000000..72bea18
+--- /dev/null
++++ b/src/lib/brevo.ts
+@@ -0,0 +1,162 @@
++import 'server-only'
++import { getAppSetting, SETTING_KEYS } from './app-settings'
++
++/**
++ * brevo.ts — minimal Brevo (ex-Sendinblue) REST client. No SDK dependency:
++ * the three endpoints we use are plain JSON over HTTPS.
++ *
++ * The API key is pasted by the admin in Réglages → Intégrations (stored in
++ * app_settings), with the BREVO_API_KEY env var as a fallback. When a key
++ * is configured, ALL outgoing email (campaigns, newsletter confirmations,
++ * password resets) goes through Brevo — see lib/mailer.ts — and confirmed
++ * newsletter subscribers are upserted as Brevo contacts.
++ */
++
++const BREVO_API = 'https://api.brevo.com/v3'
++
++export async function getBrevoApiKey(): Promise<string | null> {
++  const fromDb = await getAppSetting(SETTING_KEYS.brevoApiKey)
++  const key = (fromDb ?? process.env.BREVO_API_KEY ?? '').trim()
++  return key.length > 0 ? key : null
++}
++
++export async function isBrevoConfigured(): Promise<boolean> {
++  return (await getBrevoApiKey()) !== null
++}
++
++interface BrevoRequestOptions {
++  method?: 'GET' | 'POST' | 'PUT'
++  body?: unknown
++  /** Pass an explicit key (e.g. to test a just-pasted one before saving). */
++  apiKey?: string
++}
++
++export interface BrevoResult<T = unknown> {
++  ok: boolean
++  status: number
++  data?: T
++  error?: string
++}
++
++async function brevoFetch<T = unknown>(
++  path: string,
++  options: BrevoRequestOptions = {}
++): Promise<BrevoResult<T>> {
++  const key = options.apiKey ?? (await getBrevoApiKey())
++  if (!key) {
++    return { ok: false, status: 0, error: 'Aucune clé API Brevo configurée' }
++  }
++
++  try {
++    const res = await fetch(`${BREVO_API}${path}`, {
++      method: options.method ?? 'GET',
++      headers: {
++        'api-key': key,
++        accept: 'application/json',
++        ...(options.body ? { 'content-type': 'application/json' } : {}),
++      },
++      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
++      cache: 'no-store',
++    })
++
++    const text = await res.text()
++    let data: unknown = undefined
++    try {
++      data = text ? JSON.parse(text) : undefined
++    } catch {
++      /* non-JSON body */
++    }
++
++    if (!res.ok) {
++      const message =
++        (data as { message?: string } | undefined)?.message ??
++        `Brevo HTTP ${res.status}`
++      return { ok: false, status: res.status, data: data as T, error: message }
++    }
++    return { ok: true, status: res.status, data: data as T }
++  } catch (err) {
++    return {
++      ok: false,
++      status: 0,
++      error: err instanceof Error ? err.message : 'Erreur réseau Brevo',
++    }
++  }
++}
++
++export interface BrevoAccountInfo {
++  email?: string
++  companyName?: string
++  plan?: Array<{ type?: string; credits?: number }>
++}
++
++/** GET /account — used by the "Tester la connexion" button. */
++export async function getBrevoAccount(
++  apiKey?: string
++): Promise<BrevoResult<BrevoAccountInfo>> {
++  return brevoFetch<BrevoAccountInfo>('/account', { apiKey })
++}
++
++export interface BrevoSendInput {
++  to: string
++  subject: string
++  html: string
++  text?: string
++  replyTo?: string
++  headers?: Record<string, string>
++  fromEmail: string
++  fromName: string
++}
++
++/** POST /smtp/email — transactional send (used for ALL app email). */
++export async function sendViaBrevo(
++  input: BrevoSendInput
++): Promise<{ ok: boolean; id?: string; error?: string }> {
++  const res = await brevoFetch<{ messageId?: string }>('/smtp/email', {
++    method: 'POST',
++    body: {
++      sender: { email: input.fromEmail, name: input.fromName },
++      to: [{ email: input.to }],
++      subject: input.subject,
++      htmlContent: input.html,
++      ...(input.text ? { textContent: input.text } : {}),
++      ...(input.replyTo ? { replyTo: { email: input.replyTo } } : {}),
++      ...(input.headers ? { headers: input.headers } : {}),
++    },
++  })
++
++  if (!res.ok) return { ok: false, error: res.error }
++  return { ok: true, id: res.data?.messageId }
++}
++
++/**
++ * POST /contacts (updateEnabled) — mirror a confirmed newsletter subscriber
++ * into Brevo so campaigns can also be run from the Brevo dashboard.
++ * Fire-and-forget from the caller's perspective; errors are returned but
++ * never thrown.
++ */
++export async function upsertBrevoContact(
++  email: string,
++  attributes: Record<string, string> = {},
++  listId?: number | null
++): Promise<{ ok: boolean; error?: string }> {
++  const res = await brevoFetch('/contacts', {
++    method: 'POST',
++    body: {
++      email,
++      updateEnabled: true,
++      ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
++      ...(listId ? { listIds: [listId] } : {}),
++    },
++  })
++  // 201 created / 204 updated are both fine.
++  if (!res.ok) return { ok: false, error: res.error }
++  return { ok: true }
++}
++
++/** The configured Brevo list id (app_settings), or null. */
++export async function getBrevoListId(): Promise<number | null> {
++  const raw = await getAppSetting(SETTING_KEYS.brevoListId)
++  if (!raw) return null
++  const n = Number(raw)
++  return Number.isInteger(n) && n > 0 ? n : null
++}
+diff --git a/src/lib/custom-html.ts b/src/lib/custom-html.ts
+new file mode 100644
+index 0000000..dff1b80
+--- /dev/null
++++ b/src/lib/custom-html.ts
+@@ -0,0 +1,27 @@
++/**
++ * custom-html.ts — light sanitizer for the admin-authored HTML block shown
++ * on product pages.
++ *
++ * Trust model: only admins/staff with the "products" section can write this
++ * content, so the goal is defense-in-depth (strip active script vectors),
++ * not bulletproof filtering of hostile input. iframes (YouTube embeds),
++ * tables, images and inline styles are deliberately allowed.
++ */
++export function sanitizeCustomHtml(html: string): string {
++  if (!html) return ''
++  return (
++    html
++      // <script>…</script> blocks (and orphan open/self-closing tags)
++      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '')
++      .replace(/<script\b[^>]*\/?>/gi, '')
++      // inline event handlers: onclick="…", onload='…', onerror=x
++      .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
++      .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
++      .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
++      // javascript: URLs in href/src/xlink:href
++      .replace(
++        /((?:href|src|xlink:href)\s*=\s*)(["']?)\s*javascript:[^"'>\s]*\2/gi,
++        '$1$2#$2'
++      )
++  )
++}
+diff --git a/src/lib/data-cache.ts b/src/lib/data-cache.ts
+new file mode 100644
+index 0000000..a928211
+--- /dev/null
++++ b/src/lib/data-cache.ts
+@@ -0,0 +1,89 @@
++import 'server-only'
++
++/**
++ * data-cache.ts — tiny in-process TTL cache for hot storefront reads.
++ *
++ * Why not unstable_cache / "use cache"? Those serialize through the
++ * incremental cache (Dates become strings, bytea buffers break) and add
++ * moving parts. This is a plain Map in module scope: on Vercel each warm
++ * lambda instance keeps it between invocations, locally the dev server
++ * keeps it between requests. Real object references are preserved.
++ *
++ * Freshness model:
++ *  - every admin mutation calls bustDataCache() → the instance that served
++ *    the admin request is fresh immediately;
++ *  - other instances converge within TTL_MS (default 60 s) — the same
++ *    staleness window a CDN would give, invisible for a catalogue that
++ *    changes a few times a day;
++ *  - `null` / `undefined` / empty arrays are NOT cached by default so a
++ *    transient DB failure (queries.ts `safe()` returns []) can't pin an
++ *    empty catalogue for a whole TTL.
++ */
++
++interface Entry {
++  value: unknown
++  expires: number
++}
++
++const store = new Map<string, Entry>()
++
++/** Default TTL for storefront data (ms). */
++export const TTL_MS = 60_000
++
++const MAX_ENTRIES = 800
++
++interface CachedOptions {
++  /** Cache falsy/empty results too (e.g. a legit empty search). */
++  cacheEmpty?: boolean
++  /** Override the default TTL. */
++  ttlMs?: number
++}
++
++function isEmpty(value: unknown): boolean {
++  if (value === null || value === undefined) return true
++  if (Array.isArray(value) && value.length === 0) return true
++  return false
++}
++
++export async function cachedData<T>(
++  key: string,
++  fn: () => Promise<T>,
++  options: CachedOptions = {}
++): Promise<T> {
++  const now = Date.now()
++  const hit = store.get(key)
++  if (hit && hit.expires > now) return hit.value as T
++
++  const value = await fn()
++
++  if (options.cacheEmpty || !isEmpty(value)) {
++    if (store.size >= MAX_ENTRIES) {
++      // Drop expired entries first; if still over, drop oldest inserted.
++      for (const [k, e] of store) {
++        if (e.expires <= now) store.delete(k)
++      }
++      if (store.size >= MAX_ENTRIES) {
++        const first = store.keys().next().value
++        if (first !== undefined) store.delete(first)
++      }
++    }
++    store.set(key, { value, expires: now + (options.ttlMs ?? TTL_MS) })
++  }
++
++  return value
++}
++
++/**
++ * Invalidate cached reads. Call from every admin mutation (products,
++ * brands, categories, images, editor publishes, design switch…).
++ * With no prefix, clears everything — cheap, the next requests re-prime.
++ */
++export function bustDataCache(prefix?: string): void {
++  if (!prefix) {
++    store.clear()
++    return
++  }
++  for (const key of store.keys()) {
++    if (key.startsWith(prefix)) store.delete(key)
++  }
++}
+diff --git a/src/lib/mailer.ts b/src/lib/mailer.ts
+index 13a2509..765c916 100644
+--- a/src/lib/mailer.ts
++++ b/src/lib/mailer.ts
+@@ -21,6 +21,8 @@
+ import { promises as fs } from 'node:fs'
+ import path from 'node:path'
+ import { resend, getFromHeader, FROM } from './email'
++import { getBrevoApiKey, sendViaBrevo } from './brevo'
++import { getAppSetting, SETTING_KEYS } from './app-settings'
+ 
+ export interface SendInput {
+   to: string
+@@ -45,18 +47,53 @@ export interface SendResult {
+   error?: string
+ }
+ 
+-export function isEmailConfigured(): boolean {
+-  return resend !== null
++export async function isEmailConfigured(): Promise<boolean> {
++  return (await getBrevoApiKey()) !== null || resend !== null
++}
++
++/** Sender identity: admin-configured (Réglages → Intégrations) with the
++ *  existing env vars as fallback. */
++async function getFrom(): Promise<{ email: string; name: string }> {
++  const [email, name] = await Promise.all([
++    getAppSetting(SETTING_KEYS.mailFromEmail),
++    getAppSetting(SETTING_KEYS.mailFromName),
++  ])
++  return {
++    email: (email ?? '').trim() || FROM.email,
++    name: (name ?? '').trim() || FROM.name,
++  }
+ }
+ 
+ /**
+- * Send a single email. In production with a key set this calls Resend.
+- * Without a key, it logs to console and writes the HTML to a tmp file so
+- * the developer can preview it.
++ * Send a single email.
++ * Provider order: Brevo (key pasted in admin or BREVO_API_KEY env) →
++ * Resend (RESEND_API_KEY env) → dev stub (logged + written to
++ * .next/dev-mail so the HTML can be previewed without any key).
+  */
+ export async function sendEmail(input: SendInput): Promise<SendResult> {
+   const { to, subject, html, text, replyTo, headers, tag = 'mail' } = input
+ 
++  // ── Brevo first — the key the admin pasted in Réglages ───────────────
++  const brevoKey = await getBrevoApiKey()
++  if (brevoKey) {
++    const from = await getFrom()
++    const res = await sendViaBrevo({
++      to,
++      subject,
++      html,
++      text,
++      replyTo,
++      headers,
++      fromEmail: from.email,
++      fromName: from.name,
++    })
++    if (res.ok) return { ok: true, id: res.id }
++    // A hard Brevo failure falls through to Resend when available so a
++    // revoked key doesn't silently kill password resets.
++    if (!resend) return { ok: false, error: res.error }
++    console.warn(`[mailer] Brevo failed (${res.error}) — falling back to Resend`)
++  }
++
+   // ── dev / no-key fallback ────────────────────────────────────────────
+   if (!resend) {
+     return writeDevStub({ to, subject, html, text, tag, headers })
+@@ -64,8 +101,9 @@ export async function sendEmail(input: SendInput): Promise<SendResult> {
+ 
+   try {
+     // resend.emails.send returns { data, error }
++    const from = await getFrom()
+     const res = await resend.emails.send({
+-      from: getFromHeader(),
++      from: `${from.name} <${from.email}>`,
+       to,
+       subject,
+       html,
+diff --git a/src/lib/validations/product.ts b/src/lib/validations/product.ts
+index 560b9d5..cd0ef2c 100644
+--- a/src/lib/validations/product.ts
++++ b/src/lib/validations/product.ts
+@@ -48,6 +48,10 @@ export const productFormSchema = z.object({
+ 
+   seoTitle: z.string().max(120).optional().default(''),
+   seoDescription: z.string().max(300).optional().default(''),
++
++  /** Raw HTML block shown under the description on the product page.
++   *  Sanitized at render time (scripts/handlers stripped). */
++  customHtml: z.string().max(30000).optional().default(''),
+ })
+ 
+ export type ProductFormValues = z.infer<typeof productFormSchema>
+diff --git a/src/proxy.ts b/src/proxy.ts
+index 4ae85c4..8b0aeb4 100644
+--- a/src/proxy.ts
++++ b/src/proxy.ts
+@@ -1,6 +1,6 @@
+ import { NextResponse, type NextRequest } from 'next/server'
+ import createMiddleware from 'next-intl/middleware'
+-import { auth } from '@/lib/auth'
++import { getSessionCookie } from 'better-auth/cookies'
+ import { routing } from '@/i18n/routing'
+ 
+ const intlMiddleware = createMiddleware(routing)
+@@ -8,14 +8,16 @@ const intlMiddleware = createMiddleware(routing)
+ export async function proxy(request: NextRequest) {
+   const { pathname } = request.nextUrl
+ 
+-  // Admin routes + the full-screen web editor: protect with auth, do NOT
+-  // apply locale routing (the editor opens in its own tab at /editor).
++  // Admin routes + the full-screen web editor: cheap cookie-presence gate.
++  // The REAL session validation happens in the admin/editor layouts
++  // (requireSession → DB). Doing a full auth.api.getSession() here meant a
++  // database query on every single admin navigation — the main reason the
++  // back-office felt slow. A missing/expired cookie still redirects here;
++  // a forged cookie is rejected by the layout check.
+   if (pathname.startsWith('/admin') || pathname.startsWith('/editor')) {
+-    const session = await auth.api
+-      .getSession({ headers: request.headers })
+-      .catch(() => null)
++    const sessionCookie = getSessionCookie(request)
+ 
+-    if (!session) {
++    if (!sessionCookie) {
+       const loginUrl = new URL('/login', request.url)
+       loginUrl.searchParams.set('redirect', pathname)
+       return NextResponse.redirect(loginUrl)
+diff --git a/src/server/admin-brand-actions.ts b/src/server/admin-brand-actions.ts
+index f08bb3e..fb0f8e5 100644
+--- a/src/server/admin-brand-actions.ts
++++ b/src/server/admin-brand-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { count, eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { brands, products } from '@/db/schema'
+@@ -53,6 +54,7 @@ export async function createBrand(values: BrandFormValues) {
+     .values(normalize(parsed.data))
+     .returning({ id: brands.id })
+ 
++  bustDataCache()
+   revalidatePath('/admin/brands')
+   revalidatePath('/brands')
+   revalidatePath('/')
+@@ -97,6 +99,7 @@ export async function updateBrand(
+     .set({ ...normalize(parsed.data), updatedAt: new Date() })
+     .where(eq(brands.id, brandId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/brands')
+   revalidatePath(`/admin/brands/${brandId}/edit`)
+   revalidatePath(`/brands/${parsed.data.slug}`)
+@@ -114,6 +117,7 @@ export async function archiveBrand(brandId: string) {
+     .set({ archivedAt: new Date() })
+     .where(eq(brands.id, brandId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/brands')
+   revalidatePath('/brands')
+ 
+@@ -128,6 +132,7 @@ export async function restoreBrand(brandId: string) {
+     .set({ archivedAt: null })
+     .where(eq(brands.id, brandId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/brands')
+   revalidatePath('/brands')
+ 
+@@ -156,6 +161,7 @@ export async function deleteBrandPermanently(brandId: string) {
+ 
+   await db.delete(brands).where(eq(brands.id, brandId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/brands')
+   revalidatePath('/brands')
+   revalidatePath('/')
+diff --git a/src/server/admin-category-actions.ts b/src/server/admin-category-actions.ts
+index 41c9483..33b1204 100644
+--- a/src/server/admin-category-actions.ts
++++ b/src/server/admin-category-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { count, eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { categories, products } from '@/db/schema'
+@@ -51,6 +52,7 @@ export async function createCategory(values: CategoryFormValues) {
+     .values(normalize(parsed.data))
+     .returning({ id: categories.id })
+ 
++  bustDataCache()
+   revalidatePath('/admin/categories')
+   revalidatePath('/categories')
+   revalidatePath('/')
+@@ -95,6 +97,7 @@ export async function updateCategory(
+     .set({ ...normalize(parsed.data), updatedAt: new Date() })
+     .where(eq(categories.id, categoryId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/categories')
+   revalidatePath(`/admin/categories/${categoryId}/edit`)
+   revalidatePath(`/categories/${parsed.data.slug}`)
+@@ -112,6 +115,7 @@ export async function archiveCategory(categoryId: string) {
+     .set({ archivedAt: new Date() })
+     .where(eq(categories.id, categoryId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/categories')
+   revalidatePath('/categories')
+ 
+@@ -126,6 +130,7 @@ export async function restoreCategory(categoryId: string) {
+     .set({ archivedAt: null })
+     .where(eq(categories.id, categoryId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/categories')
+   revalidatePath('/categories')
+ 
+@@ -154,6 +159,7 @@ export async function deleteCategoryPermanently(categoryId: string) {
+ 
+   await db.delete(categories).where(eq(categories.id, categoryId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/categories')
+   revalidatePath('/categories')
+   revalidatePath('/')
+diff --git a/src/server/admin-import-actions.ts b/src/server/admin-import-actions.ts
+index 2678e0b..a774245 100644
+--- a/src/server/admin-import-actions.ts
++++ b/src/server/admin-import-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { inArray } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { brands, categories, products } from '@/db/schema'
+@@ -170,6 +171,7 @@ export async function bulkInsertProducts(
+       }
+     })
+ 
++    bustDataCache()
+     revalidatePath('/admin/products')
+     revalidatePath('/admin')
+     revalidatePath('/')
+diff --git a/src/server/admin-product-actions.ts b/src/server/admin-product-actions.ts
+index cf559bd..221cf87 100644
+--- a/src/server/admin-product-actions.ts
++++ b/src/server/admin-product-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { eq, like } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { imageBlobs, products } from '@/db/schema'
+@@ -48,11 +49,13 @@ export async function createProduct(values: ProductFormValues) {
+       searchKeywordsFr: parsed.data.searchKeywordsFr || null,
+       seoTitle: parsed.data.seoTitle || null,
+       seoDescription: parsed.data.seoDescription || null,
++      customHtml: parsed.data.customHtml || null,
+     })
+     .returning({ id: products.id })
+ 
+   const newId = inserted[0]?.id
+ 
++  bustDataCache()
+   revalidatePath('/admin/products')
+   revalidatePath('/admin')
+   revalidatePath('/')
+@@ -108,10 +111,12 @@ export async function updateProduct(
+       searchKeywordsFr: parsed.data.searchKeywordsFr || null,
+       seoTitle: parsed.data.seoTitle || null,
+       seoDescription: parsed.data.seoDescription || null,
++      customHtml: parsed.data.customHtml || null,
+       updatedAt: new Date(),
+     })
+     .where(eq(products.id, productId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/products')
+   revalidatePath(`/admin/products/${productId}/edit`)
+   revalidatePath(`/products/${parsed.data.slug}`)
+@@ -141,6 +146,7 @@ export async function archiveProduct(productId: string) {
+     .set({ archivedAt: new Date() })
+     .where(eq(products.id, productId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/products')
+   revalidatePath('/admin')
+   revalidatePath(`/products/${product.slug}`)
+@@ -159,6 +165,7 @@ export async function restoreProduct(productId: string) {
+     .set({ archivedAt: null })
+     .where(eq(products.id, productId))
+ 
++  bustDataCache()
+   revalidatePath('/admin/products')
+   revalidatePath('/admin')
+ 
+@@ -191,6 +198,7 @@ export async function deleteProductPermanently(productId: string) {
+       /* images are best-effort */
+     })
+ 
++  bustDataCache()
+   revalidatePath('/admin/products')
+   revalidatePath('/admin')
+   revalidatePath('/')
+diff --git a/src/server/admin-settings-actions.ts b/src/server/admin-settings-actions.ts
+index b60edd8..98f63f7 100644
+--- a/src/server/admin-settings-actions.ts
++++ b/src/server/admin-settings-actions.ts
+@@ -7,6 +7,13 @@ import { z } from 'zod'
+ import { auth } from '@/lib/auth'
+ import { db } from '@/db/client'
+ import { users } from '@/db/schema'
++import { requireAdmin, getSessionUser } from '@/lib/auth-helpers'
++import {
++  getAppSetting,
++  setAppSetting,
++  SETTING_KEYS,
++} from '@/lib/app-settings'
++import { getBrevoAccount, getBrevoApiKey } from '@/lib/brevo'
+ 
+ const nameSchema = z.string().trim().min(2).max(100)
+ const passwordSchema = z.string().min(8).max(200)
+@@ -79,3 +86,148 @@ export async function changePasswordAction(
+     return { ok: false, error: message }
+   }
+ }
++
++/* ─────────────────────────────────────────────────────────────────
++ * Intégrations — Brevo (email marketing)
++ * ─────────────────────────────────────────────────────────────── */
++
++export interface BrevoSettingsView {
++  /** Key exists (db or env) */
++  configured: boolean
++  /** e.g. "xkeysib-…f3a2" — never the full key */
++  keyMasked: string | null
++  listId: string
++  fromEmail: string
++  fromName: string
++}
++
++function maskKey(key: string): string {
++  if (key.length <= 10) return '••••••••'
++  return `${key.slice(0, 8)}…${key.slice(-4)}`
++}
++
++/** Data for the Réglages → Intégrations tab (admins only; staff get null). */
++export async function getBrevoSettingsView(): Promise<BrevoSettingsView | null> {
++  const user = await getSessionUser()
++  if (!user || user.role !== 'admin') return null
++
++  const [key, listId, fromEmail, fromName] = await Promise.all([
++    getBrevoApiKey(),
++    getAppSetting(SETTING_KEYS.brevoListId),
++    getAppSetting(SETTING_KEYS.mailFromEmail),
++    getAppSetting(SETTING_KEYS.mailFromName),
++  ])
++
++  return {
++    configured: key !== null,
++    keyMasked: key ? maskKey(key) : null,
++    listId: listId ?? '',
++    fromEmail: fromEmail ?? '',
++    fromName: fromName ?? '',
++  }
++}
++
++const brevoSettingsSchema = z.object({
++  /** Empty string = keep the currently stored key. */
++  apiKey: z.string().trim().max(200).optional().default(''),
++  listId: z
++    .string()
++    .trim()
++    .regex(/^\d*$/, 'Identifiant de liste invalide (nombre attendu)')
++    .max(12)
++    .optional()
++    .default(''),
++  fromEmail: z
++    .string()
++    .trim()
++    .email('Adresse e-mail invalide')
++    .max(200)
++    .or(z.literal(''))
++    .optional()
++    .default(''),
++  fromName: z.string().trim().max(120).optional().default(''),
++})
++
++export async function saveBrevoSettings(input: {
++  apiKey?: string
++  listId?: string
++  fromEmail?: string
++  fromName?: string
++}): Promise<ActionResult> {
++  try {
++    await requireAdmin()
++  } catch {
++    return { ok: false, error: 'Réservé aux administrateurs' }
++  }
++
++  const parsed = brevoSettingsSchema.safeParse(input)
++  if (!parsed.success) {
++    return {
++      ok: false,
++      error:
++        parsed.error.issues[0]?.message ?? 'Paramètres invalides',
++    }
++  }
++
++  const { apiKey, listId, fromEmail, fromName } = parsed.data
++
++  if (apiKey) {
++    await setAppSetting(SETTING_KEYS.brevoApiKey, apiKey)
++  }
++  await setAppSetting(SETTING_KEYS.brevoListId, listId || null)
++  await setAppSetting(SETTING_KEYS.mailFromEmail, fromEmail || null)
++  await setAppSetting(SETTING_KEYS.mailFromName, fromName || null)
++
++  revalidatePath('/admin/settings')
++  return { ok: true }
++}
++
++/** Clears the stored key (env fallback, if set, then applies again). */
++export async function clearBrevoKey(): Promise<ActionResult> {
++  try {
++    await requireAdmin()
++  } catch {
++    return { ok: false, error: 'Réservé aux administrateurs' }
++  }
++  await setAppSetting(SETTING_KEYS.brevoApiKey, null)
++  revalidatePath('/admin/settings')
++  return { ok: true }
++}
++
++export interface BrevoTestResult {
++  ok: boolean
++  message: string
++}
++
++/**
++ * "Tester la connexion" — GET /v3/account with the pasted key (if provided)
++ * or the stored/env key. Returns the account email + plan on success.
++ */
++export async function testBrevoConnection(
++  candidateKey?: string
++): Promise<BrevoTestResult> {
++  try {
++    await requireAdmin()
++  } catch {
++    return { ok: false, message: 'Réservé aux administrateurs' }
++  }
++
++  const key = (candidateKey ?? '').trim() || undefined
++  const res = await getBrevoAccount(key)
++
++  if (!res.ok) {
++    if (res.status === 401) {
++      return { ok: false, message: 'Clé API refusée par Brevo (401). Vérifiez la clé.' }
++    }
++    return { ok: false, message: res.error ?? 'Connexion Brevo impossible' }
++  }
++
++  const email = res.data?.email ?? 'compte inconnu'
++  const planType = res.data?.plan?.[0]?.type
++  return {
++    ok: true,
++    message: planType
++      ? `Connecté : ${email} (plan ${planType})`
++      : `Connecté : ${email}`,
++  }
++}
+diff --git a/src/server/content-actions.ts b/src/server/content-actions.ts
+index a710a26..bb03754 100644
+--- a/src/server/content-actions.ts
++++ b/src/server/content-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { sitePages } from '@/db/schema'
+@@ -227,6 +228,7 @@ export async function setContentTheme(pageKey: string, themeId: string): Promise
+       .insert(sitePages)
+       .values({ key: KEY(pageKey), draft, published, updatedAt: now, publishedAt: now })
+       .onConflictDoUpdate({ target: sitePages.key, set: { draft, published, updatedAt: now, publishedAt: now } })
++    bustDataCache()
+     revalidatePath('/', 'layout')
+     return { ok: true }
+   } catch (err) {
+@@ -262,6 +264,7 @@ export async function publishContent(pageKey: string, data: unknown): Promise<Co
+         target: sitePages.key,
+         set: { draft: clean, published: clean, updatedAt: now, publishedAt: now },
+       })
++    bustDataCache()
+     revalidatePath('/', 'layout')
+     return { ok: true }
+   } catch (err) {
+@@ -276,6 +279,7 @@ export async function resetContent(pageKey: string): Promise<ContentResult> {
+       .update(sitePages)
+       .set({ published: null, publishedAt: null, draft: null, updatedAt: new Date() })
+       .where(eq(sitePages.key, KEY(pageKey)))
++    bustDataCache()
+     revalidatePath('/', 'layout')
+     return { ok: true }
+   } catch (err) {
+diff --git a/src/server/design-actions.ts b/src/server/design-actions.ts
+index 1a9ae83..4122157 100644
+--- a/src/server/design-actions.ts
++++ b/src/server/design-actions.ts
+@@ -15,6 +15,7 @@
+  */
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { sitePages } from '@/db/schema'
+@@ -61,6 +62,7 @@ export async function publishDesign(id: DesignId): Promise<DesignResult> {
+         set: { draft: value, published: value, updatedAt: now, publishedAt: now },
+       })
+     // Re-render the whole storefront (all routes, both locales).
++    bustDataCache()
+     revalidatePath('/', 'layout')
+     return { ok: true }
+   } catch (err) {
+diff --git a/src/server/editor-page-actions.ts b/src/server/editor-page-actions.ts
+index 671eff1..430a64e 100644
+--- a/src/server/editor-page-actions.ts
++++ b/src/server/editor-page-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { headers } from 'next/headers'
+ import { eq } from 'drizzle-orm'
+ import { auth } from '@/lib/auth'
+@@ -47,6 +48,7 @@ async function requireSession(): Promise<boolean> {
+ 
+ /** Flush cached routes after a publish/unpublish (pages are force-dynamic). */
+ function flush() {
++  bustDataCache()
+   revalidatePath('/', 'layout')
+ }
+ 
+diff --git a/src/server/editor-page-data.ts b/src/server/editor-page-data.ts
+index a4c7b87..0eb1a64 100644
+--- a/src/server/editor-page-data.ts
++++ b/src/server/editor-page-data.ts
+@@ -1,5 +1,6 @@
+ import { cache } from 'react'
+ import { eq } from 'drizzle-orm'
++import { cachedData } from '@/lib/data-cache'
+ import { db } from '@/db/client'
+ import { sitePages, type SitePageRow } from '@/db/schema'
+ import {
+@@ -37,11 +38,23 @@ export async function getSitePageRow(
+   }
+ }
+ 
++/**
++ * Cached row read for VISITOR-facing lookups (published design, theme, hero,
++ * published docs). The editor keeps using getSitePageRow directly so drafts
++ * are always fresh. Admin publish/save actions call bustDataCache().
++ * `cacheEmpty` because "no row yet" is a legit steady state for most keys.
++ */
++function getSitePageRowCached(key: string): Promise<SitePageRow | null> {
++  return cachedData(`sitePage:${key}`, () => getSitePageRow(key), {
++    cacheEmpty: true,
++  })
++}
++
+ /** The published document a given page key should render, or null. */
+ export async function getPublishedPage(
+   key: string
+ ): Promise<Record<string, unknown> | null> {
+-  const row = await getSitePageRow(key)
++  const row = await getSitePageRowCached(key)
+   const published = row?.published
+   if (published && typeof published === 'object') {
+     return published as Record<string, unknown>
+@@ -59,7 +72,7 @@ export async function getPublishedHome(): Promise<Record<
+ 
+ /** The list of custom pages from the manifest row. */
+ export async function getCustomPages(): Promise<CustomPageMeta[]> {
+-  const row = await getSitePageRow(MANIFEST_KEY)
++  const row = await getSitePageRowCached(MANIFEST_KEY)
+   const data = row?.draft as { pages?: CustomPageMeta[] } | null
+   return Array.isArray(data?.pages) ? (data.pages as CustomPageMeta[]) : []
+ }
+@@ -99,7 +112,7 @@ const HERO_KEY = 'home-hero'
+ 
+ /** Published homepage hero config, or null (homepage uses default slider). */
+ export async function getHomeHero(): Promise<HeroConfig | null> {
+-  const row = await getSitePageRow(HERO_KEY)
++  const row = await getSitePageRowCached(HERO_KEY)
+   if (!row?.published) return null
+   return sanitizeHeroConfig(row.published)
+ }
+@@ -140,7 +153,7 @@ function coerceContent(src: unknown): EditData {
+ 
+ /** Inline content published for a real page (live site reads this). */
+ export async function getPublishedContent(pageKey: string): Promise<EditData> {
+-  const row = await getSitePageRow(`content:${pageKey}`)
++  const row = await getSitePageRowCached(`content:${pageKey}`)
+   return coerceContent(row?.published)
+ }
+ 
+@@ -151,7 +164,7 @@ export async function getPublishedContent(pageKey: string): Promise<EditData> {
+  */
+ export async function getSiteTheme(): Promise<string> {
+   try {
+-    const row = await getSitePageRow('content:home')
++    const row = await getSitePageRowCached('content:home')
+     const t = coerceContent(row?.published).theme
+     return t && typeof t === 'string' ? t : 'nightline'
+   } catch {
+@@ -166,7 +179,7 @@ export async function getSiteTheme(): Promise<string> {
+  */
+ export const getPublishedDesign = cache(async (): Promise<DesignId> => {
+   try {
+-    const row = await getSitePageRow(DESIGN_KEY)
++    const row = await getSitePageRowCached(DESIGN_KEY)
+     return coerceDesign(row?.published)
+   } catch {
+     return coerceDesign(undefined)
+diff --git a/src/server/hero-actions.ts b/src/server/hero-actions.ts
+index 00d05bf..5c523c0 100644
+--- a/src/server/hero-actions.ts
++++ b/src/server/hero-actions.ts
+@@ -1,6 +1,7 @@
+ 'use server'
+ 
+ import { revalidatePath } from 'next/cache'
++import { bustDataCache } from '@/lib/data-cache'
+ import { eq } from 'drizzle-orm'
+ import { db } from '@/db/client'
+ import { sitePages, imageBlobs } from '@/db/schema'
+@@ -88,6 +89,7 @@ export async function publishHero(input: unknown): Promise<HeroActionResult> {
+         target: sitePages.key,
+         set: { draft: cfg, published: cfg, updatedAt: now, publishedAt: now },
+       })
++    bustDataCache()
+     revalidatePath('/', 'layout')
+     return { ok: true }
+   } catch (err) {
+@@ -103,6 +105,7 @@ export async function unpublishHero(): Promise<HeroActionResult> {
+       .update(sitePages)
+       .set({ published: null, publishedAt: null, updatedAt: new Date() })
+       .where(eq(sitePages.key, HERO_KEY))
++    bustDataCache()
+     revalidatePath('/', 'layout')
+     return { ok: true }
+   } catch (err) {
+diff --git a/src/server/newsletter-actions.ts b/src/server/newsletter-actions.ts
+index d33a674..2b582ec 100644
+--- a/src/server/newsletter-actions.ts
++++ b/src/server/newsletter-actions.ts
+@@ -17,6 +17,11 @@ import { db } from '@/db/client'
+ import { subscribers, type SubscriberStatus } from '@/db/schema'
+ import { sendEmail } from '@/lib/mailer'
+ import { confirmationTemplate } from '@/lib/email-templates'
++import {
++  isBrevoConfigured,
++  upsertBrevoContact,
++  getBrevoListId,
++} from '@/lib/brevo'
+ 
+ const SITE_URL =
+   process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+@@ -183,6 +188,21 @@ async function sendConfirmation(
+   })
+ }
+ 
++/** Push a confirmed subscriber into the Brevo contact base (and the
++ *  configured list, if any). No-op when no Brevo key is set. */
++async function syncSubscriberToBrevo(email: string): Promise<void> {
++  try {
++    if (!(await isBrevoConfigured())) return
++    const listId = await getBrevoListId()
++    const res = await upsertBrevoContact(email, {}, listId)
++    if (!res.ok) {
++      console.warn(`[newsletter] Brevo contact sync failed for ${email}: ${res.error}`)
++    }
++  } catch (err) {
++    console.warn('[newsletter] Brevo contact sync error:', err)
++  }
++}
++
+ /* ── confirm / unsubscribe — token consumption ────────────────────────
+  * These are called by GET pages, not form actions. They return small
+  * status objects the page renders into a friendly outcome.
+@@ -224,6 +244,11 @@ export async function confirmSubscriptionByToken(
+         confirmedAt: sql`now()`,
+       })
+       .where(eq(subscribers.id, row.id))
++
++    // Mirror the confirmed subscriber into Brevo contacts (fire-and-forget
++    // — a Brevo hiccup must never break the visitor's confirmation page).
++    void syncSubscriberToBrevo(row.email)
++
+     return { ok: true, state: 'subscribed', email: row.email }
+   } catch (err) {
+     console.error('[newsletter] confirm failed:', err)
+diff --git a/src/server/queries.ts b/src/server/queries.ts
+index 435e2f2..05b97be 100644
+--- a/src/server/queries.ts
++++ b/src/server/queries.ts
+@@ -1,5 +1,6 @@
+ import 'server-only'
+ import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm'
++import { cachedData } from '@/lib/data-cache'
+ import { db } from '@/db/client'
+ import {
+   brands,
+@@ -100,14 +101,17 @@ function localizeProduct(
+ export async function getAllBrands(
+   locale: Locale = defaultLocale
+ ): Promise<Brand[]> {
+-  const rows = await safe(
+-    () =>
+-      db
+-        .select()
+-        .from(brands)
+-        .where(isNull(brands.archivedAt))
+-        .orderBy(asc(brands.sortOrder), asc(brands.name)),
+-    [] as Brand[]
++  // Raw rows are locale-independent — one cache entry serves fr/en/ar.
++  const rows = await cachedData('brands:all', () =>
++    safe(
++      () =>
++        db
++          .select()
++          .from(brands)
++          .where(isNull(brands.archivedAt))
++          .orderBy(asc(brands.sortOrder), asc(brands.name)),
++      [] as Brand[]
++    )
+   )
+   return rows.map((b) => localizeBrand(b, locale))
+ }
+@@ -116,28 +120,32 @@ export async function getBrandBySlug(
+   slug: string,
+   locale: Locale = defaultLocale
+ ): Promise<Brand | null> {
+-  const row = await safe(async () => {
+-    const rs = await db
+-      .select()
+-      .from(brands)
+-      .where(and(eq(brands.slug, slug), isNull(brands.archivedAt)))
+-      .limit(1)
+-    return rs[0] ?? null
+-  }, null)
++  const row = await cachedData(`brand:${slug}`, () =>
++    safe(async () => {
++      const rs = await db
++        .select()
++        .from(brands)
++        .where(and(eq(brands.slug, slug), isNull(brands.archivedAt)))
++        .limit(1)
++      return rs[0] ?? null
++    }, null)
++  )
+   return row ? localizeBrand(row, locale) : null
+ }
+ 
+ export async function getAllCategories(
+   locale: Locale = defaultLocale
+ ): Promise<Category[]> {
+-  const rows = await safe(
+-    () =>
+-      db
+-        .select()
+-        .from(categories)
+-        .where(isNull(categories.archivedAt))
+-        .orderBy(asc(categories.sortOrder), asc(categories.name)),
+-    [] as Category[]
++  const rows = await cachedData('categories:all', () =>
++    safe(
++      () =>
++        db
++          .select()
++          .from(categories)
++          .where(isNull(categories.archivedAt))
++          .orderBy(asc(categories.sortOrder), asc(categories.name)),
++      [] as Category[]
++    )
+   )
+   return rows.map((c) => localizeCategory(c, locale))
+ }
+@@ -146,16 +154,18 @@ export async function getCategoryBySlug(
+   slug: string,
+   locale: Locale = defaultLocale
+ ): Promise<Category | null> {
+-  const row = await safe(async () => {
+-    const rs = await db
+-      .select()
+-      .from(categories)
+-      .where(
+-        and(eq(categories.slug, slug), isNull(categories.archivedAt))
+-      )
+-      .limit(1)
+-    return rs[0] ?? null
+-  }, null)
++  const row = await cachedData(`category:${slug}`, () =>
++    safe(async () => {
++      const rs = await db
++        .select()
++        .from(categories)
++        .where(
++          and(eq(categories.slug, slug), isNull(categories.archivedAt))
++        )
++        .limit(1)
++      return rs[0] ?? null
++    }, null)
++  )
+   return row ? localizeCategory(row, locale) : null
+ }
+ 
+@@ -163,13 +173,15 @@ export async function getProductBySlug(
+   slug: string,
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations | null> {
+-  const row = await safe(async () => {
+-    const r = await db.query.products.findFirst({
+-      where: and(eq(products.slug, slug), isNull(products.archivedAt)),
+-      with: { brand: true, category: true },
+-    })
+-    return r ?? null
+-  }, null)
++  const row = await cachedData(`product:${slug}`, () =>
++    safe(async () => {
++      const r = await db.query.products.findFirst({
++        where: and(eq(products.slug, slug), isNull(products.archivedAt)),
++        with: { brand: true, category: true },
++      })
++      return r ?? null
++    }, null)
++  )
+   return row ? localizeProduct(row, locale) : null
+ }
+ 
+@@ -177,23 +189,25 @@ export async function getProductsByBrand(
+   brandSlug: string,
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations[]> {
+-  const rows = await safe(async () => {
+-    const brand = await db
+-      .select()
+-      .from(brands)
+-      .where(eq(brands.slug, brandSlug))
+-      .limit(1)
+-    const brandRow = brand[0]
+-    if (!brandRow) return [] as ProductWithRelations[]
+-    return db.query.products.findMany({
+-      where: and(
+-        eq(products.brandId, brandRow.id),
+-        isNull(products.archivedAt)
+-      ),
+-      with: { brand: true, category: true },
+-      orderBy: [asc(products.sortOrder), asc(products.name)],
+-    })
+-  }, [] as ProductWithRelations[])
++  const rows = await cachedData(`products:brand:${brandSlug}`, () =>
++    safe(async () => {
++      const brand = await db
++        .select()
++        .from(brands)
++        .where(eq(brands.slug, brandSlug))
++        .limit(1)
++      const brandRow = brand[0]
++      if (!brandRow) return [] as ProductWithRelations[]
++      return db.query.products.findMany({
++        where: and(
++          eq(products.brandId, brandRow.id),
++          isNull(products.archivedAt)
++        ),
++        with: { brand: true, category: true },
++        orderBy: [asc(products.sortOrder), asc(products.name)],
++      })
++    }, [] as ProductWithRelations[])
++  )
+   return rows.map((p) => localizeProduct(p, locale))
+ }
+ 
+@@ -201,37 +215,43 @@ export async function getProductsByCategory(
+   categorySlug: string,
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations[]> {
+-  const rows = await safe(async () => {
+-    const category = await db
+-      .select()
+-      .from(categories)
+-      .where(eq(categories.slug, categorySlug))
+-      .limit(1)
+-    const categoryRow = category[0]
+-    if (!categoryRow) return [] as ProductWithRelations[]
+-    return db.query.products.findMany({
+-      where: and(
+-        eq(products.categoryId, categoryRow.id),
+-        isNull(products.archivedAt)
+-      ),
+-      with: { brand: true, category: true },
+-      orderBy: [asc(products.sortOrder), asc(products.name)],
+-    })
+-  }, [] as ProductWithRelations[])
++  const rows = await cachedData(`products:category:${categorySlug}`, () =>
++    safe(async () => {
++      const category = await db
++        .select()
++        .from(categories)
++        .where(eq(categories.slug, categorySlug))
++        .limit(1)
++      const categoryRow = category[0]
++      if (!categoryRow) return [] as ProductWithRelations[]
++      return db.query.products.findMany({
++        where: and(
++          eq(products.categoryId, categoryRow.id),
++          isNull(products.archivedAt)
++        ),
++        with: { brand: true, category: true },
++        orderBy: [asc(products.sortOrder), asc(products.name)],
++      })
++    }, [] as ProductWithRelations[])
++  )
+   return rows.map((p) => localizeProduct(p, locale))
+ }
+ 
+ export async function getAllProducts(
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations[]> {
+-  const rows = await safe(
+-    () =>
+-      db.query.products.findMany({
+-        where: isNull(products.archivedAt),
+-        with: { brand: true, category: true },
+-        orderBy: [asc(products.sortOrder), asc(products.name)],
+-      }),
+-    [] as ProductWithRelations[]
++  // The heaviest storefront read (393 products × relations, on the
++  // homepage and catalogue) — served from memory between mutations.
++  const rows = await cachedData('products:all', () =>
++    safe(
++      () =>
++        db.query.products.findMany({
++          where: isNull(products.archivedAt),
++          with: { brand: true, category: true },
++          orderBy: [asc(products.sortOrder), asc(products.name)],
++        }),
++      [] as ProductWithRelations[]
++    )
+   )
+   return rows.map((p) => localizeProduct(p, locale))
+ }
+@@ -240,18 +260,20 @@ export async function getFeaturedProducts(
+   limit = 8,
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations[]> {
+-  const rows = await safe(
+-    () =>
+-      db.query.products.findMany({
+-        where: and(
+-          eq(products.featured, true),
+-          isNull(products.archivedAt)
+-        ),
+-        with: { brand: true, category: true },
+-        orderBy: [asc(products.sortOrder)],
+-        limit,
+-      }),
+-    [] as ProductWithRelations[]
++  const rows = await cachedData(`products:featured:${limit}`, () =>
++    safe(
++      () =>
++        db.query.products.findMany({
++          where: and(
++            eq(products.featured, true),
++            isNull(products.archivedAt)
++          ),
++          with: { brand: true, category: true },
++          orderBy: [asc(products.sortOrder)],
++          limit,
++        }),
++      [] as ProductWithRelations[]
++    )
+   )
+   return rows.map((p) => localizeProduct(p, locale))
+ }
+@@ -262,19 +284,23 @@ export async function getRelatedProducts(
+   limit = 3,
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations[]> {
+-  const rows = await safe(
++  const rows = await cachedData(
++    `products:related:${brandId}:${productId}:${limit}`,
+     () =>
+-      db.query.products.findMany({
+-        where: and(
+-          eq(products.brandId, brandId),
+-          ne(products.id, productId),
+-          isNull(products.archivedAt)
+-        ),
+-        with: { brand: true, category: true },
+-        orderBy: [asc(products.sortOrder)],
+-        limit,
+-      }),
+-    [] as ProductWithRelations[]
++      safe(
++        () =>
++          db.query.products.findMany({
++            where: and(
++              eq(products.brandId, brandId),
++              ne(products.id, productId),
++              isNull(products.archivedAt)
++            ),
++            with: { brand: true, category: true },
++            orderBy: [asc(products.sortOrder)],
++            limit,
++          }),
++        [] as ProductWithRelations[]
++      )
+   )
+   return rows.map((p) => localizeProduct(p, locale))
+ }
+@@ -284,9 +310,15 @@ export async function searchProducts(
+   locale: Locale = defaultLocale
+ ): Promise<ProductWithRelations[]> {
+   const q = `%${query.trim()}%`
+-  const rows = await safe(
++  // Short-TTL cache keyed by the query — repeated keystrokes/suggestions
++  // for popular terms stop hammering the DB. Empty results are cached too
++  // (a legit "no match" shouldn't retry on every keystroke).
++  const rows = await cachedData(
++    `search:${q.toLowerCase()}`,
+     () =>
+-      db.query.products.findMany({
++      safe(
++        () =>
++          db.query.products.findMany({
+         where: and(
+           isNull(products.archivedAt),
+           or(
+@@ -304,9 +336,11 @@ export async function searchProducts(
+         ),
+         with: { brand: true, category: true },
+         orderBy: [asc(products.sortOrder), asc(products.name)],
+-        limit: 60,
+-      }),
+-    [] as ProductWithRelations[]
++            limit: 60,
++          }),
++        [] as ProductWithRelations[]
++      ),
++    { ttlMs: 30_000, cacheEmpty: true }
+   )
+   return rows.map((p) => localizeProduct(p, locale))
+ }
+diff --git a/src/styles/brand-design.css b/src/styles/brand-design.css
+index 6da5a8a..267b09a 100644
+--- a/src/styles/brand-design.css
++++ b/src/styles/brand-design.css
+@@ -969,3 +969,12 @@
+ .brand-root .b-mobile-foot {
+   display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap;
+ }
++
++/* ═══════════ ROUND 8 — FULL-PAGE HERO (brand skin) ═══════════
++   Hero section fills the first screen (viewport minus the 78px header),
++   content vertically centered in both the 2-column and stacked layouts. */
++.brand-root .hero-clean {
++  min-height: calc(100vh - 78px);
++  min-height: calc(100svh - 78px);
++  align-content: center;
++}
+diff --git a/src/styles/showroom.css b/src/styles/showroom.css
+index 059efd5..513482c 100644
+--- a/src/styles/showroom.css
++++ b/src/styles/showroom.css
+@@ -768,3 +768,120 @@ body[data-home-theme='light'] .sr-root .sr-wamini { color: #178a43; }
+ /* The floating cart bubble must never overlap the sticky buy bar (both
+    mount on product pages once scrolled); hide it while the bar shows. */
+ .sr-root:has(.sr-buybar) .sr-fab { display: none; }
++
++/* ═══════════ ROUND 8 — PRODUCT CUSTOM HTML BLOCK ═══════════
++   Admin-authored HTML rendered under the product description (both skins —
++   brand overrides inherit through the --sr-* token mapping). */
++.sr-customhtml {
++  border-top: 1px solid var(--sr-line);
++  padding-top: 18px;
++  color: var(--sr-sub);
++  font-size: 15.5px;
++  line-height: 1.7;
++  overflow-wrap: break-word;
++}
++.sr-customhtml h2, .sr-customhtml h3, .sr-customhtml h4 {
++  color: var(--sr-text);
++  font-weight: 650;
++  letter-spacing: -0.01em;
++  margin: 18px 0 8px;
++}
++.sr-customhtml h2 { font-size: 22px; }
++.sr-customhtml h3 { font-size: 18px; }
++.sr-customhtml h4 { font-size: 16px; }
++.sr-customhtml p { margin: 0 0 10px; }
++.sr-customhtml ul, .sr-customhtml ol { margin: 0 0 12px; padding-inline-start: 20px; }
++.sr-customhtml li { margin-bottom: 4px; }
++.sr-customhtml a { color: var(--sr-cyan); text-underline-offset: 3px; }
++.sr-customhtml img, .sr-customhtml video, .sr-customhtml iframe {
++  max-width: 100%;
++  border-radius: 12px;
++  border: 1px solid var(--sr-line);
++}
++.sr-customhtml iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; }
++.sr-customhtml table {
++  width: 100%;
++  border-collapse: collapse;
++  margin: 12px 0;
++  font-size: 14px;
++}
++.sr-customhtml th, .sr-customhtml td {
++  border: 1px solid var(--sr-line);
++  padding: 9px 12px;
++  text-align: start;
++}
++.sr-customhtml th { color: var(--sr-text); background: color-mix(in srgb, var(--sr-cyan) 7%, transparent); }
++.sr-customhtml blockquote {
++  border-inline-start: 3px solid var(--sr-cyan);
++  margin: 12px 0;
++  padding: 4px 0 4px 14px;
++  color: var(--sr-text);
++}
++.sr-customhtml hr { border: 0; border-top: 1px solid var(--sr-line); margin: 16px 0; }
++/* Brand skin: token mapping under .brand-root already re-points --sr-*;
++   just soften the block edges to match the lighter design. */
++.brand-root .sr-customhtml { font-size: 15px; }
++
++/* ═══════════ ROUND 8 — FOOTER NEWSLETTER (all skins) ═══════════
++   Token fallback chain: .sr-root defines --sr-*, .brand-root maps --sr-*
++   to the brand palette, and the classic homepage falls back to its own
++   --text/--mute/--cyan/--line-2 tokens. */
++.sr-nl { max-width: 380px; position: relative; margin-top: 18px; }
++.sr-nl-title {
++  font-weight: 650;
++  font-size: 14.5px;
++  letter-spacing: -0.01em;
++  color: var(--sr-text, var(--text, #fdfdfd));
++  margin: 0 0 10px;
++}
++.sr-nl-row { display: flex; gap: 8px; align-items: stretch; }
++.sr-nl-input {
++  flex: 1; min-width: 0;
++  border-radius: 999px;
++  border: 1px solid var(--sr-line, var(--line-2, rgba(255,255,255,0.14)));
++  background: color-mix(in srgb, var(--sr-text, var(--text, #fff)) 4%, transparent);
++  color: var(--sr-text, var(--text, #fdfdfd));
++  padding: 10px 16px;
++  font-size: 13.5px;
++  outline: none;
++  transition: border-color .2s ease, box-shadow .2s ease;
++}
++.sr-nl-input::placeholder { color: var(--sr-muted, var(--mute, #8a8f99)); }
++.sr-nl-input:focus-visible {
++  border-color: var(--sr-cyan, var(--cyan, #7ce0c3));
++  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sr-cyan, var(--cyan, #7ce0c3)) 25%, transparent);
++}
++.sr-nl-btn {
++  flex-shrink: 0;
++  border: 0;
++  border-radius: 999px;
++  padding: 10px 18px;
++  font-weight: 650;
++  font-size: 13px;
++  cursor: pointer;
++  background: var(--sr-cyan, var(--cyan, #7ce0c3));
++  color: #08131c;
++  transition: transform .18s ease, filter .18s ease;
++}
++.sr-nl-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
++.sr-nl-btn:disabled { opacity: .6; cursor: default; transform: none; }
++.sr-nl-btn:focus-visible {
++  outline: 2px solid var(--sr-cyan, var(--cyan, #7ce0c3));
++  outline-offset: 2px;
++}
++.sr-nl-msg { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; }
++.sr-nl-msg.is-ok { color: var(--sr-cyan, var(--cyan, #7ce0c3)); }
++.sr-nl-msg.is-err { color: #f08a8a;
++}
++/* brand skin: solid surfaces, darker ink on teal button */
++.brand-root .sr-nl-input {
++  background: var(--surface, #fff);
++  color: var(--ink, #15152e);
++  border-color: var(--line-2, rgba(0,0,0,0.12));
++}
++.brand-root .sr-nl-input::placeholder { color: var(--mute, #6a6a82); }
++.brand-root .sr-nl-btn { color: #fff; background: var(--teal-deep, #0f766e); }
++@media (max-width: 480px) {
++  .sr-nl-row { flex-direction: column; }
++  .sr-nl-btn { padding: 11px 18px; }
++}

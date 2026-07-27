@@ -6,6 +6,7 @@ import { Heading } from '@/components/ui/Heading'
 import { InquiryButton } from '@/components/ui/InquiryButton'
 import { type Locale } from '@/i18n/config'
 import { getProductBySlug } from '@/server/queries'
+import { SkinShell } from '@/components/skin/SkinShell'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,7 @@ export default async function InquirySentPage({ searchParams }: SentPageProps) {
   const product = from ? await getProductBySlug(from, locale).catch(() => null) : null
 
   return (
+    <SkinShell locale={locale}>
     <section className="py-24 md:py-32">
       <Container>
         <div className="mx-auto max-w-3xl space-y-8 text-center">
@@ -45,7 +47,7 @@ export default async function InquirySentPage({ searchParams }: SentPageProps) {
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-4">
             <InquiryButton href="/">{t('sentAction')}</InquiryButton>
             {product ? (
-              <InquiryButton href={`/brands/${product.brand.slug}`}>
+              <InquiryButton href={`/products?brand=${product.brand.slug}`}>
                 {tNav('brands')} · {product.brand.name}
               </InquiryButton>
             ) : null}
@@ -60,5 +62,6 @@ export default async function InquirySentPage({ searchParams }: SentPageProps) {
         </div>
       </Container>
     </section>
+    </SkinShell>
   )
 }

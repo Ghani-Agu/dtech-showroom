@@ -75,7 +75,7 @@ export function BrandCategories({
         </div>
         <div className="brand-grid">
           {categories.map((c) => (
-            <Link key={c.id} className="brandcard" href={`/categories/${c.id}`}>
+            <Link key={c.id} className="brandcard" href={{ pathname: '/products', query: { category: c.id } }}>
               <span style={{ color: 'var(--teal-deep)' }}>
                 <GridCatIcon kind={c.icon} size={28} />
               </span>
