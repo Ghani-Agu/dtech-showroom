@@ -2,7 +2,7 @@ const STAR = 'M12 2l2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.2 1.3-6.6L2.5 9l6
 
 /** Star colors per surface tone (dark showroom vs light brand skin). */
 const STAR_TONES = {
-  dark: { on: '#4f9dff', off: 'rgba(255,255,255,0.16)' },
+  dark: { on: '#7ce0c3', off: 'rgba(255,255,255,0.16)' },
   light: { on: '#10a396', off: 'rgba(127,138,148,0.35)' },
 } as const
 
@@ -45,12 +45,8 @@ export function Stars({
   tone?: StarTone
 }) {
   return (
-    <span
-      className="sr-stars"
-      role="img"
-      aria-label={`${value.toFixed(1)} / 5${count !== undefined ? ` · ${count}` : ''}`}
-    >
-      <span className="s" aria-hidden="true">
+    <span className="sr-stars">
+      <span className="s">
         {[1, 2, 3, 4, 5].map((i) => (
           <Star key={i} size={size} fill={value - i + 1} tone={tone} />
         ))}

@@ -1161,7 +1161,7 @@ function LiveEditor({
     }))
     const layout: Layout = preset?.layout ?? 'stack'
     // current rendered order of editable sections (real + custom)
-    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact'] : []
+    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact'] : []
     const curCustoms = dataRef.current.customSections.map((c) => c.id)
     const present = [...real, ...curCustoms]
     const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
@@ -1190,7 +1190,7 @@ function LiveEditor({
   function addBlockSection(kind: BlockKind, atIndex?: number) {
     const id = `custom:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`
     const blocks: PresetBlock[] = [{ id: 'b' + Math.random().toString(36).slice(2, 8), kind }]
-    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact'] : []
+    const real = isHome ? ['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact'] : []
     const curCustoms = dataRef.current.customSections.map((c) => c.id)
     const present = [...real, ...curCustoms]
     const savedOrd = (dataRef.current.sections.order || []).filter((x) => present.includes(x))
@@ -1235,7 +1235,7 @@ function LiveEditor({
   }
   const hideHelp = () => setHelp(null)
 
-  const DEF_HOME_ORDER = ['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact']
+  const DEF_HOME_ORDER = ['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']
   const presentReal = isHome ? DEF_HOME_ORDER : []
   const customIds = customSections.map((c) => c.id)
   const savedOrder = (sections.order || []).filter((id) => presentReal.includes(id) || customIds.includes(id))
@@ -1876,7 +1876,7 @@ function LibHelpCard({ info }: { info: HelpInfo }) {
 }
 
 const SEC_LABELS: Record<string, string> = {
-  hero: 'Hero', categories: 'Catégories', catalog: 'Produits en vedette', services: 'Services', partner: 'Partenaire HP', brands: 'Marques', about: 'À propos', contact: 'Contact',
+  hero: 'Hero', categories: 'Catégories', catalog: 'Catalogue', services: 'Services', brands: 'Marques', about: 'À propos', contact: 'Contact',
 }
 const LAYOUT_LABELS: Record<Layout, string> = {
   stack: 'Pile', center: 'Centré', cols2: '2 colonnes', cols3: '3 colonnes', cols4: '4 colonnes', row: 'Ligne',

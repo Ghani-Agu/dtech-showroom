@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { imgOr } from '@/lib/img'
-import { useCart, whatsappOrderUrl, trackWhatsappOrder } from '@/lib/cart'
+import { useCart, whatsappOrderUrl } from '@/lib/cart'
 
 /**
  * Sticky buy bar for product pages (both designs): once the visitor scrolls
@@ -58,10 +58,9 @@ export function StickyBuyBar({
       </div>
       <a
         className="wa"
-        href={whatsappOrderUrl([{ name, qty: 1, slug }], t('product.waProduct'))}
+        href={whatsappOrderUrl([{ name, qty: 1 }], t('product.waProduct'))}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackWhatsappOrder([{ name, qty: 1, slug }])}
         aria-label="WhatsApp"
         title="WhatsApp"
       >

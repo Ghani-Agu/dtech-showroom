@@ -64,42 +64,23 @@ function LoginFormInner() {
     setError(null)
     setIsPending(true)
 
-    // This call had no try/catch. Any THROWN failure — the client's baseURL
-    // falling back to localhost on an https page (mixed content), a network
-    // drop, a cold serverless start that times out — left isPending true
-    // forever, so the button sat on "Connexion…" with no error and no way
-    // back. That is the "can't log in" symptom: usually a reachability
-    // problem, always presented as a hang.
-    try {
-      const result = await authClient.signIn.email({
-        email,
-        password,
-        callbackURL: redirectTo,
-      })
+    const result = await authClient.signIn.email({
+      email,
+      password,
+      callbackURL: redirectTo,
+    })
 
-      if (result.error) {
-        const code = result.error.code ?? ''
-        setError(
-          code === 'INVALID_EMAIL_OR_PASSWORD'
-            ? 'E-mail ou mot de passe incorrect.'
-            : code === 'INVALID_ORIGIN'
-              ? "Connexion refusée par le serveur (origine non autorisée). Contactez l'administrateur du site."
-              : (result.error.message ??
-                'Échec de la connexion. Vérifiez votre e-mail et votre mot de passe.')
-        )
-        setIsPending(false)
-        return
-      }
-
-      router.push(redirectTo)
-      router.refresh()
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
+    if (result.error) {
       setError(
-        `Impossible de joindre le serveur de connexion. Vérifiez votre connexion internet et réessayez. (${msg})`
+        result.error.message ??
+          'Échec de la connexion. Vérifiez votre e-mail et votre mot de passe.'
       )
       setIsPending(false)
+      return
     }
+
+    router.push(redirectTo)
+    router.refresh()
   }
 
   return (

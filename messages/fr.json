@@ -758,15 +758,7 @@
       "prevPage": "Page précédente",
       "nextPage": "Page suivante",
       "brandsLabel": "Marques",
-      "categoriesLabel": "Catégories",
-      "featuredOnly": "En vedette",
-      "clearFilter": "Retirer ce filtre",
-      "sortNewest": "Plus récents",
-      "filtersTitle": "Filtres",
-      "refine": "Affiner",
-      "categoriesTitle": "Catégorie",
-      "brandsTitle": "Marque",
-      "activeCount": "{n} filtre(s) actif(s)"
+      "categoriesLabel": "Catégories"
     },
     "product": {
       "addToCart": "Ajouter au panier",
@@ -813,28 +805,7 @@
       "kicker": "{count} produits · {cats} catégories · {brands} marques",
       "title1": "Le catalogue",
       "title2": "complet.",
-      "sub": "Filtrez par catégorie ou marque, triez, et commandez directement sur WhatsApp.",
-      "breadcrumb": "Catalogue",
-      "titleCategory": "{category} — Catalogue D-Tech",
-      "titleBrand": "{brand} — Catalogue D-Tech",
-      "titleBrandCategory": "{brand} {category} — Catalogue D-Tech",
-      "titleSearch": "Recherche « {q} » — Catalogue",
-      "titlePaged": "{title} — Page {page}",
-      "subFiltered": "{scope} — parcourez la sélection D-Tech Algérie, filtrez, comparez et commandez sur WhatsApp."
-    },
-    "featured": {
-      "seeAll": "Voir les {count} produits",
-      "browseAll": "Explorer tout le catalogue",
-      "note": "{count} produits · filtres par catégorie, marque et recherche"
-    },
-    "partner": {
-      "eyebrow": "Partenaire {brand}",
-      "partnerLine": "D-Tech Algérie × {brand}",
-      "title1": "La gamme professionnelle {brand},",
-      "title2": "chez votre distributeur.",
-      "sub": "Postes de travail, écrans et impression {brand} pour entreprises et administrations — avec devis, facture et garantie officielle, livrés dans les 58 wilayas.",
-      "cta": "Découvrir la gamme {brand}",
-      "tileSub": "{count} produits"
+      "sub": "Filtrez par catégorie ou marque, triez, et commandez directement sur WhatsApp."
     }
   },
   "newsletter": {

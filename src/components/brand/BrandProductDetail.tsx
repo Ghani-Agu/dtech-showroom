@@ -29,8 +29,6 @@ export interface BrandProductDetailData {
   catSlug: string
   tagline: string
   description: string
-  /** Pre-sanitized HTML block (see lib/custom-html) shown under the description. */
-  customHtml?: string
   image: string
   specs?: Record<string, string | number | string[]>
   images?: string[]
@@ -153,13 +151,6 @@ export function BrandProductDetail({
                 ))}
               </div>
             )}
-
-            {product.customHtml ? (
-              <div
-                className="sr-customhtml"
-                dangerouslySetInnerHTML={{ __html: product.customHtml }}
-              />
-            ) : null}
           </div>
         </div>
 

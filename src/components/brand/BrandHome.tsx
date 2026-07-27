@@ -11,35 +11,20 @@
 import { BrandPageShell } from './BrandPageShell'
 import {
   BrandHero,
-  BrandFeatured,
+  BrandShop,
   BrandBrands,
   BrandServices,
   BrandAbout,
   BrandContact,
 } from './BrandSections'
 import type { BrandData } from './brand-types'
-import { BrandPartnerSection } from './BrandPartnerSection'
-import type { PartnerBandData } from '@/server/partner-band'
 
-export function BrandHome({
-  locale,
-  data,
-  partner = null,
-}: {
-  locale: string
-  data: BrandData
-  partner?: PartnerBandData | null
-}) {
+export function BrandHome({ locale, data }: { locale: string; data: BrandData }) {
   return (
     <BrandPageShell locale={locale}>
-      <BrandHero heroImages={data.heroImages} />
-      <BrandFeatured
-        products={data.products}
-        productCount={data.productCount}
-        categories={data.categories}
-      />
+      <BrandHero heroImages={data.heroImages} productCount={data.products.length} />
+      <BrandShop products={data.products} categories={data.categories} />
       <BrandServices />
-      <BrandPartnerSection partner={partner} />
       <BrandBrands brands={data.brands} />
       <BrandAbout />
       <BrandContact />

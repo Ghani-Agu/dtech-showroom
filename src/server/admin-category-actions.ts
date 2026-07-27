@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { bustDataCache } from '@/lib/data-cache'
 import { count, eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { categories, products } from '@/db/schema'
@@ -52,7 +51,6 @@ export async function createCategory(values: CategoryFormValues) {
     .values(normalize(parsed.data))
     .returning({ id: categories.id })
 
-  bustDataCache()
   revalidatePath('/admin/categories')
   revalidatePath('/categories')
   revalidatePath('/')
@@ -97,7 +95,6 @@ export async function updateCategory(
     .set({ ...normalize(parsed.data), updatedAt: new Date() })
     .where(eq(categories.id, categoryId))
 
-  bustDataCache()
   revalidatePath('/admin/categories')
   revalidatePath(`/admin/categories/${categoryId}/edit`)
   revalidatePath(`/categories/${parsed.data.slug}`)
@@ -115,7 +112,6 @@ export async function archiveCategory(categoryId: string) {
     .set({ archivedAt: new Date() })
     .where(eq(categories.id, categoryId))
 
-  bustDataCache()
   revalidatePath('/admin/categories')
   revalidatePath('/categories')
 
@@ -130,7 +126,6 @@ export async function restoreCategory(categoryId: string) {
     .set({ archivedAt: null })
     .where(eq(categories.id, categoryId))
 
-  bustDataCache()
   revalidatePath('/admin/categories')
   revalidatePath('/categories')
 
@@ -159,7 +154,6 @@ export async function deleteCategoryPermanently(categoryId: string) {
 
   await db.delete(categories).where(eq(categories.id, categoryId))
 
-  bustDataCache()
   revalidatePath('/admin/categories')
   revalidatePath('/categories')
   revalidatePath('/')

@@ -15,7 +15,6 @@
  */
 
 import { revalidatePath } from 'next/cache'
-import { bustDataCache } from '@/lib/data-cache'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { sitePages } from '@/db/schema'
@@ -62,7 +61,6 @@ export async function publishDesign(id: DesignId): Promise<DesignResult> {
         set: { draft: value, published: value, updatedAt: now, publishedAt: now },
       })
     // Re-render the whole storefront (all routes, both locales).
-    bustDataCache()
     revalidatePath('/', 'layout')
     return { ok: true }
   } catch (err) {

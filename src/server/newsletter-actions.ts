@@ -17,11 +17,6 @@ import { db } from '@/db/client'
 import { subscribers, type SubscriberStatus } from '@/db/schema'
 import { sendEmail } from '@/lib/mailer'
 import { confirmationTemplate } from '@/lib/email-templates'
-import {
-  isBrevoConfigured,
-  upsertBrevoContact,
-  getBrevoListId,
-} from '@/lib/brevo'
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
@@ -188,21 +183,6 @@ async function sendConfirmation(
   })
 }
 
-/** Push a confirmed subscriber into the Brevo contact base (and the
- *  configured list, if any). No-op when no Brevo key is set. */
-async function syncSubscriberToBrevo(email: string): Promise<void> {
-  try {
-    if (!(await isBrevoConfigured())) return
-    const listId = await getBrevoListId()
-    const res = await upsertBrevoContact(email, {}, listId)
-    if (!res.ok) {
-      console.warn(`[newsletter] Brevo contact sync failed for ${email}: ${res.error}`)
-    }
-  } catch (err) {
-    console.warn('[newsletter] Brevo contact sync error:', err)
-  }
-}
-
 /* ── confirm / unsubscribe — token consumption ────────────────────────
  * These are called by GET pages, not form actions. They return small
  * status objects the page renders into a friendly outcome.
@@ -244,11 +224,6 @@ export async function confirmSubscriptionByToken(
         confirmedAt: sql`now()`,
       })
       .where(eq(subscribers.id, row.id))
-
-    // Mirror the confirmed subscriber into Brevo contacts (fire-and-forget
-    // — a Brevo hiccup must never break the visitor's confirmation page).
-    void syncSubscriberToBrevo(row.email)
-
     return { ok: true, state: 'subscribed', email: row.email }
   } catch (err) {
     console.error('[newsletter] confirm failed:', err)

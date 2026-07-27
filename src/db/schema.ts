@@ -156,10 +156,6 @@ export const products = pgTable(
     taglineAr: text('tagline_ar'),
     descriptionAr: text('description_ar'),
 
-    /** Raw HTML block (Round 8) shown under the description on the
-     *  product page — same content for all locales. Sanitized at render. */
-    customHtml: text('custom_html'),
-
     // SEO overrides (Phase 7c) — null falls back to name/tagline
     seoTitle: text('seo_title'),
     seoDescription: text('seo_description'),
@@ -385,21 +381,6 @@ export const sitePages = pgTable('site_pages', {
 })
 
 export type SitePageRow = InferSelectModel<typeof sitePages>
-
-/**
- * Small key/value store for app-level configuration edited from the admin
- * (e.g. the Brevo API key, Brevo list id). Created idempotently in
- * ensure-schema.ts. Values are plain text — mask them in the UI.
- */
-export const appSettings = pgTable('app_settings', {
-  key: text('key').primaryKey(),
-  value: text('value'),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-})
-
-export type AppSettingRow = InferSelectModel<typeof appSettings>
 
 /* ─────────────────────────────────────────────────────────────────
  * NEWSLETTER — subscribers, campaigns, per-recipient sends

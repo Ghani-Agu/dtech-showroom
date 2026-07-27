@@ -1,11 +1,9 @@
 'use client'
 
 // Icon library: lucide-react (already installed in package.json).
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  BarChart3,
   ExternalLink,
   FolderKanban,
   Images,
@@ -13,7 +11,6 @@ import {
   LogOut,
   Mail,
   Megaphone,
-  Menu,
   MessageSquare,
   Package,
   Paintbrush,
@@ -21,12 +18,10 @@ import {
   Settings,
   Tag,
   Users,
-  X,
   type LucideIcon,
 } from 'lucide-react'
 import { PulsingDot } from './PulsingDot'
 import { authClient } from '@/lib/auth-client'
-import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -47,13 +42,6 @@ const PRIMARY_NAV: NavItem[] = [
     desc: 'Vue d’ensemble',
     icon: LayoutDashboard,
     color: 'var(--c-mint)',
-  },
-  {
-    href: '/admin/analytics',
-    label: 'Statistiques',
-    desc: 'Audience et activité du site',
-    icon: BarChart3,
-    color: 'var(--c-blue)',
   },
   {
     href: '/admin/products',
@@ -152,17 +140,6 @@ export interface AdminSidebarProps {
 export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const [open, setOpen] = useState(false)
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- close the drawer on navigation
-  useEffect(() => setOpen(false), [pathname])
-  const trapRef = useFocusTrap<HTMLElement>(open, () => setOpen(false))
-  useEffect(() => {
-    if (!open) return
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [open])
 
   function isActive(href: string): boolean {
     if (href === '/admin') return pathname === '/admin'
@@ -181,40 +158,14 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
   }
 
   return (
-    <>
-      <button
-        type="button"
-        className="admin-navfab"
-        aria-label="Ouvrir le menu"
-        aria-expanded={open}
-        onClick={() => setOpen(true)}
-      >
-        <Menu size={22} strokeWidth={1.9} />
-      </button>
-      <div
-        className="admin-navscrim"
-        data-open={open}
-        aria-hidden="true"
-        onClick={() => setOpen(false)}
-      />
-      <aside
-        ref={trapRef}
-        data-open={open}
-        className={cn(
-          'glass-surface sticky top-0 flex h-screen w-[268px] shrink-0 flex-col overflow-y-auto',
-          'rounded-none border-y-0 border-l-0',
-          className
-        )}
-        style={{ borderRight: '1px solid var(--admin-glass-border)' }}
-      >
-        <button
-          type="button"
-          className="admin-navclose"
-          aria-label="Fermer le menu"
-          onClick={() => setOpen(false)}
-        >
-          <X size={18} />
-        </button>
+    <aside
+      className={cn(
+        'glass-surface sticky top-0 flex h-screen w-[268px] shrink-0 flex-col overflow-y-auto',
+        'rounded-none border-y-0 border-l-0',
+        className
+      )}
+      style={{ borderRight: '1px solid var(--admin-glass-border)' }}
+    >
       {/* Wordmark — same language as the public site header */}
       <div className="px-5 pb-5 pt-6">
         <Link
@@ -385,8 +336,7 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
           </li>
         </ul>
       </nav>
-      </aside>
-    </>
+    </aside>
   )
 }
 

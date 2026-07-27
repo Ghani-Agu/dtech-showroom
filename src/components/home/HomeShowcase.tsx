@@ -15,6 +15,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -30,13 +31,10 @@ import { useCart, WHATSAPP_NUMBER } from '@/lib/cart'
 import { SpecsToggle } from '@/components/product/SpecsToggle'
 import { CartDrawer } from '@/components/showroom/CartDrawer'
 import { FloatingCart } from '@/components/showroom/FloatingCart'
-import { FooterNewsletter } from '@/components/forms/FooterNewsletter'
 import { seededRating } from '@/lib/reviews'
 import { Stars } from '@/components/showroom/Stars'
 import { Carousel } from '@/components/showroom/Carousel'
 import { SiteNav, Logo } from '@/components/showroom/SiteNav'
-import { PartnerBand } from './PartnerBand'
-import type { PartnerBandData } from '@/server/partner-band'
 
 export type IconKind =
   | 'desktop'
@@ -80,24 +78,19 @@ import { EditProvider, Editable, EditableLink, SectionList, type EditData } from
 
 export function HomeShowcase({
   products,
-  productCount,
   categories,
   brands,
-  partner = null,
   heroConfig = null,
   content = {},
 }: {
-  /** Featured shortlist only — the full catalogue lives on /products. */
   products: HomeProduct[]
-  /** Total published products (for counters/copy), not products.length. */
-  productCount: number
   categories: HomeCategory[]
   brands: HomeBrand[]
-  /** Partner spotlight, derived from the catalogue. Null hides the section. */
-  partner?: PartnerBandData | null
   heroConfig?: HeroConfig | null
   content?: Partial<EditData>
 }) {
+  const [activeCat, setActiveCat] = useState<string | 'all'>('all')
+
   // Hero slides come ONLY from the images uploaded in the admin interface
   // (Slider Hero / éditeur — same source as the Brand design). When nothing
   // has been uploaded yet, the slider shows a branded D-Tech panel.
@@ -123,27 +116,34 @@ export function HomeShowcase({
       {/* Not a <main>: the locale layout already renders <main id="main-content">. */}
       <div role="presentation">
         <SectionList
-          defaultOrder={['hero', 'categories', 'catalog', 'services', 'partner', 'brands', 'about', 'contact']}
+          defaultOrder={['hero', 'categories', 'catalog', 'services', 'brands', 'about', 'contact']}
           nodes={{
-            hero: <HeroSlider slides={heroSlides} />,
+            hero: (
+              <HeroSlider
+                productCount={products.length}
+                brandCount={brands.length}
+                slides={heroSlides}
+                config={heroConfig}
+              />
+            ),
             categories: <CategoriesSection categories={categories} />,
             catalog: (
-              <FeaturedSection
+              <CatalogSection
+                activeCat={activeCat}
+                setActiveCat={setActiveCat}
                 products={products}
-                productCount={productCount}
                 categories={categories}
                 brandCount={brands.length}
               />
             ),
             services: <ServicesStrip />,
             brands: <BrandsSection brands={brands} />,
-            partner: <PartnerSection partner={partner} />,
-            about: <AboutSection productCount={productCount} brandCount={brands.length} categoryCount={categories.length} />,
+            about: <AboutSection productCount={products.length} brandCount={brands.length} categoryCount={categories.length} />,
             contact: <ContactSection />,
           }}
         />
       </div>
-      <Footer />
+      <Footer onSelectCat={setActiveCat} />
       <CartDrawer />
       <FloatingCart />
     </div>
@@ -211,10 +211,6 @@ function Counter({
         entries.forEach((e) => {
           if (e.isIntersecting && !started.current) {
             started.current = true
-            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-              setV(to)
-              return
-            }
             const start = performance.now()
             const dur = 1600
             const tick = (t: number) => {
@@ -248,121 +244,122 @@ function Counter({
  * ──────────────────────────────────────────────────────────────── */
 
 function HeroSlider({
+  productCount,
+  brandCount,
   slides,
+  config,
 }: {
+  productCount: number
+  brandCount: number
   slides: { src: string; alt: string }[]
+  config?: HeroConfig | null
 }) {
-  const locale = useLocale()
+  const t = useTranslations('showcase.hero')
   const [idx, setIdx] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const [reduced, setReduced] = useState(false)
   const real = slides.length > 0 ? slides : [{ src: '', alt: '' }]
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(mq.matches)
-    const on = () => setReduced(mq.matches)
-    mq.addEventListener?.('change', on)
-    return () => mq.removeEventListener?.('change', on)
-  }, [])
-  // Auto-advance only when there are multiple slides, the visitor hasn't
-  // paused, and reduced-motion isn't requested (WCAG 2.2.2).
-  useEffect(() => {
-    if (real.length <= 1 || paused || reduced) return
+    if (real.length <= 1) return
     const id = setInterval(() => setIdx((v) => (v + 1) % real.length), 4500)
     return () => clearInterval(id)
-  }, [real.length, paused, reduced])
-  const slideLabel = (n: number) =>
-    locale === 'ar' ? `الشريحة ${n}` : locale === 'fr' ? `Diapositive ${n}` : `Slide ${n}`
-  const carouselLabel = locale === 'ar' ? 'لافتة' : locale === 'fr' ? 'Bannière' : 'Banner'
-  const pauseLabel = locale === 'ar' ? 'إيقاف مؤقت' : locale === 'fr' ? 'Mettre en pause' : 'Pause'
-  const playLabel = locale === 'ar' ? 'تشغيل' : locale === 'fr' ? 'Lecture' : 'Play'
-  const prevLabel = locale === 'ar' ? 'السابق' : locale === 'fr' ? 'Précédent' : 'Previous'
-  const nextLabel = locale === 'ar' ? 'التالي' : locale === 'fr' ? 'Suivant' : 'Next'
-  const go = (n: number) => setIdx((n + real.length) % real.length)
+  }, [real.length])
 
-  // Full-bleed image hero: the slider IS the hero section. No copy, no CTA —
-  // the uploaded slides carry the message (admin → Slider Hero).
+  const title1 = config?.title1 ?? t('title1')
+  const title2 = config?.title2 ?? t('title2')
+  const primaryLabel = config?.primaryLabel ?? t('ctaCatalog')
+  const primaryHref = config?.primaryHref ?? '#products'
+  const secondaryLabel = config?.secondaryLabel ?? t('ctaStory')
+  const secondaryHref = config?.secondaryHref ?? '#about'
+
   return (
-    <section className="hero hero-full" id="top">
-      <div
-        className="hero-slider"
-        role="group"
-        aria-roledescription="carousel"
-        aria-label={carouselLabel}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
-      >
-        {real.map((sl, i) => (
-          <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
-            {sl.src ? (
-              <Image
-                src={sl.src}
-                alt={sl.alt}
-                fill
-                sizes="100vw"
-                priority={i === 0}
-                fetchPriority={i === 0 ? 'high' : 'auto'}
-                quality={82}
-                style={{ objectFit: 'cover' }}
-              />
-            ) : (
-              <div className="hero-slide-brand" aria-hidden>
-                <span className="hsb-mark">
-                  D-Tech<span className="dot">.</span>
-                </span>
-                <span className="hsb-tag">Algérie · Digital Technologie</span>
-              </div>
-            )}
+    <section className="hero" id="top">
+      <div className="wrap hero-grid">
+        <div className="hero-text">
+          <span className="kicker" style={{ marginBottom: 24 }}>
+            {config?.kicker ?? t('kicker')}
+          </span>
+          <h1 className="h-mega">
+            {title1}
+            <br />
+            <span className="serif-i" style={{ color: 'var(--cyan)' }}>
+              {title2}
+            </span>
+          </h1>
+          <p className="sub">
+            {config?.subtitle
+              ? config.subtitle
+              : t.rich('sub', {
+                  count: productCount,
+                  strong: (chunks: ReactNode) => (
+                    <strong style={{ color: 'var(--text)' }}>{chunks}</strong>
+                  ),
+                })}
+          </p>
+          <div className="cta">
+            <a className="btn btn-primary btn-lg" href={primaryHref}>
+              <span className="shimmer" />
+              {primaryLabel}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </a>
+            <a className="btn btn-ghost btn-lg" href={secondaryHref}>
+              {secondaryLabel}
+            </a>
           </div>
-        ))}
-        <div className="hero-slider-veil" />
-        {real.length > 1 && (
-          <>
-            <button
-              type="button"
-              className="hero-slider-arrow prev"
-              aria-label={prevLabel}
-              onClick={() => go(idx - 1)}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
-            </button>
-            <button
-              type="button"
-              className="hero-slider-arrow next"
-              aria-label={nextLabel}
-              onClick={() => go(idx + 1)}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
-            </button>
+
+          <div className="hero-stats">
+            <div>
+              <div className="v"><Counter to={new Date().getFullYear() - 2006} /><span className="accent"> {t('stats.yearsSuffix')}</span></div>
+              <div className="l">{t('stats.presence')}</div>
+            </div>
+            <div>
+              <div className="v"><Counter to={brandCount} /><span className="accent"> {t('stats.brandsSuffix')}</span></div>
+              <div className="l">{t('stats.partners')}</div>
+            </div>
+            <div>
+              <div className="v"><Counter to={58} /><span className="accent"> {t('stats.wilayasSuffix')}</span></div>
+              <div className="l">{t('stats.wilayas')}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-slider" aria-roledescription="carousel">
+          {real.map((sl, i) => (
+            <div key={i} className={`hero-slide ${i === idx ? 'is-active' : ''}`}>
+              {sl.src ? (
+                <Image
+                  src={sl.src}
+                  alt={sl.alt}
+                  fill
+                  sizes="(min-width: 1024px) 720px, 100vw"
+                  priority={i === 0}
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <div className="hero-slide-brand" aria-hidden>
+                  <span className="hsb-mark">
+                    D-Tech<span className="dot">.</span>
+                  </span>
+                  <span className="hsb-tag">Algérie · Digital Technologie</span>
+                </div>
+              )}
+            </div>
+          ))}
+          <div className="hero-slider-veil" />
+          {real.length > 1 && (
             <div className="hero-slider-dots">
-              <button
-                type="button"
-                className="hero-slider-play"
-                aria-label={paused ? playLabel : pauseLabel}
-                aria-pressed={paused}
-                onClick={() => setPaused((p) => !p)}
-              >
-                {paused ? (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                ) : (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" /></svg>
-                )}
-              </button>
               {real.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   className={i === idx ? 'is-active' : ''}
                   onClick={() => setIdx(i)}
-                  aria-label={slideLabel(i + 1)}
-                  aria-current={i === idx ? 'true' : undefined}
+                  aria-label={`Image ${i + 1}`}
                 />
               ))}
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </section>
   )
@@ -597,27 +594,60 @@ function BrandsSection({ brands }: { brands: HomeBrand[] }) {
  * Catalog (filterable + paginated)
  * ──────────────────────────────────────────────────────────────── */
 
-/**
- * Featured products teaser. The full 393-product catalogue moved to
- * /products (URL-driven filters, server-side paging, indexable) — shipping
- * every row into the homepage payload was the single biggest cause of the
- * "site feels heavy" complaint. This section keeps the homepage commercial
- * with a short shortlist plus category entry points into /products.
- */
-function FeaturedSection({
+const PER_PAGE = 12
+
+function CatalogSection({
+  activeCat,
+  setActiveCat,
   products,
-  productCount,
   categories,
   brandCount,
 }: {
+  activeCat: string | 'all'
+  setActiveCat: (c: string | 'all') => void
   products: HomeProduct[]
-  productCount: number
   categories: HomeCategory[]
   brandCount: number
 }) {
   const t = useTranslations('showcase.catalog')
-  const tf = useTranslations('showroom.featured')
   const ref = useFade<HTMLDivElement>()
+  const [page, setPage] = useState(1)
+
+  const filtered = useMemo(
+    () =>
+      activeCat === 'all'
+        ? products
+        : products.filter((p) => p.categorySlug === activeCat),
+    [activeCat, products]
+  )
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset pagination when the filter changes
+    setPage(1)
+  }, [activeCat])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
+  const goPage = (p: number) => {
+    if (p < 1 || p > totalPages) return
+    setPage(p)
+    setTimeout(() => {
+      const el = document.getElementById('products')
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 80
+        window.scrollTo({ top: y, behavior: 'smooth' })
+      }
+    }, 50)
+  }
+
+  const pageNums: (number | '…')[] = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+    if (page <= 4) return [1, 2, 3, 4, 5, '…', totalPages]
+    if (page >= totalPages - 3)
+      return [1, '…', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+    return [1, '…', page - 1, page, page + 1, '…', totalPages]
+  }, [page, totalPages])
 
   return (
     <section id="products" className="sec">
@@ -626,7 +656,7 @@ function FeaturedSection({
           <div>
             <Editable as="span" id="home.catalog.kicker" className="kicker" style={{ marginBottom: 12 }} label="Sur-titre — Catalogue">
               {t('kicker', {
-                products: productCount,
+                products: products.length,
                 categories: categories.length,
                 brands: brandCount,
               })}
@@ -640,13 +670,9 @@ function FeaturedSection({
             </h2>
             <p className="sub"><Editable id="home.catalog.sub" label="Sous-titre — Catalogue">{t('sub')}</Editable></p>
           </div>
-          <Link href="/products" className="btn btn-primary hs-seeall-top">
-            <span className="shimmer" />
-            {tf('seeAll', { count: productCount })}
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <path d="M5 12h14M13 5l7 7-7 7" />
-            </svg>
-          </Link>
+          <span className="kicker mono" style={{ color: 'var(--mute)' }}>
+            {t('results', { count: filtered.length })}
+          </span>
         </div>
 
         <div className="catalog-chips">
@@ -655,106 +681,109 @@ function FeaturedSection({
             prevLabel={t('prevAria')}
             nextLabel={t('nextAria')}
           >
-            <Link href="/products" className="cat-chip">
+            <button
+              type="button"
+              className={`cat-chip ${activeCat === 'all' ? 'on' : ''}`}
+              onClick={() => setActiveCat('all')}
+            >
               {t('all')}
-              <span className="ct">{productCount}</span>
-            </Link>
+              <span className="ct">{products.length}</span>
+            </button>
             {categories.map((c) => (
-              <Link
+              <button
+                type="button"
                 key={c.slug}
-                href={{ pathname: '/products', query: { category: c.slug } }}
-                className="cat-chip"
+                className={`cat-chip ${activeCat === c.slug ? 'on' : ''}`}
+                onClick={() => setActiveCat(c.slug)}
               >
                 <CatIcon kind={c.icon} size={14} />
                 {c.name}
                 <span className="ct">{c.count}</span>
-              </Link>
+              </button>
             ))}
           </Carousel>
         </div>
 
-        <div className="prod-grid" style={{ marginTop: 22 }}>
-          {products.map((p, i) => (
+        <div className="page-meta">
+          <span>
+            {t.rich('showing', {
+              from: (page - 1) * PER_PAGE + 1,
+              to: Math.min(page * PER_PAGE, filtered.length),
+              total: filtered.length,
+              b: (chunks: ReactNode) => (
+                <b style={{ color: 'var(--text)' }}>{chunks}</b>
+              ),
+            })}
+          </span>
+          <span>
+            {t.rich('page', {
+              page,
+              total: totalPages,
+              b: (chunks: ReactNode) => (
+                <b style={{ color: 'var(--cyan)' }}>{chunks}</b>
+              ),
+            })}
+          </span>
+        </div>
+
+        <div className="prod-grid" style={{ marginTop: 18 }}>
+          {pageItems.map((p, i) => (
             <ProductCard
               key={p.slug}
               product={p}
-              animationDelay={(i % 8) * 40}
+              animationDelay={(i % 12) * 40}
             />
           ))}
         </div>
 
-        <div className="hs-seeall">
-          <Link href="/products" className="btn btn-primary btn-lg">
-            <span className="shimmer" />
-            {tf('browseAll')}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <path d="M5 12h14M13 5l7 7-7 7" />
-            </svg>
-          </Link>
-          <span className="hs-seeall-note">{tf('note', { count: productCount })}</span>
-        </div>
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button
+              type="button"
+              className="page-btn nav"
+              disabled={page === 1}
+              onClick={() => goPage(page - 1)}
+              aria-label={t('prevAria')}
+            >
+              <svg className="ico-prev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M19 12H5M12 5l-7 7 7 7" />
+              </svg>
+              {t('prev')}
+            </button>
+            {pageNums.map((n, i) =>
+              n === '…' ? (
+                <span key={`e${i}`} className="page-ellipsis">
+                  …
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  key={n}
+                  className={`page-btn ${page === n ? 'on' : ''}`}
+                  onClick={() => goPage(n)}
+                  aria-label={t('pageAria', { n })}
+                  aria-current={page === n ? 'page' : undefined}
+                >
+                  {n}
+                </button>
+              )
+            )}
+            <button
+              type="button"
+              className="page-btn nav"
+              disabled={page === totalPages}
+              onClick={() => goPage(page + 1)}
+              aria-label={t('nextAria')}
+            >
+              {t('next')}
+              <svg className="ico-next" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </section>
-  )
-}
-
-/* ─────────────────────────────────────────────────────────────────
- * Partner spotlight (classic skin wrapper)
- * ──────────────────────────────────────────────────────────────── */
-
-/**
- * Wraps the shared band with `<Editable>` nodes so the headline, sub-text and
- * button label are editable through the inline site editor. The tiles are NOT
- * editable by design — they're generated from the catalogue, so editing them
- * by hand is how they'd end up pointing at products that no longer exist.
- */
-function PartnerSection({ partner }: { partner: PartnerBandData | null }) {
-  const t = useTranslations('showroom.partner')
-  if (!partner) return null
-  const brand = partner.brandName
-
-  return (
-    <PartnerBand
-      brandSlug={partner.brandSlug}
-      brandName={brand}
-      logoPath={partner.logoPath}
-      accent={partner.accent}
-      accentDeep={partner.accentDeep}
-      eyebrow={
-        <Editable id="home.partner.eyebrow" label="Sur-titre — Partenaire">
-          {t('eyebrow', { brand })}
-        </Editable>
-      }
-      partnerLine={
-        <Editable id="home.partner.line" label="Ligne partenaire">
-          {t('partnerLine', { brand })}
-        </Editable>
-      }
-      heading={
-        <>
-          <Editable id="home.partner.title1" label="Titre — Partenaire (ligne 1)">
-            {t('title1', { brand })}
-          </Editable>{' '}
-          <Editable id="home.partner.title2" label="Titre — Partenaire (ligne 2)">
-            {t('title2', { brand })}
-          </Editable>
-        </>
-      }
-      sub={
-        <Editable id="home.partner.sub" label="Texte — Partenaire">
-          {t('sub', { brand })}
-        </Editable>
-      }
-      ctaLabel={
-        <Editable id="home.partner.cta" label="Bouton — Partenaire">
-          {t('cta', { brand })}
-        </Editable>
-      }
-      tiles={partner.tiles.map((tile) => ({
-        ...tile,
-        sub: t('tileSub', { count: Number(tile.sub) }),
-      }))}
-    />
   )
 }
 
@@ -1163,13 +1192,13 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
           <circle cx="22" cy="22" r="20" stroke="rgba(184,239,220,0.25)" />
           <circle cx="22" cy="22" r="14" stroke="rgba(184,239,220,0.15)" />
-          <text x="22" y="9" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#4f9dff" fontWeight="600">N</text>
+          <text x="22" y="9" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="8" fill="#7ce0c3" fontWeight="600">N</text>
           <text x="22" y="40" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">S</text>
           <text x="6" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">W</text>
           <text x="38" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7" fill="#8a8f99">E</text>
-          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="#4f9dff" />
-          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="none" stroke="rgba(79,157,255,0.5)" />
-          <circle cx="22" cy="22" r="1.5" fill="#4f9dff" />
+          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="#7ce0c3" />
+          <path d="M22 16 L18 26 L22 24 L26 26 Z" fill="none" stroke="rgba(124,224,195,0.5)" />
+          <circle cx="22" cy="22" r="1.5" fill="#7ce0c3" />
         </svg>
       </div>
 
@@ -1216,9 +1245,9 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
             <stop offset="100%" stopColor="#0f1116" />
           </linearGradient>
           <radialGradient id="m2-aura" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0%" stopColor="rgba(79,157,255,0.28)" />
-            <stop offset="60%" stopColor="rgba(79,157,255,0.06)" />
-            <stop offset="100%" stopColor="rgba(79,157,255,0)" />
+            <stop offset="0%" stopColor="rgba(124,224,195,0.28)" />
+            <stop offset="60%" stopColor="rgba(124,224,195,0.06)" />
+            <stop offset="100%" stopColor="rgba(124,224,195,0)" />
           </radialGradient>
         </defs>
 
@@ -1235,7 +1264,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         />
         <ellipse cx="500" cy="390" rx="170" ry="120" fill="url(#m2-aura)" />
 
-        <g fill="rgba(79,157,255,0.05)" stroke="rgba(79,157,255,0.10)" strokeWidth="0.5">
+        <g fill="rgba(124,224,195,0.05)" stroke="rgba(124,224,195,0.10)" strokeWidth="0.5">
           <path d="M 260 460 C 240 450, 230 480, 250 500 C 280 514, 320 504, 326 480 C 332 460, 296 446, 260 460 Z" />
           <path d="M 600 240 C 590 232, 578 254, 590 268 C 612 280, 638 270, 638 252 C 638 238, 616 232, 600 240 Z" />
         </g>
@@ -1271,7 +1300,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         <g fill="none" strokeLinecap="round">
           <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(0,0,0,0.7)" strokeWidth="6" />
           <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(255,255,255,0.16)" strokeWidth="3.2" />
-          <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(79,157,255,0.20)" strokeWidth="1" strokeDasharray="6 6" />
+          <path d="M 0 322 C 200 312, 400 342, 800 306" stroke="rgba(124,224,195,0.20)" strokeWidth="1" strokeDasharray="6 6" />
           <path d="M 0 232 C 200 224, 400 244, 800 228" stroke="rgba(0,0,0,0.5)" strokeWidth="4" />
           <path d="M 0 232 C 200 224, 400 244, 800 228" stroke="rgba(255,255,255,0.10)" strokeWidth="2" />
           <path d="M 0 460 C 200 456, 400 472, 800 458" stroke="rgba(0,0,0,0.5)" strokeWidth="4" />
@@ -1290,7 +1319,7 @@ function MapPanel({ live }: { live: { time: string; open: boolean } | null }) {
         <g fontFamily="JetBrains Mono" fontSize="9" fill="rgba(255,255,255,0.32)" letterSpacing="3">
           <text x="400" y="80" textAnchor="middle">{t('map.sea')}</text>
         </g>
-        <g fontFamily="JetBrains Mono" fontSize="8" fill="rgba(79,157,255,0.45)" letterSpacing="1.5">
+        <g fontFamily="JetBrains Mono" fontSize="8" fill="rgba(124,224,195,0.45)" letterSpacing="1.5">
           <text x="120" y="316" textAnchor="middle">A1</text>
         </g>
         <g fontFamily="JetBrains Mono" fontSize="9" fill="rgba(255,255,255,0.22)" letterSpacing="2">
@@ -1353,23 +1382,23 @@ function ContactPanel({
                 <stop offset="100%" stopColor="#0d0e12" />
               </linearGradient>
             </defs>
-            <rect x="50" y="40" width="300" height="20" fill="url(#store-grad)" stroke="rgba(79,157,255,0.3)" />
-            <text x="200" y="56" textAnchor="middle" fontFamily="Inter" fontSize="14" fontWeight="700" fill="#4f9dff" letterSpacing="2">D-TECH</text>
-            <rect x="50" y="60" width="300" height="140" fill="url(#store-grad)" stroke="rgba(79,157,255,0.2)" />
-            <rect x="74" y="76" width="116" height="100" fill="rgba(79,157,255,0.08)" stroke="rgba(79,157,255,0.4)" />
-            <line x1="132" y1="76" x2="132" y2="176" stroke="rgba(79,157,255,0.3)" />
-            <line x1="74" y1="126" x2="190" y2="126" stroke="rgba(79,157,255,0.2)" />
+            <rect x="50" y="40" width="300" height="20" fill="url(#store-grad)" stroke="rgba(124,224,195,0.3)" />
+            <text x="200" y="56" textAnchor="middle" fontFamily="Inter" fontSize="14" fontWeight="700" fill="#7ce0c3" letterSpacing="2">D-TECH</text>
+            <rect x="50" y="60" width="300" height="140" fill="url(#store-grad)" stroke="rgba(124,224,195,0.2)" />
+            <rect x="74" y="76" width="116" height="100" fill="rgba(124,224,195,0.08)" stroke="rgba(124,224,195,0.4)" />
+            <line x1="132" y1="76" x2="132" y2="176" stroke="rgba(124,224,195,0.3)" />
+            <line x1="74" y1="126" x2="190" y2="126" stroke="rgba(124,224,195,0.2)" />
             <rect x="82" y="88" width="42" height="28" rx="2" fill="rgba(184,239,220,0.18)" />
             <rect x="140" y="88" width="42" height="28" rx="2" fill="rgba(184,239,220,0.10)" />
             <rect x="82" y="138" width="42" height="28" rx="2" fill="rgba(184,239,220,0.10)" />
             <rect x="140" y="138" width="42" height="28" rx="2" fill="rgba(184,239,220,0.18)" />
-            <rect x="208" y="100" width="48" height="76" fill="rgba(79,157,255,0.06)" stroke="rgba(79,157,255,0.5)" />
-            <circle cx="246" cy="138" r="1.5" fill="#4f9dff" />
-            <rect x="270" y="76" width="60" height="100" fill="rgba(79,157,255,0.06)" stroke="rgba(79,157,255,0.3)" />
-            <line x1="300" y1="76" x2="300" y2="176" stroke="rgba(79,157,255,0.2)" />
-            <line x1="270" y1="126" x2="330" y2="126" stroke="rgba(79,157,255,0.2)" />
-            <rect x="282" y="86" width="36" height="14" rx="2" fill="rgba(79,157,255,0.2)" />
-            <text x="300" y="96" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" fill="#4f9dff" letterSpacing="1.5">2026</text>
+            <rect x="208" y="100" width="48" height="76" fill="rgba(124,224,195,0.06)" stroke="rgba(124,224,195,0.5)" />
+            <circle cx="246" cy="138" r="1.5" fill="#7ce0c3" />
+            <rect x="270" y="76" width="60" height="100" fill="rgba(124,224,195,0.06)" stroke="rgba(124,224,195,0.3)" />
+            <line x1="300" y1="76" x2="300" y2="176" stroke="rgba(124,224,195,0.2)" />
+            <line x1="270" y1="126" x2="330" y2="126" stroke="rgba(124,224,195,0.2)" />
+            <rect x="282" y="86" width="36" height="14" rx="2" fill="rgba(124,224,195,0.2)" />
+            <text x="300" y="96" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="6" fill="#7ce0c3" letterSpacing="1.5">2026</text>
             <line x1="30" y1="200" x2="370" y2="200" stroke="rgba(184,239,220,0.4)" strokeWidth="1.5" />
             <circle cx="100" cy="194" r="3" fill="rgba(184,239,220,0.55)" />
             <rect x="98" y="194" width="4" height="6" rx="1" fill="rgba(184,239,220,0.55)" />
@@ -1478,9 +1507,15 @@ function ContactPanel({
  * Footer
  * ──────────────────────────────────────────────────────────────── */
 
-function Footer() {
+function Footer({ onSelectCat }: { onSelectCat: (c: string | 'all') => void }) {
   const t = useTranslations('showcase.footer')
   const tShowroom = useTranslations('showroom.footer')
+  const filterTo = (cat: string) => () => {
+    onSelectCat(cat)
+    document
+      .getElementById('products')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   return (
     <footer>
       <div className="wrap">
@@ -1507,16 +1542,15 @@ function Footer() {
                 </svg>
               </a>
             </div>
-            <FooterNewsletter source="footer-home" />
           </div>
           <FootCol
             title={t('cols.catalog.title')}
             links={[
               { label: tShowroom('allProducts'), internal: '/products' },
-              { label: t('cols.catalog.l1'), internal: '/products?category=desktops' },
-              { label: t('cols.catalog.l2'), internal: '/products?category=laptops' },
-              { label: t('cols.catalog.l3'), internal: '/products?category=all-in-one' },
-              { label: t('cols.catalog.l5'), internal: '/products?category=printers' },
+              { label: t('cols.catalog.l1'), onClick: filterTo('desktops') },
+              { label: t('cols.catalog.l2'), onClick: filterTo('laptops') },
+              { label: t('cols.catalog.l3'), onClick: filterTo('all-in-one') },
+              { label: t('cols.catalog.l5'), onClick: filterTo('printers') },
             ]}
           />
           <FootCol
@@ -1570,6 +1604,7 @@ interface FootLink {
   href?: string
   /** locale-aware route (rendered with the i18n <Link>) */
   internal?: string
+  onClick?: () => void
   external?: boolean
 }
 
@@ -1582,6 +1617,16 @@ function FootCol({ title, links }: { title: string; links: FootLink[] }) {
           <li key={l.label}>
             {l.internal ? (
               <Link href={l.internal}>{l.label}</Link>
+            ) : l.onClick ? (
+              <a
+                href="#products"
+                onClick={(e) => {
+                  e.preventDefault()
+                  l.onClick?.()
+                }}
+              >
+                {l.label}
+              </a>
             ) : (
               <a
                 href={l.href}

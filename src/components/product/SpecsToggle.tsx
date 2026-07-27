@@ -15,17 +15,14 @@ const TONES = {
     onAccent: '#04121f',
     btnBg: 'var(--sr-surface, rgba(255,255,255,0.08))',
   },
-  // "light" is the Brand skin's tone; drive it from the brand theme tokens
-  // so it stays readable in the brand DARK theme too (was a hardcoded white
-  // panel + near-white --ink text = invisible in dark mode).
   light: {
-    panelBg: 'var(--surface, #ffffff)',
-    line: 'var(--line, rgba(18,18,40,0.12))',
+    panelBg: '#ffffff',
+    line: 'rgba(18,18,40,0.10)',
     text: 'var(--ink, #16162e)',
-    muted: 'var(--mute, #6a6a82)',
-    accent: 'var(--teal-deep, #0b7e8c)',
+    muted: 'var(--muted, #6a6a82)',
+    accent: 'var(--accent, #12b3a6)',
     onAccent: '#ffffff',
-    btnBg: 'var(--surface-2, rgba(18,18,40,0.05))',
+    btnBg: 'rgba(18,18,40,0.05)',
   },
 } as const
 
@@ -57,7 +54,6 @@ export function SpecsToggle({
       : locale === 'en'
         ? 'Technical specifications'
         : 'Caractéristiques techniques'
-  const closeLabel = locale === 'ar' ? 'إغلاق' : locale === 'en' ? 'Close' : 'Fermer'
 
   const openPanel = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -153,7 +149,7 @@ export function SpecsToggle({
             </span>
             <button
               type="button"
-              aria-label={closeLabel}
+              aria-label="Fermer"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()

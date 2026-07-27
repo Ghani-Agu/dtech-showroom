@@ -3,14 +3,11 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
-import { ProductsBrowser } from '@/components/showroom/ProductsBrowser'
-import { TrackProductList } from '@/components/analytics/TrackView'
-import { toExplorerProducts } from '@/lib/showroom-data'
+import { ProductExplorer } from '@/components/showroom/ProductExplorer'
 import {
-  parseProductQuery,
-  runProductQuery,
-  type RawSearchParams,
-} from '@/lib/product-filters'
+  facetFromProducts,
+  toExplorerProducts,
+} from '@/lib/showroom-data'
 import { type Locale } from '@/i18n/config'
 import { getBrandBySlug, getProductsByBrand } from '@/server/queries'
 import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
@@ -20,19 +17,11 @@ import type { PageDoc } from '@/components/admin/editor/types'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { BrandGridPage } from '@/components/brand/BrandCollections'
 import { toBrandProducts } from '@/server/brand-data'
-import {
-  alternatesFor,
-  openGraphFor,
-  breadcrumbLd,
-  itemListLd,
-  jsonLdScript,
-} from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
 interface BrandPageProps {
   params: Promise<{ locale: string; brandSlug: string }>
-  searchParams: Promise<RawSearchParams>
 }
 
 export async function generateMetadata({
@@ -41,26 +30,11 @@ export async function generateMetadata({
   const { locale, brandSlug } = await params
   const brand = await getBrandBySlug(brandSlug, locale as Locale)
   if (!brand) notFound()
-  const path = `/brands/${brand.slug}`
-  return {
-    title: brand.name,
-    description: brand.description,
-    alternates: alternatesFor(locale, path),
-    openGraph: openGraphFor(
-      locale as Locale,
-      path,
-      brand.name,
-      brand.description ?? ''
-    ),
-  }
+  return { title: brand.name, description: brand.description }
 }
 
-export default async function BrandPage({
-  params,
-  searchParams,
-}: BrandPageProps) {
+export default async function BrandPage({ params }: BrandPageProps) {
   const { brandSlug } = await params
-  const sp = await searchParams
   const locale = (await getLocale()) as Locale
   const t = await getTranslations('showroom')
 
@@ -93,28 +67,11 @@ export default async function BrandPage({
     )
   }
 
-  // Same URL-driven engine as /products, with the brand fixed by the route.
-  const query = parseProductQuery(sp)
-  const result = runProductQuery(toExplorerProducts(rawProducts), {
-    ...query,
-    brand: null, // the route already scopes it
-  })
+  const products = toExplorerProducts(rawProducts)
+  const categories = facetFromProducts(products, 'category')
 
   return (
     <section className="sr-wrap" style={{ paddingTop: 26, paddingBottom: 60 }}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: jsonLdScript([
-            breadcrumbLd(locale, [
-              { name: t('nav.home'), path: '' },
-              { name: t('nav.brands'), path: '/brands' },
-              { name: brand.name, path: `/brands/${brand.slug}` },
-            ]),
-            itemListLd(locale, result.items, result.offset),
-          ]),
-        }}
-      />
       <nav className="sr-crumbs sr-in" style={{ marginBottom: 18 }}>
         <Link href="/">{t('nav.home')}</Link>
         <span className="sep">/</span>
@@ -134,7 +91,7 @@ export default async function BrandPage({
         <div className="veil" />
         <div className="inner">
           <span className="sr-kicker">
-            {t('categoriesPage.products', { count: rawProducts.length })}
+            {t('categoriesPage.products', { count: products.length })}
           </span>
           <h1 className="sr-h1" style={{ marginTop: 10 }}>
             {brand.name}
@@ -145,24 +102,13 @@ export default async function BrandPage({
       </div>
 
       <div className="sr-in sr-in-2">
-        <ProductsBrowser
-          query={query}
-          result={result}
-          basePath={`/brands/${brand.slug}`}
+        <ProductExplorer
+          products={products}
+          brands={[]}
+          categories={categories}
           lock="brand"
         />
       </div>
-      <TrackProductList
-        listName={`brand:${brand.slug}`}
-        searchTerm={query.q || undefined}
-        facets={{ category: query.category, featured: query.featuredOnly }}
-        items={result.items.map((p) => ({
-          slug: p.slug,
-          name: p.name,
-          brandName: p.brandName,
-          categoryName: p.categoryName,
-        }))}
-      />
     </section>
   )
 }

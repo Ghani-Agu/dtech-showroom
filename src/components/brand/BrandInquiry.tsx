@@ -82,7 +82,7 @@ export function BrandInquiry({ product }: { product: BrandInquiryProduct }) {
           <input type="hidden" name="locale" value={locale} />
 
           {/* Honeypot */}
-          <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap', opacity: 0, pointerEvents: 'none' }}>
+          <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}>
             <label htmlFor="website">Website (leave empty)</label>
             <input type="text" id="website" name="website" tabIndex={-1} autoComplete="off" />
           </div>

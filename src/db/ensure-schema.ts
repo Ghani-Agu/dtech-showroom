@@ -123,18 +123,6 @@ export async function ensureSchema(): Promise<void> {
     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_campaign_id_idx" ON "campaign_sends" ("campaign_id")`)
     await db.execute(sql`CREATE INDEX IF NOT EXISTS "campaign_sends_subscriber_id_idx" ON "campaign_sends" ("subscriber_id")`)
 
-    // ── Round 8 — free-form HTML block on the product page ──
-    await db.execute(sql`ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "custom_html" text`)
-
-    // ── Round 8 — app settings KV (Brevo key, integrations…) ──
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS "app_settings" (
-        "key" text PRIMARY KEY,
-        "value" text,
-        "updated_at" timestamptz NOT NULL DEFAULT now()
-      )
-    `)
-
     // ── Arabic catalogue (Phase 8) — additive AR columns + one-shot fill ──
     await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "name_ar" text`)
     await db.execute(sql`ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "description_ar" text`)

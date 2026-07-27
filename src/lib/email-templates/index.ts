@@ -14,7 +14,7 @@ const BRAND = {
   bg: '#0a0a0d',
   fg: '#f5f5f3',
   accent: '#3ec5e0',
-  mint: '#4f9dff',
+  mint: '#7ce0c3',
   muted: 'rgba(245,245,243,0.78)',
   faint: 'rgba(245,245,243,0.5)',
   panel: '#11121a',

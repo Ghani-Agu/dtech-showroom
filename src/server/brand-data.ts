@@ -7,7 +7,6 @@ import 'server-only'
  */
 
 import { imgOr } from '@/lib/img'
-import { pickFeatured } from '@/server/queries'
 import type { getAllProducts, getAllCategories, getAllBrands } from '@/server/queries'
 import type { HeroConfig } from '@/components/home/hero-config'
 import type {
@@ -92,13 +91,10 @@ export function buildBrandData(
   products: ProductsRaw,
   categories: CategoriesRaw,
   brands: BrandsRaw,
-  hero: HeroConfig | null,
-  /** Homepage teaser size. The full catalogue lives on /products. */
-  featuredLimit = 8
+  hero: HeroConfig | null
 ): BrandData {
   return {
-    products: toBrandProducts(pickFeatured(products, featuredLimit)),
-    productCount: products.length,
+    products: toBrandProducts(products),
     categories: toBrandCategories(categories, products),
     brands: toBrandBrands(brands, products),
     heroImages: (hero?.slides ?? []).map((s) => s.src).filter(Boolean),

@@ -40,10 +40,7 @@ export interface BrandBrandItem {
 }
 
 export interface BrandData {
-  /** Featured shortlist for the homepage teaser — NOT the whole catalogue. */
   products: BrandProduct[]
-  /** Total published products (counters/copy). */
-  productCount: number
   categories: BrandCategory[]
   brands: BrandBrandItem[]
   /** Hero slider image URLs (real images); empty falls back to a styled panel. */
