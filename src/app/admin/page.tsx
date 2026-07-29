@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { headers } from 'next/headers'
 import { and, count, desc, eq, isNull, isNotNull, or, sql } from 'drizzle-orm'
 import {
   ArrowRight,
@@ -18,8 +17,9 @@ import {
   Tag,
   Upload,
 } from 'lucide-react'
-import { auth } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth-helpers'
 import { db } from '@/db/client'
+import { withDb } from '@/db/health'
 import { brands, categories, inquiries, products } from '@/db/schema'
 import { GlassCard } from '@/components/admin/GlassCard'
 import { StatCard, type StatAccent } from '@/components/admin/StatCard'
@@ -30,6 +30,14 @@ export const metadata: Metadata = {
   title: 'Tableau de bord · Dtech Admin',
   robots: { index: false, follow: false },
 }
+
+/**
+ * A stalled DB link used to hold this render open until Vercel killed the
+ * function at its 300s ceiling — five minutes of spinner, then a bare
+ * "Une erreur est survenue". withDb() below bounds the queries; this bounds
+ * everything else. Fail in seconds, show error.tsx, let the user retry.
+ */
+export const maxDuration = 30
 
 const noPhoto = or(
   isNull(products.cardImagePath),
@@ -50,7 +58,8 @@ async function getDashboardData() {
     topCategories,
     latestInquiries,
     recentProducts,
-  ] = await Promise.all([
+  ] = await withDb(() =>
+    Promise.all([
     db.select({ n: count() }).from(products).where(isNull(products.archivedAt)),
     db.select({ n: count() }).from(brands).where(isNull(brands.archivedAt)),
     db.select({ n: count() }).from(categories).where(isNull(categories.archivedAt)),
@@ -95,7 +104,8 @@ async function getDashboardData() {
       .where(isNull(products.archivedAt))
       .orderBy(desc(products.updatedAt))
       .limit(5),
-  ])
+    ])
+  )
 
   return {
     products: productCount[0]?.n ?? 0,
@@ -149,8 +159,13 @@ const BAR_COLORS = ['var(--c-mint)', 'var(--c-blue)', 'var(--c-violet)', 'var(--
 /* ── page ─────────────────────────────────────────────────── */
 
 export default async function AdminDashboardPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  const firstName = (session?.user?.name || '').split(' ')[0]
+  // getSessionUser() — NOT auth.api.getSession(). This page was the only
+  // admin route calling better-auth directly: a second, uncached, uncaught
+  // session lookup on top of the one the layout already did. React cache()
+  // makes it free here, and its .catch() means a database blip reads as
+  // "signed out" instead of hanging the render forever.
+  const sessionUser = await getSessionUser()
+  const firstName = (sessionUser?.name || '').split(' ')[0]
 
   const data = await getDashboardData()
   const hasWaitingInquiries = data.newInquiries > 0
