@@ -463,14 +463,6 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
       ) : (
         <Link
           href={item.href}
-          /**
-           * Every admin nav item is a force-dynamic, DB-backed render, so the
-           * default prefetch fired ~11 server renders the moment any admin
-           * page mounted — enough to draw 503s from Vercel and to pile
-           * concurrent session writes onto the same row. Navigation is a
-           * click away; it does not need eleven speculative renders.
-           */
-          prefetch={false}
           aria-current={active ? 'page' : undefined}
           className={linkClass}
           style={linkStyle}
