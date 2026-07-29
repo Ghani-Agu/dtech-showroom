@@ -15,9 +15,15 @@ export const revalidate = 3600 // regenerate hourly
 // listed below instead.
 const STATIC_PATHS = [
   '',
+  '/catalogue',
   '/products',
-  '/about',
   '/brands',
+  // Round 19 phase C: these are real pages now, not redirect stubs, so they
+  // are indexable and belong here.
+  '/gaming',
+  '/company',
+  '/contact',
+  '/about',
   '/legal',
 ]
 
@@ -66,11 +72,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     }
 
-    // Facet views of the one catalogue page. These are the canonical
-    // category/brand URLs now (the old /categories/x and /brands/x routes
-    // 308 here) and they match how shoppers actually search
-    // ("HP laptops", "printers").
+    // ROUND 19 — /brands/<slug> is a real page again (editorial skin), with
+    // brand story, ranges, FAQ and its own JSON-LD. It outranks the bare
+    // facet, so it ships at a higher priority; the facet stays listed because
+    // it is still what the other two skins serve and what a "HP laptops"
+    // style query maps onto.
     for (const brand of brandList) {
+      const path = `/brands/${brand.slug}`
+      entries.push({
+        url: `${SITE_URL}/${locale}${path}`,
+        lastModified: brand.updatedAt ?? now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+        alternates: { languages: languageAlternates(path) },
+      })
       const facet = `/products?brand=${brand.slug}`
       entries.push({
         url: `${SITE_URL}/${locale}${facet}`,

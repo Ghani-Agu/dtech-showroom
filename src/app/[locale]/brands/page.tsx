@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { type Locale } from '@/i18n/config'
 import { getAllBrands, getAllProducts } from '@/server/queries'
@@ -7,19 +7,44 @@ import { getBrandMark, BrandMarkArt } from '@/components/home/brand-marks'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdBrandsPage } from '@/components/editorial/EditorialCollections'
+import { EdBrandsIndex } from '@/components/editorial/EdBrandsIndex'
 import { BrandBrands } from '@/components/brand/BrandSections'
 import { toBrandBrands } from '@/server/brand-data'
 
-export const dynamic = 'force-dynamic'
+/**
+ * ISR, not `force-dynamic`.
+ *
+ * This page reads nothing request-specific — no cookies, no session, no
+ * searchParams — so rendering it per visitor meant every single visit paid a
+ * round trip from the Vercel function to Postgres before a byte reached the
+ * browser. Prerendered and revalidated, Vercel answers from the edge cache
+ * closest to the visitor and the database is touched only when the content
+ * actually changes. `revalidate` is the safety net; the real freshness comes
+ * from revalidateStorefront() in every admin mutation (src/lib/revalidate.ts).
+ *
+ * setRequestLocale() is what MAKES this possible: without it next-intl reads
+ * the locale from request headers, which silently opts the route back into
+ * dynamic rendering.
+ */
+export const revalidate = 300
 
-export async function generateMetadata(): Promise<Metadata> {
+interface LocaleParams {
+  params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: LocaleParams): Promise<Metadata> {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('showroom.brandsPage')
   return { title: `${t('title1')} ${t('title2')}`, description: t('sub') }
 }
 
-export default async function BrandsPage() {
-  const locale = (await getLocale()) as Locale
+export default async function BrandsPage({ params }: LocaleParams) {
+  const { locale: raw } = await params
+  setRequestLocale(raw)
+  const locale = raw as Locale
   const t = await getTranslations('showroom.brandsPage')
   const tCat = await getTranslations('showroom.categoriesPage')
   const [brands, products] = await Promise.all([
@@ -37,9 +62,16 @@ export default async function BrandsPage() {
     )
   }
   if (skinDesign === 'editorial') {
-        return (
+    /* ROUND 19 — EdBrandsIndex replaces EdBrandsPage: brands grouped by the
+       real commercial relationship (own / exclusive / official / carried),
+       each card linking to its own /brands/<slug> page rather than straight
+       into the filtered catalogue. It reads its own strings from ED_TR, so
+       the next-intl translator is no longer threaded in — which also drops
+       the `t('kicker')` call that was rendering the literal "{count} marques"
+       because the {count} argument was never passed. */
+    return (
       <EditorialPageShell locale={locale}>
-        <EdBrandsPage eyebrow={t('kicker')} title={`${t('title1')} ${t('title2')}`} brands={toBrandBrands(brands, products)} />
+        <EdBrandsIndex brands={toBrandBrands(brands, products)} />
       </EditorialPageShell>
     )
   }

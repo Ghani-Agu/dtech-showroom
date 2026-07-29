@@ -10,6 +10,8 @@
  * from NEXT_PUBLIC_SITE_URL.
  */
 
+import { ADDRESS_ONELINE } from '@/lib/contact-info'
+
 const BRAND = {
   bg: '#0a0a0d',
   fg: '#f5f5f3',
@@ -79,7 +81,7 @@ function brandFooter(opts: {
         : ''}
       <a href="${siteUrl}" style="color:${BRAND.accent};text-decoration:underline;">d-techalgerie.com</a>
       <br/>
-      © ${new Date().getFullYear()} D-Tech Algérie — Cité 05 Juillet, Bab Ezzouar, Alger.
+      © ${new Date().getFullYear()} D-Tech Algérie — ${ADDRESS_ONELINE}.
     </div>
   `
 }

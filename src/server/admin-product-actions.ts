@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { bustDataCache } from '@/lib/data-cache'
+import { revalidateStorefront } from '@/lib/revalidate'
 import { eq, like } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { imageBlobs, products } from '@/db/schema'
@@ -55,7 +55,7 @@ export async function createProduct(values: ProductFormValues) {
 
   const newId = inserted[0]?.id
 
-  bustDataCache()
+  revalidateStorefront()
   revalidatePath('/admin/products')
   revalidatePath('/admin')
   revalidatePath('/')
@@ -116,7 +116,7 @@ export async function updateProduct(
     })
     .where(eq(products.id, productId))
 
-  bustDataCache()
+  revalidateStorefront()
   revalidatePath('/admin/products')
   revalidatePath(`/admin/products/${productId}/edit`)
   revalidatePath(`/products/${parsed.data.slug}`)
@@ -146,7 +146,7 @@ export async function archiveProduct(productId: string) {
     .set({ archivedAt: new Date() })
     .where(eq(products.id, productId))
 
-  bustDataCache()
+  revalidateStorefront()
   revalidatePath('/admin/products')
   revalidatePath('/admin')
   revalidatePath(`/products/${product.slug}`)
@@ -165,7 +165,7 @@ export async function restoreProduct(productId: string) {
     .set({ archivedAt: null })
     .where(eq(products.id, productId))
 
-  bustDataCache()
+  revalidateStorefront()
   revalidatePath('/admin/products')
   revalidatePath('/admin')
 
@@ -198,7 +198,7 @@ export async function deleteProductPermanently(productId: string) {
       /* images are best-effort */
     })
 
-  bustDataCache()
+  revalidateStorefront()
   revalidatePath('/admin/products')
   revalidatePath('/admin')
   revalidatePath('/')

@@ -12,10 +12,11 @@ import { useCallback, useEffect, useRef, useState, Fragment, type ReactNode } fr
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { useEditorial } from './editorial-context'
+import { useAnimGate, useScrollFx, useScrollP } from './ed-scroll'
 import { EIcon, WaIcon } from './editorial-icons'
 import { WA, ED_PHONE_TEL, ED_PHONE_DISPLAY, ED_EMAIL, ED_SAV_TEL } from './EditorialChrome'
 import { edCountWord } from './editorial-i18n'
-import { ED_TIER_COLORS, ED_TIERS_MAX, ED_WORKSTATION_SLUGS, type EdBento, type EdBentoProd, type EdCat, type EdData } from './editorial-types'
+import { ED_TIER_COLORS, ED_TIERS_MAX, ED_WORKSTATION_SLUGS, type EdBento, type EdCat, type EdData } from './editorial-types'
 import { ED_BRAND_LOGOS, EdLogo } from './editorial-logos'
 
 /* ─────────── shared primitives (design SplitH2 / SecHead / Curtain) ─────────── */
@@ -47,30 +48,19 @@ function SecHead({ kicker, title, lede }: { kicker?: string; title: string; lede
 export function Curtain({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement | null>(null)
   const cur = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    let raf = 0
-    const upd = () => {
-      raf = 0
+  /* ROUND 21 — read and write phases split by the shared scheduler, see
+     ed-scroll.ts. Was its own scroll listener + rAF. */
+  useScrollFx(
+    () => {
       const el = ref.current
-      const c = cur.current
-      if (!el || !c) return
+      if (!el || !cur.current) return null
       const r = el.getBoundingClientRect()
-      const vh = innerHeight
-      const p = Math.max(0, Math.min(1, (vh - r.bottom) / (vh * 0.5)))
-      c.style.setProperty('--p', p.toFixed(3))
-    }
-    const on = () => {
-      if (!raf) raf = requestAnimationFrame(upd)
-    }
-    upd()
-    addEventListener('scroll', on, { passive: true })
-    addEventListener('resize', on)
-    return () => {
-      removeEventListener('scroll', on)
-      removeEventListener('resize', on)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
+      return Math.max(0, Math.min(1, (innerHeight - r.bottom) / (innerHeight * 0.5))).toFixed(3)
+    },
+    (p) => {
+      if (p !== null) cur.current?.style.setProperty('--p', p)
+    },
+  )
   return (
     <div className="cw" ref={ref}>
       {children}
@@ -174,7 +164,11 @@ export function EdCatalogue({ data }: { data: EdData }) {
           </div>
         </div>
       </div>
-      <div className="car" ref={track} onScroll={sync}>
+      {/* data-lenis-prevent: bare overflow-x:auto rail, same class of bug as
+          EdRail's viewport — without it Lenis (allowNestedScroll:false) eats
+          the wheel/trackpad gesture here and scrolls the page instead of the
+          carousel. */}
+      <div className="car" ref={track} onScroll={sync} data-lenis-prevent>
         {data.cats.map((c, i) => (
           /* [PORT] design cards deep-link to WhatsApp; the live site opens the
              catalogue pre-filtered on the clicked family. */
@@ -297,6 +291,9 @@ export function EdProof({ data }: { data: EdData }) {
 
 export function EdMarquee({ data }: { data: EdData }) {
   const { t } = useEditorial()
+  /* ROUND 21 — the logo belt translates forever; park it when off screen. */
+  const secRef = useRef<HTMLElement | null>(null)
+  useAnimGate(secRef)
   /* [PORT+] only the big marks ride the slider — real vector logos, one
      distinct color per brand. Everyone else stays in the catalogue filter. */
   const bigs = data.brands.filter((b) => ED_BRAND_LOGOS[b.id])
@@ -308,7 +305,7 @@ export function EdMarquee({ data }: { data: EdData }) {
     ['bolt', t('mq.svc4')],
   ]
   return (
-    <section className="sec" id="marques" style={{ background: 'var(--wash)' }}>
+    <section className="sec" id="marques" ref={secRef} style={{ background: 'var(--wash)' }}>
       <div className="wrap">
         <SecHead kicker={t('mq.eyebrow')} title={t('mq.title')} lede={t('mq.lede')} />
       </div>
@@ -368,33 +365,8 @@ export function EdMarquee({ data }: { data: EdData }) {
 
 /* [PORT+] lorolabs-style slide reveal — the photo parallax-slides upward
    and sheds a dark veil while the band crosses the viewport (scroll-driven
-   --p, same rAF pattern as the fan). */
-function useScrollP(ref: { current: HTMLElement | null }) {
-  useEffect(() => {
-    let raf = 0
-    const upd = () => {
-      raf = 0
-      const el = ref.current
-      if (!el) return
-      const r = el.getBoundingClientRect()
-      const vh = innerHeight
-      const p = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)))
-      el.style.setProperty('--p', p.toFixed(3))
-    }
-    const on = () => {
-      if (!raf) raf = requestAnimationFrame(upd)
-    }
-    upd()
-    addEventListener('scroll', on, { passive: true })
-    addEventListener('resize', on)
-    return () => {
-      removeEventListener('scroll', on)
-      removeEventListener('resize', on)
-      cancelAnimationFrame(raf)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-}
+   --p). ROUND 21: the hook itself moved to ed-scroll.ts so the two bands,
+   the curtain, the fan and the chrome all share ONE read/write pass. */
 
 export function EdBand({ img, cap, ph, pos = 'tl' }: { img?: string | null; cap: string; ph: string; pos?: 'tl' | 'br' }) {
   const ref = useRef<HTMLElement | null>(null)
@@ -421,6 +393,15 @@ export function EdHistory({ data }: { data: EdData }) {
   const refsCount = Math.max(10, Math.floor(data.productCount / 10) * 10)
   const thumbs = data.cats.filter((c) => c.img).slice(0, 6)
   const more = Math.max(0, data.cats.length - thumbs.length)
+  /* ROUND 19 — never print a bare "0".
+     `brandCount` is 0 whenever getAllBrands() came back empty, which happens
+     on a DB blip: queries.ts swallows the error into [] and, because the
+     homepage's empty-catalogue guard only checks PRODUCTS, that zero gets
+     frozen into the ISR cache for 5 minutes. A counter reading "0 brands"
+     next to "390+ references" is worse than no counter at all, so the band
+     falls back to the number of brands we are contractually a distributor
+     for. */
+  const brandCount = data.brandCount > 0 ? data.brandCount : 20
   return (
     <section className="band hist" data-band="dark" ref={ref}>
       <div className="band-media">
@@ -428,95 +409,57 @@ export function EdHistory({ data }: { data: EdData }) {
       </div>
       <span className="hist-scrim" aria-hidden />
       <span className="band-veil" aria-hidden />
-      <div className="hist-in">
-        <div className="hist-mark">D-tech.</div>
-        <p className="hist-sub">{t('hist.sub')}</p>
-        <div className="hist-stats">
-          <div>
-            <b>{refsCount}+</b>
-            <span>{t('hist.refs')}</span>
+      {/* data-lenis-prevent: below 1080px this becomes a nested scroller, and
+          Lenis (smoothWheel, allowNestedScroll:false) would otherwise eat the
+          wheel and scroll the page past the band instead. */}
+      <div className="hist-in" data-lenis-prevent>
+        <div className="hist-left">
+          <div className="hist-mark">D-tech.</div>
+          <p className="hist-sub">{t('hist.sub')}</p>
+          <div className="hist-stats">
+            <div>
+              <b>{refsCount}+</b>
+              <span>{t('hist.refs')}</span>
+            </div>
+            <div>
+              <b>{brandCount}</b>
+              <span>{t('hist.brands')}</span>
+            </div>
+            <div>
+              <b>58</b>
+              <span>{t('hist.wilayas')}</span>
+            </div>
           </div>
-          <div>
-            <b>{data.brandCount}</b>
-            <span>{t('hist.brands')}</span>
-          </div>
-          <div>
-            <b>58</b>
-            <span>{t('hist.wilayas')}</span>
+          <div className="hist-cats">
+            {thumbs.map((c) => (
+              <Link key={c.id} href={`/products?category=${c.id}`} className="hist-chip" aria-label={c.name}>
+                {c.img ? <Image src={c.img} alt="" fill sizes="90px" style={{ objectFit: 'cover' }} /> : null}
+              </Link>
+            ))}
+            {more > 0 && (
+              <Link href="/products" className="hist-chip hist-more">
+                +{more}
+              </Link>
+            )}
           </div>
         </div>
-        <div className="hist-cats">
-          {thumbs.map((c) => (
-            <Link key={c.id} href={`/products?category=${c.id}`} className="hist-chip" aria-label={c.name}>
-              {c.img ? <Image src={c.img} alt="" fill sizes="90px" style={{ objectFit: 'cover' }} /> : null}
-            </Link>
-          ))}
-          {more > 0 && (
-            <Link href="/products" className="hist-chip hist-more">
-              +{more}
-            </Link>
-          )}
-        </div>
+        {/* ROUND 19 — the story column the band was missing: who D-tech
+            actually is, next to the numbers that prove it. */}
+        <aside className="hist-right">
+          <span className="hist-rule" aria-hidden />
+          <h2 className="hist-h">{t('hist.h')}</h2>
+          <p>{t('hist.p1')}</p>
+          <p>{t('hist.p2')}</p>
+          <Link className="hist-cta" href="/company">
+            {t('hist.cta')}
+            <b aria-hidden>→</b>
+          </Link>
+        </aside>
       </div>
     </section>
   )
 }
 
-
-/* [PORT+] bento objects — realistic dark-studio CSS renders:
-   laptop (config) / gear (SAV) / invoice stack (facture) / parcels (livraison) */
-function CubeFaces() {
-  return (
-    <>
-      <span className="f fA" />
-      <span className="f fB" />
-      <span className="f fC" />
-      <span className="f fD" />
-      <span className="f fT" />
-      <span className="f fBo" />
-    </>
-  )
-}
-
-function Ed3D({ v }: { v: 1 | 2 | 3 | 4 }) {
-  return (
-    <div className={`e3d v${v}`} aria-hidden>
-      <span className="shadow" />
-      {v === 1 && (
-        <div className="lap3">
-          <div className="lap3-scr" />
-          <div className="lap3-base" />
-        </div>
-      )}
-      {v === 2 && (
-        <div className="gear3">
-          <span className="gear3-ring" />
-          {Array.from({ length: 9 }, (_, i) => (
-            <span className="gear3-t" key={i} style={{ '--a': `${i * 40}deg` } as React.CSSProperties} />
-          ))}
-          <span className="gear3-hub" />
-        </div>
-      )}
-      {v === 3 && (
-        <>
-          <span className="inv i1" />
-          <span className="inv i2" />
-          <span className="inv i3" />
-        </>
-      )}
-      {v === 4 && (
-        <>
-          <div className="obj">
-            <CubeFaces />
-          </div>
-          <div className="mini">
-            <CubeFaces />
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
 
 /* ─────────── bento why (design EdWhy) ─────────── */
 
@@ -567,138 +510,247 @@ function Tilt({ children, max = 8 }: { children: ReactNode; max?: number }) {
   )
 }
 
-function BenchMedia({ items, label }: { items: EdBentoProd[]; label: string }) {
-  if (!items.length) return <Ed3D v={1} />
+/* ROUND 20 — the four bento scenes are 3D objects, not photo plates.
+   Ghani asked for a 3D laptop with a coloured backdrop and live content on its
+   screen, and an animated 3D delivery truck; the gears and the sealed quote
+   are my call for the other two. All CSS — see the block in
+   editorial-design.css for the geometry and the cost note. */
+
+/** Key counts per row — real keyboard proportions, widths set in CSS. */
+const KB_ROWS = [14, 14, 13, 12, 7]
+
+function LaptopMedia({ t }: { t: (k: string) => string }) {
   return (
     <Tilt>
-    <div className="bench" aria-hidden>
-      {items.map((p, i) => (
-        <figure className="bch" key={`${p.name}-${i}`} style={{ '--bi': i } as React.CSSProperties}>
-          <span className="bch-img">
-            {p.img ? (
-              <Image src={p.img} alt="" fill sizes="180px" style={{ objectFit: 'contain' }} />
-            ) : null}
-          </span>
-          <figcaption>
-            <b>{p.cat}</b>
-            <i>{p.name}</i>
-          </figcaption>
-        </figure>
-      ))}
-      <span className="bench-line">
-        <em>{label}</em>
-      </span>
-    </div>
+      <div className="bn-lap" aria-hidden>
+        <span className="bn-glow" />
+        <span className="bn-floor" />
+        <span className="bn-chip">{t('why.bench')}</span>
+        <div className="lap">
+          <div className="lap-lid">
+            <div className="lap-scr">
+              <span className="lap-wall" />
+              <div className="lap-ui">
+                <span className="lap-head">
+                  <i />
+                  {t('why.lap.head')}
+                </span>
+                <span className="lap-line" style={{ '--f': '88%' } as React.CSSProperties} />
+                <span
+                  className="lap-line"
+                  style={{ '--f': '64%', '--d': '.5s' } as React.CSSProperties}
+                />
+                <span
+                  className="lap-line"
+                  style={{ '--f': '41%', '--d': '1s' } as React.CSSProperties}
+                />
+                <span className="lap-tags">
+                  <span>{t('why.lap.k1')}</span>
+                  <span>{t('why.lap.k2')}</span>
+                  <span>{t('why.lap.k3')}</span>
+                  <span>{t('why.lap.k4')}</span>
+                </span>
+              </div>
+              <span className="lap-vig" />
+              <span className="lap-gloss" />
+              <span className="lap-cam" />
+            </div>
+            <span className="lap-hinge" />
+          </div>
+          <div className="lap-base">
+            <span className="lap-kb">
+              {KB_ROWS.map((count, r) => (
+                <span className={`kbrow r${r}`} key={r}>
+                  {Array.from({ length: count }, (_, k) => (
+                    <i key={k} />
+                  ))}
+                </span>
+              ))}
+            </span>
+            <span className="lap-pad" />
+          </div>
+          <span className="lap-chassis" />
+        </div>
+      </div>
     </Tilt>
   )
 }
 
-function SavMedia({ item, t }: { item: EdBentoProd | null; t: (k: string) => string }) {
-  if (!item) return <Ed3D v={2} />
+function SavMedia({ t }: { t: (k: string) => string }) {
   return (
     <Tilt>
-    <div className="sav" aria-hidden>
-      <span className="sav-img">
-        {item.img ? (
-          <Image src={item.img} alt="" fill sizes="240px" style={{ objectFit: 'contain' }} />
-        ) : null}
-      </span>
-      <div className="sav-tkt">
-        <span className="tkt-head">
-          {t('why.sav.ticket')} <b className="mono">SAV-2214</b>
-        </span>
-        <span className="tkt-step done">
-          <i />
-          {t('why.sav.s1')}
-        </span>
-        <span className="tkt-step done">
-          <i />
-          {t('why.sav.s2')}
-        </span>
-        <span className="tkt-step run">
-          <i />
-          {t('why.sav.s3')}
-        </span>
+      <div className="bn-sav" aria-hidden>
+        <span className="sav-glow" />
+        {/* Two drawers pulled open on a workshop cabinet — the card's copy is
+            "des pièces en stock", so the object should be the stock. */}
+        <div className="cabnet">
+          <div className="cab-shell">
+            <span className="cab-side" />
+            <span className="cab-lab">{t('why.sav.parts')}</span>
+            <span className="drw" />
+            <span className="drw open">
+              <span className="drw-top">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+            </span>
+            <span className="drw open">
+              <span className="drw-top">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+            </span>
+            <span className="drw" />
+            <span className="drw" />
+            <span className="drw" />
+          </div>
+        </div>
+        <div className="sav-tkt">
+          <span className="tkt-head">
+            {t('why.sav.ticket')} <b>SAV-2214</b>
+          </span>
+          <span className="tkt-step">
+            <i>
+              <EIcon n="check" s={8} sw={3.4} />
+            </i>
+            {t('why.sav.s1')}
+          </span>
+          <span className="tkt-step">
+            <i>
+              <EIcon n="check" s={8} sw={3.4} />
+            </i>
+            {t('why.sav.s2')}
+          </span>
+          <span className="tkt-step run">
+            <i />
+            {t('why.sav.s3')}
+          </span>
+        </div>
       </div>
-    </div>
     </Tilt>
   )
 }
 
 function QuoteMedia({ rows, t }: { rows: { name: string; cat: string }[]; t: (k: string) => string }) {
-  if (!rows.length) return <Ed3D v={3} />
   return (
     <Tilt>
-    <div className="fact" aria-hidden>
-      <span className="fact-back" />
-      <div className="fact-doc">
-        <header>
-          <b className="fact-mark">
-            D-tech<span>.</span>
-          </b>
-          <span className="mono">
-            {t('why.fact.no')} 2026-0148 · {t('why.fact.date')}
-          </span>
-        </header>
-        {rows.map((r) => (
-          <div className="fact-row" key={r.name}>
-            <span className="fact-name">{r.name}</span>
-            <span className="fact-dots" />
-            <span className="mono">{t('why.fact.sur')}</span>
+      <div className="bn-fact" aria-hidden>
+        <span className="fact-glow" />
+        <div className="fact-stack">
+          <span className="fact-sheet s1" />
+          <span className="fact-sheet s2" />
+          <div className="fact-doc">
+            <header>
+              <b className="fact-mark">
+                D-tech<span>.</span>
+              </b>
+              <span className="mono">
+                {t('why.fact.no')} 2026-0148 · {t('why.fact.date')}
+              </span>
+            </header>
+            {/* Real model names off the catalogue when we have them — an
+                invented row on an invoice mock is the one thing a visitor
+                who knows the stock would spot. */}
+            {(rows.length ? rows : FALLBACK_ROWS).map((r) => (
+              <div className="fact-row" key={r.name}>
+                <span className="fact-name">{r.name}</span>
+                <span className="fact-dots" />
+                <span className="mono">{t('why.fact.sur')}</span>
+              </div>
+            ))}
+            <div className="fact-tot">
+              <span className="mono">{t('why.fact.total')}</span>
+              <b>{t('why.fact.sur')}</b>
+            </div>
+            <footer className="mono">{t('why.fact.foot')}</footer>
           </div>
-        ))}
-        <div className="fact-tot">
-          <span className="mono">{t('why.fact.total')}</span>
-          <b>{t('why.fact.sur')}</b>
+          <span className="fact-seal">
+            <span className="seal-rib" />
+            <span className="seal-disc">
+              <span className="seal-ic">{t('why.fact.seal')}</span>
+            </span>
+          </span>
         </div>
-        <footer className="mono">{t('why.fact.foot')}</footer>
-        <span className="fact-stamp">{t('why.fact.stamp')}</span>
       </div>
-    </div>
     </Tilt>
   )
 }
 
+/* Only reached on the About page, which passes no catalogue slice. */
+const FALLBACK_ROWS = [
+  { name: 'LAPTOP LENOVO LOQ 15', cat: '' },
+  { name: 'IMPRIMANTE PHOTOCOPIEUR', cat: '' },
+  { name: 'ONDULEUR UNOMAT UPS', cat: '' },
+]
+
 function ShipMedia({ t }: { t: (k: string) => string }) {
   return (
-    <Tilt>
-    <div className="ship" aria-hidden>
-      <header className="ship-top">
-        <b>{t('why.ship.co')}</b>
-        <span className="mono">Nº DZ-58-2214</span>
-      </header>
-      <div className="ship-route">
-        <b>{t('why.ship.from')}</b>
-        <span className="ship-line">
-          <i className="ship-truck">
-            <EIcon n="truck" s={13} />
-          </i>
+    <Tilt max={5}>
+      <div className="bn-tk" aria-hidden>
+        <span className="tk-sky" />
+        <span className="bn-chip">
+          {t('why.ship.co')} · {t('why.ship.dest')}
         </span>
-        <b>{t('why.ship.dest')}</b>
-      </div>
-      <span className="ship-bar" />
-      <div className="ship-steps">
-        <span className="done">
-          <EIcon n="check" s={12} />
-          {t('why.ship.s1')}
-        </span>
-        <span className="done">
-          <EIcon n="check" s={12} />
-          {t('why.ship.s2')}
-        </span>
-        <span className="run">
+        <div className="tk-pins">
+          <span>
+            {t('why.ship.s1')}
+            <i />
+          </span>
+          <span>
+            {t('why.ship.s2')}
+            <i />
+          </span>
+          <span>
+            {t('why.ship.s3')}
+            <i />
+          </span>
+        </div>
+        <span className="tk-speed">
           <i />
-          {t('why.ship.s3')}
+          <i />
+          <i />
         </span>
+        <span className="tk-road" />
+        <div className="truck">
+          <div className="bx cargo">
+            <span className="f-bk" />
+            <span className="f-lf" />
+            <span className="f-tp" />
+            <span className="f-fr" />
+            <span className="cargo-stripe" />
+            <span className="cargo-mark">
+              D<em>-</em>tech<em>.</em>
+            </span>
+          </div>
+          <div className="bx cab">
+            <span className="f-lf" />
+            <span className="f-tp" />
+            <span className="f-rt" />
+            <span className="f-fr" />
+            <span className="cab-win" />
+            <span className="cab-lamp" />
+          </div>
+          <span className="whl w1" />
+          <span className="whl w2" />
+          <span className="whl w3" />
+        </div>
       </div>
-      <span className="ship-cod mono">{t('why.ship.cod')}</span>
-    </div>
     </Tilt>
   )
 }
 
 export function EdWhy({ bento }: { bento?: EdBento }) {
   const { t } = useEditorial()
+  /* ROUND 21 — the four 3D artifacts in here account for ~85 of the home
+     page's ~88 infinite CSS animations (60 of them the laptop keycaps,
+     animating `background` + `box-shadow`, which repaint). Pause the lot
+     while the section is off screen. See ed-scroll.ts. */
+  const secRef = useRef<HTMLElement | null>(null)
+  useAnimGate(secRef)
   const items = [
     { k: 'bt-a', ic: 'bolt', n: 1, mediaFirst: false },
     { k: 'bt-b', ic: 'wrench', n: 2, mediaFirst: true },
@@ -706,13 +758,13 @@ export function EdWhy({ bento }: { bento?: EdBento }) {
     { k: 'bt-d', ic: 'truck', n: 4, mediaFirst: true },
   ] as const
   const mediaOf = (n: 1 | 2 | 3 | 4) => {
-    if (n === 1) return <BenchMedia items={bento?.shelf ?? []} label={t('why.bench')} />
-    if (n === 2) return <SavMedia item={bento?.sav ?? null} t={t} />
+    if (n === 1) return <LaptopMedia t={t} />
+    if (n === 2) return <SavMedia t={t} />
     if (n === 3) return <QuoteMedia rows={bento?.invoice ?? []} t={t} />
     return <ShipMedia t={t} />
   }
   return (
-    <section className="sec" id="pourquoi" style={{ background: 'var(--wash2)' }}>
+    <section className="sec" id="pourquoi" ref={secRef} style={{ background: 'var(--wash2)' }}>
       <div className="wrap rv">
         <SecHead kicker={t('why.eyebrow')} title={t('why.title')} />
         <div className="bento">
@@ -936,70 +988,122 @@ export function EdTiers({ data }: { data: EdData }) {
 export function EdFan({ data }: { data: EdData }) {
   const { t } = useEditorial()
   const fanRef = useRef<HTMLDivElement | null>(null)
-  const cards = data.cats.slice(0, 7)
+  /* ROUND 19 — the fan now shows D-TECH'S OWN PRODUCTS, not categories.
+     This is the one section on the homepage that says "we don't only resell,
+     we make things", so it has to hold the house-brand line (PROTAB tablet +
+     the DP power-bank family). Categories stay as the fallback: if the
+     `dtech` brand is ever renamed or emptied in the admin, the section
+     degrades to what it used to be instead of collapsing to nothing. */
+  const own = (data.own ?? []).slice(0, 6)
+  const useOwn = own.length >= 3
+  const cards: { id: string; href: string; img: string | null; kicker: string; title: string }[] =
+    useOwn
+      ? own.map((p) => ({
+          id: p.slug,
+          href: `/products/${p.slug}`,
+          img: p.img,
+          kicker: p.catName,
+          title: p.label,
+        }))
+      : data.cats.slice(0, 6).map((c) => ({
+          id: c.id,
+          href: `/products?category=${c.id}`,
+          img: c.img,
+          kicker: `${c.count} ${t('fan.refs')}`,
+          title: c.name,
+        }))
   const mid = (cards.length - 1) / 2
-  useEffect(() => {
-    let raf = 0
-    const upd = () => {
-      raf = 0
+  const n = cards.length
+  /* ROUND 21 — shared read/write pass (ed-scroll.ts), was its own listener. */
+  useScrollFx(
+    () => {
       const el = fanRef.current
-      if (!el) return
+      if (!el) return null
       const r = el.getBoundingClientRect()
       const vh = innerHeight
-      const p = Math.max(0, Math.min(1, (vh * 0.92 - r.top) / (vh * 0.5)))
-      el.style.setProperty('--p', p.toFixed(3))
-    }
-    const on2 = () => {
-      if (!raf) raf = requestAnimationFrame(upd)
-    }
-    upd()
-    addEventListener('scroll', on2, { passive: true })
-    addEventListener('resize', on2)
-    return () => {
-      removeEventListener('scroll', on2)
-      removeEventListener('resize', on2)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
+      /* The step is measured, not computed in CSS, and that is deliberate.
+         The CSS fallback derives it from a `100%` inside a clamp(); the moment
+         that expression is MULTIPLIED inside `translateX`, Chrome drops the
+         whole term to zero — the row stayed shut at --p 0.489 with the cards
+         4px apart, and nothing about the declaration looks wrong. A measured
+         pixel value has no percentage in it, so the transform is plain
+         arithmetic. The CSS value still governs the first paint. */
+      return {
+        p: Math.max(0, Math.min(1, (vh * 0.92 - r.top) / (vh * 0.5))).toFixed(3),
+        w: el.clientWidth,
+      }
+    },
+    (v) => {
+      const el = fanRef.current
+      if (!el || !v) return
+      el.style.setProperty('--p', v.p)
+      if (v.w > 0) {
+        const fw = Math.max(104, Math.min(198, (v.w - (n - 1) * 14) / n))
+        el.style.setProperty('--fw', `${fw.toFixed(2)}px`)
+        el.style.setProperty('--fstep', `${(fw + 14).toFixed(2)}px`)
+      }
+    },
+  )
   return (
     <section className="sec" style={{ background: 'var(--wash2)', overflow: 'hidden' }}>
       <div className="wrap rv">
-        <SecHead kicker={t('fan.eyebrow')} title={t('fan.title')} lede={t('fan.lede')} />
-        <div className="fan" ref={fanRef}>
+        <SecHead
+          kicker={useOwn ? t('own.eyebrow') : t('fan.eyebrow')}
+          title={useOwn ? t('own.title') : t('fan.title')}
+          lede={useOwn ? t('own.lede') : t('fan.lede')}
+        />
+        {/* data-lenis-prevent: below 720px the fan becomes a snapped
+            horizontal rail, and Lenis runs with allowNestedScroll:false —
+            without this the wheel/touch is swallowed by the page. */}
+        <div
+          className="fan"
+          ref={fanRef}
+          data-lenis-prevent
+          style={{ ['--n' as string]: String(cards.length) }}
+        >
           {cards.map((c, i) => {
             const d = i - mid
             const st = {
-              '--x': `${d * 78}px`,
-              '--r2': `${d * 5}deg`,
-              '--y': `${Math.abs(d) * 13}px`,
-              '--sd': Math.abs(d) * 0.03,
-              zIndex: 10 - Math.abs(d),
+              /* Unitless offset from the centre card. The CSS multiplies it by
+                 a step derived from the card width, so the row is exact at any
+                 count instead of the old hardcoded 78px arc. */
+              ['--d' as string]: String(d),
+              // Math.round: with an EVEN card count `mid` is a .5, so d is a
+              // half-integer and this became `z-index: 8.5` — invalid per
+              // spec, so the whole declaration is dropped and the stack's
+              // centre-on-top order silently collapses to DOM order.
+              zIndex: Math.round(10 - Math.abs(d)),
             } as React.CSSProperties
             return (
-              /* [PORT+] a tap goes straight to the pre-filtered catalogue. */
-              <Link className="fcard" key={c.id} style={st} href={`/products?category=${c.id}`}>
+              /* [PORT+] a tap goes straight to the product (or, in fallback
+                 mode, to the pre-filtered catalogue). */
+              <Link className="fcard" key={c.id} style={st} href={c.href}>
                 <span className="fi">
                   {c.img ? (
                     <Image src={c.img} alt="" fill sizes="210px" style={{ objectFit: 'cover' }} />
                   ) : (
-                    <Slot label={c.name} />
+                    <Slot label={c.title} />
                   )}
                 </span>
                 <span className="fo"></span>
                 <span className="fl">
-                  <span className="k">
-                    {c.count} {t('fan.refs')}
-                  </span>
-                  <h4>{c.name}</h4>
+                  <span className="k">{c.kicker}</span>
+                  <h4>{c.title}</h4>
                 </span>
               </Link>
             )
           })}
         </div>
         <div className="fan-foot">
-          <Link href="/products" style={{ fontWeight: 600 }}>
-            {t('fan.foot')}
-          </Link>
+          {useOwn ? (
+            <Link href="/products?brand=dtech" style={{ fontWeight: 600 }}>
+              {t('own.foot')}
+            </Link>
+          ) : (
+            <Link href="/products" style={{ fontWeight: 600 }}>
+              {t('fan.foot')}
+            </Link>
+          )}
         </div>
       </div>
     </section>

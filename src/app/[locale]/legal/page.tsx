@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server'
 import { SkinShell } from '@/components/skin/SkinShell'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
@@ -10,9 +10,32 @@ import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { EditProvider, Editable } from '@/components/site-edit/edit-context'
 import type { PageDoc } from '@/components/admin/editor/types'
 
-export const dynamic = 'force-dynamic'
+/**
+ * ISR, not `force-dynamic`.
+ *
+ * This page reads nothing request-specific — no cookies, no session, no
+ * searchParams — so rendering it per visitor meant every single visit paid a
+ * round trip from the Vercel function to Postgres before a byte reached the
+ * browser. Prerendered and revalidated, Vercel answers from the edge cache
+ * closest to the visitor and the database is touched only when the content
+ * actually changes. `revalidate` is the safety net; the real freshness comes
+ * from revalidateStorefront() in every admin mutation (src/lib/revalidate.ts).
+ *
+ * setRequestLocale() is what MAKES this possible: without it next-intl reads
+ * the locale from request headers, which silently opts the route back into
+ * dynamic rendering.
+ */
+export const revalidate = 300
 
-export async function generateMetadata(): Promise<Metadata> {
+interface LocaleParams {
+  params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: LocaleParams): Promise<Metadata> {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('legal')
   return {
     title: t('pageTitle'),
@@ -20,7 +43,9 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function LegalPage() {
+export default async function LegalPage({ params }: LocaleParams) {
+  const { locale: routeLocale } = await params
+  setRequestLocale(routeLocale)
   const locale = await getLocale()
   const tmpl = await getPublishedPage('page:legal')
   if (tmpl)

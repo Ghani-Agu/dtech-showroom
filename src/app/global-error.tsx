@@ -55,7 +55,7 @@ export default function GlobalError({
             }}
           >
             Something fundamental went wrong. Try reloading; if it persists, email
-            contact@d-techalgerie.com.
+            contact@dtech.dz.
           </p>
           <button
             onClick={reset}

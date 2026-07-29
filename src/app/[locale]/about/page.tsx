@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
@@ -13,9 +13,32 @@ import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { EditProvider, Editable } from '@/components/site-edit/edit-context'
 import type { PageDoc } from '@/components/admin/editor/types'
 
-export const dynamic = 'force-dynamic'
+/**
+ * ISR, not `force-dynamic`.
+ *
+ * This page reads nothing request-specific — no cookies, no session, no
+ * searchParams — so rendering it per visitor meant every single visit paid a
+ * round trip from the Vercel function to Postgres before a byte reached the
+ * browser. Prerendered and revalidated, Vercel answers from the edge cache
+ * closest to the visitor and the database is touched only when the content
+ * actually changes. `revalidate` is the safety net; the real freshness comes
+ * from revalidateStorefront() in every admin mutation (src/lib/revalidate.ts).
+ *
+ * setRequestLocale() is what MAKES this possible: without it next-intl reads
+ * the locale from request headers, which silently opts the route back into
+ * dynamic rendering.
+ */
+export const revalidate = 300
 
-export async function generateMetadata(): Promise<Metadata> {
+interface LocaleParams {
+  params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: LocaleParams): Promise<Metadata> {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('about')
   return {
     title: t('pageTitle'),
@@ -23,7 +46,9 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function AboutPage() {
+export default async function AboutPage({ params }: LocaleParams) {
+  const { locale: routeLocale } = await params
+  setRequestLocale(routeLocale)
   // New "dtech Brand" design — brand-styled about section.
   const skinDesign = await getPublishedDesign()
   if (skinDesign === 'brand') {
@@ -100,10 +125,10 @@ export default async function AboutPage() {
                 </p>
               </div>
               <div className="space-y-2 font-body text-base text-text-secondary">
-                <Editable as="p" id="about.email" label="E-mail">contact@d-techalgerie.com</Editable>
-                <Editable as="p" id="about.phone" label="Téléphone">+213 0 00 00 00 00</Editable>
+                <Editable as="p" id="about.email" label="E-mail">contact@dtech.dz</Editable>
+                <Editable as="p" id="about.phone" label="Téléphone">+213 560 99 05 06</Editable>
                 <p>
-                  <Editable id="about.addr" label="Adresse">Dtech Algérie — Alger, Algeria</Editable>
+                  <Editable id="about.addr" label="Adresse">D-Tech Algérie — Cité 1577 logements, Bt 3, Bab Ezzouar, Alger</Editable>
                 </p>
               </div>
             </div>

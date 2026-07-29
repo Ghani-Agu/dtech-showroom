@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { bustDataCache } from '@/lib/data-cache'
+import { revalidateStorefront } from '@/lib/revalidate'
 import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { sitePages, imageBlobs } from '@/db/schema'
@@ -89,7 +89,7 @@ export async function publishHero(input: unknown): Promise<HeroActionResult> {
         target: sitePages.key,
         set: { draft: cfg, published: cfg, updatedAt: now, publishedAt: now },
       })
-    bustDataCache()
+    revalidateStorefront()
     revalidatePath('/', 'layout')
     return { ok: true }
   } catch (err) {
@@ -105,7 +105,7 @@ export async function unpublishHero(): Promise<HeroActionResult> {
       .update(sitePages)
       .set({ published: null, publishedAt: null, updatedAt: new Date() })
       .where(eq(sitePages.key, HERO_KEY))
-    bustDataCache()
+    revalidateStorefront()
     revalidatePath('/', 'layout')
     return { ok: true }
   } catch (err) {

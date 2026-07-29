@@ -4,7 +4,7 @@ import { sanitizeCustomHtml } from '@/lib/custom-html'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StickyBuyBar } from '@/components/product/StickyBuyBar'
 import { notFound } from 'next/navigation'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { Carousel } from '@/components/showroom/Carousel'
 import { ProductActions } from '@/components/showroom/ProductActions'
@@ -34,7 +34,39 @@ import {
   jsonLdScript,
 } from '@/lib/seo'
 
-export const dynamic = 'force-dynamic'
+/**
+ * ISR, not `force-dynamic`.
+ *
+ * This page reads nothing request-specific — no cookies, no session, no
+ * searchParams — so rendering it per visitor meant every single visit paid a
+ * round trip from the Vercel function to Postgres before a byte reached the
+ * browser. Prerendered and revalidated, Vercel answers from the edge cache
+ * closest to the visitor and the database is touched only when the content
+ * actually changes. `revalidate` is the safety net; the real freshness comes
+ * from revalidateStorefront() in every admin mutation (src/lib/revalidate.ts).
+ *
+ * setRequestLocale() is what MAKES this possible: without it next-intl reads
+ * the locale from request headers, which silently opts the route back into
+ * dynamic rendering.
+ */
+export const revalidate = 300
+
+/**
+ * Empty on purpose — this is what turns the route from "dynamic" into
+ * "prerender on first request, then cache".
+ *
+ * Next 16 treats a dynamic segment with NO generateStaticParams as fully
+ * dynamic: every visit re-renders. Declaring it (even with zero params) puts
+ * the route in SSG mode with `dynamicParams: true`, so the first visitor to a
+ * given slug pays the render and everyone after them is served from the route
+ * cache until revalidateStorefront() or the revalidate window drops it.
+ *
+ * Returning [] rather than all 393 slugs keeps `next build` fast and avoids
+ * prerendering 1179 pages (393 × 3 locales) that may never be visited.
+ */
+export function generateStaticParams(): { productSlug: string }[] {
+  return []
+}
 
 interface ProductPageProps {
   params: Promise<{ locale: string; productSlug: string }>
@@ -44,6 +76,7 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { locale, productSlug } = await params
+  setRequestLocale(locale)
   const product = await getProductBySlug(productSlug, locale as Locale)
   if (!product) notFound()
 
@@ -63,8 +96,9 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { productSlug } = await params
-  const locale = (await getLocale()) as Locale
+  const { locale: raw, productSlug } = await params
+  setRequestLocale(raw)
+  const locale = raw as Locale
   const t = await getTranslations('showroom')
   const tSpec = await getTranslations('products.specLabels')
 

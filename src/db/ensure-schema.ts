@@ -139,6 +139,13 @@ const DDL: string[] = [
   `ALTER TABLE "brands" ADD COLUMN IF NOT EXISTS "description_ar" text`,
   `ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "tagline_ar" text`,
   `ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "description_ar" text`,
+  // ── Round 19 — general contact requests ──
+  // /contact posts a request that is not about a specific product, so the
+  // product FK has to become optional. The three denormalised product_*
+  // text columns deliberately stay NOT NULL and carry the request's subject
+  // instead, so every existing admin list/detail query keeps working
+  // untouched and an inquiry row always renders something meaningful.
+  `ALTER TABLE "inquiries" ALTER COLUMN "product_id" DROP NOT NULL`,
 ]
 
 const DDL_HASH = createHash('sha1').update(DDL.join('\n;\n')).digest('hex').slice(0, 12)

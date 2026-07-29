@@ -376,7 +376,7 @@ export function BrandAbout() {
   const { t } = useBrand()
   const ref = useFade()
   const tl = [
-    { yr: '2006', tt: 'Hardware Technology Services', ds: t('tl.2006d') },
+    { yr: '2006', tt: 'Hardware Technology Service', ds: t('tl.2006d') },
     { yr: '2012', tt: t('tl.2012t'), ds: t('tl.2012d') },
     { yr: '2017', tt: t('tl.2017t'), ds: t('tl.2017d') },
     { yr: '2022', tt: t('tl.2022t'), ds: 'HP, Dell, Lenovo, ASUS, Canon, Epson, TP-Link.' },
@@ -488,7 +488,7 @@ export function BrandContact() {
                 <div className="ci-row"><span className="l">{t('row.service')}</span><span className="v">{data.addr}<small>{data.hours}</small></span></div>
                 <div className="ci-actions">
                   <a className="ci-act" href={`tel:${data.phone.replace(/\s/g, '')}`}><PhoneIcon />{t('act.call')}</a>
-                  <a className="ci-act" href="https://maps.google.com/?q=Bab+Ezzouar+Alger" target="_blank" rel="noopener noreferrer"><RouteIcon />{t('act.route')}</a>
+                  <a className="ci-act" href="https://maps.google.com/?q=Cit%C3%A9+1577+logements+Bab+Ezzouar+Alger" target="_blank" rel="noopener noreferrer"><RouteIcon />{t('act.route')}</a>
                   <a className="ci-act" href={`https://wa.me/${BRAND_WHATSAPP}`} target="_blank" rel="noopener noreferrer"><WhatsAppIcon s={19} />WhatsApp</a>
                 </div>
                 <div className="hours">

@@ -16,11 +16,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { usePathname, useRouter, Link } from '@/i18n/routing'
 import { useEditorial } from './editorial-context'
+import { useScrollFx } from './ed-scroll'
 import { useCart } from '@/lib/cart'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { EIcon, WaIcon } from './editorial-icons'
 import { useNlPopup } from '@/lib/newsletter-popup'
 import { useChatPanel } from '@/lib/chat-panel'
+import { useNavData } from '@/components/layout/nav-data'
+import { groupByFamily } from './ed-families'
+import {
+  CONTACT_EMAIL,
+  PHONE_DISPLAY,
+  PHONE_TEL,
+  SAV_DISPLAY,
+  SAV_TEL,
+  WHATSAPP_URL,
+} from '@/lib/contact-info'
 
 /* ROUND 16 — newsletter pop-up trigger (no customer accounts). */
 const NL_LABEL: Record<'fr' | 'en' | 'ar', string> = {
@@ -36,23 +47,51 @@ const CHAT_LABEL: Record<'fr' | 'en' | 'ar', string> = {
   ar: 'مساعد D-Tech',
 }
 
-export const ED_PHONE_DISPLAY = '+213 560 99 05 06'
-export const ED_PHONE_TEL = '+213560990506'
-export const ED_SAV_DISPLAY = '0561 616 911'
-export const ED_SAV_TEL = '+213561616911'
-export const ED_EMAIL = 'contact@dtech.dz'
-export const WA = 'https://wa.me/213560990506'
+/* Re-exported under the ED_* names the editorial components already import,
+   but defined once in @/lib/contact-info — this file used to be a second
+   source of truth for the phone numbers and mailbox. */
+export const ED_PHONE_DISPLAY = PHONE_DISPLAY
+export const ED_PHONE_TEL = PHONE_TEL
+export const ED_SAV_DISPLAY = SAV_DISPLAY
+export const ED_SAV_TEL = SAV_TEL
+export const ED_EMAIL = CONTACT_EMAIL
+export const WA = WHATSAPP_URL
 
-/** [key, anchor(home), route(inner pages)] */
-const NAV: [string, string, string][] = [
-  ['nav.home', '#accueil', '/'],
-  ['nav.catalogue', '#catalogue', '/products'],
-  ['nav.brands', '#marques', '/brands'],
-  ['nav.why', '#pourquoi', '/about'],
-  // ROUND 13: the categories-overview page redirects to /products — deep-link
-  // the nav straight there (one catalogue surface, URL-driven filters).
-  ['nav.ranges', '#gammes', '/products'],
-  ['nav.contact', '#contact', '/about'],
+/**
+ * ROUND 19 — the nav is now SIX real destinations, everywhere.
+ *
+ * It used to be anchor links on the homepage and routes on inner pages, so
+ * the same label scrolled on `/` and navigated on `/products`. Every entry is
+ * a route now: one mental model, deep-linkable, shareable, indexable.
+ * `mega: true` marks the entry that drops the category panel on hover.
+ */
+interface EdNavItem {
+  key: string
+  route: string
+  mega?: boolean
+}
+
+const NAV: EdNavItem[] = [
+  { key: 'nav.catalogue', route: '/catalogue', mega: true },
+  { key: 'nav.products', route: '/products' },
+  { key: 'nav.brands', route: '/brands' },
+  { key: 'nav.gaming', route: '/gaming' },
+  { key: 'nav.company', route: '/company' },
+  { key: 'nav.contact', route: '/contact' },
+]
+
+/**
+ * Homepage section anchors, used ONLY by the scroll-spy label in the pill.
+ * Decoupled from NAV in round 19 — the nav no longer points at sections, but
+ * the rolling label still tracks where you are on the long homepage.
+ */
+const HOME_SPY: [string, string][] = [
+  ['nav.home', '#accueil'],
+  ['nav.catalogue', '#catalogue'],
+  ['nav.brands', '#marques'],
+  ['nav.ranges', '#gammes'],
+  ['nav.why', '#pourquoi'],
+  ['nav.contact', '#contact'],
 ]
 
 /* ─────────── cursor (design EdCursor, verbatim behaviour) ─────────── */
@@ -76,16 +115,27 @@ export function EdCursor() {
     let tx = x
     let ty = y
     let raf = 0
+    /* ROUND 21 — the trail eases toward the pointer, so once it has caught
+       up there is nothing to animate. Parking the loop when it settles
+       removes two transform writes (one of them on a blurred, fixed layer)
+       from every single frame of every scroll. */
     const loop = () => {
       x += (tx - x) * 0.22
       y += (ty - y) * 0.22
       core.style.transform = `translate3d(${tx}px,${ty}px,0) rotate(10deg)`
       trail.style.transform = `translate3d(${x}px,${y}px,0)`
+      if (Math.abs(tx - x) < 0.1 && Math.abs(ty - y) < 0.1) {
+        x = tx
+        y = ty
+        raf = 0
+        return
+      }
       raf = requestAnimationFrame(loop)
     }
     const move = (e: PointerEvent) => {
       tx = e.clientX
       ty = e.clientY
+      if (!raf) raf = requestAnimationFrame(loop)
       const t = (e.target as Element | null)?.closest?.('a,button')
       root.classList.toggle('cur-link', !!t)
     }
@@ -118,39 +168,63 @@ export function EdCursor() {
 function useChrome(homeLabels: string[]) {
   const { rootRef } = useEditorial()
   const [lab, setLab] = useState(homeLabels[0] ?? '')
+  /* ROUND 21 — this ran on every scroll frame and was the second-biggest
+     source of home-page jank after image decode (measured: 19 stalls >60ms
+     and 1.9s of stall time down to 10 stalls / 1.15s by fixing the write
+     alone). Three things were wrong:
+       · `setAttribute('data-tone', …)` fired ~344 times per scroll-through
+         even though the value changes maybe four times. Writing an
+         attribute on `.editorial-root` invalidates style for every
+         descendant matching one of the ~25 `[data-tone='dark'] …` rules —
+         the whole chrome — on EVERY frame.
+       · the `[data-band="dark"]` list and the six spy anchors were
+         re-queried from the DOM on every frame.
+       · reads and writes interleaved with the four other scroll listeners,
+         so each read forced a synchronous layout.
+     Now: elements cached, one read/write pass shared with everything else
+     (ed-scroll.ts), and both the attribute and the React state only touched
+     when the value actually changes. */
+  const cache = useRef<{ bands: HTMLElement[]; spies: (Element | null)[] } | null>(null)
+  const tone = useRef<'light' | 'dark' | ''>('')
+  const labels = homeLabels.join('|')
   useEffect(() => {
-    const root = rootRef.current
-    if (!root) return
-    let raf = 0
-    const upd = () => {
-      raf = 0
+    cache.current = null
+    tone.current = ''
+  }, [labels, rootRef])
+  useScrollFx(
+    () => {
+      const root = rootRef.current
+      if (!root) return null
+      if (!cache.current || cache.current.bands.length === 0) {
+        cache.current = {
+          bands: Array.from(root.querySelectorAll<HTMLElement>('[data-band="dark"]')),
+          spies: HOME_SPY.map(([, h]) => root.querySelector(h)),
+        }
+      }
       const y = 78
       let t: 'light' | 'dark' = 'light'
-      root.querySelectorAll<HTMLElement>('[data-band="dark"]').forEach((el) => {
+      for (const el of cache.current.bands) {
         const r = el.getBoundingClientRect()
-        if (r.top <= y && r.bottom >= y) t = 'dark'
-      })
-      root.setAttribute('data-tone', t)
+        if (r.top <= y && r.bottom >= y) {
+          t = 'dark'
+          break
+        }
+      }
       let cur = homeLabels[0] ?? ''
-      NAV.forEach(([, h], i) => {
-        const el = root.querySelector(h)
+      cache.current.spies.forEach((el, i) => {
         if (el && el.getBoundingClientRect().top <= y + 60) cur = homeLabels[i] ?? cur
       })
-      setLab(cur)
-    }
-    const on = () => {
-      if (!raf) raf = requestAnimationFrame(upd)
-    }
-    upd()
-    addEventListener('scroll', on, { passive: true })
-    addEventListener('resize', on)
-    return () => {
-      removeEventListener('scroll', on)
-      removeEventListener('resize', on)
-      cancelAnimationFrame(raf)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rootRef, homeLabels.join('|')])
+      return { t, cur }
+    },
+    (v) => {
+      if (!v) return
+      if (tone.current !== v.t) {
+        tone.current = v.t
+        rootRef.current?.setAttribute('data-tone', v.t)
+      }
+      setLab((prev) => (prev === v.cur ? prev : v.cur))
+    },
+  )
   return { lab }
 }
 
@@ -298,14 +372,160 @@ function NewsletterMenuLink({ onClose }: { onClose: () => void }) {
   )
 }
 
+/* ─────────── Catalogue mega-menu (ROUND 19) ─────────── */
+
+/**
+ * Hover-to-open category panel hanging off the Catalogue nav item.
+ *
+ * Rules it has to respect:
+ *  - the link itself STILL navigates to /catalogue on click — the panel is
+ *    additive, never a trap;
+ *  - keyboard users get it on focus-within, and Escape closes it;
+ *  - touch devices never see it (no hover), they just navigate;
+ *  - closing is delayed ~160 ms so the diagonal mouse travel from the label
+ *    down into the panel doesn't dismiss it mid-move.
+ */
+function CatalogueMega({
+  open,
+  onNavigate,
+}: {
+  open: boolean
+  onNavigate: () => void
+}) {
+  const { t } = useEditorial()
+  const { cats, productCount } = useNavData()
+  const groups = groupByFamily(cats)
+
+  return (
+    <div className={`mega${open ? ' on' : ''}`} id="ed-mega" aria-hidden={!open}>
+      {/* data-lenis-prevent: ScrollProvider runs Lenis with smoothWheel and
+          allowNestedScroll:false, so without this opt-out Lenis swallows the
+          wheel event and scrolls the PAGE instead of this panel — on a 768px
+          laptop the panel is taller than its max-height and the footer row
+          would be unreachable by mouse. */}
+      <div className="mega-in" data-lenis-prevent>
+        <div className="mega-head">
+          <div>
+            <span className="mega-k">{t('mega.title')}</span>
+            <p>{t('mega.lede')}</p>
+          </div>
+          <Link className="mega-all" href="/catalogue" onClick={onNavigate} tabIndex={open ? 0 : -1}>
+            {t('mega.all')}
+            <b aria-hidden>→</b>
+          </Link>
+        </div>
+        <div className="mega-grid">
+          {groups.map(({ family, cats: fc }) => (
+            <div
+              className="mega-col"
+              key={family.id}
+              style={{ ['--h' as string]: String(family.hue) }}
+            >
+              <h4>{t(`fam.${family.id}`)}</h4>
+              <ul>
+                {fc.map((c) => (
+                  <li key={c.slug}>
+                    <Link
+                      href={`/products?category=${c.slug}`}
+                      onClick={onNavigate}
+                      tabIndex={open ? 0 : -1}
+                    >
+                      <span>{c.name}</span>
+                      <i>{c.count}</i>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mega-foot">
+          <span>
+            {productCount} {t('cpage.refs')}
+          </span>
+          <Link href="/gaming" onClick={onNavigate} tabIndex={open ? 0 : -1}>
+            {t('nav.gaming')} <b aria-hidden>→</b>
+          </Link>
+          <Link href="/brands" onClick={onNavigate} tabIndex={open ? 0 : -1}>
+            {t('nav.brands')} <b aria-hidden>→</b>
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function PillNav({ onMenu }: { onMenu: () => void }) {
   const { t } = useEditorial()
   const pathname = usePathname()
   const onHome = pathname === '/'
-  const labels = NAV.map(([k]) => t(k))
-  const { lab } = useChrome(labels)
+  const spyLabels = HOME_SPY.map(([k]) => t(k))
+  const { lab } = useChrome(spyLabels)
+
+  /* Mega-menu open state, with the close delay described above. */
+  const [mega, setMega] = useState(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }, [])
+  const openMega = useCallback(() => {
+    cancelClose()
+    setMega(true)
+  }, [cancelClose])
+  const closeMega = useCallback(
+    (immediate = false) => {
+      cancelClose()
+      if (immediate) setMega(false)
+      else closeTimer.current = setTimeout(() => setMega(false), 160)
+    },
+    [cancelClose]
+  )
+  useEffect(() => () => cancelClose(), [cancelClose])
+  /* Route change (including a click inside the panel) always dismisses it. */
+  useEffect(() => {
+    setMega(false)
+  }, [pathname])
+  /**
+   * Dismissal paths that hover alone does not cover.
+   *
+   *  - Escape, obviously.
+   *  - focusin ANYWHERE outside the pill: a keyboard user who opens the panel
+   *    with focus and then tabs onward would otherwise leave a 960×560 panel
+   *    sitting over the page with pointer-events on, with nothing left in the
+   *    tab order able to close it.
+   *  - pointerdown outside: the safety net for hybrid touch/trackpad laptops,
+   *    where a tap synthesises mouseenter but never a mouseleave.
+   */
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!mega) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMega(false)
+    }
+    const outside = (e: Event) => {
+      const t = e.target as Node | null
+      if (t && navRef.current && !navRef.current.contains(t)) setMega(false)
+    }
+    addEventListener('keydown', onKey)
+    document.addEventListener('focusin', outside)
+    document.addEventListener('pointerdown', outside)
+    return () => {
+      removeEventListener('keydown', onKey)
+      document.removeEventListener('focusin', outside)
+      document.removeEventListener('pointerdown', outside)
+    }
+  }, [mega])
+
   return (
-    <nav className="pill" aria-label="Navigation principale">
+    <nav
+      className="pill"
+      aria-label="Navigation principale"
+      ref={navRef}
+      onMouseLeave={() => closeMega()}
+    >
       <div className="pill-in">
         {onHome ? (
           <a className="pill-logo" href="#accueil" aria-label="D-tech, accueil">
@@ -317,17 +537,30 @@ export function PillNav({ onMenu }: { onMenu: () => void }) {
           </Link>
         )}
         <div className="pill-links">
-          {NAV.map(([k, h, route]) =>
-            onHome ? (
-              <a key={k} href={h}>
-                {t(k)}
-              </a>
-            ) : (
-              <Link key={k} href={route}>
-                {t(k)}
+          {NAV.map((item) => {
+            const active = pathname === item.route || pathname.startsWith(item.route + '/')
+            return (
+              <Link
+                key={item.key}
+                href={item.route}
+                aria-current={active ? 'page' : undefined}
+                className={
+                  (active ? 'on' : '') + (item.mega ? ' has-mega' : '')
+                }
+                {...(item.mega
+                  ? {
+                      onMouseEnter: openMega,
+                      onFocus: openMega,
+                      'aria-expanded': mega,
+                      'aria-controls': 'ed-mega',
+                    }
+                  : { onMouseEnter: () => closeMega(true) })}
+              >
+                {t(item.key)}
+                {item.mega ? <b className="cav" aria-hidden /> : null}
               </Link>
             )
-          )}
+          })}
         </div>
         <RollLabel text={lab} />
         <div className="pill-acts">
@@ -346,6 +579,13 @@ export function PillNav({ onMenu }: { onMenu: () => void }) {
           </button>
         </div>
       </div>
+      <div
+        className="mega-wrap"
+        onMouseEnter={openMega}
+        onMouseLeave={() => closeMega()}
+      >
+        <CatalogueMega open={mega} onNavigate={() => closeMega(true)} />
+      </div>
     </nav>
   )
 }
@@ -360,8 +600,6 @@ export function MenuOverlay({
   previews?: (string | null)[]
 }) {
   const { t } = useEditorial()
-  const pathname = usePathname()
-  const onHome = pathname === '/'
   const [hov, setHov] = useState(0)
   const ref = useFocusTrap<HTMLDivElement>(true, onClose)
   useEffect(() => {
@@ -385,24 +623,23 @@ export function MenuOverlay({
             ) : (
               <span className="ed-slot">
                 <i>
-                  {t('menu.prev')} — {t(NAV[hov]?.[0] ?? 'nav.home')}
+                  {t('menu.prev')} — {t(NAV[hov]?.key ?? 'nav.home')}
                 </i>
               </span>
             )}
           </div>
           <div className="ov-nav">
-            {NAV.map(([k, h, route], i) => (
-              onHome ? (
-                <a className="ov-item" key={k} href={h} onClick={onClose} onMouseEnter={() => setHov(i)}>
-                  <span className="n">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="l">{t(k)}</span>
-                </a>
-              ) : (
-                <Link className="ov-item" key={k} href={route} onClick={onClose} onMouseEnter={() => setHov(i)}>
-                  <span className="n">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="l">{t(k)}</span>
-                </Link>
-              )
+            {NAV.map((item, i) => (
+              <Link
+                className="ov-item"
+                key={item.key}
+                href={item.route}
+                onClick={onClose}
+                onMouseEnter={() => setHov(i)}
+              >
+                <span className="n">{String(i + 1).padStart(2, '0')}</span>
+                <span className="l">{t(item.key)}</span>
+              </Link>
             ))}
           </div>
         </div>
@@ -449,6 +686,13 @@ export function EditorialFooter({ catNames = [] }: { catNames?: { id: string; na
   const pathname = usePathname()
   const onHome = pathname === '/'
   const year = new Date().getFullYear()
+  /* ROUND 19: the homepage passes catNames explicitly; every OTHER route used
+     to render an empty category column because nothing threaded them down.
+     The nav context now backfills it, so the footer is complete site-wide. */
+  const nav = useNavData()
+  const cats = catNames.length
+    ? catNames
+    : nav.cats.slice(0, 6).map((c) => ({ id: c.slug, name: c.name }))
   return (
     <div className="fwrap">
       <footer className="foot">
@@ -473,9 +717,9 @@ export function EditorialFooter({ catNames = [] }: { catNames?: { id: string; na
           <div>
             <h4>{t('foot.nav')}</h4>
             <ul>
-              {NAV.map(([k, h, route]) => (
-                <li key={k}>
-                  {onHome ? <a href={h}>{t(k)}</a> : <Link href={route}>{t(k)}</Link>}
+              {NAV.map((item) => (
+                <li key={item.key}>
+                  <Link href={item.route}>{t(item.key)}</Link>
                 </li>
               ))}
             </ul>
@@ -483,11 +727,14 @@ export function EditorialFooter({ catNames = [] }: { catNames?: { id: string; na
           <div>
             <h4>{t('foot.cat')}</h4>
             <ul>
-              {catNames.slice(0, 6).map((c) => (
+              {cats.slice(0, 6).map((c) => (
                 <li key={c.id}>
                   <Link href={`/products?category=${c.id}`}>{c.name}</Link>
                 </li>
               ))}
+              <li>
+                <Link href="/catalogue">{t('cpage.all')}</Link>
+              </li>
               <li>
                 <Link href="/legal">{t('foot.legal')}</Link>
               </li>

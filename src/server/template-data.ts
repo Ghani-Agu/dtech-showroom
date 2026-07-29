@@ -11,15 +11,18 @@ import type {
   SpecItem,
   SiteCtx,
 } from '@/components/admin/editor/render-context'
+import { ADDRESS_ONELINE, CONTACT_EMAIL, SAV_DISPLAY } from '@/lib/contact-info'
 
 /** Real site contact details, exposed as {{site.*}} tokens. */
 export const SITE_CTX: SiteCtx = {
   name: 'D-Tech Algérie',
   phone: '0560 99 05 06',
-  sav: '0561 616 911',
+  sav: SAV_DISPLAY,
   whatsapp: '213560990506',
-  email: 'contact@dtech.dz',
-  address: 'Bab Ezzouar, Alger',
+  email: CONTACT_EMAIL,
+  // Was locality-only; editor templates that print {{site.address}} were
+  // therefore vaguer than the contact page they sit next to.
+  address: ADDRESS_ONELINE,
 }
 
 /** Normalise the product `specs` jsonb (object map or array) to label/value. */

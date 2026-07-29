@@ -186,9 +186,13 @@ export const inquiries = pgTable(
   'inquiries',
   {
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    productId: uuid('product_id')
-      .notNull()
-      .references(() => products.id, { onDelete: 'restrict' }),
+    // Round 19: nullable — a request sent from /contact is not about a
+    // specific product. product_slug / product_name / product_brand stay
+    // NOT NULL and carry the request's subject in that case, so the admin
+    // list and detail views keep rendering without a single change.
+    productId: uuid('product_id').references(() => products.id, {
+      onDelete: 'restrict',
+    }),
 
     fullName: text('full_name').notNull(),
     email: text('email').notNull(),

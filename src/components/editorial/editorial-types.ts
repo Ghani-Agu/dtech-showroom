@@ -41,6 +41,23 @@ export interface EdBento {
   invoice: { name: string; cat: string }[]
 }
 
+/**
+ * ROUND 19 — a product of D-tech's OWN brand (not a distributed one), for the
+ * fan section on the homepage. Hartech owns two house brands: `dtech`
+ * (tablets, power banks) and `ink-master` (compatible consumables); the fan
+ * shows the dtech line, which is the one carrying the company name.
+ */
+export interface EdOwnProduct {
+  slug: string
+  name: string
+  /** Short marketing label from the catalogue, e.g. "PROTAB T101". */
+  label: string
+  tagline: string
+  img: string | null
+  catName: string
+  catSlug: string
+}
+
 export interface EdData {
   cats: EdCat[]
   brands: EdBrandItem[]
@@ -48,7 +65,15 @@ export interface EdData {
   brandCount: number
   heroImage: string | null
   bento: EdBento
+  /** D-tech-branded products for the fan. Empty → the fan falls back to
+   *  categories, so a renamed/removed brand can never blank the section. */
+  own: EdOwnProduct[]
+  /** Total count of house-brand references (dtech + ink-master). */
+  ownCount: number
 }
+
+/** Slugs of the brands Hartech owns outright, in display priority. */
+export const ED_OWN_BRANDS = ['dtech', 'ink-master'] as const
 
 /** Tier-panel colors — lorolabs-style multi-color: every row opens on its
  *  own distinct hue, deliberately NOT the site theme (user request). Ordered

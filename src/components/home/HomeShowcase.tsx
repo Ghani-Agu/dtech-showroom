@@ -1450,7 +1450,7 @@ function ContactPanel({
           </a>
           <a
             className="contact-action"
-            href="https://maps.google.com/?q=Bab+Ezzouar+Alger"
+            href="https://maps.google.com/?q=Cit%C3%A9+1577+logements+Bab+Ezzouar+Alger"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -1564,7 +1564,7 @@ function Footer() {
             links={[
               {
                 label: t('cols.contact.l1'),
-                href: 'https://maps.google.com/?q=Bab+Ezzouar+Alger',
+                href: 'https://maps.google.com/?q=Cit%C3%A9+1577+logements+Bab+Ezzouar+Alger',
                 external: true,
               },
               { label: t('cols.contact.l2'), href: 'tel:+213560990506' },

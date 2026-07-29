@@ -19,7 +19,15 @@ type ProductsRaw = Awaited<ReturnType<typeof getAllProducts>>
 type CategoriesRaw = Awaited<ReturnType<typeof getAllCategories>>
 type BrandsRaw = Awaited<ReturnType<typeof getAllBrands>>
 
-import type { EdCat, EdBrandItem, EdData, EdBento, EdBentoProd } from '@/components/editorial/editorial-types'
+import type {
+  EdCat,
+  EdBrandItem,
+  EdData,
+  EdBento,
+  EdBentoProd,
+  EdOwnProduct,
+} from '@/components/editorial/editorial-types'
+import { ED_OWN_BRANDS } from '@/components/editorial/editorial-types'
 export type { EdCat, EdBrandItem, EdData }
 
 /** Real category slug → design EDPATH icon. */
@@ -81,6 +89,32 @@ export function buildEditorialData(
     .map((b) => ({ id: b.slug, name: b.name, count: countByBrand.get(b.slug) ?? 0 }))
     .filter((b) => b.count > 0)
 
+  /* ROUND 19 — Hartech's OWN products, for the homepage fan.
+     ONLY the `dtech` line, not every house brand. Hartech also owns
+     ink-master (25 toner refs), but the fan's copy says "tablettes et
+     batteries nomades" and its footer links to /products?brand=dtech — so
+     letting ink-master in produced two cards reading "TONER INK MASTER
+     TK1245" under a D-tech headline, and a "see all 7" link that landed on a
+     page showing 5. `ownCount` below still counts both, since that IS the
+     number of house-brand references.
+     Capped at 7: the fan's arc geometry (±3 around the centre) stops reading
+     past that. */
+  const ownRank = new Map<string, number>(ED_OWN_BRANDS.map((s, i) => [s, i]))
+  const own: EdOwnProduct[] = products
+    .filter((p) => p.brand.slug === 'dtech')
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .slice(0, 7)
+    .map((p) => ({
+      slug: p.slug,
+      name: p.name,
+      // `cardSpec` is a truncated blurb; the tagline is the real one-liner.
+      label: p.name.replace(/^.*?D-?TECH\s*/i, '').trim() || p.name,
+      tagline: p.tagline ?? '',
+      img: p.cardImagePath ? imgOr(p.cardImagePath) : null,
+      catName: p.category.name,
+      catSlug: p.category.slug,
+    }))
+
   return {
     cats,
     brands: brandItems,
@@ -88,6 +122,8 @@ export function buildEditorialData(
     brandCount: brandItems.length,
     heroImage: hero?.slides?.[0]?.src || null,
     bento: buildBento(products),
+    own,
+    ownCount: products.filter((p) => ownRank.has(p.brand.slug)).length,
   }
 }
 

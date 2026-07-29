@@ -5,7 +5,8 @@ import { ScrollProvider } from '@/components/layout/ScrollProvider'
 import { ShowroomShell } from '@/components/showroom/ShowroomShell'
 import { SiteTheme } from '@/components/site-theme'
 import { getSiteTheme, getPublishedDesign } from '@/server/editor-page-data'
-import { pokeCampaignScheduler } from '@/server/campaign-send-core'
+import { getNavData } from '@/server/nav-data'
+import { NavDataProvider } from '@/components/layout/nav-data'
 import { getSiteIntegrations } from '@/lib/site-integrations'
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { AiChat } from '@/components/chat/AiChat'
@@ -31,20 +32,21 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale)
 
-  // Round 15: visitor traffic advances due scheduled campaigns (throttled,
-  // runs after the response — zero cost for the visitor).
-  pokeCampaignScheduler()
-
-  const [messages, siteTheme, design, integrations] = await Promise.all([
+  const [messages, siteTheme, design, integrations, navData] = await Promise.all([
     getMessages(),
     getSiteTheme(),
     getPublishedDesign(),
     getSiteIntegrations(),
+    // ROUND 19: categories + brands for the Catalogue mega-menu and the
+    // footer. Cheap — every source read is already memoised for the page
+    // body that follows, and the projection is a few kB.
+    getNavData(locale),
   ])
   const t = await getTranslations('common')
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
+      <NavDataProvider value={navData}>
       <SiteTheme theme={siteTheme} />
       <a
         href="#main-content"
@@ -93,6 +95,7 @@ export default async function LocaleLayout({
           <NewsletterPopup />
         </div>
       </ScrollProvider>
+      </NavDataProvider>
     </NextIntlClientProvider>
   )
 }

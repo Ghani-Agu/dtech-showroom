@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { imgOr } from '@/lib/img'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   alternatesFor,
   openGraphFor,
@@ -31,7 +31,22 @@ import { buildEditorialData } from '@/server/editorial-data'
 import { buildBrandData } from '@/server/brand-data'
 import { buildPartnerBand } from '@/server/partner-band'
 
-export const dynamic = 'force-dynamic'
+/**
+ * ISR, not `force-dynamic`.
+ *
+ * This page reads nothing request-specific — no cookies, no session, no
+ * searchParams — so rendering it per visitor meant every single visit paid a
+ * round trip from the Vercel function to Postgres before a byte reached the
+ * browser. Prerendered and revalidated, Vercel answers from the edge cache
+ * closest to the visitor and the database is touched only when the content
+ * actually changes. `revalidate` is the safety net; the real freshness comes
+ * from revalidateStorefront() in every admin mutation (src/lib/revalidate.ts).
+ *
+ * setRequestLocale() is what MAKES this possible: without it next-intl reads
+ * the locale from request headers, which silently opts the route back into
+ * dynamic rendering.
+ */
+export const revalidate = 300
 
 /**
  * The homepage had NO generateMetadata — it inherited the root layout's
@@ -39,8 +54,16 @@ export const dynamic = 'force-dynamic'
  * canonical or hreflang. The `metadata` i18n namespace already existed and
  * was read by nothing.
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = (await getLocale()) as Locale
+interface LocaleParams {
+  params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({
+  params,
+}: LocaleParams): Promise<Metadata> {
+  const { locale: raw } = await params
+  setRequestLocale(raw)
+  const locale = raw as Locale
   const t = await getTranslations('metadata')
   const title = t('defaultTitle')
   const description = t('defaultDescription')
@@ -76,8 +99,10 @@ const CATEGORY_ICON: Record<string, IconKind> = {
   'power-banks': 'phone',
 }
 
-export default async function HomePage() {
-  const locale = (await getLocale()) as Locale
+export default async function HomePage({ params }: LocaleParams) {
+  const { locale: raw } = await params
+  setRequestLocale(raw)
+  const locale = raw as Locale
   const [design, publishedHome, heroConfig, contentOverrides, productsRaw, categoriesRaw, brandsRaw] =
     await Promise.all([
       getPublishedDesign(),
@@ -88,6 +113,29 @@ export default async function HomePage() {
       getAllCategories(locale),
       getAllBrands(locale),
     ])
+
+  /**
+   * Never let an empty catalogue be CACHED.
+   *
+   * Under ISR the homepage is prerendered once and served until it is
+   * revalidated — so if the database is unreachable at build or regeneration
+   * time, `safe()` hands back [] and a blank storefront gets frozen into the
+   * route cache. Throwing instead is the correct failure: at build time it
+   * fails the deploy loudly rather than shipping an empty shop, and during
+   * regeneration Next keeps serving the LAST GOOD page and retries later.
+   * Set ALLOW_EMPTY_CATALOGUE=1 for a deliberately empty first deploy.
+   */
+  if (
+    productsRaw.length === 0 &&
+    process.env.NODE_ENV === 'production' &&
+    process.env.ALLOW_EMPTY_CATALOGUE !== '1'
+  ) {
+    throw new Error(
+      '[home] refusing to cache an empty catalogue — the database returned no ' +
+        'products. Check DATABASE_URL / connectivity, then redeploy. ' +
+        'Set ALLOW_EMPTY_CATALOGUE=1 to override.'
+    )
+  }
 
   // Per-category / per-brand product counts (shared by both designs).
   const countByCat = new Map<string, number>()

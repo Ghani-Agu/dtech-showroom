@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { pokeCampaignScheduler } from '@/server/campaign-send-core'
 import { ProductsBrowser } from '@/components/showroom/ProductsBrowser'
 import { TrackProductList } from '@/components/analytics/TrackView'
 import { toExplorerProducts } from '@/lib/showroom-data'
@@ -8,6 +9,8 @@ import { getAllProducts, getAllCategories, getAllBrands } from '@/server/queries
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { EdProductsBrowser } from '@/components/editorial/EdProductsBrowser'
+import { type EdLang } from '@/components/editorial/editorial-i18n'
 import {
   parseProductQuery,
   productQueryToSearch,
@@ -105,6 +108,14 @@ export async function generateMetadata({
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  // ROUND 18 — the traffic-driven campaign poke used to live in the [locale]
+  // layout. The catalogue routes are ISR now, so that layout is prerendered
+  // and would only poke on regeneration. /products and /search read
+  // searchParams and therefore still render per request, which makes them the
+  // right home for it. Backstops: the admin layout does the same, and the
+  // daily Vercel cron hits /api/cron/campaigns.
+  pokeCampaignScheduler()
+
   const locale = (await getLocale()) as Locale
   const sp = await searchParams
   const query = parseProductQuery(sp)
@@ -144,14 +155,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     </>
   )
 
-  const body = (
-    <section className="sr-wrap" style={{ paddingTop: 34, paddingBottom: 60 }}>
+  /* Shared by both catalogue bodies: JSON-LD + the rel=prev/next link
+     elements some crawlers still read. */
+  const seoHead = (
+    <>
       <script
         type="application/ld+json"
         // Server-rendered constant string built from our own data.
         dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }}
       />
-      {/* rel=prev/next as real link elements for crawlers that still use them */}
       {result.page > 1 ? (
         <link
           rel="prev"
@@ -170,12 +182,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           )}
         />
       ) : null}
+    </>
+  )
 
-      <header className="sr-in sr-pagehead">{header}</header>
-      <div className="sr-in sr-in-2">
-        <ProductsBrowser query={query} result={result} />
-      </div>
-      <TrackProductList
+  const tracker = (
+    <TrackProductList
         listName={
           query.category || query.brand
             ? `catalogue:${[query.brand, query.category].filter(Boolean).join('/')}`
@@ -194,17 +205,38 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           categoryName: p.categoryName,
         }))}
       />
+  )
+
+  const body = (
+    <section className="sr-wrap" style={{ paddingTop: 34, paddingBottom: 60 }}>
+      {seoHead}
+      <header className="sr-in sr-pagehead">{header}</header>
+      <div className="sr-in sr-in-2">
+        <ProductsBrowser query={query} result={result} />
+      </div>
+      {tracker}
     </section>
   )
 
-  // Same browser in both skins: `.brand-root` remaps the --sr-* tokens, so the
-  // showroom components render in brand colours. One catalogue surface to
-  // maintain instead of two diverging ones.
+  // The brand skin keeps the shared browser: `.brand-root` remaps the --sr-*
+  // tokens, so the showroom components render in brand colours.
   if (design === 'brand') {
     return <BrandPageShell locale={locale}>{body}</BrandPageShell>
   }
+
+  /* ROUND 19 D — the editorial skin gets its OWN catalogue surface.
+     Same engine (server-rendered, URL-as-state, crawlable facets, one page of
+     cards on the wire); different presentation — brand marks instead of text
+     chips, categories grouped into the 7 families, sticky toolbar. */
   if (design === 'editorial') {
-    return <EditorialPageShell locale={locale}>{body}</EditorialPageShell>
+    const edLang: EdLang = locale === 'en' || locale === 'ar' ? locale : 'fr'
+    return (
+      <EditorialPageShell locale={locale}>
+        {seoHead}
+        <EdProductsBrowser lang={edLang} query={query} result={result} />
+        {tracker}
+      </EditorialPageShell>
+    )
   }
 
   return body

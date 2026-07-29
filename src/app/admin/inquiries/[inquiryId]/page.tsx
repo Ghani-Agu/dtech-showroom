@@ -79,14 +79,20 @@ export default async function InquiryDetailPage({ params }: PageProps) {
 
   if (!inquiry) notFound()
 
+  // Round 19: productId is nullable — a request sent from /contact is not
+  // about a product. Skip the lookup rather than querying `id = NULL`, which
+  // would silently match nothing anyway.
+  const productId = inquiry.productId
   const [product, history] = await Promise.all([
-    db
-      .select({ slug: products.slug })
-      .from(products)
-      .where(eq(products.id, inquiry.productId))
-      .limit(1)
-      .then((rows) => rows[0])
-      .catch(() => null),
+    productId
+      ? db
+          .select({ slug: products.slug })
+          .from(products)
+          .where(eq(products.id, productId))
+          .limit(1)
+          .then((rows) => rows[0])
+          .catch(() => null)
+      : Promise.resolve(null),
     db
       .select()
       .from(inquiryStatusHistory)

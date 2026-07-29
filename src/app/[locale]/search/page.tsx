@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { pokeCampaignScheduler } from '@/server/campaign-send-core'
 import { Link } from '@/i18n/routing'
 import { SearchInput } from '@/components/search/SearchInput'
 import { ShowroomCard } from '@/components/showroom/ShowroomCard'
@@ -26,6 +27,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
+  // ROUND 18 — the traffic-driven campaign poke used to live in the [locale]
+  // layout. The catalogue routes are ISR now, so that layout is prerendered
+  // and would only poke on regeneration. /products and /search read
+  // searchParams and therefore still render per request, which makes them the
+  // right home for it. Backstops: the admin layout does the same, and the
+  // daily Vercel cron hits /api/cron/campaigns.
+  pokeCampaignScheduler()
+
   const locale = (await getLocale()) as Locale
   const t = await getTranslations('search')
   const tShowroom = await getTranslations('showroom')

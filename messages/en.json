@@ -118,12 +118,12 @@
       "titleLine1": "Twenty years",
       "titleAccent": "democratizing",
       "titleLine3": "technology.",
-      "lead": "Founded in 2006 as <em>Hardware Technology Services</em>, D-Tech grew from a simple conviction: a good tool should never be a luxury.",
+      "lead": "Founded in 2006 as <em>Hardware Technology Service</em>, D-Tech grew from a simple conviction: a good tool should never be a luxury.",
       "lead2": "Twenty years on, we assemble and distribute devices in Algeria, for Algeria — backed by certified service and a nationwide retail network.",
       "statYears": "Years of experience",
       "statClients": "Customers served",
       "statNational": "Nationwide availability",
-      "m1Title": "Hardware Technology Services is born",
+      "m1Title": "Hardware Technology Service is born",
       "m1Body": "Founded in Algiers around a simple idea: make technology accessible.",
       "m2Title": "First reseller network",
       "m2Body": "Nationwide rollout and the first structured after-sales service.",
@@ -152,7 +152,7 @@
       "openStatus": "Open · 14:32",
       "openNow": "OPEN NOW",
       "storeName": "D-Tech · HQ & Showroom",
-      "addressLine1": "Cité 05 Juillet 1962",
+      "addressLine1": "Cité 1577 logements, Bt 3",
       "addressLine2": "Bab Ezzouar, Algiers",
       "coords": "36°43′N · 03°11′E · ALT 24m",
       "scaleLabel": "Scale · 1:8 000",
@@ -174,7 +174,7 @@
       "info": {
         "showroomPhone": "Walk-ins welcome · no appointment",
         "showroomEmail": "contact@dtech.dz",
-        "showroomService": "Cité 05 Juillet 1962, Bab Ezzouar, Algiers",
+        "showroomService": "Cité 1577 logements, Bt 3, Bab Ezzouar, Algiers",
         "showroomServiceHours": "Mon–Thu · Sun · 9 AM–5 PM",
         "commercialPhone": "+213 560 99 05 06",
         "commercialEmail": "commercial@dtech.dz",
@@ -382,7 +382,7 @@
     "privacy": "Privacy",
     "commercial": "Sales",
     "sav": "After-sales service",
-    "addressLine1": "Cité 05 Juillet 1962",
+    "addressLine1": "Cité 1577 logements, Bt 3",
     "addressLine2": "Bab Ezzouar, Algiers"
   },
   "notFound": {
@@ -396,7 +396,28 @@
     "heading": "An error occurred",
     "description": "We've been notified. Please try again or return to the home page.",
     "retry": "Try again",
-    "home": "Back to home"
+    "home": "Back to home",
+    "digest": "Error code",
+    "brand": {
+      "description": "This brand page didn't load correctly. Try again, or browse all brands.",
+      "action": "All brands"
+    },
+    "category": {
+      "description": "This category page didn't load correctly. Try again, or browse all categories.",
+      "action": "All categories"
+    },
+    "product": {
+      "description": "This product page didn't load correctly. The product is still in the catalogue — try again.",
+      "action": "Browse categories"
+    },
+    "inquiry": {
+      "description": "The request form didn't load correctly. You can also write to us directly at {email}.",
+      "action": "Back to the catalogue"
+    },
+    "search": {
+      "description": "The search didn't run correctly. Try a different query, or browse the catalogue.",
+      "action": "Browse categories"
+    }
   },
   "metadata": {
     "siteName": "Dtech Algérie",
@@ -535,7 +556,7 @@
       "title1": "Twenty years",
       "title2": "equipping",
       "title3": " Algeria.",
-      "p1": "Founded in <strong>2006</strong> as <strong>Hardware Technology Services</strong>, D-Tech grew into a reference distributor for Algerian businesses and individuals. We officially represent <strong>HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson</strong> — and have carried our own tablet and phone brand since 2017.",
+      "p1": "Founded in <strong>2006</strong> as <strong>Hardware Technology Service</strong>, D-Tech grew into a reference distributor for Algerian businesses and individuals. We officially represent <strong>HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson</strong> — and have carried our own tablet and phone brand since 2017.",
       "p2": "<strong>Our job:</strong> find the right hardware at a fair price, deliver it everywhere, guarantee it two years, and repair it when needed.",
       "stats": {
         "founded": "Founded in Algiers",
@@ -547,7 +568,7 @@
         "families": "Product families"
       },
       "timeline": {
-        "t1Title": "Hardware Technology Services",
+        "t1Title": "Hardware Technology Service",
         "t1Desc": "Company founded in Algiers.",
         "t2Title": "National network",
         "t2Desc": "Reseller rollout and structured after-sales service.",
@@ -572,7 +593,7 @@
       "tabData": {
         "show": {
           "phone": "Walk-in · no appointment",
-          "addr": "Cité 05 Juillet 1962, Bab Ezzouar, Algiers",
+          "addr": "Cité 1577 logements, Bt 3, Bab Ezzouar, Algiers",
           "hours": "Mon–Thu · Sun · 9 am–5 pm"
         },
         "comm": {
@@ -618,7 +639,7 @@
         "open": "Open · 14:32",
         "closedNow": "Closed",
         "name": "D-Tech · HQ & Showroom",
-        "addr1": "Cité 05 Juillet 1962",
+        "addr1": "Cité 1577 logements, Bt 3",
         "addr2": "Bab Ezzouar, Algiers",
         "coords": "36°43′N · 03°11′E · ALT 24m",
         "scale": "Scale · 1:8 000",
@@ -703,7 +724,7 @@
     "heading": "Legal information",
     "updated": "Last updated: June 2026",
     "mentionsTitle": "Legal notice",
-    "mentionsBody": "D-Tech Algeria (Hardware Technology Services), Cité 05 Juillet 1962, Bab Ezzouar, Algiers. Official distributor of HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson. Contact: contact@dtech.dz · +213 560 99 05 06. The full content of this page will be provided by the legal department.",
+    "mentionsBody": "D-Tech Algeria (SARL Hardware Technology Service), Cité 1577 logements, Bt 3, local DEFG, Bab Ezzouar, Algiers. Official distributor of HP, Dell, Lenovo, ASUS, TP-Link, Canon and Epson. Contact: contact@dtech.dz · +213 560 99 05 06. The full content of this page will be provided by the legal department.",
     "cgvTitle": "Terms of sale",
     "cgvBody": "Products carry a two-year manufacturer warranty and are delivered across all 58 wilayas. Displayed prices are indicative and confirmed by quote. The full terms will be published here soon.",
     "privacyTitle": "Privacy",

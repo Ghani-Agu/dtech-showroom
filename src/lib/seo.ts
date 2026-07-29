@@ -11,6 +11,7 @@
  */
 
 import { locales, type Locale } from '@/i18n/config'
+import { CONTACT_EMAIL, PHONE_TEL, POSTAL_ADDRESS } from '@/lib/contact-info'
 
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dtech-showroom.vercel.app'
@@ -88,14 +89,11 @@ export function organizationLd(): Json {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/images/logo.png`,
-    email: 'contact@dtech.dz',
-    telephone: '+213560990506',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Bab Ezzouar',
-      addressRegion: 'Alger',
-      addressCountry: 'DZ',
-    },
+    email: CONTACT_EMAIL,
+    telephone: PHONE_TEL,
+    // Was locality-only, while the /company block carried a street line this
+    // one lacked. One source now, so the two cannot disagree again.
+    address: POSTAL_ADDRESS,
     sameAs: [
       'https://www.facebook.com/DtechDZ',
       'https://www.instagram.com/dtechdz',

@@ -13,12 +13,14 @@
 
 import '@/styles/editorial-design.css'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react'
-import { edT, type EdLang } from './editorial-i18n'
+import { edT, edTf, type EdLang } from './editorial-i18n'
 
 interface EdCtxValue {
   lang: EdLang
   dir: 'ltr' | 'rtl'
   t: (key: string) => string
+  /** Round 19: `t` with `{placeholder}` interpolation, for the brand pages. */
+  tf: (key: string, vars: Record<string, string | number>) => string
   rootRef: RefObject<HTMLDivElement | null>
 }
 
@@ -68,7 +70,13 @@ export function EditorialProvider({
   }, [])
 
   const value = useMemo<EdCtxValue>(
-    () => ({ lang, dir, t: (k: string) => edT(lang, k), rootRef }),
+    () => ({
+      lang,
+      dir,
+      t: (k: string) => edT(lang, k),
+      tf: (k: string, vars: Record<string, string | number>) => edTf(lang, k, vars),
+      rootRef,
+    }),
     [lang, dir]
   )
 
