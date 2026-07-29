@@ -350,6 +350,11 @@ export const ED_TR: Record<EdLang, Record<string, string>> = {
     'hero.cta1': 'Voir le catalogue',
     'hero.cta2': 'Demander un devis',
     'hero.ph': 'Image héro — showroom, poste de travail ou produit phare',
+    /* ROUND 22 — le hero défile tout seul (admin → Hero) */
+    'hero.carousel': 'Diaporama du hero',
+    'hero.slide': 'Diapositive',
+    'hero.pause': 'Mettre le diaporama en pause',
+    'hero.play': 'Relancer le diaporama',
 
     'cat.eyebrow': 'Catalogue',
     'cat.title': 'familles, un seul interlocuteur.',
@@ -822,6 +827,10 @@ export const ED_TR: Record<EdLang, Record<string, string>> = {
     'hero.cta1': 'Browse the catalogue',
     'hero.cta2': 'Request a quote',
     'hero.ph': 'Hero image — showroom, workstation or flagship product',
+    'hero.carousel': 'Hero slideshow',
+    'hero.slide': 'Slide',
+    'hero.pause': 'Pause the slideshow',
+    'hero.play': 'Resume the slideshow',
 
     'cat.eyebrow': 'Catalogue',
     'cat.title': 'families, one point of contact.',
@@ -1292,6 +1301,10 @@ export const ED_TR: Record<EdLang, Record<string, string>> = {
     'hero.cta1': 'تصفّح الكتالوج',
     'hero.cta2': 'اطلب عرض سعر',
     'hero.ph': 'صورة الواجهة — صالة العرض أو منتج رئيسي',
+    'hero.carousel': 'شرائح الواجهة',
+    'hero.slide': 'شريحة',
+    'hero.pause': 'إيقاف العرض مؤقتًا',
+    'hero.play': 'استئناف العرض',
 
     'cat.eyebrow': 'الكتالوج',
     'cat.title': 'عائلة منتجات، ومحاورٌ واحد.',

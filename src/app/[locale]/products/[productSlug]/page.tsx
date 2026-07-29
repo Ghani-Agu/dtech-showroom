@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { imgOr } from '@/lib/img'
-import { sanitizeCustomHtml } from '@/lib/custom-html'
+import { prepareCustomHtml } from '@/lib/custom-html'
+import { CustomHtml } from '@/components/product/CustomHtml'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StickyBuyBar } from '@/components/product/StickyBuyBar'
 import { notFound } from 'next/navigation'
@@ -169,7 +170,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             tagline: product.tagline ?? '',
             description: product.description ?? '',
             customHtml: product.customHtml
-              ? sanitizeCustomHtml(product.customHtml)
+              ? prepareCustomHtml(product.customHtml)
               : '',
             image: imgOr(product.cardImagePath),
             specs: product.specs,
@@ -200,7 +201,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             tagline: product.tagline ?? '',
             description: product.description ?? '',
             customHtml: product.customHtml
-              ? sanitizeCustomHtml(product.customHtml)
+              ? prepareCustomHtml(product.customHtml)
               : '',
             image: imgOr(product.cardImagePath),
             specs: product.specs,
@@ -308,12 +309,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
             ))}
           </div>
 
+          {/* ROUND 22 — CustomHtml (not a bare dangerouslySetInnerHTML):
+              scripts inserted via innerHTML never execute. */}
           {product.customHtml ? (
-            <div
+            <CustomHtml
               className="sr-customhtml"
-              dangerouslySetInnerHTML={{
-                __html: sanitizeCustomHtml(product.customHtml),
-              }}
+              html={prepareCustomHtml(product.customHtml)}
             />
           ) : null}
         </div>

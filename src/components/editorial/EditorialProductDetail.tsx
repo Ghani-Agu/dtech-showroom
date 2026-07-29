@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl'
 import { ReviewsSection } from '@/components/showroom/ReviewsSection'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StickyBuyBar } from '@/components/product/StickyBuyBar'
+import { CustomHtml } from '@/components/product/CustomHtml'
 import { Carousel } from '@/components/showroom/Carousel'
 import { useCart, WHATSAPP_NUMBER } from '@/lib/cart'
 import type { BrandProduct } from '@/components/brand/brand-types'
@@ -122,11 +123,13 @@ export function EditorialProductDetail({
               </div>
             ) : null}
 
+            {/* ROUND 22 — CustomHtml (not a bare dangerouslySetInnerHTML):
+                scripts inserted via innerHTML never execute. */}
             {product.customHtml ? (
-              <div
+              <CustomHtml
                 className="ed-pdp-tag sr-customhtml"
                 style={{ marginTop: 20 }}
-                dangerouslySetInnerHTML={{ __html: product.customHtml }}
+                html={product.customHtml}
               />
             ) : null}
 

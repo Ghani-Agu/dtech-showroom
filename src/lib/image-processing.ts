@@ -1,7 +1,7 @@
 import 'server-only'
 import sharp from 'sharp'
 
-export type ImageVariant = 'card' | 'hero' | 'carousel' | 'logo'
+export type ImageVariant = 'card' | 'hero' | 'heroSlide' | 'carousel' | 'logo'
 export type ImageFormat = 'webp' | 'avif'
 
 interface VariantSpec {
@@ -26,6 +26,17 @@ export const VARIANT_SPECS: Record<ImageVariant, VariantSpec> = {
     height: 1350,
     fit: 'cover',
     quality: { webp: 85, avif: 65 },
+  },
+  /* ROUND 23 — the homepage slider banner is its OWN spec. The house export
+     for the éditorial hero is 1920 × 700; running those through the shared
+     16:9 `hero` spec above center-cropped ~45% of the width away and then
+     upscaled what was left. Separate variant so category / brand / product
+     hero images keep their 16:9 crop. */
+  heroSlide: {
+    width: 1920,
+    height: 700,
+    fit: 'cover',
+    quality: { webp: 86, avif: 66 },
   },
   carousel: {
     width: 1600,

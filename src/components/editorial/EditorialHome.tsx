@@ -35,7 +35,7 @@ function HomeBody({ data }: { data: EdData }) {
     <>
       <EditorialHeader previews={previews} />
       <main id="main-content">
-        <EdHero heroImage={data.heroImage} />
+        <EdHero slides={data.heroSlides} />
         <EdCatalogue data={data} />
         <EdMarquee data={data} />
         <EdProof data={data} />

@@ -265,7 +265,7 @@ export function BrandForm({
           <CardDescription>
             {!values.slug
               ? 'Enregistrez d’abord la marque pour activer l’envoi d’images.'
-              : 'Glissez-déposez les images, ou cliquez pour parcourir.'}
+              : 'Glissez-déposez un fichier, cliquez pour parcourir, ou choisissez une image déjà en ligne.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -280,8 +280,8 @@ export function BrandForm({
           />
 
           <ImageUpload
-            label="Image principale"
-            description="Image 16:9 affichée en haut de la page de la marque."
+            label="Image du hero — page de la marque"
+            description="Format 16:9. Affichée dans le bandeau tout en haut de la page de la marque ; elle y remplace la tuile logo. Publiée dès l’enregistrement."
             variant="hero"
             entityType="brand"
             entitySlug={values.slug}

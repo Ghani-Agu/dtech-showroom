@@ -115,8 +115,10 @@ export function HeroEditor({
   return (
     <div className={`we-page ${uiClass}`} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <div className="we-page-bar">
-        <Link className="we-exit" href="/editor?page=home">
-          <ChevronLeft size={16} /> <span>Éditeur</span>
+        {/* ROUND 23 — this page is reached from the admin sidebar, so "back"
+            means the admin, not the web editor it used to send people to. */}
+        <Link className="we-exit" href="/admin" title="Revenir à l’administration">
+          <ChevronLeft size={16} /> <span>Quitter</span>
         </Link>
         <span className="we-appbar-brand">
           <ImagePlus size={16} style={{ color: 'var(--c-mint)' }} /> Hero d’accueil
@@ -146,7 +148,7 @@ export function HeroEditor({
         <section className="he-col">
           <h2 className="he-h">Images du slider</h2>
           <p className="he-hint">
-            Ajoutez vos visuels (format paysage 16:9 conseillé). Glissez l’ordre avec les flèches.
+            Ajoutez vos visuels au format <strong>1920 × 700</strong>. Glissez l’ordre avec les flèches.
             Si aucune image n’est ajoutée, le slider affiche un panneau D-Tech aux couleurs du site.
           </p>
 
@@ -202,9 +204,12 @@ export function HeroEditor({
         <section className="he-col">
           <h2 className="he-h">Aperçu</h2>
           <p className="he-hint">
-            Le hero est désormais <strong>plein écran et 100&nbsp;% image</strong>&nbsp;: le
-            slider occupe toute la première page, sans texte ni bouton par-dessus.
-            Le message doit donc vivre dans l’image elle-même.
+            Le hero est une <strong>bannière 1920 × 700</strong> qui{' '}
+            <strong>défile toute seule</strong> : chaque image reste ~5,5&nbsp;s puis
+            fond vers la suivante (12 images au maximum). Le visiteur peut mettre
+            en pause, cliquer une puce ou faire glisser. Sur l’habillage actuel
+            (Éditorial), le titre et les boutons restent posés en bas à gauche —
+            gardez ce coin des images lisible.
           </p>
           <div className="he-preview">
             {preview?.src ? (
@@ -222,10 +227,19 @@ export function HeroEditor({
           <div className="he-tips">
             <h3>Pour un rendu net</h3>
             <ul>
-              <li>Format <strong>paysage large</strong> (2400 × 1350 ou plus).</li>
               <li>
-                Gardez le sujet <strong>au centre</strong> — l’image est recadrée
-                selon la taille de l’écran, les bords peuvent être coupés.
+                Taille exacte&nbsp;: <strong>1920 × 700 px</strong>. À cette
+                taille la bannière s’affiche telle quelle, sans recadrage.
+              </li>
+              <li>
+                Gardez le sujet <strong>au centre</strong> — sur un écran plus
+                étroit que 1920&nbsp;px, les bords gauche et droit sont coupés.
+              </li>
+              <li>
+                <strong>Plus d’assombrissement&nbsp;:</strong> l’image s’affiche
+                à sa vraie luminosité. Le titre et les boutons sont en blanc en
+                bas à gauche — gardez ce coin sombre, sinon ils deviennent
+                illisibles.
               </li>
               <li>
                 Si l’image contient du texte, laissez-le loin du bas&nbsp;: les

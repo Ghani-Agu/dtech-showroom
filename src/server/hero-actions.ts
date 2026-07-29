@@ -32,8 +32,8 @@ export async function uploadHeroImage(
 
     if (R2_CONFIGURED) {
       const [webp, avif] = await Promise.all([
-        processVariant(buf, 'hero', 'webp'),
-        processVariant(buf, 'hero', 'avif'),
+        processVariant(buf, 'heroSlide', 'webp'),
+        processVariant(buf, 'heroSlide', 'avif'),
       ])
       const [w] = await Promise.all([
         uploadToR2(`hero/slide-${hash}.webp`, webp, 'image/webp'),
@@ -42,7 +42,7 @@ export async function uploadHeroImage(
       return { ok: true, url: w.url }
     }
 
-    const webp = await processVariant(buf, 'hero', 'webp')
+    const webp = await processVariant(buf, 'heroSlide', 'webp')
     const key = `hero/slide-${hash}.webp`
     await db
       .insert(imageBlobs)

@@ -16,7 +16,7 @@ import { setVar, useAnimGate, useMedia, useScrollFx } from './ed-scroll'
 import { EIcon, WaIcon } from './editorial-icons'
 import { WA, ED_PHONE_TEL, ED_PHONE_DISPLAY, ED_EMAIL, ED_SAV_TEL } from './EditorialChrome'
 import { edCountWord } from './editorial-i18n'
-import { ED_TIER_COLORS, ED_TIERS_MAX, ED_WORKSTATION_SLUGS, type EdBento, type EdCat, type EdData } from './editorial-types'
+import { ED_TIER_COLORS, ED_TIERS_MAX, ED_WORKSTATION_SLUGS, type EdBento, type EdCat, type EdData, type EdHeroSlide } from './editorial-types'
 import { ED_BRAND_LOGOS, EdLogo } from './editorial-logos'
 
 /* ─────────── shared primitives (design SplitH2 / SecHead / Curtain) ─────────── */
@@ -79,20 +79,164 @@ function Slot({ label }: { label: string }) {
 
 /* ─────────── hero (design EdHero) ─────────── */
 
-export function EdHero({ heroImage }: { heroImage: string | null }) {
-  const { t } = useEditorial()
+/**
+ * ROUND 22 — dwell per slide, in ms. The tick fill animation reads the same
+ * number through `--hero-ms`, so the progress line and the timer can never
+ * disagree.
+ */
+const HERO_MS = 5600
+
+/**
+ * The homepage hero. Was a single still (`slides[0]`); it now cross-fades
+ * through every slide published in admin → Hero, exactly like the classic
+ * and brand skins, and keeps the éditorial copy block on top.
+ *
+ * Performance rules this obeys (see the scroll-perf notes — the éditorial
+ * skin's stutters have all been paint-property animations):
+ *   · the cross-fade animates OPACITY only, never a filter or a background;
+ *   · non-active layers go `visibility: hidden`, so a 12-slide hero still
+ *     composites exactly one full-bleed image;
+ *   · the ken-burns transform runs on the ACTIVE layer alone and freezes
+ *     (never restarts) when the layer hands over, so nothing pops;
+ *   · everything — timer and ken-burns — stops while the hero is off screen
+ *     or the tab is in the background, like `useAnimGate` does for the bento;
+ *   · no scroll listener is added.
+ */
+export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
+  const { t, dir } = useEditorial()
+  const shots = slides.length > 0 ? slides : [{ src: '', alt: '' }]
+  const many = shots.length > 1
+  const rtl = dir === 'rtl' ? -1 : 1
+  const card = useRef<HTMLDivElement | null>(null)
+  const [i, setI] = useState(0)
+  /** Hover or keyboard focus inside the hero — WCAG 2.2.2, hold the timer. */
+  const [hover, setHover] = useState(false)
+  /** The explicit pause button. */
+  const [stopped, setStopped] = useState(false)
+  /** On screen AND tab in the foreground. */
+  const [awake, setAwake] = useState(true)
+  /* Shared media-query hook (ed-scroll.ts), same one `.hist-in` uses. */
+  const reduced = useMedia('(prefers-reduced-motion: reduce)')
+
+  /* An always-running animation is only free when nobody is looking at it. */
+  useEffect(() => {
+    const el = card.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    let onScreen = true
+    const sync = () => setAwake(onScreen && !document.hidden)
+    const io = new IntersectionObserver(
+      (entries) => {
+        onScreen = entries.some((e) => e.isIntersecting)
+        sync()
+      },
+      { rootMargin: '10% 0px' },
+    )
+    io.observe(el)
+    document.addEventListener('visibilitychange', sync)
+    return () => {
+      io.disconnect()
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [])
+
+  /* The tick fill is a CSS animation, so it would start at FIRST PAINT while
+     the autoplay timer only starts at hydration — on a slow first load the
+     progress line finished before the slide actually turned. Holding it until
+     the timer exists (a direct classList write, so no extra render) keeps the
+     two honest; a paused animation resumes from 0, which is exactly right. */
+  useEffect(() => {
+    card.current?.classList.add('hero-live')
+  }, [])
+
+  /* A slide removed in admin must not leave the index dangling — clamped on
+     read, so no corrective render is needed. */
+  const at = Math.min(i, shots.length - 1)
+
+  const running = many && awake && !hover && !stopped && !reduced
+  /* `at` is a dependency on purpose: a manual jump restarts the dwell instead
+     of inheriting the few hundred ms left on the previous slide's clock. */
+  useEffect(() => {
+    if (!running) return
+    const id = setInterval(() => setI((v) => (v + 1) % shots.length), HERO_MS)
+    return () => clearInterval(id)
+  }, [running, shots.length, at])
+
+  const go = (n: number) => setI((n + shots.length) % shots.length)
+
+  /* Swipe — touch and pen only; a mouse has the arrows. */
+  const from = useRef<number | null>(null)
+  const onDown = (e: React.PointerEvent) => {
+    from.current = e.pointerType === 'mouse' ? null : e.clientX
+  }
+  const onUp = (e: React.PointerEvent) => {
+    const x0 = from.current
+    from.current = null
+    if (x0 === null || !many) return
+    const d = e.clientX - x0
+    if (Math.abs(d) < 44) return
+    go(at + (d < 0 ? 1 : -1) * rtl)
+  }
+  const onKey = (e: React.KeyboardEvent) => {
+    if (!many) return
+    if (e.key === 'ArrowRight') go(at + rtl)
+    else if (e.key === 'ArrowLeft') go(at - rtl)
+    else return
+    e.preventDefault()
+  }
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const cls = [
+    'hero-card',
+    many ? 'hero-many' : '',
+    running || !many ? '' : 'hero-hold',
+    awake && !reduced ? '' : 'hero-sleep',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <header className="hero" id="accueil" data-band="dark">
-      <div className="hero-card">
-        <div className="hero-img">
-          {heroImage ? (
-            <Image src={heroImage} alt="" fill priority sizes="100vw" style={{ objectFit: 'cover' }} />
-          ) : (
-            <Slot label={t('hero.ph')} />
-          )}
+      <div
+        className={cls}
+        ref={card}
+        style={{ '--hero-ms': `${HERO_MS}ms` } as React.CSSProperties}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        onFocusCapture={() => setHover(true)}
+        onBlurCapture={() => setHover(false)}
+        onPointerDown={onDown}
+        onPointerUp={onUp}
+        onKeyDown={onKey}
+        {...(many
+          ? { role: 'group', 'aria-roledescription': t('hero.carousel'), 'aria-label': t('hero.carousel') }
+          : {})}
+      >
+        <div className="hero-shots">
+          {shots.map((s, n) => (
+            <div
+              key={`${n}-${s.src}`}
+              className={`hero-shot${n === at ? ' on' : ''}`}
+              aria-hidden={n === at ? undefined : true}
+            >
+              {s.src ? (
+                <Image
+                  src={s.src}
+                  alt={s.alt}
+                  fill
+                  sizes="100vw"
+                  quality={82}
+                  priority={n === 0}
+                  fetchPriority={n === 0 ? 'high' : 'auto'}
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <Slot label={t('hero.ph')} />
+              )}
+            </div>
+          ))}
         </div>
-        <div className="hero-scrim"></div>
-        <div className="hero-scrim2"></div>
+        {/* ROUND 23 — the two darkening layers (.hero-scrim / .hero-scrim2)
+            were removed on request: the 1920×700 banner is shown unmodified. */}
         <div className="hero-in hero-anim">
           <div className="hero-mark gmark">
             D-tech<span>.</span>
@@ -114,6 +258,51 @@ export function EdHero({ heroImage }: { heroImage: string | null }) {
             </a>
           </div>
         </div>
+        {many && (
+          <div className="hero-rail">
+            <button
+              type="button"
+              className="hero-cyc"
+              aria-label={stopped ? t('hero.play') : t('hero.pause')}
+              aria-pressed={stopped}
+              onClick={() => setStopped((v) => !v)}
+            >
+              {stopped ? (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              ) : (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M7 5h3v14H7zM14 5h3v14h-3z" />
+                </svg>
+              )}
+            </button>
+            <div className="hero-ticks">
+              {shots.map((_, n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={`hero-tick${n === at ? ' on' : ''}`}
+                  onClick={() => go(n)}
+                  aria-label={`${t('hero.slide')} ${n + 1}`}
+                  aria-current={n === at ? 'true' : undefined}
+                />
+              ))}
+            </div>
+            {/* dir=ltr: bidi would otherwise render "01 / 05" as "05 / 01" on /ar */}
+            <span className="hero-count" dir="ltr" aria-hidden="true">
+              {pad(at + 1)} / {pad(shots.length)}
+            </span>
+            <div className="hero-arrows">
+              <button type="button" onClick={() => go(at - 1)} aria-label={t('aria.prev')}>
+                <EIcon n={dir === 'rtl' ? 'chevR' : 'chevL'} s={16} />
+              </button>
+              <button type="button" onClick={() => go(at + 1)} aria-label={t('aria.next')}>
+                <EIcon n={dir === 'rtl' ? 'chevL' : 'chevR'} s={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   )

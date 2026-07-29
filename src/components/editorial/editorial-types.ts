@@ -24,6 +24,16 @@ export interface EdBrandItem {
   count: number
 }
 
+/**
+ * ROUND 22 — one slide of the homepage hero, straight from admin → Hero.
+ * The éditorial hero used to render `slides[0]` and drop the rest; it now
+ * cross-fades through the whole list like skins 1 and 2 do.
+ */
+export interface EdHeroSlide {
+  src: string
+  alt: string
+}
+
 /** A real product surfaced inside the bento's "proof" artifacts. */
 export interface EdBentoProd {
   img: string | null
@@ -63,7 +73,10 @@ export interface EdData {
   brands: EdBrandItem[]
   productCount: number
   brandCount: number
+  /** First hero slide — the header's image preloader wants a single src. */
   heroImage: string | null
+  /** Every published hero slide, in admin order. Empty → editorial slot. */
+  heroSlides: EdHeroSlide[]
   bento: EdBento
   /** D-tech-branded products for the fan. Empty → the fan falls back to
    *  categories, so a renamed/removed brand can never blank the section. */

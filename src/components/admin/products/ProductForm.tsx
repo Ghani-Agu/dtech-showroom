@@ -22,6 +22,7 @@ import { Button } from '@/components/admin/ui/Button'
 import { Input } from '@/components/admin/ui/Input'
 import { Textarea } from '@/components/admin/ui/Textarea'
 import { BilingualField } from './BilingualField'
+import { CustomHtmlPreview } from './CustomHtmlPreview'
 import { ImageManager } from './ImageManager'
 import { ImageUpload } from './ImageUpload'
 import { SpecsEditor } from './SpecsEditor'
@@ -429,10 +430,11 @@ export function ProductForm({
                   Code HTML (optionnel)
                 </label>
                 <p className="mt-0.5 font-body text-xs text-[var(--admin-text-tertiary)]">
-                  Affiché tel quel sous la description, sur la page du
-                  produit (toutes les langues). Tableaux, images et vidéos
-                  intégrées (iframe) autorisés — les balises{' '}
-                  <code>&lt;script&gt;</code> sont supprimées.
+                  Affiché tel quel sous la description, sur la page du produit
+                  (toutes les langues). Tableaux, images, vidéos intégrées
+                  (iframe) et <strong>code d’intégration</strong> (widgets,
+                  visionneuses 3D, lecteurs…) — les balises{' '}
+                  <code>&lt;script&gt;</code> sont exécutées sur la page.
                 </p>
                 <textarea
                   id="product-custom-html"
@@ -449,6 +451,15 @@ export function ProductForm({
                     {errors.customHtml[0]}
                   </p>
                 ) : null}
+                {/* ROUND 22 — the block RUNS now, so it needs a place to try
+                    it before publishing. The preview is a real sandboxed
+                    iframe, not innerHTML: an embed that rewrites the document
+                    or throws must not take the admin form down with it. */}
+                <CustomHtmlPreview html={values.customHtml} />
+                <p className="mt-2 font-body text-xs text-[var(--c-amber)]">
+                  ⚠︎ Le code est exécuté tel quel sur la page publique. Ne
+                  collez que du code venant d’une source de confiance.
+                </p>
               </div>
               <BilingualField
                 label="Mots-clés de recherche"

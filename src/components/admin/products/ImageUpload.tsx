@@ -2,12 +2,13 @@
 
 import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
-import { Loader2, Upload, X } from 'lucide-react'
+import { ImageIcon, Loader2, Upload, X } from 'lucide-react'
 import {
   deleteEntityImage,
   uploadEntityImage,
 } from '@/server/admin-image-actions'
 import type { EntityType } from '@/lib/admin-image-entity'
+import { ImageLibraryPicker } from './ImageLibraryPicker'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import type { ImageVariant } from '@/lib/image-processing'
@@ -35,6 +36,10 @@ export function ImageUpload({
   const [isUploading, startUpload] = useTransition()
   const [isDeleting, startDelete] = useTransition()
   const [isDragging, setIsDragging] = useState(false)
+  // ROUND 22 — "choisir une image déjà en ligne" alongside the uploader.
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const pickerAspect =
+    variant === 'logo' ? '1 / 1' : variant === 'hero' ? '16 / 9' : '4 / 3'
 
   const isPending = isUploading || isDeleting
 
@@ -148,6 +153,14 @@ export function ImageUpload({
           <div className="absolute right-2 top-2 flex gap-2">
             <button
               type="button"
+              onClick={() => setLibraryOpen(true)}
+              disabled={isPending}
+              className="rounded-md bg-[var(--admin-canvas)]/90 px-3 py-1.5 font-body text-xs text-white backdrop-blur transition-colors hover:bg-[var(--admin-canvas)]"
+            >
+              Choisir…
+            </button>
+            <button
+              type="button"
               onClick={() => inputRef.current?.click()}
               disabled={isPending}
               className="rounded-md bg-[var(--admin-canvas)]/90 px-3 py-1.5 font-body text-xs text-white backdrop-blur transition-colors hover:bg-[var(--admin-canvas)]"
@@ -214,6 +227,25 @@ export function ImageUpload({
                 <p className="font-body text-sm text-white">
                   Glissez une photo ici, ou cliquez pour parcourir
                 </p>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setLibraryOpen(true)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setLibraryOpen(true)
+                    }
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.05] px-3 py-1.5 font-body text-xs font-semibold text-white transition-colors hover:bg-white/[0.1]"
+                >
+                  <ImageIcon size={13} />
+                  Choisir une image déjà en ligne
+                </span>
                 <p className="mt-1 font-mono text-xs text-[var(--admin-text-tertiary)]">
                   {variant === 'hero'
                     ? '2400×1350'
@@ -229,6 +261,15 @@ export function ImageUpload({
           )}
         </div>
       )}
+
+      {libraryOpen ? (
+        <ImageLibraryPicker
+          entityType={entityType}
+          aspect={pickerAspect}
+          onPick={(url) => onChange(url)}
+          onClose={() => setLibraryOpen(false)}
+        />
+      ) : null}
 
       <input
         ref={inputRef}

@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl'
 import { ReviewsSection } from '@/components/showroom/ReviewsSection'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StickyBuyBar } from '@/components/product/StickyBuyBar'
+import { CustomHtml } from '@/components/product/CustomHtml'
 import { Carousel } from '@/components/showroom/Carousel'
 import { useCart } from '@/lib/cart'
 import { ProductCard } from './BrandSections'
@@ -154,11 +155,10 @@ export function BrandProductDetail({
               </div>
             )}
 
+            {/* ROUND 22 — CustomHtml (not a bare dangerouslySetInnerHTML):
+                scripts inserted via innerHTML never execute. */}
             {product.customHtml ? (
-              <div
-                className="sr-customhtml"
-                dangerouslySetInnerHTML={{ __html: product.customHtml }}
-              />
+              <CustomHtml className="sr-customhtml" html={product.customHtml} />
             ) : null}
           </div>
         </div>

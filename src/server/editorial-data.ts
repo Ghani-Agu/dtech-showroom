@@ -115,12 +115,21 @@ export function buildEditorialData(
       catSlug: p.category.slug,
     }))
 
+  /* ROUND 22 — the éditorial hero is a slider now, so carry EVERY published
+     slide through instead of `slides[0]`. Same source as skins 1 and 2
+     (admin → Hero); `heroImage` stays as the first one for the header's
+     preloader. */
+  const heroSlides = (hero?.slides ?? [])
+    .filter((s) => !!s.src)
+    .map((s) => ({ src: s.src, alt: s.alt ?? '' }))
+
   return {
     cats,
     brands: brandItems,
     productCount: products.length,
     brandCount: brandItems.length,
-    heroImage: hero?.slides?.[0]?.src || null,
+    heroImage: heroSlides[0]?.src ?? null,
+    heroSlides,
     bento: buildBento(products),
     own,
     ownCount: products.filter((p) => ownRank.has(p.brand.slug)).length,
