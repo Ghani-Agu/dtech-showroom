@@ -104,7 +104,12 @@ async function getDashboardData() {
       .where(isNull(products.archivedAt))
       .orderBy(desc(products.updatedAt))
       .limit(5),
-    ])
+    ]),
+    // 10s for the whole fan-out, not the 6s a single storefront read gets:
+    // these eleven run concurrently and a cold lambda pays the connect once.
+    // Generous enough never to fire on a healthy day, 30x tighter than the
+    // 300s ceiling this page used to ride all the way to the end.
+    10_000
   )
 
   return {
