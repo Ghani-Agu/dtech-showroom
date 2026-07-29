@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState, Fragment, type ReactNode } fr
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { useEditorial } from './editorial-context'
-import { useAnimGate, useScrollFx, useScrollP } from './ed-scroll'
+import { setVar, useAnimGate, useMedia, useScrollFx } from './ed-scroll'
 import { EIcon, WaIcon } from './editorial-icons'
 import { WA, ED_PHONE_TEL, ED_PHONE_DISPLAY, ED_EMAIL, ED_SAV_TEL } from './EditorialChrome'
 import { edCountWord } from './editorial-i18n'
@@ -58,7 +58,7 @@ export function Curtain({ children }: { children: ReactNode }) {
       return Math.max(0, Math.min(1, (innerHeight - r.bottom) / (innerHeight * 0.5))).toFixed(3)
     },
     (p) => {
-      if (p !== null) cur.current?.style.setProperty('--p', p)
+      if (p !== null) setVar(cur.current, '--p', p)
     },
   )
   return (
@@ -164,11 +164,19 @@ export function EdCatalogue({ data }: { data: EdData }) {
           </div>
         </div>
       </div>
-      {/* data-lenis-prevent: bare overflow-x:auto rail, same class of bug as
-          EdRail's viewport — without it Lenis (allowNestedScroll:false) eats
-          the wheel/trackpad gesture here and scrolls the page instead of the
-          carousel. */}
-      <div className="car" ref={track} onScroll={sync} data-lenis-prevent>
+      {/* ROUND 21c — `data-lenis-prevent-TOUCH`, not the plain attribute.
+          The plain one makes Lenis bail out of WHEEL events too: the pointer
+          sits over this rail for ~900px of the home page, and there Lenis
+          stopped smoothing entirely — the page jumped in raw native steps,
+          then Lenis re-synced when the pointer left. That discontinuity is
+          exactly the "scroll locks, then continues" Ghani reported.
+          Desktop needs no prevention: Lenis runs gestureOrientation
+          'vertical' and passes a pure-horizontal wheel straight through, so
+          the rail still scrolls sideways. Touch DOES need it (a horizontal
+          swipe would otherwise be hijacked) — hence the -touch variant.
+          RULE: horizontal rails get -touch; only genuinely VERTICAL nested
+          scrollers (.mega-in, .hist-in, .edp-rail) get the plain attribute. */}
+      <div className="car" ref={track} onScroll={sync} data-lenis-prevent-touch>
         {data.cats.map((c, i) => (
           /* [PORT] design cards deep-link to WhatsApp; the live site opens the
              catalogue pre-filtered on the clicked family. */
@@ -369,12 +377,13 @@ export function EdMarquee({ data }: { data: EdData }) {
    the curtain, the fan and the chrome all share ONE read/write pass. */
 
 export function EdBand({ img, cap, ph, pos = 'tl' }: { img?: string | null; cap: string; ph: string; pos?: 'tl' | 'br' }) {
+  /* ROUND 21d — no useScrollP: the band no longer parallaxes. See the
+     .band-media note in editorial-design.css. */
   const ref = useRef<HTMLElement | null>(null)
-  useScrollP(ref)
   return (
     <section className="band" data-band="dark" ref={ref}>
       <div className="band-media">
-        {img ? <Image src={img} alt="" fill sizes="100vw" style={{ objectFit: 'cover' }} /> : <Slot label={ph} />}
+        {img ? <Image src={img} alt="" fill sizes="100vw" loading="eager" fetchPriority="low" style={{ objectFit: 'cover' }} /> : <Slot label={ph} />}
       </div>
       <span className="band-veil" aria-hidden />
       <div className={`band-cap ${pos}`}>{cap}</div>
@@ -388,8 +397,11 @@ export function EdBand({ img, cap, ph, pos = 'tl' }: { img?: string | null; cap:
    deep-link into the filtered catalogue. Same slide-reveal as EdBand. */
 export function EdHistory({ data }: { data: EdData }) {
   const { t } = useEditorial()
+  /* ROUND 21d — no useScrollP (static band, see editorial-design.css). */
   const ref = useRef<HTMLElement | null>(null)
-  useScrollP(ref)
+  /* ROUND 22 — only below 1080px is .hist-in an actual scroller. See the
+     data-lenis-prevent note on it below, and useMedia in ed-scroll.ts. */
+  const nested = useMedia('(max-width: 1080px)')
   const refsCount = Math.max(10, Math.floor(data.productCount / 10) * 10)
   const thumbs = data.cats.filter((c) => c.img).slice(0, 6)
   const more = Math.max(0, data.cats.length - thumbs.length)
@@ -405,14 +417,25 @@ export function EdHistory({ data }: { data: EdData }) {
   return (
     <section className="band hist" data-band="dark" ref={ref}>
       <div className="band-media">
-        <Image src="/images/editorial/band-history.webp" alt="" fill sizes="100vw" style={{ objectFit: 'cover' }} />
+        {/* ROUND 21d — eager + low priority. This is a full-bleed photo far
+            below the fold; lazy-loading meant it arrived and DECODED right as
+            the band scrolled into view — a hitch at exactly the boundary
+            Ghani kept reporting. Fetching it early at low priority costs the
+            hero nothing and the decode is done long before he gets here. */}
+        <Image src="/images/editorial/band-history.webp" alt="" fill sizes="100vw" loading="eager" fetchPriority="low" style={{ objectFit: 'cover' }} />
       </div>
       <span className="hist-scrim" aria-hidden />
       <span className="band-veil" aria-hidden />
-      {/* data-lenis-prevent: below 1080px this becomes a nested scroller, and
-          Lenis (smoothWheel, allowNestedScroll:false) would otherwise eat the
-          wheel and scroll the page past the band instead. */}
-      <div className="hist-in" data-lenis-prevent>
+      {/* ROUND 22 — the attribute is now CONDITIONAL, and this was the lag.
+          `.hist-in` is `position: absolute; inset: 0` — it covers the entire
+          78vh band at every width — but it only becomes a nested scroller
+          below 1080px. Carrying `data-lenis-prevent` unconditionally meant
+          that on a desktop viewport every wheel event aimed anywhere at this
+          section made Lenis bail out before preventDefault(), handing the
+          scroll back to the browser in raw 120px steps while the rest of the
+          page glided at lerp .13 — then snapping back as the pointer left.
+          Measured numbers are in the useMedia doc comment in ed-scroll.ts. */}
+      <div className="hist-in" {...(nested ? { 'data-lenis-prevent': '' } : {})}>
         <div className="hist-left">
           <div className="hist-mark">D-tech.</div>
           <p className="hist-sub">{t('hist.sub')}</p>
@@ -1036,11 +1059,15 @@ export function EdFan({ data }: { data: EdData }) {
     (v) => {
       const el = fanRef.current
       if (!el || !v) return
-      el.style.setProperty('--p', v.p)
+      /* ROUND 21d — setVar, not setProperty: `--p` here is an INHERITED
+         custom property on `.fan`, whose subtree is every fan card and its
+         contents. Writing it unchanged still invalidates that subtree, and
+         it IS unchanged on most frames (clamped 0 below, 1 above). */
+      setVar(el, '--p', v.p)
       if (v.w > 0) {
         const fw = Math.max(104, Math.min(198, (v.w - (n - 1) * 14) / n))
-        el.style.setProperty('--fw', `${fw.toFixed(2)}px`)
-        el.style.setProperty('--fstep', `${(fw + 14).toFixed(2)}px`)
+        setVar(el, '--fw', `${fw.toFixed(2)}px`)
+        setVar(el, '--fstep', `${(fw + 14).toFixed(2)}px`)
       }
     },
   )
@@ -1058,7 +1085,7 @@ export function EdFan({ data }: { data: EdData }) {
         <div
           className="fan"
           ref={fanRef}
-          data-lenis-prevent
+          data-lenis-prevent-touch
           style={{ ['--n' as string]: String(cards.length) }}
         >
           {cards.map((c, i) => {

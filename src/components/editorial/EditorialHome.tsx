@@ -3,8 +3,9 @@
 /**
  * EditorialHome — section order (evolved from the design's app shell on
  * Ghani's requests):
- *   Hero → Catalogue → Marquee → Tiers → Proof → History band → Why →
- *   Fan → Contact → Footer  (curtain wipes, demo and band 2 removed)
+ *   Hero → Catalogue → Marquee → Proof → History band → Why →
+ *   Fan → Contact → Footer  (curtain wipes, demo, band 2 and the
+ *   Tiers/« Combien ça coûte » accordion removed — round 21b)
  * plus the live shop's cart drawer / floating cart. Fed by EdData (real
  * catalogue).
  */
@@ -20,7 +21,6 @@ import {
   EdMarquee,
   EdHistory,
   EdWhy,
-  EdTiers,
   EdFan,
   EdContact,
 } from './EditorialSections'
@@ -38,7 +38,6 @@ function HomeBody({ data }: { data: EdData }) {
         <EdHero heroImage={data.heroImage} />
         <EdCatalogue data={data} />
         <EdMarquee data={data} />
-        <EdTiers data={data} />
         <EdProof data={data} />
         {/* [PORT+] the history band: dedicated photo + typeset story
             (color-animated mark, live counters, catalogue thumbnails). */}

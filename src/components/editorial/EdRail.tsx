@@ -83,7 +83,7 @@ export function EdRail({
     <div
       className={`edrail${edge.over ? ' over' : ''}${edge.start ? ' s' : ''}${edge.end ? ' e' : ''} ${className}`}
     >
-      <div className="edrail-vp" ref={ref} data-lenis-prevent role="group" aria-label={label}>
+      <div className="edrail-vp" ref={ref} data-lenis-prevent-touch role="group" aria-label={label}>
         {children}
       </div>
       {edge.over ? (

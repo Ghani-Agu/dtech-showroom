@@ -85,11 +85,11 @@ const NAV: EdNavItem[] = [
  * Decoupled from NAV in round 19 — the nav no longer points at sections, but
  * the rolling label still tracks where you are on the long homepage.
  */
+/* ROUND 21b — 'nav.ranges'/#gammes removed with the EdTiers section. */
 const HOME_SPY: [string, string][] = [
   ['nav.home', '#accueil'],
   ['nav.catalogue', '#catalogue'],
   ['nav.brands', '#marques'],
-  ['nav.ranges', '#gammes'],
   ['nav.why', '#pourquoi'],
   ['nav.contact', '#contact'],
 ]

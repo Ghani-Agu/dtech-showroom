@@ -88,7 +88,7 @@ export function EdCataloguePage({
         ref={railRef}
         role="navigation"
         aria-label={t('cpage.jump')}
-        data-lenis-prevent
+        data-lenis-prevent-touch
       >
         {groups.map(({ family }) => (
           <a

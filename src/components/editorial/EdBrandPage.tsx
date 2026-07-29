@@ -329,7 +329,7 @@ export function EdBrandPage({ data }: { data: EdBrandPageData }) {
             {/* data-lenis-prevent: bare overflow-x:auto rail — Lenis runs
                 with allowNestedScroll:false and would otherwise eat the
                 wheel/trackpad gesture and scroll the page instead. */}
-            <div className="edb-otherrail" data-lenis-prevent>
+            <div className="edb-otherrail" data-lenis-prevent-touch>
               {data.others.map((o) => {
                 const m = getBrandMark(o.slug, o.name)
                 return (

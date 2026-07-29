@@ -17,7 +17,7 @@
  * the editorial skin — register a read/write pair here instead.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Fx<T> = { read: () => T; write: (v: T) => void }
 
@@ -39,18 +39,48 @@ function schedule() {
   if (!raf) raf = requestAnimationFrame(flush)
 }
 
+/**
+ * ROUND 22 — an `ed-scrolling` class on <html> for the whole gesture.
+ *
+ * Some effects cannot be composited at all — an animated `background-position`
+ * on a `background-clip: text` wordmark repaints its glyphs on the main
+ * thread, every frame, forever. That is affordable while the page is still
+ * and ruinous while it is moving, which is precisely backwards from how CSS
+ * animations behave on their own. This flag lets the stylesheet freeze that
+ * class of animation for exactly as long as the wheel is live: two class
+ * writes per gesture, nothing per frame. See `.ed-scrolling` in
+ * editorial-design.css.
+ */
+let idleT: ReturnType<typeof setTimeout> | 0 = 0
+
+function idle() {
+  idleT = 0
+  document.documentElement.classList.remove('ed-scrolling')
+}
+
+function onScroll() {
+  if (idleT) clearTimeout(idleT)
+  else document.documentElement.classList.add('ed-scrolling')
+  idleT = setTimeout(idle, 140)
+  schedule()
+}
+
 function register(fx: Fx<unknown>) {
   fxs.add(fx)
   if (fxs.size === 1) {
-    addEventListener('scroll', schedule, { passive: true })
+    addEventListener('scroll', onScroll, { passive: true })
     addEventListener('resize', schedule, { passive: true })
   }
   schedule()
   return () => {
     fxs.delete(fx)
     if (fxs.size === 0) {
-      removeEventListener('scroll', schedule)
+      removeEventListener('scroll', onScroll)
       removeEventListener('resize', schedule)
+      if (idleT) {
+        clearTimeout(idleT)
+        idle()
+      }
       if (raf) {
         cancelAnimationFrame(raf)
         raf = 0
@@ -78,10 +108,53 @@ export function useScrollFx<T>(read: () => T, write: (v: T) => void) {
 }
 
 /**
- * The `--p` progress variable shared by the photo bands: 0 as the section
- * enters from the bottom, 1 as it leaves through the top.
+ * ROUND 21d — write a custom property ONLY when its value actually changed.
+ *
+ * `setProperty` invalidates style for the element (and, for an inherited
+ * custom property, its whole subtree) even when the value is byte-identical
+ * to what is already there. Most scroll frames do not move a clamped
+ * progress value at all: `--p` sits pinned at 0 while a section is still
+ * below the fold and at 1 once it has passed, and `--fw`/`--fstep` only
+ * change on resize. Guarding the write turns the majority of frames into
+ * genuinely zero work instead of "recompute the subtree, arrive at the same
+ * answer".
+ *
+ * Keep using this for every scroll-driven custom property.
  */
+export function setVar(el: HTMLElement | null | undefined, name: string, value: string) {
+  if (!el) return
+  const cache = (el as HTMLElement & { __sv?: Record<string, string> }).__sv ?? {}
+  if (cache[name] === value) return
+  cache[name] = value
+  ;(el as HTMLElement & { __sv?: Record<string, string> }).__sv = cache
+  el.style.setProperty(name, value)
+}
+
+/**
+ * The `--p` progress variable driving the photo bands: 0 as the section
+ * enters from the bottom, 1 as it leaves through the top.
+ *
+ * ROUND 21c — `--p` is written to the two elements that actually READ it,
+ * never to the <section>.
+ *
+ * `--p` is an unregistered custom property, so it inherits. Setting it on
+ * the section meant Chrome had to recompute inherited custom properties for
+ * that section's ENTIRE subtree on every scrolled frame — for `.band.hist`
+ * that is the wordmark, the three counters, six thumbnails and the CTA,
+ * ~50 nodes, 60 times a second. Only `.band-media` (the parallax transform)
+ * and `.band-veil` (the fading scrim) consume it, and both are leaves, so
+ * writing straight to them drops the per-frame invalidation from ~50 nodes
+ * to 2 with pixel-identical output.
+ *
+ * Exact same rule as the animated inherited @property from round 20b: cost
+ * scales with the descendant count of where the property is DECLARED, not
+ * with how many elements consume it. It bites through JS writes too, not
+ * just CSS animations.
+ */
+const P_CONSUMERS = '.band-media, .band-veil'
+
 export function useScrollP(ref: { current: HTMLElement | null }) {
+  const targets = useRef<HTMLElement[] | null>(null)
   useScrollFx(
     () => {
       const el = ref.current
@@ -91,9 +164,47 @@ export function useScrollP(ref: { current: HTMLElement | null }) {
       return Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height))).toFixed(3)
     },
     (p) => {
-      if (p !== null) ref.current?.style.setProperty('--p', p)
+      const el = ref.current
+      if (p === null || !el) return
+      if (!targets.current || targets.current.length === 0) {
+        targets.current = Array.from(el.querySelectorAll<HTMLElement>(P_CONSUMERS))
+      }
+      for (const t of targets.current) setVar(t, '--p', p)
     },
   )
+}
+
+/**
+ * ROUND 22 — `data-lenis-prevent` is a WHEEL KILL SWITCH, not a hint.
+ *
+ * Lenis walks the composed path of every wheel event and, the moment it
+ * finds the attribute, `return`s before `preventDefault()` — so the browser
+ * scrolls the page natively, in raw OS wheel steps, for as long as the
+ * pointer is over that element. Measured on lenis 1.3.23 with this project's
+ * exact options (lerp .13, wheelMultiplier 1.2), one 120px wheel tick:
+ *
+ *   plain section    18 → 27 → 35 → 42 → 49 → 56 → 63 → 69 → 75 … px  (eased)
+ *   data-lenis-prevent   120px on frame 1, done                        (teleport)
+ *
+ * That is the whole bug when the attribute is on a full-bleed overlay: the
+ * page glides everywhere else and hard-steps through that one section, and
+ * Lenis resyncs from the native scroll on the way out. So the attribute must
+ * be present ONLY at the sizes where the element is genuinely a nested
+ * scroller — hence this hook, matched to the element's own CSS breakpoint.
+ *
+ * Never put a bare `data-lenis-prevent` on something that is not, right now,
+ * an overflowing scroll container.
+ */
+export function useMedia(query: string) {
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    const mq = matchMedia(query)
+    const sync = () => setOn(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [query])
+  return on
 }
 
 /**

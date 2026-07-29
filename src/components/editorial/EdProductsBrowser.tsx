@@ -179,7 +179,7 @@ export function EdProductsBrowser({
               a horizontal overflow-x:auto rail, Lenis (allowNestedScroll:false)
               would otherwise eat the gesture and scroll the page instead. */}
           {categories.length > 1 ? (
-            <nav className="edp-cats" aria-label={t('pf.cats')} data-lenis-prevent>
+            <nav className="edp-cats" aria-label={t('pf.cats')} data-lenis-prevent-touch>
               <Link
                 href={href({ category: null })}
                 className={`edp-cat${!query.category ? ' on' : ''}`}

@@ -127,14 +127,34 @@
 .editorial-root .demo-note { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 
 .editorial-root .sec { padding: clamp(64px, 9vw, 120px) 0; }
+/* ROUND 21e — two stacked light sections used to add their FULL paddings:
+   120px bottom + 120px top = a 240px void, which is what Ghani flagged
+   between the services row and « ce que disent nos clients ». One section
+   pays for the seam; the next only tops up. Dark bands are excluded — the
+   `.band` boundary needs its full breathing room. */
+.editorial-root .sec + .sec { padding-top: clamp(34px, 4.4vw, 58px); }
 .editorial-root .center { text-align: center; }
 .editorial-root .sec-head { max-width: 640px; margin: 0 auto 56px; text-align: center; display: flex; flex-direction: column; gap: 16px; align-items: center; }
 
 /* reveal */
 .editorial-root .rv { opacity: 0; transform: translateY(18px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
 .editorial-root .rv[data-revealed] { opacity: 1; transform: none; }
-.editorial-root .sw { display: inline-block; margin-inline-end: .26em; opacity: 0; transform: translateY(16px); filter: blur(9px); transition: opacity .75s var(--ease), transform .75s var(--ease), filter .75s var(--ease); transition-delay: calc(var(--w, 0) * 62ms); }
-.editorial-root [data-revealed] .sw, .editorial-root .sw.lit { opacity: 1; transform: none; filter: blur(0); }
+/* ROUND 21d — the word reveal animates OPACITY + TRANSFORM ONLY.
+   It used to also transition `filter: blur(9px) -> 0`. Measured live on
+   Ghani's machine: 33 `.sw` spans x 3 transitioned properties = 107
+   simultaneously-running transitions, and the filter one REPAINTS the
+   glyphs every frame for 750ms + up to ~600ms of stagger. Every heading
+   entering the viewport fired a paint storm — which is why the stutter
+   tracked "scrolling into a section" rather than any one component.
+   The reference site we copied (lorolabs.ai) reveals with transform +
+   opacity only and runs FOUR animations on its whole page against our 119;
+   its blur/backdrop load is actually HIGHER than ours, so blur at rest was
+   never the problem — blur in MOTION was.
+   RULE: never transition or animate `filter`, `box-shadow`, `background`
+   or `background-position` on many elements at once. Transform and opacity
+   are the only two the compositor can do without repainting. */
+.editorial-root .sw { display: inline-block; margin-inline-end: .26em; opacity: 0; transform: translateY(16px); transition: opacity .62s var(--ease), transform .62s var(--ease); transition-delay: calc(var(--w, 0) * 46ms); }
+.editorial-root [data-revealed] .sw, .editorial-root .sw.lit { opacity: 1; transform: none; }
 .editorial-root .cw { position: relative; }
 .editorial-root .curtain { pointer-events: none; position: absolute; bottom: 0; left: 0; right: 0; height: 46vh; background: var(--black); transform-origin: bottom; transform: scaleY(var(--p, 0)); will-change: transform; }
 .editorial-root .rv[data-revealed] .stag { animation: edd-rise .55s var(--ease) both; animation-delay: calc(60ms + var(--i, 0) * 55ms); }
@@ -242,7 +262,7 @@
 .editorial-root .car-btn:hover { background: var(--wash); }
 .editorial-root .car-btn[disabled] { opacity: .3; cursor: default; }
 .editorial-root[dir='rtl'] .car-btn svg { transform: scaleX(-1); }
-.editorial-root .car { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 26px var(--pad) 42px; margin: -26px 0 -22px; scrollbar-width: none; scroll-snap-type: x mandatory; }
+.editorial-root .car { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 26px var(--pad) 42px; margin: -26px 0 -22px; scrollbar-width: none; scroll-snap-type: x proximity; }
 .editorial-root .car::-webkit-scrollbar { display: none; }
 .editorial-root .ccard { position: relative; flex: none; width: min(84vw, 420px); aspect-ratio: 4/3; border-radius: 24px; overflow: hidden; background: var(--black); scroll-snap-align: start; cursor: pointer; text-align: start; color: #fff; }
 @media (min-width: 1024px) { .editorial-root .ccard { width: min(46vw, 540px); border-radius: 28px; } }
@@ -253,9 +273,21 @@
 .editorial-root .ccard:hover .ccard-tint { background: linear-gradient(to top, rgba(0, 0, 0, .8), rgba(0, 0, 0, .34) 60%, rgba(0, 0, 0, .2)); }
 .editorial-root .ccard-in { position: absolute; inset: 0; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; }
 .editorial-root .ccard-top { display: flex; align-items: center; justify-content: space-between; }
-.editorial-root .chip { display: flex; align-items: center; justify-content: center; height: 46px; width: 46px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .45); background: rgba(255, 255, 255, .15); backdrop-filter: blur(8px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 8px 24px rgba(0, 0, 0, .2); transition: transform .3s var(--ease2), background .3s; }
+/* ROUND 21c — NO backdrop-filter on carousel card furniture.
+   The catalogue rail renders 20 cards, each with a `.chip` and a
+   `.ccount` — that was 40 separate backdrop-filter render surfaces on the
+   home page. Chrome re-snapshots and re-blurs EVERY one of them on every
+   scrolled frame, on the GPU. On Ghani's Intel UHD that alone produced
+   visible dropped frames crossing this section (proved from a 30fps screen
+   recording of his machine: 13 pixel-identical duplicate frames in 11.4s).
+   A translucent background at slightly higher alpha is visually
+   indistinguishable at this size and costs nothing.
+   ⚠️ The sandbox Playwright rig CANNOT measure this — it renders on
+   SwiftShader and reports backdrop-filter as free. Never clear a glass
+   effect as "measured fine" from that rig alone. */
+.editorial-root .chip { display: flex; align-items: center; justify-content: center; height: 46px; width: 46px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .45); background: rgba(255, 255, 255, .26); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 8px 24px rgba(0, 0, 0, .2); transition: transform .3s var(--ease2), background .3s; }
 .editorial-root .ccard:hover .chip { transform: translateY(-4px) rotate(-4deg); background: rgba(255, 255, 255, .26); }
-.editorial-root .ccount { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .12); backdrop-filter: blur(8px); }
+.editorial-root .ccount { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; padding: 7px 13px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .22); }
 .editorial-root .ccard-from { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255, 255, 255, .72); margin-bottom: 8px; }
 .editorial-root .ccard h3 { font-size: clamp(22px, 2.6vw, 34px); line-height: 1.05; }
 .editorial-root .ccard-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .5s var(--ease), opacity .5s var(--ease), margin .5s var(--ease); }
@@ -305,12 +337,51 @@
 .editorial-root .dash { border-top: 1px dashed rgba(0, 0, 0, .14); margin: clamp(22px, 3vw, 38px) 0; }
 
 /* ---------- accent band ---------- */
-.editorial-root .band { position: relative; width: 100%; height: min(78vh, 720px); overflow: hidden; background: var(--black); }
+/* ROUND 21b — `contain: layout paint` isolates the band's raster from the
+   rest of the page (it already clips via overflow:hidden, so nothing
+   visual changes). With the lorolabs lerp engine the page crosses this
+   full-viewport photo at sustained speed, and without containment its
+   repaints were the biggest remaining scroll cost on the home page. */
+.editorial-root .band { position: relative; width: 100%; height: min(78vh, 720px); overflow: hidden; background: var(--black); contain: layout paint; view-timeline-name: --edband; }
 /* [PORT+] slide reveal: the media sits taller than the band and glides
    upward with scroll (--p 0→1), while a black veil lifts on entry. */
-.editorial-root .band-media { position: absolute; inset: -14% 0; transform: translateY(calc((0.5 - var(--p, 0.5)) * 16%)) scale(1.02); will-change: transform; }
+/* ROUND 21d — the band is STATIC. No parallax, no per-frame transform.
+   This is the section Ghani kept pointing at. Crossing it used to mean, on
+   every single frame: a style recalc for --p, a transform on a
+   will-change layer ~1920x1180 holding a full-bleed photograph, an opacity
+   recalc on a second full-viewport layer (.band-veil), all composited over
+   .hist-scrim on an Intel UHD iGPU — three overlapping full-screen layers.
+   lorolabs.ai, the reference this design copies, has NO parallax anywhere:
+   its photos are static and only transform/opacity reveals move. Matching
+   that removes the last scroll-linked work on the home page.
+   To restore the parallax: put back the transform + will-change here, the
+   calc() opacity on .band-veil, and the useScrollP() calls in EdBand /
+   EdHistory. It will cost this section's smoothness again. */
+/* ROUND 21e — parallax is BACK, but driven by the compositor, not by JS.
+   `animation-timeline: view()` is a native scroll-driven animation: Chrome
+   ties the keyframes to the element's own progress through the viewport and
+   runs it off the main thread. No scroll listener, no per-frame style
+   recalc, no custom property write — the three things that made the old
+   `--p` version stutter. This is how lorolabs.ai's photo section pans
+   smoothly, and it is strictly cheaper than the static version was,
+   because nothing on the main thread touches it at all. */
+.editorial-root .band-media { position: absolute; inset: -8% 0; animation: ed-band-pan linear both; animation-timeline: --edband; animation-range: cover 0% cover 100%; will-change: transform; }
+@keyframes ed-band-pan { from { transform: translateY(-6%); } to { transform: translateY(6%); } }
+/* Browsers without scroll-driven animations (Safari < 26, Firefox default):
+   no parallax at all rather than a JS fallback. Static is the correct
+   degradation — it is what this band did before r21d. */
+@supports not (animation-timeline: --edband) {
+  .editorial-root .band-media { inset: 0; animation: none; will-change: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .editorial-root .band-media { inset: 0; animation: none; will-change: auto; }
+}
 .editorial-root .band-media img { opacity: .85; }
-.editorial-root .band-veil { position: absolute; inset: 0; background: var(--black); opacity: calc(1 - min(var(--p, 0) * 2.6, 1)); pointer-events: none; }
+/* Static now (was a per-frame calc() on --p). `.hist` keeps its own
+   `.hist-scrim` for text legibility, so its veil goes to 0 — the photo
+   stays exactly as bright as it was when the band sat centred before. */
+.editorial-root .band-veil { position: absolute; inset: 0; background: var(--black); opacity: .2; pointer-events: none; }
+.editorial-root .band.hist .band-veil { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   .editorial-root .band-media { inset: 0; transform: none; }
   .editorial-root .band-veil { display: none; }
@@ -327,6 +398,13 @@
 .editorial-root .hist-rule { width: 46px; height: 3px; border-radius: 3px; background: var(--yellow); }
 .editorial-root .hist-h { margin: 2px 0 2px; font-family: var(--disp); font-weight: 700; font-size: clamp(20px, 2.3vw, 30px); line-height: 1.2; letter-spacing: -.015em; color: #fff; }
 .editorial-root .hist-right p { margin: 0; font-size: clamp(13px, 1.05vw, 14.5px); line-height: 1.62; color: rgba(255, 255, 255, .76); }
+/* ROUND 22 — the blur STAYS. Tried dropping it (the r21e parallax means this
+   pill sits over a backdrop that moves every frame, so the filter re-runs
+   every frame) and rendered the A/B over the real photograph: over the lit
+   half of the frame the flat tint lets the laptop edges read straight
+   through and the pill looks dirty. It is 190x42px of GPU blur; the
+   measured rule from round 21c still holds — glass at rest is not what
+   costs frames here. Reverted, on purpose. */
 .editorial-root .hist-cta { align-self: flex-start; display: inline-flex; align-items: center; gap: 9px; margin-top: 6px; padding: 11px 19px; border-radius: 999px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .28); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-size: 13px; font-weight: 600; color: #fff; transition: background .25s, border-color .25s, transform .25s var(--ease2); }
 .editorial-root .hist-cta:hover { background: var(--yellow); border-color: var(--yellow); color: #1a1408; transform: translateY(-2px); }
 .editorial-root .hist-cta b { transition: transform .25s var(--ease2); }
@@ -344,8 +422,31 @@
   .editorial-root .hist-right { max-width: 60ch; }
 }
 @media (max-width: 620px) { .editorial-root .hist-right p:last-of-type { display: none; } }
-.editorial-root .hist-mark { font-family: var(--disp); font-weight: 700; font-size: clamp(48px, 7vw, 98px); letter-spacing: -.03em; line-height: 1.05; width: fit-content; background: linear-gradient(90deg, #7b42f6, #0aa2b0, #3cf56a, #f5b40e, #f33f9f, #7b42f6); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: edd-mark-colors 9s linear infinite; }
+/* ROUND 21c — `will-change` on the animated gradient WORDMARKS.
+   `.hist-mark` and `.gmark` animate `background-position` on a
+   `background-clip: text` element: that repaints the glyphs every frame,
+   and without its own layer the repaint dirties the page tile UNDERNEATH
+   it — which here is the full-bleed band photograph. Promoting the two
+   marks confines each repaint to a small text layer. This is the section
+   Ghani singled out as still stuttering after round 21b. */
+.editorial-root .hist-mark { font-family: var(--disp); font-weight: 700; font-size: clamp(48px, 7vw, 98px); letter-spacing: -.03em; line-height: 1.05; width: fit-content; background: linear-gradient(90deg, #7b42f6, #0aa2b0, #3cf56a, #f5b40e, #f33f9f, #7b42f6); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: edd-mark-colors 9s linear infinite; contain: paint; }
 @keyframes edd-mark-colors { to { background-position: 300% 0; } }
+/* ROUND 22 — the r21c comment above is WRONG and the fix it describes never
+   happened: `will-change` only promotes a layer for properties Chrome can
+   composite (transform, opacity, filter, backdrop-filter, translate, scale,
+   rotate). `background-position` is not one of them, so
+   `will-change: background-position` was a hint Blink ignores — the marks
+   were never on their own layer, and the per-frame glyph repaint has been
+   landing in the shared tile all along. `contain: paint` is what has
+   actually been bounding the damage, so it stays; the dead hint is gone.
+   An animated text gradient CANNOT be composited, full stop. So instead of
+   paying for it during the only moments it costs anything, it is frozen for
+   the length of each wheel gesture — see `onScroll` in ed-scroll.ts. A 9s
+   colour cycle pausing for the ~1s you spend scrolling past is invisible;
+   repainting a 98px gradient wordmark on top of a full-bleed photograph at
+   60fps on an Intel UHD is not. */
+.ed-scrolling .editorial-root .hist-mark,
+.ed-scrolling .editorial-root .gmark { animation-play-state: paused; }
 .editorial-root .hist-sub { font-size: clamp(14px, 1.4vw, 17px); line-height: 1.55; color: rgba(255, 255, 255, .9); max-width: 46ch; }
 .editorial-root .hist-stats { display: flex; gap: clamp(22px, 3.6vw, 56px); margin-top: 4px; }
 .editorial-root .hist-stats b { display: block; font-family: var(--disp); font-weight: 700; font-size: clamp(26px, 3vw, 42px); line-height: 1.15; color: var(--yellow); }
@@ -353,7 +454,7 @@
 .editorial-root .hist-cats { display: flex; align-items: center; margin-top: clamp(8px, 1.8vh, 18px); }
 .editorial-root .hist-chip { position: relative; width: clamp(54px, 5.2vw, 76px); aspect-ratio: 1; flex: none; border-radius: 14px; overflow: hidden; border: 2px solid rgba(255, 255, 255, .42); box-shadow: 0 10px 24px rgba(0, 0, 0, .5); margin-inline-end: -12px; background: #101318; transition: transform .35s var(--ease), border-color .35s, z-index 0s; }
 .editorial-root .hist-chip:hover, .editorial-root .hist-chip:focus-visible { transform: translateY(-6px); border-color: #fff; z-index: 4; }
-.editorial-root .hist-more { display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 13px; font-weight: 700; color: #fff; text-decoration: none; background: rgba(255, 255, 255, .16); backdrop-filter: blur(4px); }
+.editorial-root .hist-more { display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 13px; font-weight: 700; color: #fff; text-decoration: none; background: rgba(255, 255, 255, .24); }
 @media (prefers-reduced-motion: reduce) { .editorial-root .hist-mark { animation: none; } }
 .editorial-root .band-cap { position: absolute; max-width: 340px; font-size: 10px; font-weight: 500; letter-spacing: .09em; line-height: 1.75; text-transform: uppercase; color: rgba(255, 255, 255, .72); }
 .editorial-root .band-cap.tl { top: clamp(24px, 5vw, 56px); inset-inline-start: clamp(24px, 5vw, 56px); }
@@ -423,7 +524,7 @@
 .editorial-root .lap-vig { position: absolute; inset: 0; box-shadow: inset 0 0 44px rgba(0, 0, 0, .55); pointer-events: none; }
 .editorial-root .lap-hinge { position: absolute; left: 16%; right: 16%; bottom: 2px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, transparent, #0c0d10 12%, #2b2e34 50%, #0c0d10 88%, transparent); }
 .editorial-root .lap-chassis { width: clamp(240px, 26vw, 340px); height: 11px; border-radius: 0 0 13px 13px; background: linear-gradient(180deg, #31353d, #0e1013); transform-origin: top center; transform: rotateX(72deg) translateZ(-1px) translateY(168px); box-shadow: 0 16px 26px rgba(0, 0, 0, .6); }
-.editorial-root .lap-wall { position: absolute; inset: 0; background: radial-gradient(60% 80% at 22% 18%, rgba(91, 140, 255, .85), transparent 62%), radial-gradient(60% 70% at 82% 30%, rgba(176, 107, 255, .8), transparent 60%), radial-gradient(70% 80% at 55% 96%, rgba(10, 162, 176, .9), transparent 66%), linear-gradient(160deg, #0b1030, #071018); animation: edd-wallshift 9s ease-in-out infinite alternate; }
+.editorial-root .lap-wall { position: absolute; inset: 0; will-change: filter; background: radial-gradient(60% 80% at 22% 18%, rgba(91, 140, 255, .85), transparent 62%), radial-gradient(60% 70% at 82% 30%, rgba(176, 107, 255, .8), transparent 60%), radial-gradient(70% 80% at 55% 96%, rgba(10, 162, 176, .9), transparent 66%), linear-gradient(160deg, #0b1030, #071018); animation: edd-wallshift 9s ease-in-out infinite alternate; }
 @keyframes edd-wallshift { to { filter: hue-rotate(38deg) saturate(1.2); } }
 .editorial-root .lap-ui { position: absolute; inset: 7%; display: flex; flex-direction: column; gap: 8px; justify-content: flex-end; }
 .editorial-root .lap-head { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 8px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .88); }
@@ -445,11 +546,18 @@
 .editorial-root .kbrow.r2 { grid-template-columns: 1.8fr repeat(11, 1fr) 2.2fr; }
 .editorial-root .kbrow.r3 { grid-template-columns: 2.4fr repeat(10, 1fr) 2.6fr; }
 .editorial-root .kbrow.r4 { grid-template-columns: 1.2fr 1.2fr 1.2fr 6.4fr 1.2fr 1.2fr 1.2fr; }
-.editorial-root .lap-kb i { height: 9px; border-radius: 2px; background: #6d747f; box-shadow: 0 1px 0 #24272d; animation: edd-keylite 5s linear infinite; }
-.editorial-root .lap-kb i:nth-child(3n) { animation-delay: .7s; }
-.editorial-root .lap-kb i:nth-child(5n) { animation-delay: 1.9s; }
-.editorial-root .lap-kb i:nth-child(7n) { animation-delay: 3.1s; }
-@keyframes edd-keylite { 0%, 92% { background: #6d747f; } 94% { background: #2fd4e4; box-shadow: 0 0 10px #2fd4e4; } 100% { background: #6d747f; } }
+/* ROUND 21b — the keycap flash used to animate `background`+`box-shadow`
+   on 60 keys: paint properties, so the laptop repainted on the MAIN THREAD
+   every frame while the bento was on screen — the single biggest cost when
+   scrolling THROUGH the section (the round-21 gate only helps while it is
+   off screen). The flash now lives on an ::after animating OPACITY only —
+   identical look, pure compositor. Keep it this way. */
+.editorial-root .lap-kb i { position: relative; height: 9px; border-radius: 2px; background: #6d747f; box-shadow: 0 1px 0 #24272d; }
+.editorial-root .lap-kb i::after { content: ""; position: absolute; inset: 0; border-radius: 2px; background: #2fd4e4; box-shadow: 0 0 10px #2fd4e4; opacity: 0; animation: edd-keylite 5s linear infinite; }
+.editorial-root .lap-kb i:nth-child(3n)::after { animation-delay: .7s; }
+.editorial-root .lap-kb i:nth-child(5n)::after { animation-delay: 1.9s; }
+.editorial-root .lap-kb i:nth-child(7n)::after { animation-delay: 3.1s; }
+@keyframes edd-keylite { 0%, 92% { opacity: 0; } 94% { opacity: 1; } 100% { opacity: 0; } }
 .editorial-root .lap-pad { display: block; width: 28%; aspect-ratio: 96 / 50; margin: 5% auto 0; border-radius: 7px; background: #5a616b; box-shadow: inset 0 0 0 1px #7e858f; transform: translateZ(3px); }
 .editorial-root .bn-chip { position: absolute; top: 9%; inset-inline-start: 6%; font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: #fff; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .24); padding: 4px 10px; border-radius: 999px; }
 
@@ -575,7 +683,7 @@
 @media (max-width: 620px) { .editorial-root .truck { transform: translateX(-50%) rotateX(6deg) rotateY(-27deg) scale(.55); } .editorial-root .tk-pins { display: none; } .editorial-root .sav-tkt { inset-inline-end: 4%; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .editorial-root .bn-glow, .editorial-root .lap, .editorial-root .lap-kb i, .editorial-root .lap-line::after,
+  .editorial-root .bn-glow, .editorial-root .lap, .editorial-root .lap-kb i, .editorial-root .lap-kb i::after, .editorial-root .lap-line::after,
   .editorial-root .gear, .editorial-root .sav-tkt, .editorial-root .fact-stack, .editorial-root .fact-seal,
   .editorial-root .truck, .editorial-root .whl, .editorial-root .tk-road::after, .editorial-root .tk-speed i,
   .editorial-root .lap-wall { animation: none !important; }
@@ -643,7 +751,7 @@
 /* Below the point where a five-across row stops being readable, stop
    pretending: a snapped horizontal rail is the better mobile control. */
 @media (max-width: 719px) {
-  .editorial-root .fan { height: auto; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-block-end: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .editorial-root .fan { height: auto; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x proximity; padding-block-end: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .editorial-root .fan::-webkit-scrollbar { display: none; }
   .editorial-root .fan .fcard { position: static; flex: none; width: min(62vw, 236px); transform: none; scroll-snap-align: center; }
 }
@@ -673,7 +781,7 @@
 .editorial-root .foot a:hover { color: var(--yellow); }
 .editorial-root .foot .mark { font-family: var(--disp); font-weight: 700; font-size: 24px; margin-bottom: 14px; }
 .editorial-root .foot .mark span { color: var(--yellow); }
-.editorial-root .gmark { background: linear-gradient(90deg, var(--teal) 0%, var(--yellow) 22%, #fff 42%, var(--teal) 62%, var(--yellow) 82%, var(--teal) 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: edd-mesh 5s linear infinite; }
+.editorial-root .gmark { background: linear-gradient(90deg, var(--teal) 0%, var(--yellow) 22%, #fff 42%, var(--teal) 62%, var(--yellow) 82%, var(--teal) 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: edd-mesh 5s linear infinite; contain: paint; }
 .editorial-root .foot .mark.gmark span, .editorial-root .hero-mark.gmark span { color: transparent; -webkit-text-fill-color: transparent; }
 .editorial-root .btn-wa { background: #25d366; color: #0a2e18; }
 .editorial-root .btn-wa:hover { background: #1fbb59; color: #0a2e18; }
@@ -1192,7 +1300,7 @@
 .editorial-root .edb-why, .editorial-root .edb-cats, .editorial-root .edb-sel,
 .editorial-root .edb-faqs, .editorial-root .edb-others { padding: clamp(40px, 5vw, 72px) 0; }
 .editorial-root .edb-cta { padding: clamp(34px, 4.5vw, 62px) 0 clamp(46px, 6vw, 80px); }
-.editorial-root .edb-rail .edrail-vp { gap: 14px; scroll-snap-type: x mandatory; padding: 2px 2px 12px; }
+.editorial-root .edb-rail .edrail-vp { gap: 14px; scroll-snap-type: x proximity; padding: 2px 2px 12px; }
 .editorial-root .edb-statgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; padding: clamp(22px, 3vw, 34px) 0; }
 @media (max-width: 760px) { /* ROUND 20 — the shared .sec rhythm (clamp(64px,9vw,120px) top AND bottom)
    is right for the homepage's magazine pacing and far too loose here: six
@@ -1200,7 +1308,7 @@
 .editorial-root .edb-why, .editorial-root .edb-cats, .editorial-root .edb-sel,
 .editorial-root .edb-faqs, .editorial-root .edb-others { padding: clamp(40px, 5vw, 72px) 0; }
 .editorial-root .edb-cta { padding: clamp(34px, 4.5vw, 62px) 0 clamp(46px, 6vw, 80px); }
-.editorial-root .edb-rail .edrail-vp { gap: 14px; scroll-snap-type: x mandatory; padding: 2px 2px 12px; }
+.editorial-root .edb-rail .edrail-vp { gap: 14px; scroll-snap-type: x proximity; padding: 2px 2px 12px; }
 .editorial-root .edb-statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .editorial-root .edb-statgrid > div { position: relative; padding-inline-start: 16px; }
 .editorial-root .edb-statgrid > div::before { content: ""; position: absolute; inset-inline-start: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 3px; background: var(--bc); }
@@ -1242,7 +1350,7 @@
 .editorial-root .edb-catbody b { font-family: var(--disp); font-size: 18px; font-weight: 700; color: #fff; }
 
 /* ── product rail ── */
-.editorial-root .edb-rail { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 12px; scrollbar-width: none; }
+.editorial-root .edb-rail { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x proximity; padding: 2px 2px 12px; scrollbar-width: none; }
 .editorial-root .edb-rail::-webkit-scrollbar { display: none; }
 .editorial-root .edb-prod { flex: none; width: 236px; scroll-snap-align: start; border-radius: 16px; border: 1px solid var(--line); background: #fff; overflow: hidden; transition: transform .3s var(--ease2), border-color .3s, box-shadow .35s var(--ease2); }
 .editorial-root .edb-prod:hover { transform: translateY(-4px); border-color: var(--bc); box-shadow: 0 18px 40px rgb(0 0 0 / .1); }
@@ -1873,3 +1981,5 @@
   .editorial-root .edc-rail { top: 70px; }
   .editorial-root .edp-toolbar { top: 78px; }
 }
+
+/* hmr-probe */
