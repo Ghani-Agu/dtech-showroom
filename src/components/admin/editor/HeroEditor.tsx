@@ -36,6 +36,20 @@ export function HeroEditor({
 
   const fileRef = React.useRef<HTMLInputElement>(null)
 
+  /* ROUND 23b — the live band sizes itself to the TALLEST slide (see
+     `heroAspect` in EditorialSections.tsx — keep the two rules identical).
+     Slides uploaded before this round carry no stored size, so the thumbnails
+     report theirs on load and we fold those in the same way. */
+  const [seen, setSeen] = useState<Record<string, number>>({})
+  function noteSize(src: string, el: HTMLImageElement) {
+    const r = el.naturalWidth / el.naturalHeight
+    if (!Number.isFinite(r) || r <= 0) return
+    setSeen((m) => (m[src] !== undefined ? m : { ...m, [src]: r }))
+  }
+  function ratioOf(s: HeroSlide): number | undefined {
+    return s.w && s.h ? s.w / s.h : seen[s.src]
+  }
+
   function setSlides(slides: HeroSlide[]) {
     setCfg((c) => ({ ...c, slides }))
   }
@@ -49,7 +63,7 @@ export function HeroEditor({
         const fd = new FormData()
         fd.append('file', file)
         const r = await uploadHeroImage(fd)
-        if (r.ok) next.push({ src: r.url, alt: '' })
+        if (r.ok) next.push({ src: r.url, alt: '', w: r.w, h: r.h })
         else toast.error(r.error ?? "Échec de l'envoi")
       }
       setSlides(next)
@@ -112,6 +126,23 @@ export function HeroEditor({
   const slides = cfg.slides
   const preview = slides[active] ?? slides[0]
 
+  const known = slides.map(ratioOf).filter((r): r is number => typeof r === 'number' && Number.isFinite(r) && r > 0)
+  /* Same clamp as the storefront: 1.2 … 4. */
+  const bandRatio = known.length
+    ? Math.min(4, Math.max(1.2, Math.min(...known)))
+    : 1920 / 700
+  /* Which slide is currently setting the band's depth — worth surfacing, it is
+     the one to swap if the hero looks too tall. */
+  const driverIdx = known.length
+    ? slides.findIndex((s) => ratioOf(s) === Math.min(...known))
+    : -1
+  /* The band grows to fit the tallest slide but stops at 88vh — past that a
+     hero would be taller than the screen. On a typical 1536 × 826 desktop that
+     ceiling lands around 2.1:1, so anything squarer than that gets trimmed top
+     and bottom however much the band adapts. Say so here rather than let him
+     discover it on the live site. */
+  const tooTall = known.length > 0 && bandRatio < 2.05
+
   return (
     <div className={`we-page ${uiClass}`} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <div className="we-page-bar">
@@ -148,8 +179,9 @@ export function HeroEditor({
         <section className="he-col">
           <h2 className="he-h">Images du slider</h2>
           <p className="he-hint">
-            Ajoutez vos visuels au format <strong>1920 × 700</strong>. Glissez l’ordre avec les flèches.
-            Si aucune image n’est ajoutée, le slider affiche un panneau D-Tech aux couleurs du site.
+            Le hero <strong>s’adapte à vos images</strong> — aucune n’est recadrée en hauteur.
+            Glissez l’ordre avec les flèches. Si aucune image n’est ajoutée, le slider
+            affiche un panneau D-Tech aux couleurs du site.
           </p>
 
           <button
@@ -182,8 +214,20 @@ export function HeroEditor({
                 onClick={() => setActive(i)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={s.src} alt={s.alt} />
+                <img
+                  src={s.src}
+                  alt={s.alt}
+                  onLoad={(e) => noteSize(s.src, e.currentTarget)}
+                />
                 <div className="he-slide-body">
+                  <span className="he-dim">
+                    {s.w && s.h ? `${s.w} × ${s.h}` : '…'}
+                    {i === driverIdx && slides.length > 1 && (
+                      <b title="C’est cette image, la plus haute, qui fixe la hauteur du hero">
+                        donne la hauteur
+                      </b>
+                    )}
+                  </span>
                   <input
                     className="he-alt"
                     placeholder="Texte alternatif (description)"
@@ -204,14 +248,22 @@ export function HeroEditor({
         <section className="he-col">
           <h2 className="he-h">Aperçu</h2>
           <p className="he-hint">
-            Le hero est une <strong>bannière 1920 × 700</strong> qui{' '}
-            <strong>défile toute seule</strong> : chaque image reste ~5,5&nbsp;s puis
+            La bande prend la forme de votre image <strong>la plus haute</strong>,
+            et <strong>défile toute seule</strong> : chaque image reste ~5,5&nbsp;s puis
             fond vers la suivante (12 images au maximum). Le visiteur peut mettre
             en pause, cliquer une puce ou faire glisser. Sur l’habillage actuel
             (Éditorial), le titre et les boutons restent posés en bas à gauche —
             gardez ce coin des images lisible.
           </p>
-          <div className="he-preview">
+          {tooTall && (
+            <p className="he-warn">
+              L’image la plus haute est plus carrée que ce qu’un écran peut
+              afficher&nbsp;: la bande s’arrête à 88&nbsp;% de la hauteur d’écran
+              et cette image sera rognée en haut et en bas. Recadrez-la vers
+              1920 × 700 pour l’éviter.
+            </p>
+          )}
+          <div className="he-preview" style={{ aspectRatio: String(bandRatio) }}>
             {preview?.src ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview.src} alt={preview.alt} />
@@ -228,12 +280,15 @@ export function HeroEditor({
             <h3>Pour un rendu net</h3>
             <ul>
               <li>
-                Taille exacte&nbsp;: <strong>1920 × 700 px</strong>. À cette
-                taille la bannière s’affiche telle quelle, sans recadrage.
+                <strong>Donnez-leur toutes la même taille.</strong> La bande se
+                règle sur la plus haute&nbsp;: une seule image plus carrée que
+                les autres et tout le hero grandit. 1920 × 700 reste la valeur
+                de référence.
               </li>
               <li>
                 Gardez le sujet <strong>au centre</strong> — sur un écran plus
-                étroit que 1920&nbsp;px, les bords gauche et droit sont coupés.
+                étroit que l’image, les bords gauche et droit sont coupés
+                (jamais le haut ni le bas).
               </li>
               <li>
                 <strong>Plus d’assombrissement&nbsp;:</strong> l’image s’affiche

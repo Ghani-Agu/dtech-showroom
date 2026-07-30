@@ -223,16 +223,18 @@
 
 /* ---------- hero ---------- */
 .editorial-root .hero { padding: 3px; background: var(--wash); }
-/* ROUND 23 — the band is sized to the ARTWORK, not to the viewport. The house
-   hero export is 1920 × 700, and `height: min(100vh, 860px)` used to make the
-   card ~826px tall on his 1536px screen: object-fit: cover then scaled that
-   banner to 2266px wide and threw away a third of it. At 1920/700 a full-width
-   banner lands pixel-for-pixel.
+/* ROUND 23 / 23b — the band is sized to the ARTWORK, not to the viewport.
+   `height: min(100vh, 860px)` used to make the card ~826px tall on a 1536px
+   screen: object-fit: cover then scaled a 1920 × 700 banner to 2266px wide and
+   threw away a third of it. Now `--hero-ar` is written by EdHero from the
+   TALLEST slide in the set, so the band fits whatever he actually uploads and
+   the fallback below only applies before hydration / with no slides.
    · min-height keeps the copy block from being crushed on narrow viewports —
-     below ~1536px the band stops shrinking and the photo crops instead, which
-     is the lesser evil (an unreadable h1 is worse than a tighter crop);
-   · max-height stops a 2560px monitor from rendering a 933px-tall banner. */
-.editorial-root .hero-card { position: relative; width: 100%; border-radius: var(--r); overflow: hidden; background: #0b0b0c; aspect-ratio: 1920 / 700; height: auto; min-height: min(510px, 76vh); max-height: 88vh; box-shadow: 0 8px 30px rgba(0, 0, 0, .12), inset 0 1px 0 rgba(255, 255, 255, .1); outline: 1px solid rgba(0, 0, 0, .05); outline-offset: -1px; }
+     the band stops shrinking and the photo crops instead, which is the lesser
+     evil (an unreadable h1 is worse than a tighter crop);
+   · max-height stops a wide monitor — or a near-square slide — from rendering
+     a band taller than the screen. */
+.editorial-root .hero-card { position: relative; width: 100%; border-radius: var(--r); overflow: hidden; background: #0b0b0c; aspect-ratio: var(--hero-ar, 1920 / 700); height: auto; min-height: min(510px, 76vh); max-height: 88vh; box-shadow: 0 8px 30px rgba(0, 0, 0, .12), inset 0 1px 0 rgba(255, 255, 255, .1); outline: 1px solid rgba(0, 0, 0, .05); outline-offset: -1px; }
 /* ROUND 22 — hero SLIDER. `.hero-shot` replaces the old single `.hero-img`.
    Rules, all of them load-bearing (see the scroll-perf ruleset):
    · the cross-fade is OPACITY only — never a filter, shadow or background;

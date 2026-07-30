@@ -8,6 +8,7 @@ import { getSessionUser } from '@/lib/auth-helpers'
 import { hasAccess } from '@/lib/permissions'
 import { SubscribersToolbar } from '@/components/admin/subscribers/SubscribersToolbar'
 import { SubscriberRow } from '@/components/admin/subscribers/SubscriberRow'
+import { getNewsletterHealth } from '@/server/newsletter-actions'
 
 export const metadata: Metadata = {
   title: 'Abonnés · Dtech Admin',
@@ -28,6 +29,11 @@ interface PageProps {
 export default async function SubscribersPage({ searchParams }: PageProps) {
   const user = await getSessionUser()
   if (!user || !hasAccess(user, 'newsletter')) redirect('/admin')
+
+  /* ROUND 24 — why the list is not growing is almost never visible from the
+     rows themselves: the signup works, the confirmation email is what fails.
+     Surface the two things that silently break it. */
+  const health = await getNewsletterHealth()
 
   const params = await searchParams
   const status: StatusFilter = VALID.includes(
@@ -107,6 +113,41 @@ export default async function SubscribersPage({ searchParams }: PageProps) {
           {total} adresses au total · {countMap.subscribed ?? 0} confirmées
         </p>
       </div>
+
+      {(!health.mailConfigured || !health.siteUrlPublic) && (
+        <div
+          className="rounded-2xl border px-5 py-4 font-body text-[13px] leading-relaxed"
+          style={{
+            borderColor: 'color-mix(in oklab, var(--c-amber) 45%, transparent)',
+            background: 'color-mix(in oklab, var(--c-amber) 10%, transparent)',
+            color: 'var(--admin-text-secondary)',
+          }}
+        >
+          <strong style={{ color: 'var(--admin-text-primary)' }}>
+            Les e-mails de confirmation ne partent pas.
+          </strong>{' '}
+          {!health.mailConfigured && (
+            <>
+              Aucun fournisseur e-mail n’est configuré — collez une clé Brevo dans{' '}
+              <a href="/admin/settings" style={{ color: 'var(--c-mint)' }}>
+                Réglages → Intégrations
+              </a>
+              , ou définissez <code>RESEND_API_KEY</code>.{' '}
+            </>
+          )}
+          {!health.siteUrlPublic && (
+            <>
+              <code>NEXT_PUBLIC_SITE_URL</code> n’est pas défini, donc le lien de
+              confirmation pointerait vers <code>{health.siteUrl}</code> — injouable
+              depuis la boîte mail d’un client. Ajoutez la variable sur Vercel puis
+              redéployez.{' '}
+            </>
+          )}
+          En attendant, les inscriptions sont bien enregistrées&nbsp;: utilisez
+          «&nbsp;Confirmer&nbsp;» sur chaque ligne en attente pour les faire entrer
+          dans les campagnes.
+        </div>
+      )}
 
       <SubscribersToolbar
         status={status}

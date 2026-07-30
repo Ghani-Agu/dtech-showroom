@@ -2,6 +2,12 @@
 export interface HeroSlide {
   src: string
   alt: string
+  /* ROUND 23b — the stored pixel size of the processed image. The éditorial
+     hero sizes its band from these so it fits the artwork instead of forcing
+     every upload into one hard-coded ratio. Optional: slides saved before
+     this round have none, and the storefront measures those on load. */
+  w?: number
+  h?: number
 }
 
 export interface HeroConfig {
@@ -24,7 +30,15 @@ export function sanitizeHeroConfig(input: unknown): HeroConfig {
   const slides = Array.isArray(c.slides)
     ? (c.slides as unknown[])
         .filter((s): s is Record<string, unknown> => !!s && typeof s === 'object' && typeof (s as Record<string, unknown>).src === 'string')
-        .map((s) => ({ src: String(s.src), alt: String(s.alt ?? '') }))
+        .map((s) => {
+          const dim = (v: unknown): number | undefined => {
+            const n = typeof v === 'number' ? v : Number(v)
+            return Number.isFinite(n) && n > 0 && n < 20000 ? Math.round(n) : undefined
+          }
+          const w = dim(s.w)
+          const h = dim(s.h)
+          return { src: String(s.src), alt: String(s.alt ?? ''), ...(w && h ? { w, h } : {}) }
+        })
         .slice(0, 12)
     : []
   return {

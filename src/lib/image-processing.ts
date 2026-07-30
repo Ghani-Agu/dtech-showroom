@@ -1,7 +1,7 @@
 import 'server-only'
 import sharp from 'sharp'
 
-export type ImageVariant = 'card' | 'hero' | 'heroSlide' | 'carousel' | 'logo'
+export type ImageVariant = 'card' | 'hero' | 'carousel' | 'logo'
 export type ImageFormat = 'webp' | 'avif'
 
 interface VariantSpec {
@@ -26,17 +26,6 @@ export const VARIANT_SPECS: Record<ImageVariant, VariantSpec> = {
     height: 1350,
     fit: 'cover',
     quality: { webp: 85, avif: 65 },
-  },
-  /* ROUND 23 — the homepage slider banner is its OWN spec. The house export
-     for the éditorial hero is 1920 × 700; running those through the shared
-     16:9 `hero` spec above center-cropped ~45% of the width away and then
-     upscaled what was left. Separate variant so category / brand / product
-     hero images keep their 16:9 crop. */
-  heroSlide: {
-    width: 1920,
-    height: 700,
-    fit: 'cover',
-    quality: { webp: 86, avif: 66 },
   },
   carousel: {
     width: 1600,
@@ -119,4 +108,39 @@ export async function processVariant(
   }
 
   return pipeline.toBuffer()
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROUND 23b — homepage slider slides
+   Every other variant above CROPS to a fixed shape. Hero slides must not: the
+   band on the storefront sizes ITSELF to the slides (tallest one wins), so
+   whatever aspect ratio Ghani exports is the aspect ratio the site adopts.
+   `fit: 'inside'` + `withoutEnlargement` therefore only ever shrinks an
+   oversized upload — a 1920 × 700 banner comes through untouched — and the
+   real output size is handed back so it can be stored with the slide.
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const HERO_SLIDE_MAX = { width: 2400, height: 1600 } as const
+
+export async function processHeroSlide(
+  sourceBuffer: Buffer,
+  format: ImageFormat
+): Promise<{ data: Buffer; width: number; height: number }> {
+  let pipeline = sharp(sourceBuffer)
+    // honour EXIF orientation BEFORE measuring, or a phone shot reports its
+    // dimensions swapped and the band adopts a ratio nothing actually has
+    .rotate()
+    .resize({
+      width: HERO_SLIDE_MAX.width,
+      height: HERO_SLIDE_MAX.height,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+
+  pipeline =
+    format === 'avif'
+      ? pipeline.avif({ quality: 66, effort: 4 })
+      : pipeline.webp({ quality: 86, effort: 4 })
+
+  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true })
+  return { data, width: info.width, height: info.height }
 }

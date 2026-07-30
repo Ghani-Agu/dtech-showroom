@@ -8,7 +8,7 @@
  * [PORT] markers note the intentional adaptations.
  */
 
-import { useCallback, useEffect, useRef, useState, Fragment, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, Fragment, type ReactNode } from 'react'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { useEditorial } from './editorial-context'
@@ -87,6 +87,31 @@ function Slot({ label }: { label: string }) {
 const HERO_MS = 5600
 
 /**
+ * ROUND 23b — the band takes its shape from the SLIDES, not from a constant.
+ * `heroAspect` returns the smallest width/height it finds, i.e. the TALLEST
+ * slide, so the band is deep enough for every image in the set and none of
+ * them is cropped top-to-bottom. Clamped either side: a portrait upload must
+ * not turn the homepage into a poster, and an ultra-wide panorama must not
+ * squash the band to a letterbox the copy can't stand up in. `.hero-card`
+ * also keeps a min-height (the copy block's floor) and a max-height (88vh),
+ * which win over this when they have to.
+ */
+const HERO_AR_FALLBACK = 1920 / 700
+const HERO_AR_MIN = 1.2
+const HERO_AR_MAX = 4
+
+function heroAspect(
+  slides: EdHeroSlide[],
+  measured: Record<string, number>,
+): number {
+  const found = slides
+    .map((s) => (s.w && s.h ? s.w / s.h : measured[s.src]))
+    .filter((r): r is number => typeof r === 'number' && Number.isFinite(r) && r > 0)
+  if (found.length === 0) return HERO_AR_FALLBACK
+  return Math.min(HERO_AR_MAX, Math.max(HERO_AR_MIN, Math.min(...found)))
+}
+
+/**
  * The homepage hero. Was a single still (`slides[0]`); it now cross-fades
  * through every slide published in admin → Hero, exactly like the classic
  * and brand skins, and keeps the éditorial copy block on top.
@@ -117,6 +142,18 @@ export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
   const [awake, setAwake] = useState(true)
   /* Shared media-query hook (ed-scroll.ts), same one `.hist-in` uses. */
   const reduced = useMedia('(prefers-reduced-motion: reduce)')
+  /* Slides saved before ROUND 23b carry no stored size. Rather than guess a
+     ratio for them, measure the decoded image once and fold it in — so his
+     existing slider adapts without anything being re-uploaded. Slides that DO
+     carry `w`/`h` are correct from the first server-rendered paint, with no
+     shift. */
+  const [measured, setMeasured] = useState<Record<string, number>>({})
+  const note = useCallback((src: string, el: HTMLImageElement) => {
+    const r = el.naturalWidth / el.naturalHeight
+    if (!Number.isFinite(r) || r <= 0) return
+    setMeasured((m) => (m[src] !== undefined ? m : { ...m, [src]: r }))
+  }, [])
+  const ar = useMemo(() => heroAspect(slides, measured), [slides, measured])
 
   /* An always-running animation is only free when nobody is looking at it. */
   useEffect(() => {
@@ -199,7 +236,7 @@ export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
       <div
         className={cls}
         ref={card}
-        style={{ '--hero-ms': `${HERO_MS}ms` } as React.CSSProperties}
+        style={{ '--hero-ms': `${HERO_MS}ms`, '--hero-ar': String(ar) } as React.CSSProperties}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         onFocusCapture={() => setHover(true)}
@@ -227,6 +264,7 @@ export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
                   quality={82}
                   priority={n === 0}
                   fetchPriority={n === 0 ? 'high' : 'auto'}
+                  onLoad={(e) => note(s.src, e.currentTarget)}
                   style={{ objectFit: 'cover' }}
                 />
               ) : (

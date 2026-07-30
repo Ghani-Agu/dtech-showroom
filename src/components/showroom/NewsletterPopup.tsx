@@ -141,6 +141,15 @@ export function NewsletterPopup() {
   if (!open) return null
 
   const already = state?.ok === true && state.status === 'already_subscribed'
+  /* ROUND 24 — saved, but no confirmation email went out. Literals rather than
+     t() because these keys are not in the message catalogues. */
+  const noMail = state?.ok === true && state.status === 'saved_no_mail'
+  const noMailSub =
+    locale === 'en'
+      ? 'You are on the list. The confirmation email could not be sent — we will confirm you manually.'
+      : locale === 'ar'
+        ? 'تم تسجيلك. تعذّر إرسال بريد التأكيد — سنؤكّد اشتراكك يدويًا.'
+        : 'Inscription enregistrée. L’e-mail de confirmation n’a pas pu partir — nous vous confirmons manuellement.'
   let errText: string | null = null
   if (state && !state.ok) {
     const code = state.errors?.email?.[0] ?? state.errors?._form?.[0] ?? 'generic'
@@ -189,7 +198,9 @@ export function NewsletterPopup() {
                 </svg>
               </span>
               <p className="np-done-title">{already ? t('alreadyTitle') : t('okTitle')}</p>
-              <p className="np-done-sub">{already ? t('alreadySub') : t('okSub')}</p>
+              <p className="np-done-sub">
+                {noMail ? noMailSub : already ? t('alreadySub') : t('okSub')}
+              </p>
               <button type="button" className="np-cta np-cta-done" onClick={() => setOpen(false)}>
                 {t('doneBtn')}
               </button>
@@ -220,7 +231,7 @@ export function NewsletterPopup() {
                   }}
                 >
                   <label htmlFor="np-hp">Website</label>
-                  <input type="text" name="website" id="np-hp" tabIndex={-1} autoComplete="off" />
+                  <input type="text" name="nl_ref_url" id="np-hp" tabIndex={-1} autoComplete="off" />
                 </div>
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="source" value="popup" />

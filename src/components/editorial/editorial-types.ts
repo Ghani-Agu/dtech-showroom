@@ -32,6 +32,10 @@ export interface EdBrandItem {
 export interface EdHeroSlide {
   src: string
   alt: string
+  /** Stored pixel size (ROUND 23b). Absent on slides uploaded before that —
+   *  `EdHero` measures those from the decoded image instead. */
+  w?: number
+  h?: number
 }
 
 /** A real product surfaced inside the bento's "proof" artifacts. */

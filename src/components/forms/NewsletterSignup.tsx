@@ -111,6 +111,10 @@ export function NewsletterSignup({
       if (state.status === 'pending') statusText = successPending
       else if (state.status === 'already_subscribed') statusText = successAlready
       else if (state.status === 'resent') statusText = successResent
+      /* ROUND 24 — stored, but the confirmation could not be sent. Saying
+         "check your inbox" here is a lie the visitor waits on. */
+      else if (state.status === 'saved_no_mail')
+        statusText = FallbackT(t, 'successNoMail', 'Inscription enregistrée. L’e-mail de confirmation n’a pas pu partir — nous vous confirmons manuellement, ou réessayez plus tard.')
       else statusText = successPending
     } else {
       statusTone = 'err'

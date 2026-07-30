@@ -9,13 +9,16 @@
  * confirmation email through the central mailer (dev-stub friendly).
  */
 
+import { revalidatePath } from 'next/cache'
 import { createHash, randomBytes } from 'node:crypto'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { campaignSends, subscribers, type SubscriberStatus } from '@/db/schema'
-import { sendEmail } from '@/lib/mailer'
+import { sendEmail, isEmailConfigured } from '@/lib/mailer'
+import { requireSection } from '@/lib/auth-helpers'
+import { getSiteUrl, isPublicSiteUrl } from '@/lib/site-url'
 import { confirmationTemplate } from '@/lib/email-templates'
 import {
   isBrevoConfigured,
@@ -23,9 +26,6 @@ import {
   setBrevoContactBlacklist,
   getBrevoListId,
 } from '@/lib/brevo'
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 const EMAIL_RE =
   /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
@@ -42,7 +42,17 @@ const ratelimit =
 
 export interface NewsletterActionResult {
   ok: boolean
-  status?: 'pending' | 'already_subscribed' | 'resent'
+  /**
+   * `pending` / `resent`  — row saved AND the confirmation left the building.
+   * `already_subscribed`  — nothing to do.
+   * `saved_no_mail`       — ROUND 24. The address IS stored, but the
+   *   confirmation could not be sent (no provider, provider rejected, or the
+   *   site URL is not publicly reachable so the link would be dead). Never
+   *   report this as a plain success: the visitor would sit waiting for an
+   *   email that is not coming, and the admin would never know why the list
+   *   stopped growing.
+   */
+  status?: 'pending' | 'already_subscribed' | 'resent' | 'saved_no_mail'
   errors?: { _form?: string[]; email?: string[] }
 }
 
@@ -79,8 +89,16 @@ export async function subscribeAction(
   _prev: NewsletterActionResult | null,
   form: FormData
 ): Promise<NewsletterActionResult> {
-  // Honeypot — silently pretend success without writing anything.
-  if (typeof form.get('website') === 'string' && (form.get('website') as string).length > 0) {
+  /* Honeypot. ROUND 24 — the field used to be called `website`, which Chrome
+     autofill and form-filling extensions recognise and populate: a real
+     visitor got silently discarded and told "thanks". The field is now
+     `nl_ref_url`, a name nothing autofills, and a trip is LOGGED so this can
+     never again be an invisible drop. The old name is still checked so a
+     cached page from before this deploy keeps working. */
+  const trap =
+    String(form.get('nl_ref_url') ?? '') || String(form.get('website') ?? '')
+  if (trap.trim().length > 0) {
+    console.warn('[newsletter] honeypot tripped — submission discarded')
     return { ok: true, status: 'pending' }
   }
 
@@ -120,6 +138,27 @@ export async function subscribeAction(
     /* ignore */
   }
 
+  try {
+    return await runSubscribe({ email, locale, source, ipHash })
+  } catch (err) {
+    /* Was an unhandled throw — the visitor got Next's generic server-action
+       error with no clue, and nothing was logged anywhere he would look. */
+    console.error('[newsletter] subscribe failed:', err)
+    return { ok: false, errors: { _form: ['generic'] } }
+  }
+}
+
+async function runSubscribe({
+  email,
+  locale,
+  source,
+  ipHash,
+}: {
+  email: string
+  locale: string
+  source: string
+  ipHash: string | null
+}): Promise<NewsletterActionResult> {
   // Look up existing row.
   const existing = await db
     .select({
@@ -144,8 +183,8 @@ export async function subscribeAction(
       source,
       ipHash,
     })
-    await sendConfirmation(email, confirmToken, locale)
-    return { ok: true, status: 'pending' }
+    const sent = await sendConfirmation(email, confirmToken, locale)
+    return { ok: true, status: sent.ok ? 'pending' : 'saved_no_mail' }
   }
 
   if (existing.status === 'subscribed') {
@@ -164,18 +203,40 @@ export async function subscribeAction(
       unsubscribedAt: null,
     })
     .where(eq(subscribers.id, existing.id))
-  await sendConfirmation(email, confirmToken, locale)
-  return { ok: true, status: 'resent' }
+  const sent = await sendConfirmation(email, confirmToken, locale)
+  return { ok: true, status: sent.ok ? 'resent' : 'saved_no_mail' }
 }
 
+/**
+ * Send the double-opt-in confirmation.
+ *
+ * ROUND 24 — this used to be `Promise<void>` and threw the result away, so
+ * every failure mode below was invisible: no provider key, a provider
+ * rejection, or a confirm link pointing at localhost. The subscriber sat at
+ * `pending` for ever and, since campaigns only target `subscribed`, silently
+ * never existed as far as the marketing screens were concerned.
+ */
 async function sendConfirmation(
   email: string,
   token: string,
   locale: string
-): Promise<void> {
-  const confirmUrl = `${SITE_URL}/${locale}/newsletter/confirm?token=${encodeURIComponent(token)}`
-  const tpl = confirmationTemplate({ siteUrl: SITE_URL, confirmUrl, locale })
-  await sendEmail({
+): Promise<{ ok: boolean; error?: string }> {
+  const siteUrl = getSiteUrl()
+
+  if (!isPublicSiteUrl(siteUrl)) {
+    const error = `NEXT_PUBLIC_SITE_URL is not set — the confirm link would point at ${siteUrl}`
+    console.error(`[newsletter] refusing to send to ${email}: ${error}`)
+    return { ok: false, error }
+  }
+  if (!(await isEmailConfigured())) {
+    const error = 'no email provider configured (Brevo key or RESEND_API_KEY)'
+    console.error(`[newsletter] cannot confirm ${email}: ${error}`)
+    return { ok: false, error }
+  }
+
+  const confirmUrl = `${siteUrl}/${locale}/newsletter/confirm?token=${encodeURIComponent(token)}`
+  const tpl = confirmationTemplate({ siteUrl, confirmUrl, locale })
+  const res = await sendEmail({
     to: email,
     subject:
       locale === 'en'
@@ -187,6 +248,10 @@ async function sendConfirmation(
     text: tpl.text,
     tag: 'newsletter-confirm',
   })
+  if (!res.ok) {
+    console.error(`[newsletter] confirmation to ${email} failed: ${res.error}`)
+  }
+  return { ok: res.ok, error: res.error }
 }
 
 /** Push a confirmed subscriber into the Brevo contact base (and the
@@ -322,5 +387,111 @@ async function syncUnsubscribeToBrevo(email: string): Promise<void> {
     }
   } catch (err) {
     console.warn('[newsletter] Brevo blacklist sync error:', err)
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROUND 24 — admin side of the same flow.
+
+   Double opt-in means a signup only reaches the marketing screens once the
+   visitor clicks the link, and campaigns target `subscribed` only. When the
+   confirmation email cannot be delivered — no provider key, a rejected send,
+   a confirm link that pointed at localhost — every signup piles up as
+   `pending` and the list looks dead from the back office. These give the
+   admin a way out without touching SQL: see WHY it is stuck, resend, or
+   confirm the address by hand.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface NewsletterHealth {
+  /** A provider (Brevo key in Réglages, or RESEND_API_KEY) is available. */
+  mailConfigured: boolean
+  /** Origin the confirm links are being built from. */
+  siteUrl: string
+  /** False when that origin is localhost — links in real inboxes are dead. */
+  siteUrlPublic: boolean
+}
+
+export async function getNewsletterHealth(): Promise<NewsletterHealth> {
+  /* Exported from a 'use server' module = a public endpoint. Gate it: it
+     reports whether the mailer is configured, which is nobody's business. */
+  await requireSection('newsletter')
+  const siteUrl = getSiteUrl()
+  let mailConfigured = false
+  try {
+    mailConfigured = await isEmailConfigured()
+  } catch {
+    /* app_settings unreachable — report "not configured" rather than throw,
+       this only drives a banner. */
+  }
+  return { mailConfigured, siteUrl, siteUrlPublic: isPublicSiteUrl(siteUrl) }
+}
+
+/** Rotate the token and send the confirmation again. */
+export async function resendConfirmationAction(
+  id: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await requireSection('newsletter')
+    const row = await db
+      .select({ id: subscribers.id, email: subscribers.email, locale: subscribers.locale, status: subscribers.status })
+      .from(subscribers)
+      .where(eq(subscribers.id, id))
+      .limit(1)
+      .then((r) => r[0])
+    if (!row) return { ok: false, error: 'Abonné introuvable' }
+    if (row.status === 'subscribed') return { ok: false, error: 'Déjà confirmé' }
+
+    const confirmToken = newToken()
+    await db
+      .update(subscribers)
+      .set({ status: 'pending' satisfies SubscriberStatus, confirmToken, unsubscribedAt: null })
+      .where(eq(subscribers.id, row.id))
+
+    const sent = await sendConfirmation(row.email, confirmToken, row.locale)
+    revalidatePath('/admin/subscribers')
+    return sent.ok ? { ok: true } : { ok: false, error: sent.error ?? "L'e-mail n'est pas parti" }
+  } catch (err) {
+    console.error('[newsletter] resend failed:', err)
+    return { ok: false, error: err instanceof Error ? err.message : 'Échec' }
+  }
+}
+
+/**
+ * Confirm an address from the back office.
+ *
+ * Deliberately manual and one at a time: this is consent, not a bulk import.
+ * Use it for people who signed up while the mailer was broken, or who tell
+ * you in person / on WhatsApp that they want the newsletter.
+ */
+export async function confirmSubscriberAction(
+  id: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await requireSection('newsletter')
+    const row = await db
+      .select({ id: subscribers.id, email: subscribers.email, status: subscribers.status })
+      .from(subscribers)
+      .where(eq(subscribers.id, id))
+      .limit(1)
+      .then((r) => r[0])
+    if (!row) return { ok: false, error: 'Abonné introuvable' }
+    if (row.status === 'subscribed') return { ok: true }
+
+    await db
+      .update(subscribers)
+      .set({
+        status: 'subscribed' satisfies SubscriberStatus,
+        confirmToken: null,
+        confirmedAt: sql`now()`,
+        unsubscribedAt: null,
+      })
+      .where(eq(subscribers.id, row.id))
+
+    void syncSubscriberToBrevo(row.email)
+    revalidatePath('/admin/subscribers')
+    return { ok: true }
+  } catch (err) {
+    console.error('[newsletter] manual confirm failed:', err)
+    return { ok: false, error: err instanceof Error ? err.message : 'Échec' }
   }
 }

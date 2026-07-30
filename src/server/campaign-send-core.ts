@@ -35,6 +35,7 @@ import {
   type Campaign,
   type CampaignStatus,
 } from '@/db/schema'
+import { getSiteUrl } from '@/lib/site-url'
 import { sendEmail } from '@/lib/mailer'
 import { campaignEnvelope } from '@/lib/email-templates'
 import { rewriteLinksForTracking } from '@/lib/email-tracking'
@@ -45,13 +46,11 @@ import type {
   ChunkResult,
 } from '@/types/campaigns'
 
-export function getSiteUrl(): string {
-  const explicit = (process.env.NEXT_PUBLIC_SITE_URL ?? '').trim()
-  if (explicit) return explicit.replace(/\/+$/, '')
-  const prod = (process.env.VERCEL_PROJECT_PRODUCTION_URL ?? '').trim()
-  if (prod) return `https://${prod}`
-  return 'http://localhost:3000'
-}
+/* ROUND 24 — moved to `@/lib/site-url` so the newsletter confirm link and the
+   campaign links can never disagree again. Imported (not just re-exported) so
+   the local uses below still resolve; re-exported because campaign-actions.ts
+   imports it from this module. */
+export { getSiteUrl }
 
 /** 'fr' | 'en' | 'ar' route segment for a stored subscriber locale. */
 export function normalizeLocale(locale: string | null | undefined): 'fr' | 'en' | 'ar' {

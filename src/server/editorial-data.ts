@@ -121,7 +121,12 @@ export function buildEditorialData(
      preloader. */
   const heroSlides = (hero?.slides ?? [])
     .filter((s) => !!s.src)
-    .map((s) => ({ src: s.src, alt: s.alt ?? '' }))
+    .map((s) => ({
+      src: s.src,
+      alt: s.alt ?? '',
+      /* ROUND 23b — dimensions drive the band's aspect ratio client-side. */
+      ...(s.w && s.h ? { w: s.w, h: s.h } : {}),
+    }))
 
   return {
     cats,

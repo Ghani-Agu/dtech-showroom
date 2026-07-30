@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/db/client'
 import { sitePages, imageBlobs } from '@/db/schema'
 import { requireSection } from '@/lib/auth-helpers'
-import { processVariant, validateImage } from '@/lib/image-processing'
+import { processHeroSlide, validateImage } from '@/lib/image-processing'
 import { R2_CONFIGURED, generateHash, uploadToR2 } from '@/lib/r2'
 import { sanitizeHeroConfig, type HeroConfig } from '@/components/home/hero-config'
 
@@ -20,7 +20,9 @@ export interface HeroActionResult {
 /** Upload one hero slide image (R2 if configured, else Postgres image_blobs). */
 export async function uploadHeroImage(
   formData: FormData
-): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+): Promise<
+  { ok: true; url: string; w: number; h: number } | { ok: false; error: string }
+> {
   try {
     await requireSection('editor')
     const file = formData.get('file')
@@ -30,28 +32,31 @@ export async function uploadHeroImage(
     await validateImage(buf)
     const hash = generateHash(`${file.name}-${Date.now()}`)
 
+    /* ROUND 23b — no fixed crop. The slide keeps its own aspect ratio and we
+       carry the real output size back to the editor, which stores it on the
+       slide so the storefront band can size itself to the artwork. */
     if (R2_CONFIGURED) {
       const [webp, avif] = await Promise.all([
-        processVariant(buf, 'heroSlide', 'webp'),
-        processVariant(buf, 'heroSlide', 'avif'),
+        processHeroSlide(buf, 'webp'),
+        processHeroSlide(buf, 'avif'),
       ])
-      const [w] = await Promise.all([
-        uploadToR2(`hero/slide-${hash}.webp`, webp, 'image/webp'),
-        uploadToR2(`hero/slide-${hash}.avif`, avif, 'image/avif'),
+      const [up] = await Promise.all([
+        uploadToR2(`hero/slide-${hash}.webp`, webp.data, 'image/webp'),
+        uploadToR2(`hero/slide-${hash}.avif`, avif.data, 'image/avif'),
       ])
-      return { ok: true, url: w.url }
+      return { ok: true, url: up.url, w: webp.width, h: webp.height }
     }
 
-    const webp = await processVariant(buf, 'heroSlide', 'webp')
+    const webp = await processHeroSlide(buf, 'webp')
     const key = `hero/slide-${hash}.webp`
     await db
       .insert(imageBlobs)
-      .values({ key, contentType: 'image/webp', data: webp })
+      .values({ key, contentType: 'image/webp', data: webp.data })
       .onConflictDoUpdate({
         target: imageBlobs.key,
-        set: { contentType: 'image/webp', data: webp },
+        set: { contentType: 'image/webp', data: webp.data },
       })
-    return { ok: true, url: `/api/images/${key}` }
+    return { ok: true, url: `/api/images/${key}`, w: webp.width, h: webp.height }
   } catch (err) {
     console.error('[hero upload] Failed:', err)
     return { ok: false, error: err instanceof Error ? err.message : "Échec de l'envoi" }

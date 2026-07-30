@@ -60,14 +60,18 @@ export function FooterNewsletter({ source = 'footer' }: { source?: string }) {
   if (state) {
     ok = state.ok
     if (state.ok) {
+      /* ROUND 24 — `saved_no_mail` must NOT read as "check your inbox": the
+         address is stored but no email is coming. */
       statusText =
         state.status === 'already_subscribed'
           ? tf(t, 'successAlready', 'Vous êtes déjà inscrit·e — merci !')
-          : tf(
-              t,
-              'successPending',
-              'Vérifiez votre boîte mail — un message de confirmation vient d’arriver.'
-            )
+          : state.status === 'saved_no_mail'
+            ? tf(t, 'successNoMail', 'Inscription enregistrée. L’e-mail de confirmation n’a pas pu partir — nous vous confirmons manuellement, ou réessayez plus tard.')
+            : tf(
+                t,
+                'successPending',
+                'Vérifiez votre boîte mail — un message de confirmation vient d’arriver.'
+              )
     } else {
       const code =
         state.errors?.email?.[0] ?? state.errors?._form?.[0] ?? 'generic'
@@ -109,7 +113,7 @@ export function FooterNewsletter({ source = 'footer' }: { source?: string }) {
         }}
       >
         <label htmlFor={hpId}>Website</label>
-        <input type="text" name="website" id={hpId} tabIndex={-1} autoComplete="off" />
+        <input type="text" name="nl_ref_url" id={hpId} tabIndex={-1} autoComplete="off" />
       </div>
 
       <input type="hidden" name="locale" value={locale} />
