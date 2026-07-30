@@ -310,8 +310,11 @@ function CartCirc() {
 function NewsletterCirc() {
   const { lang } = useEditorial()
   const setOpen = useNlPopup((s) => s.setOpen)
+  /* `circ-nl`: the PHONE PASS hides this one ≤620px — five 40px circles left
+     the pill's section label ~55px. The pop-up opens itself and the same
+     form is in the menu overlay and the footer. */
   return (
-    <button className="circ" type="button" aria-label={NL_LABEL[lang]} title={NL_LABEL[lang]} onClick={() => setOpen(true)}>
+    <button className="circ circ-nl" type="button" aria-label={NL_LABEL[lang]} title={NL_LABEL[lang]} onClick={() => setOpen(true)}>
       <EIcon n="mail" s={16} />
     </button>
   )

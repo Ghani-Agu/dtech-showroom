@@ -2061,3 +2061,188 @@
 }
 
 /* hmr-probe */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHONE PASS (round 26) — everything below is scoped to touch/narrow
+   viewports. Read the notes: several of these are load-bearing.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Grid tracks must never be sized by their content on a phone ──
+   `grid-template-columns: 1fr` is `minmax(auto, 1fr)`, and that `auto`
+   minimum is the item's MIN-CONTENT contribution. On /products the rail
+   below 1000px turns into a wrap-flex row whose `.edp-cats` child is
+   `flex: 1 1 100%`; a percentage flex-basis makes the flex container
+   report the chip row's MAX-content (28 nowrap chips ≈ 4419px) as its
+   intrinsic width, so the single "1fr" track became 4419px wide inside a
+   390px phone. Every product card was then 2204px wide and 1812px tall:
+   the catalogue rendered as a column of blank white slabs with the photo
+   in the top-left corner — "you can't see any product". `minmax(0, 1fr)`
+   removes the content-driven floor; `min-width: 0` stops the flex
+   container from propagating it in the first place. Both, deliberately. */
+@media (max-width: 1000px) {
+  .editorial-root .edp-layout { grid-template-columns: minmax(0, 1fr); }
+  .editorial-root .edp-rail { min-width: 0; max-width: 100%; }
+  .editorial-root .edp-cats { min-width: 0; }
+  .editorial-root .edp-results { min-width: 0; }
+}
+
+/* Same class of bug on the product page: the single implicit `auto` track
+   was sized by the gallery's min-content and pushed the whole info column
+   32px past the right edge, clipping the last word of every line. */
+@media (max-width: 979px) {
+  .editorial-root .ed-pdp-grid { grid-template-columns: minmax(0, 1fr); }
+  .editorial-root .ed-pdp-media { min-width: 0; }
+}
+
+/* ── 2. iOS zooms the whole page when you focus an input under 16px ──
+   Every form field in the skin was 13–14.5px, so tapping the catalogue
+   search (or any contact field) punched the layout to ~115% and left the
+   page scrolled sideways afterwards. 16px is the documented threshold. */
+@media (max-width: 860px) {
+  .editorial-root input,
+  .editorial-root textarea,
+  .editorial-root select,
+  .sr-nlpop input {
+    font-size: 16px;
+  }
+  .editorial-root .edp-sort select { height: 42px; }
+}
+
+/* ── 3. The pill nav ran out of room ──
+   390px phone: logo 40 + FIVE 40px circles (WhatsApp, call, newsletter,
+   cart, menu) + gaps = 288px of the 343px inside the pill, leaving ~55px
+   for the section label — it read as a squeezed jumble of black dots.
+   The newsletter circle goes: the pop-up opens itself, and the same
+   subscribe form sits in the menu overlay AND the footer. Call stays —
+   for a hardware shop in Alger it is the highest-intent tap on the page. */
+@media (max-width: 620px) {
+  .editorial-root .circ-nl { display: none; }
+  .editorial-root .pill { width: calc(100vw - 24px); }
+  .editorial-root .pill-in { gap: 8px; }
+  .editorial-root .pill-acts { gap: 6px; }
+  .editorial-root .pill-lab { min-width: 0; }
+  .editorial-root .pill-lab b { font-size: 12px; padding-inline: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; line-height: 20px; }
+}
+
+/* ── 4. Catalogue cards: the primary button was wrapping mid-label ──
+   In the 2-up phone grid a card is 172px wide, so the action row
+   (button + cart + WhatsApp on one line) gave the button ~82px and
+   "VOIR LA FICHE" broke across two lines inside a 34px pill. Stack it:
+   full-width primary on its own row, the two icon buttons under it at a
+   real 40px touch height. */
+@media (max-width: 560px) {
+  .editorial-root .edp-cardbody { padding: 12px 12px 12px; gap: 4px; }
+  .editorial-root .edp-acts { flex-wrap: wrap; gap: 6px; padding-top: 10px; }
+  .editorial-root .edp-view { flex: 1 0 100%; height: 40px; font-size: 10.5px; letter-spacing: .05em; white-space: nowrap; }
+  .editorial-root .edp-icon { flex: 1 1 0; width: auto; height: 40px; }
+  /* A 6-line product name in a 172px column pushed everything else out of
+     the card; three lines + ellipsis keeps the grid even. */
+  .editorial-root .edp-name { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 13.5px; }
+  .editorial-root .edp-spec { -webkit-line-clamp: 2; min-height: 0; font-size: 11.5px; }
+  .editorial-root .edp-kicker { font-size: 9px; }
+}
+
+/* Filter chips were 31px tall — under every touch-target guideline. */
+@media (max-width: 1000px) {
+  .editorial-root .edp-cat { min-height: 38px; }
+  .editorial-root .edp-fam h3 { min-height: 38px; display: flex; align-items: center; }
+  .editorial-root .edp-feat { min-height: 40px; }
+}
+
+/* ── 5. Search / brand / category results were ONE card per row ──
+   `.ed-prod-grid` asks for 255px columns, so a 354px phone got a single
+   column of 441px-tall cards: a "hp" search was 29 000px of scrolling for
+   30 results. Two columns halve it and match the catalogue. */
+@media (max-width: 560px) {
+  .editorial-root .ed-prod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .editorial-root .ed-prod-grid .ed-card-body { padding: 12px 12px 13px; gap: 4px; }
+  .editorial-root .ed-prod-grid .ed-card-name { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .editorial-root .ed-prod-grid .ed-card-kicker { font-size: 9px; letter-spacing: .1em; }
+  .editorial-root .ed-prod-grid .ed-card-spec { font-size: 11.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 0; }
+  .editorial-root .ed-prod-grid .ed-card-imgbox { padding: 10px; }
+  .editorial-root .ed-prod-grid .ed-card-foot { flex-wrap: wrap; gap: 6px; padding-top: 10px; }
+  .editorial-root .ed-prod-grid .ed-card-cta { flex: 1 0 100%; padding: 13px 10px; font-size: 10.5px; white-space: nowrap; }
+  .editorial-root .ed-prod-grid .ed-card-wa { flex: 1 1 0; width: auto; height: 40px; border-radius: 12px; }
+}
+
+/* ── 6. Hero copy over the photograph, on a phone ──
+   ROUND 23 removed the scrims on request: the banner shows at full
+   brightness and the admin composes a dark bottom-start corner to hold the
+   white type. That contract only holds while the band keeps the image's
+   ratio. Below 860px it does NOT — a 2.74:1 banner would be 142px tall, so
+   the band switches to a 580px box and `object-fit: cover` crops the middle
+   out of the artwork. The composed dark corner is simply not on screen, and
+   the copy landed on whatever the crop happened to contain (on a circuit-
+   board slide: unreadable). This gradient is phone-only and sits under the
+   copy just enough to carry it — the desktop banner is untouched. */
+@media (max-width: 860px) {
+  .editorial-root .hero-in::before {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 78%;
+    background: linear-gradient(to top, rgba(6, 8, 10, .82) 0%, rgba(6, 8, 10, .66) 34%, rgba(6, 8, 10, .3) 66%, transparent 100%);
+    pointer-events: none;
+  }
+  .editorial-root .hero-in > * { position: relative; }
+  .editorial-root .hero-tag { color: rgba(255, 255, 255, .8); }
+  .editorial-root .hero p { color: rgba(255, 255, 255, .92); }
+  /* Two stacked full-width buttons beat two half-width ones you have to aim at. */
+  .editorial-root .hero-btns { gap: 9px; }
+  .editorial-root .hero-btns .btn { padding: 13px 20px; }
+}
+@media (max-width: 420px) {
+  .editorial-root .hero-btns .btn { flex: 1 0 100%; justify-content: center; }
+}
+
+/* ── 7. Bento: the 3D scenes spilled onto their own captions ──
+   `.bt-media` is `flex: 1; min-height: 150px` and the scenes inside are
+   drawn at fixed pixel sizes. Stacked one-per-row on a phone the media box
+   collapses to its floor while the invoice sheet keeps its full height, so
+   the artwork printed straight over the "Facture et garantie" heading.
+   Clip the media box and give it a real floor. */
+@media (max-width: 1023px) {
+  .editorial-root .bt-media { overflow: hidden; }
+}
+@media (max-width: 759px) {
+  .editorial-root .bt-media { min-height: 220px; }
+  .editorial-root .bt-txt { padding: 18px 20px 22px; }
+  .editorial-root .bt-txt h3 { font-size: 16.5px; align-items: flex-start; }
+  .editorial-root .bt-txt p { font-size: 13.5px; }
+}
+
+/* ── 8. Phone-width polish on the section headers and rails ── */
+@media (max-width: 560px) {
+  .editorial-root .edp-toolbar { gap: 10px; padding: 10px 0 12px; }
+  .editorial-root .edp-chips { gap: 6px; margin-bottom: 12px; }
+  .editorial-root .edp-chip { min-height: 34px; }
+  /* the brand rail's chips were 46px tall but 8px apart from the edge */
+  .editorial-root .edp-bchip { height: 44px; }
+}
+
+/* The 16px inset around the card photo costs 37% of a 172px phone tile —
+   the product ended up smaller than its own brand badge. */
+@media (max-width: 560px) {
+  .editorial-root .edp-cardimg img { inset: 8px !important; max-width: calc(100% - 16px); max-height: calc(100% - 16px); }
+}
+
+/* Product page: the two calls to action were content-width, so "Commander
+   sur WhatsApp" ran to 78% of the screen and "Ajouter au panier" stopped at
+   55% — a ragged pair of half-buttons. Full width, equal, stacked. */
+@media (max-width: 560px) {
+  .editorial-root .ed-pdp-ctas { gap: 10px; margin-top: 22px; }
+  .editorial-root .ed-pdp-ctas .btn { flex: 1 0 100%; justify-content: center; padding: 14px 18px; }
+  .editorial-root .ed-pdp { padding-top: 118px; }
+  .editorial-root .ed-pdp-title { font-size: 24px; }
+  .editorial-root .ed-pdp-tag { font-size: 14.5px; margin-top: 12px; }
+}
+
+/* /gaming — the segmented control is an inline-flex pill with a 999px
+   radius. Three French labels do not fit one 354px row, so it wrapped into
+   a two-row blob whose second row sat on the capsule's curve. Full-width
+   rounded-rect with equal segments reads as a control at any wrap. */
+@media (max-width: 560px) {
+  .editorial-root .edg-tabs { display: flex; width: 100%; border-radius: 18px; padding: 4px; gap: 4px; justify-content: stretch; }
+  .editorial-root .edg-tabs button { flex: 1 1 auto; padding: 11px 8px; border-radius: 14px; font-size: 12px; text-align: center; }
+  .editorial-root .edg-tabs button em { margin-inline-start: 4px; font-size: 9.5px; }
+}

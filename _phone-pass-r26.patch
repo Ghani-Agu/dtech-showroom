@@ -1,0 +1,332 @@
+diff --git a/src/components/chat/ai-chat.css b/src/components/chat/ai-chat.css
+index 902464d..03bcdcd 100644
+--- a/src/components/chat/ai-chat.css
++++ b/src/components/chat/ai-chat.css
+@@ -735,3 +735,17 @@ body[data-home-theme='light'] .dt-chat-row.is-failed .dt-chat-msg {
+     opacity: 0.6;
+   }
+ }
++
++/* ─────────────────────────────────────────────────────────────────────
++   PHONE PASS (round 26) — the bubble was sitting ON the sticky buy bar.
++   On a product page `.sr-buybar` is fixed at bottom:10px, 64px tall, and
++   the launcher (bottom:18px, z-index 57 vs the bar's 55) covered its
++   thumbnail and the start of the product name. Lift the bubble above the
++   bar when one is mounted, and respect the home-indicator inset.
++   ───────────────────────────────────────────────────────────────────── */
++.dt-chat-fab {
++  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
++}
++body:has(.sr-buybar) .dt-chat-fab {
++  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
++}
+diff --git a/src/components/editorial/EditorialChrome.tsx b/src/components/editorial/EditorialChrome.tsx
+index 0ab441e..d9fb8b1 100644
+--- a/src/components/editorial/EditorialChrome.tsx
++++ b/src/components/editorial/EditorialChrome.tsx
+@@ -310,8 +310,11 @@ function CartCirc() {
+ function NewsletterCirc() {
+   const { lang } = useEditorial()
+   const setOpen = useNlPopup((s) => s.setOpen)
++  /* `circ-nl`: the PHONE PASS hides this one ≤620px — five 40px circles left
++     the pill's section label ~55px. The pop-up opens itself and the same
++     form is in the menu overlay and the footer. */
+   return (
+-    <button className="circ" type="button" aria-label={NL_LABEL[lang]} title={NL_LABEL[lang]} onClick={() => setOpen(true)}>
++    <button className="circ circ-nl" type="button" aria-label={NL_LABEL[lang]} title={NL_LABEL[lang]} onClick={() => setOpen(true)}>
+       <EIcon n="mail" s={16} />
+     </button>
+   )
+diff --git a/src/components/ui/Heading.tsx b/src/components/ui/Heading.tsx
+index d9c240a..9cd0066 100644
+--- a/src/components/ui/Heading.tsx
++++ b/src/components/ui/Heading.tsx
+@@ -12,12 +12,17 @@ interface HeadingProps {
+   className?: string
+ }
+ 
++/* PHONE PASS (round 26) — `xl` and `hero` started at 60px / 72px with no
++   small-screen step. A single French word ("Informations") is then ~490px
++   wide and ran clean off a 390px phone on /legal, /about and /inquiry/sent:
++   the title read "Informati / légales." with the rest cut off. Desktop
++   sizes are untouched — only a phone step was missing. */
+ const sizeClasses: Record<HeadingSize, string> = {
+   sm: 'text-3xl tracking-snug',
+   md: 'text-4xl md:text-5xl tracking-snug',
+-  lg: 'text-5xl md:text-6xl tracking-tight',
+-  xl: 'text-6xl md:text-7xl tracking-tight leading-tight',
+-  hero: 'text-7xl md:text-8xl lg:text-9xl tracking-tight leading-tight',
++  lg: 'text-4xl sm:text-5xl md:text-6xl tracking-tight',
++  xl: 'text-[2.5rem] sm:text-6xl md:text-7xl tracking-tight leading-tight',
++  hero: 'text-[2.75rem] sm:text-7xl md:text-8xl lg:text-9xl tracking-tight leading-tight',
+ }
+ 
+ export function Heading({
+diff --git a/src/styles/editorial-design.css b/src/styles/editorial-design.css
+index bebe429..9337cd6 100644
+--- a/src/styles/editorial-design.css
++++ b/src/styles/editorial-design.css
+@@ -2061,3 +2061,188 @@
+ }
+ 
+ /* hmr-probe */
++
++/* ═══════════════════════════════════════════════════════════════════════
++   PHONE PASS (round 26) — everything below is scoped to touch/narrow
++   viewports. Read the notes: several of these are load-bearing.
++   ═══════════════════════════════════════════════════════════════════════ */
++
++/* ── 1. Grid tracks must never be sized by their content on a phone ──
++   `grid-template-columns: 1fr` is `minmax(auto, 1fr)`, and that `auto`
++   minimum is the item's MIN-CONTENT contribution. On /products the rail
++   below 1000px turns into a wrap-flex row whose `.edp-cats` child is
++   `flex: 1 1 100%`; a percentage flex-basis makes the flex container
++   report the chip row's MAX-content (28 nowrap chips ≈ 4419px) as its
++   intrinsic width, so the single "1fr" track became 4419px wide inside a
++   390px phone. Every product card was then 2204px wide and 1812px tall:
++   the catalogue rendered as a column of blank white slabs with the photo
++   in the top-left corner — "you can't see any product". `minmax(0, 1fr)`
++   removes the content-driven floor; `min-width: 0` stops the flex
++   container from propagating it in the first place. Both, deliberately. */
++@media (max-width: 1000px) {
++  .editorial-root .edp-layout { grid-template-columns: minmax(0, 1fr); }
++  .editorial-root .edp-rail { min-width: 0; max-width: 100%; }
++  .editorial-root .edp-cats { min-width: 0; }
++  .editorial-root .edp-results { min-width: 0; }
++}
++
++/* Same class of bug on the product page: the single implicit `auto` track
++   was sized by the gallery's min-content and pushed the whole info column
++   32px past the right edge, clipping the last word of every line. */
++@media (max-width: 979px) {
++  .editorial-root .ed-pdp-grid { grid-template-columns: minmax(0, 1fr); }
++  .editorial-root .ed-pdp-media { min-width: 0; }
++}
++
++/* ── 2. iOS zooms the whole page when you focus an input under 16px ──
++   Every form field in the skin was 13–14.5px, so tapping the catalogue
++   search (or any contact field) punched the layout to ~115% and left the
++   page scrolled sideways afterwards. 16px is the documented threshold. */
++@media (max-width: 860px) {
++  .editorial-root input,
++  .editorial-root textarea,
++  .editorial-root select,
++  .sr-nlpop input {
++    font-size: 16px;
++  }
++  .editorial-root .edp-sort select { height: 42px; }
++}
++
++/* ── 3. The pill nav ran out of room ──
++   390px phone: logo 40 + FIVE 40px circles (WhatsApp, call, newsletter,
++   cart, menu) + gaps = 288px of the 343px inside the pill, leaving ~55px
++   for the section label — it read as a squeezed jumble of black dots.
++   The newsletter circle goes: the pop-up opens itself, and the same
++   subscribe form sits in the menu overlay AND the footer. Call stays —
++   for a hardware shop in Alger it is the highest-intent tap on the page. */
++@media (max-width: 620px) {
++  .editorial-root .circ-nl { display: none; }
++  .editorial-root .pill { width: calc(100vw - 24px); }
++  .editorial-root .pill-in { gap: 8px; }
++  .editorial-root .pill-acts { gap: 6px; }
++  .editorial-root .pill-lab { min-width: 0; }
++  .editorial-root .pill-lab b { font-size: 12px; padding-inline: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; line-height: 20px; }
++}
++
++/* ── 4. Catalogue cards: the primary button was wrapping mid-label ──
++   In the 2-up phone grid a card is 172px wide, so the action row
++   (button + cart + WhatsApp on one line) gave the button ~82px and
++   "VOIR LA FICHE" broke across two lines inside a 34px pill. Stack it:
++   full-width primary on its own row, the two icon buttons under it at a
++   real 40px touch height. */
++@media (max-width: 560px) {
++  .editorial-root .edp-cardbody { padding: 12px 12px 12px; gap: 4px; }
++  .editorial-root .edp-acts { flex-wrap: wrap; gap: 6px; padding-top: 10px; }
++  .editorial-root .edp-view { flex: 1 0 100%; height: 40px; font-size: 10.5px; letter-spacing: .05em; white-space: nowrap; }
++  .editorial-root .edp-icon { flex: 1 1 0; width: auto; height: 40px; }
++  /* A 6-line product name in a 172px column pushed everything else out of
++     the card; three lines + ellipsis keeps the grid even. */
++  .editorial-root .edp-name { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 13.5px; }
++  .editorial-root .edp-spec { -webkit-line-clamp: 2; min-height: 0; font-size: 11.5px; }
++  .editorial-root .edp-kicker { font-size: 9px; }
++}
++
++/* Filter chips were 31px tall — under every touch-target guideline. */
++@media (max-width: 1000px) {
++  .editorial-root .edp-cat { min-height: 38px; }
++  .editorial-root .edp-fam h3 { min-height: 38px; display: flex; align-items: center; }
++  .editorial-root .edp-feat { min-height: 40px; }
++}
++
++/* ── 5. Search / brand / category results were ONE card per row ──
++   `.ed-prod-grid` asks for 255px columns, so a 354px phone got a single
++   column of 441px-tall cards: a "hp" search was 29 000px of scrolling for
++   30 results. Two columns halve it and match the catalogue. */
++@media (max-width: 560px) {
++  .editorial-root .ed-prod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
++  .editorial-root .ed-prod-grid .ed-card-body { padding: 12px 12px 13px; gap: 4px; }
++  .editorial-root .ed-prod-grid .ed-card-name { font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
++  .editorial-root .ed-prod-grid .ed-card-kicker { font-size: 9px; letter-spacing: .1em; }
++  .editorial-root .ed-prod-grid .ed-card-spec { font-size: 11.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 0; }
++  .editorial-root .ed-prod-grid .ed-card-imgbox { padding: 10px; }
++  .editorial-root .ed-prod-grid .ed-card-foot { flex-wrap: wrap; gap: 6px; padding-top: 10px; }
++  .editorial-root .ed-prod-grid .ed-card-cta { flex: 1 0 100%; padding: 13px 10px; font-size: 10.5px; white-space: nowrap; }
++  .editorial-root .ed-prod-grid .ed-card-wa { flex: 1 1 0; width: auto; height: 40px; border-radius: 12px; }
++}
++
++/* ── 6. Hero copy over the photograph, on a phone ──
++   ROUND 23 removed the scrims on request: the banner shows at full
++   brightness and the admin composes a dark bottom-start corner to hold the
++   white type. That contract only holds while the band keeps the image's
++   ratio. Below 860px it does NOT — a 2.74:1 banner would be 142px tall, so
++   the band switches to a 580px box and `object-fit: cover` crops the middle
++   out of the artwork. The composed dark corner is simply not on screen, and
++   the copy landed on whatever the crop happened to contain (on a circuit-
++   board slide: unreadable). This gradient is phone-only and sits under the
++   copy just enough to carry it — the desktop banner is untouched. */
++@media (max-width: 860px) {
++  .editorial-root .hero-in::before {
++    content: '';
++    position: absolute;
++    inset: auto 0 0 0;
++    height: 78%;
++    background: linear-gradient(to top, rgba(6, 8, 10, .82) 0%, rgba(6, 8, 10, .66) 34%, rgba(6, 8, 10, .3) 66%, transparent 100%);
++    pointer-events: none;
++  }
++  .editorial-root .hero-in > * { position: relative; }
++  .editorial-root .hero-tag { color: rgba(255, 255, 255, .8); }
++  .editorial-root .hero p { color: rgba(255, 255, 255, .92); }
++  /* Two stacked full-width buttons beat two half-width ones you have to aim at. */
++  .editorial-root .hero-btns { gap: 9px; }
++  .editorial-root .hero-btns .btn { padding: 13px 20px; }
++}
++@media (max-width: 420px) {
++  .editorial-root .hero-btns .btn { flex: 1 0 100%; justify-content: center; }
++}
++
++/* ── 7. Bento: the 3D scenes spilled onto their own captions ──
++   `.bt-media` is `flex: 1; min-height: 150px` and the scenes inside are
++   drawn at fixed pixel sizes. Stacked one-per-row on a phone the media box
++   collapses to its floor while the invoice sheet keeps its full height, so
++   the artwork printed straight over the "Facture et garantie" heading.
++   Clip the media box and give it a real floor. */
++@media (max-width: 1023px) {
++  .editorial-root .bt-media { overflow: hidden; }
++}
++@media (max-width: 759px) {
++  .editorial-root .bt-media { min-height: 220px; }
++  .editorial-root .bt-txt { padding: 18px 20px 22px; }
++  .editorial-root .bt-txt h3 { font-size: 16.5px; align-items: flex-start; }
++  .editorial-root .bt-txt p { font-size: 13.5px; }
++}
++
++/* ── 8. Phone-width polish on the section headers and rails ── */
++@media (max-width: 560px) {
++  .editorial-root .edp-toolbar { gap: 10px; padding: 10px 0 12px; }
++  .editorial-root .edp-chips { gap: 6px; margin-bottom: 12px; }
++  .editorial-root .edp-chip { min-height: 34px; }
++  /* the brand rail's chips were 46px tall but 8px apart from the edge */
++  .editorial-root .edp-bchip { height: 44px; }
++}
++
++/* The 16px inset around the card photo costs 37% of a 172px phone tile —
++   the product ended up smaller than its own brand badge. */
++@media (max-width: 560px) {
++  .editorial-root .edp-cardimg img { inset: 8px !important; max-width: calc(100% - 16px); max-height: calc(100% - 16px); }
++}
++
++/* Product page: the two calls to action were content-width, so "Commander
++   sur WhatsApp" ran to 78% of the screen and "Ajouter au panier" stopped at
++   55% — a ragged pair of half-buttons. Full width, equal, stacked. */
++@media (max-width: 560px) {
++  .editorial-root .ed-pdp-ctas { gap: 10px; margin-top: 22px; }
++  .editorial-root .ed-pdp-ctas .btn { flex: 1 0 100%; justify-content: center; padding: 14px 18px; }
++  .editorial-root .ed-pdp { padding-top: 118px; }
++  .editorial-root .ed-pdp-title { font-size: 24px; }
++  .editorial-root .ed-pdp-tag { font-size: 14.5px; margin-top: 12px; }
++}
++
++/* /gaming — the segmented control is an inline-flex pill with a 999px
++   radius. Three French labels do not fit one 354px row, so it wrapped into
++   a two-row blob whose second row sat on the capsule's curve. Full-width
++   rounded-rect with equal segments reads as a control at any wrap. */
++@media (max-width: 560px) {
++  .editorial-root .edg-tabs { display: flex; width: 100%; border-radius: 18px; padding: 4px; gap: 4px; justify-content: stretch; }
++  .editorial-root .edg-tabs button { flex: 1 1 auto; padding: 11px 8px; border-radius: 14px; font-size: 12px; text-align: center; }
++  .editorial-root .edg-tabs button em { margin-inline-start: 4px; font-size: 9.5px; }
++}
+diff --git a/src/styles/showroom.css b/src/styles/showroom.css
+index 7bbd8e5..f76dd45 100644
+--- a/src/styles/showroom.css
++++ b/src/styles/showroom.css
+@@ -1731,3 +1731,70 @@ body[data-home-theme='light'] .sr-root .sr-spectable .row:nth-child(even) { back
+   .brand-root .sr-skinpage,
+   .editorial-root .sr-skinpage { padding: 36px 18px 64px; }
+ }
++
++/* ═══════════════════════════════════════════════════════════════════
++   PHONE PASS (round 26) — shared floating UI on a real phone.
++   Fixed bottom furniture sat 14–18px off the viewport edge, which on an
++   iPhone means underneath the home indicator. Add the inset, and give the
++   sticky buy bar room for a two-line product name instead of clipping it.
++   ═══════════════════════════════════════════════════════════════════ */
++.sr-fab { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
++.sr-buybar { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
++
++@media (max-width: 560px) {
++  .sr-buybar { gap: 8px; padding: 8px 9px; width: calc(100% - 16px); }
++  .sr-buybar .thumb { width: 40px; height: 40px; }
++  .sr-buybar .nm { font-size: 12.5px; }
++  .sr-buybar .wa { width: 40px; height: 40px; }
++  /* the pop-up's fine print used to slide under the assistant bubble */
++  .sr-nlpop { padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)); }
++  .sr-nlpop .np-card { max-height: 86vh; overflow-y: auto; overscroll-behavior: contain; }
++}
++
++/* The cart drawer left a 31px strip of page showing on a 390px phone —
++   too thin to read as "tap here to close", wide enough to look broken.
++   Full width with a scrim tap target above it instead. */
++@media (max-width: 560px) {
++  .sr-drawer { width: 100%; }
++  .sr-drawer .head { padding: 16px 18px; }
++  .sr-drawer .body { padding: 12px 18px; }
++  .sr-drawer .foot { padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
++}
++
++/* Every full-screen surface (cart drawer, éditorial menu, chat panel,
++   newsletter pop-up) was being punctured by the assistant bubble, which
++   lives in its own stacking context and floated over the drawer's own
++   "Commander via WhatsApp" button. */
++body:has(.sr-drawer) .dt-chat-fab,
++body:has(.editorial-root .ov) .dt-chat-fab,
++body:has(.sr-nlpop) .dt-chat-fab,
++body:has(.sr-drawer) .sr-fab,
++body:has(.editorial-root .ov) .sr-fab {
++  display: none;
++}
++
++/* The cart drawer is rendered INSIDE the skin root, so under the éditorial
++   skin it inherited the light palette's dark ink (#22201d) while keeping
++   its own hard-coded near-black panel (#070d18) — measured 1.05:1, i.e.
++   "Mon panier" and the line items were invisible. The brand skin got this
++   treatment in July; the éditorial skin never did. */
++.editorial-root .sr-drawer { background: var(--bg, #fff); border-inline-start-color: var(--line); box-shadow: -30px 0 80px rgba(0, 0, 0, .18); }
++.editorial-root .sr-drawer .qty { background: var(--wash2, #f4f4f2); }
++.editorial-root .sr-drawer .thumb { background: #fff; }
++.editorial-root .sr-overlay { background: rgba(12, 14, 16, .48); }
++
++/* CLASS COLLISION: `.foot` is the éditorial skin's dark rounded site footer
++   AND the cart drawer's action bar. The drawer renders inside the skin root,
++   so the drawer's footer was picking up `#1d1b19` + 64px of padding — a
++   black slab under a white drawer, with the fine print unreadable on it.
++   (Same for the WhatsApp button, whose label was inheriting 82% white.) */
++.editorial-root .sr-drawer .foot {
++  background: transparent;
++  color: var(--sr-text);
++  border-radius: 0;
++  box-shadow: none;
++  padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
++}
++.editorial-root .sr-drawer .foot a.sr-btn-wa { color: #06281a; font-size: 14.5px; }
++.editorial-root .sr-drawer .foot a { color: var(--sr-text); font-size: inherit; }
++.editorial-root .sr-drawer .foot .sr-mono { color: var(--ink-2); }

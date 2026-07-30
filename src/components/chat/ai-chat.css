@@ -735,3 +735,17 @@ body[data-home-theme='light'] .dt-chat-row.is-failed .dt-chat-msg {
     opacity: 0.6;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   PHONE PASS (round 26) — the bubble was sitting ON the sticky buy bar.
+   On a product page `.sr-buybar` is fixed at bottom:10px, 64px tall, and
+   the launcher (bottom:18px, z-index 57 vs the bar's 55) covered its
+   thumbnail and the start of the product name. Lift the bubble above the
+   bar when one is mounted, and respect the home-indicator inset.
+   ───────────────────────────────────────────────────────────────────── */
+.dt-chat-fab {
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+}
+body:has(.sr-buybar) .dt-chat-fab {
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+}

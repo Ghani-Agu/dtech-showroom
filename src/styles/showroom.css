@@ -1731,3 +1731,70 @@ body[data-home-theme='light'] .sr-root .sr-spectable .row:nth-child(even) { back
   .brand-root .sr-skinpage,
   .editorial-root .sr-skinpage { padding: 36px 18px 64px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHONE PASS (round 26) — shared floating UI on a real phone.
+   Fixed bottom furniture sat 14–18px off the viewport edge, which on an
+   iPhone means underneath the home indicator. Add the inset, and give the
+   sticky buy bar room for a two-line product name instead of clipping it.
+   ═══════════════════════════════════════════════════════════════════ */
+.sr-fab { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+.sr-buybar { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+
+@media (max-width: 560px) {
+  .sr-buybar { gap: 8px; padding: 8px 9px; width: calc(100% - 16px); }
+  .sr-buybar .thumb { width: 40px; height: 40px; }
+  .sr-buybar .nm { font-size: 12.5px; }
+  .sr-buybar .wa { width: 40px; height: 40px; }
+  /* the pop-up's fine print used to slide under the assistant bubble */
+  .sr-nlpop { padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .sr-nlpop .np-card { max-height: 86vh; overflow-y: auto; overscroll-behavior: contain; }
+}
+
+/* The cart drawer left a 31px strip of page showing on a 390px phone —
+   too thin to read as "tap here to close", wide enough to look broken.
+   Full width with a scrim tap target above it instead. */
+@media (max-width: 560px) {
+  .sr-drawer { width: 100%; }
+  .sr-drawer .head { padding: 16px 18px; }
+  .sr-drawer .body { padding: 12px 18px; }
+  .sr-drawer .foot { padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Every full-screen surface (cart drawer, éditorial menu, chat panel,
+   newsletter pop-up) was being punctured by the assistant bubble, which
+   lives in its own stacking context and floated over the drawer's own
+   "Commander via WhatsApp" button. */
+body:has(.sr-drawer) .dt-chat-fab,
+body:has(.editorial-root .ov) .dt-chat-fab,
+body:has(.sr-nlpop) .dt-chat-fab,
+body:has(.sr-drawer) .sr-fab,
+body:has(.editorial-root .ov) .sr-fab {
+  display: none;
+}
+
+/* The cart drawer is rendered INSIDE the skin root, so under the éditorial
+   skin it inherited the light palette's dark ink (#22201d) while keeping
+   its own hard-coded near-black panel (#070d18) — measured 1.05:1, i.e.
+   "Mon panier" and the line items were invisible. The brand skin got this
+   treatment in July; the éditorial skin never did. */
+.editorial-root .sr-drawer { background: var(--bg, #fff); border-inline-start-color: var(--line); box-shadow: -30px 0 80px rgba(0, 0, 0, .18); }
+.editorial-root .sr-drawer .qty { background: var(--wash2, #f4f4f2); }
+.editorial-root .sr-drawer .thumb { background: #fff; }
+.editorial-root .sr-overlay { background: rgba(12, 14, 16, .48); }
+
+/* CLASS COLLISION: `.foot` is the éditorial skin's dark rounded site footer
+   AND the cart drawer's action bar. The drawer renders inside the skin root,
+   so the drawer's footer was picking up `#1d1b19` + 64px of padding — a
+   black slab under a white drawer, with the fine print unreadable on it.
+   (Same for the WhatsApp button, whose label was inheriting 82% white.) */
+.editorial-root .sr-drawer .foot {
+  background: transparent;
+  color: var(--sr-text);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+.editorial-root .sr-drawer .foot a.sr-btn-wa { color: #06281a; font-size: 14.5px; }
+.editorial-root .sr-drawer .foot a { color: var(--sr-text); font-size: inherit; }
+.editorial-root .sr-drawer .foot .sr-mono { color: var(--ink-2); }
