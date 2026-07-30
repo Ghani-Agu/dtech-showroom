@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { db } from './client'
+import { KEEP_ALIVE_DDL } from '@/server/keep-alive'
 import photoCarouselMap from './photo-carousel-map.json'
 import productSpecsMap from './product-specs.json'
 import catalogueAr from './catalogue-ar.json'
@@ -146,6 +147,10 @@ const DDL: string[] = [
   // instead, so every existing admin list/detail query keeps working
   // untouched and an inquiry row always renders something meaningful.
   `ALTER TABLE "inquiries" ALTER COLUMN "product_id" DROP NOT NULL`,
+  // ── Supabase keep-alive ── (single-row counter bumped by the daily cron —
+  // src/server/keep-alive.ts owns the statements so the route can heal a
+  // database whose table is missing without waiting for a boot.)
+  ...KEEP_ALIVE_DDL,
 ]
 
 const DDL_HASH = createHash('sha1').update(DDL.join('\n;\n')).digest('hex').slice(0, 12)

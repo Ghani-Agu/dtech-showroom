@@ -53,3 +53,9 @@ next-env.d.ts
 /Photos/
 /Dtech*.zip
 
+
+# Scratch local — snapshots, tarballs de transfert, verrous git périmés (ne jamais committer)
+_to_delete/
+_stale_locks/
+_tc_*.tgz
+_keepalive_*.tgz

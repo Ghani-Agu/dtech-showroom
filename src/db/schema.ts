@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   integer,
+  smallint,
   boolean,
   jsonb,
   pgEnum,
@@ -409,6 +410,29 @@ export const appSettings = pgTable('app_settings', {
 })
 
 export type AppSettingRow = InferSelectModel<typeof appSettings>
+
+/**
+ * Single-row heartbeat. A daily cron does `ticks += 1` (see
+ * src/server/keep-alive.ts) so this free Supabase project keeps registering
+ * user activity and never gets auto-paused. `last_ping_at` doubles as the
+ * "is the scheduler still alive?" indicator.
+ *
+ * Created idempotently in ensure-schema.ts. `id` is pinned to 1 by a CHECK
+ * constraint, so there is only ever one row.
+ */
+export const keepAlive = pgTable('keep_alive', {
+  id: smallint('id').primaryKey().default(1),
+  ticks: integer('ticks').notNull().default(0),
+  lastPingAt: timestamp('last_ping_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  source: text('source'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+})
+
+export type KeepAliveRow = InferSelectModel<typeof keepAlive>
 
 /* ─────────────────────────────────────────────────────────────────
  * NEWSLETTER — subscribers, campaigns, per-recipient sends
