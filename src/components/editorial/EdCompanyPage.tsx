@@ -16,16 +16,20 @@
  *  2. Only DELL, ASUS and TP-LINK are official distributions, and only
  *     TP-LINK and AOC are exclusive. Everything else is "carried".
  *
- * Client names are rendered as TEXT, not logos: the marks belong to Mobilis,
- * Djezzy, Algérie Télécom and the rest, and inventing or AI-generating them
- * would be a trademark problem. Drop real files in `public/images/clients/`
- * and swap `.edcy-client` to an <Image> when you have permission.
+ * ROUND 27 — the client wall moved to `client-marks.tsx` and now reads like
+ * the distribution wall two sections up: a solid tile in the client's colour,
+ * the mark reversed out, plus a coloured bloom. The registry there shows
+ * artwork ONLY when a real (WHITE/mono) file has been put in
+ * `public/images/clients/`; everything else is a typographic wordmark, the
+ * same way MERCUSYS and GAME REVOLUTION already work in the brand wall.
+ * Read the header of that file before touching the colours.
  */
 
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { useEditorial } from './editorial-context'
 import { EIcon } from './editorial-icons'
+import { ED_CLIENTS, ClientMarkArt } from './client-marks'
 import { BrandMarkArt, getBrandMark } from '@/components/home/brand-marks'
 import { ED_BRAND_FACTS, type EdBrandStatus } from './ed-brand-facts'
 import { ED_FAMILIES } from './ed-families'
@@ -49,16 +53,6 @@ export interface EdCompanyData {
 const FOUNDED = 2006
 const FOUNDER = 'Faycal BOUNAR'
 const LEGAL = 'SARL Hardware Technology Service'
-
-/** From the company profile deck. Rendered as names, never as fake logos. */
-const CLIENTS = [
-  'Mobilis',
-  'Djezzy',
-  'Algérie Télécom',
-  'Crédit Populaire d’Algérie',
-  'OPGI',
-  'Bab Ezzouar Centre Commercial',
-]
 
 /** Fallback display names, so a claim survives the brand leaving the catalogue. */
 const BRAND_LABEL: Record<string, string> = {
@@ -372,11 +366,24 @@ export function EdCompanyPage({ data }: { data: EdCompanyData }) {
             </div>
             <p className="lede">{t('co.trustLede')}</p>
           </div>
-          <div className="edcy-clientrow rv">
-            {CLIENTS.map((c, i) => (
-              <span className="edcy-client stag" key={c} style={{ ['--i' as string]: String(i) }}>
-                {c}
-              </span>
+          <div className="edcy-clientgrid rv">
+            {ED_CLIENTS.map((c, i) => (
+              <div
+                className="edcy-clienttile stag"
+                key={c.slug}
+                title={c.name}
+                style={{
+                  ['--i' as string]: String(i),
+                  ['--ct' as string]: c.tile,
+                  ['--cf' as string]: c.fg,
+                  ['--cg' as string]: c.glow,
+                }}
+              >
+                <span className="edcy-chalo" aria-hidden />
+                <span className="edcy-cmark">
+                  <ClientMarkArt mark={c} />
+                </span>
+              </div>
             ))}
           </div>
         </div>

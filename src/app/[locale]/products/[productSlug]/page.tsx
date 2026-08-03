@@ -309,16 +309,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
             ))}
           </div>
 
-          {/* ROUND 22 — CustomHtml (not a bare dangerouslySetInnerHTML):
-              scripts inserted via innerHTML never execute. */}
-          {product.customHtml ? (
-            <CustomHtml
-              className="sr-customhtml"
-              html={prepareCustomHtml(product.customHtml)}
-            />
-          ) : null}
         </div>
       </div>
+
+      {/* ROUND 27 — the supplier "Code HTML" fiche is full width under the
+          gallery, not inside the narrow info column. Same reasoning as the
+          editorial skin: what gets pasted here is a wide marketing sheet
+          (product shots + spec table), and a ~420px column turned the photos
+          into thumbnails and overflowed the tables. */}
+      {product.customHtml ? (
+        <CustomHtml
+          className="sr-customhtml sr-in sr-pdhtml"
+          html={prepareCustomHtml(product.customHtml)}
+        />
+      ) : null}
 
       {specsEntries.length > 0 ? (
         <section style={{ marginTop: 52 }}>

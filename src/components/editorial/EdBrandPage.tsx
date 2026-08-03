@@ -333,10 +333,13 @@ export function EdBrandPage({ data }: { data: EdBrandPageData }) {
               {data.others.map((o) => {
                 const m = getBrandMark(o.slug, o.name)
                 return (
+                  /* ROUND 27 — see the note in EdGamingPage: mark + count
+                     alone announced as "link, 12 réfs". */
                   <Link
                     className="edb-other"
                     key={o.slug}
                     href={`/brands/${o.slug}`}
+                    aria-label={`${o.name} — ${o.count} ${t('bi.refs')}`}
                     style={{ ['--bc' as string]: m.tile, ['--bfg' as string]: m.fg }}
                   >
                     <span className="edb-othermark">

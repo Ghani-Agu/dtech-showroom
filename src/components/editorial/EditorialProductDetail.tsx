@@ -123,16 +123,6 @@ export function EditorialProductDetail({
               </div>
             ) : null}
 
-            {/* ROUND 22 — CustomHtml (not a bare dangerouslySetInnerHTML):
-                scripts inserted via innerHTML never execute. */}
-            {product.customHtml ? (
-              <CustomHtml
-                className="ed-pdp-tag sr-customhtml"
-                style={{ marginTop: 20 }}
-                html={product.customHtml}
-              />
-            ) : null}
-
             {product.specs && Object.keys(product.specs).length > 0 ? (
               <dl className="ed-pdp-specs">
                 <span className="eyebrow" style={{ display: 'block', padding: '18px 0 6px' }}>
@@ -148,6 +138,33 @@ export function EditorialProductDetail({
             ) : null}
           </div>
         </div>
+
+        {/* ROUND 27 — the admin-authored "Code HTML" fiche moved OUT of the
+            right-hand column and under the whole grid.
+
+            It used to render between the description and the spec table,
+            i.e. inside a column that is 1fr of a `1.05fr 1fr` grid — about
+            420px on a 1440px screen. What suppliers actually paste in there
+            is a full marketing sheet: HP's fiche for the Series 7 Pro 732pk
+            is a stack of wide product shots, an icon feature list and a spec
+            table. Squeezed into 420px the photos scaled down to thumbnails,
+            the table overflowed, and the buy CTAs were pushed thousands of
+            pixels up the page away from the fiche they belong to.
+
+            Full width under the gallery is where a fiche of that shape wants
+            to be, and it is where every distributor site puts it. `.ed-pdp-
+            html` (editorial-design.css) styles what comes out of the field:
+            images are capped at 100% width, tables scroll rather than push
+            the layout, and headings pick up the editorial type ramp.
+
+            CustomHtml, not a bare dangerouslySetInnerHTML — scripts inserted
+            through innerHTML never execute (see the file header, round 22). */}
+        {product.customHtml ? (
+          <section className="ed-pdp-html" aria-label={t('pdp.details')}>
+            <span className="eyebrow">{t('pdp.details')}</span>
+            <CustomHtml className="ed-pdp-htmlbody sr-customhtml" html={product.customHtml} />
+          </section>
+        ) : null}
 
         {similar.length > 0 ? (
           <div style={{ marginTop: 'clamp(40px, 6vw, 72px)' }}>

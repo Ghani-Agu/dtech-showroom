@@ -1949,7 +1949,10 @@
 /* ROUND 23 — matches the live band exactly (1920 × 700), so what he lines up
    in the preview is what the site renders. */
 .he-preview { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--admin-glass-border); aspect-ratio: 1920 / 700; background: #0a1322; }
-.he-preview > img { width: 100%; height: 100%; object-fit: cover; }
+/* ROUND 27 — `contain`, like the storefront. With `cover` the preview cropped
+   the slide while the live band letterboxes it, so the one screen whose job is
+   to predict the result was the one screen showing the wrong thing. */
+.he-preview > img { width: 100%; height: 100%; object-fit: contain; }
 .he-preview-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--admin-text-tertiary); font-size: 13px; }
 .he-preview-text { position: absolute; inset: 0; padding: 20px; display: flex; flex-direction: column; justify-content: center; gap: 6px; background: linear-gradient(90deg, rgba(4,8,12,0.78) 40%, rgba(4,8,12,0.1)); }
 .he-pv-kicker { font-family: var(--font-geist-mono), monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-mint); }

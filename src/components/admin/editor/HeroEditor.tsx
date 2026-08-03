@@ -36,7 +36,7 @@ export function HeroEditor({
 
   const fileRef = React.useRef<HTMLInputElement>(null)
 
-  /* ROUND 23b — the live band sizes itself to the TALLEST slide (see
+  /* ROUND 23b / 27 — the live band sizes itself to the MEAN slide ratio (see
      `heroAspect` in EditorialSections.tsx — keep the two rules identical).
      Slides uploaded before this round carry no stored size, so the thumbnails
      report theirs on load and we fold those in the same way. */
@@ -127,21 +127,34 @@ export function HeroEditor({
   const preview = slides[active] ?? slides[0]
 
   const known = slides.map(ratioOf).filter((r): r is number => typeof r === 'number' && Number.isFinite(r) && r > 0)
-  /* Same clamp as the storefront: 1.2 … 4. */
+  /* ROUND 27 — MEAN, and clamped 1.45 … 3.4. Must stay byte-for-byte the same
+     rule as `heroAspect`: this editor's whole job is to predict the band, and
+     while it still ran round 23b's `Math.min` it previewed a 1.333:1 band for
+     a set the storefront renders at 2.39:1. */
   const bandRatio = known.length
-    ? Math.min(4, Math.max(1.2, Math.min(...known)))
+    ? Math.min(3.4, Math.max(1.45, known.reduce((a, r) => a + r, 0) / known.length))
     : 1920 / 700
-  /* Which slide is currently setting the band's depth — worth surfacing, it is
-     the one to swap if the hero looks too tall. */
-  const driverIdx = known.length
-    ? slides.findIndex((s) => ratioOf(s) === Math.min(...known))
-    : -1
-  /* The band grows to fit the tallest slide but stops at 88vh — past that a
-     hero would be taller than the screen. On a typical 1536 × 826 desktop that
-     ceiling lands around 2.1:1, so anything squarer than that gets trimmed top
-     and bottom however much the band adapts. Say so here rather than let him
-     discover it on the live site. */
-  const tooTall = known.length > 0 && bandRatio < 2.05
+  /* ROUND 27 — which slide is furthest from the band's shape, i.e. the one
+     that will show the widest bars. No longer "gives the height": with the
+     storefront on `object-fit: contain` no single slide drives the depth and
+     none of them is cropped. */
+  const offIdx =
+    known.length > 1
+      ? slides.reduce(
+          (best, s, i) => {
+            const r = ratioOf(s)
+            if (r === undefined) return best
+            const d = Math.abs(Math.log(r / bandRatio))
+            return d > best.d ? { i, d } : best
+          },
+          { i: -1, d: 0.14 },
+        ).i
+      : -1
+  /* ROUND 27 — the old warning said a squarer slide would be "rognée en haut
+     et en bas". It no longer is: `contain` letterboxes onto a blurred copy of
+     the slide instead. What is still worth saying is that mixing shapes costs
+     visible bars, so the note is about consistency, not about damage. */
+  const mixed = offIdx >= 0
 
   return (
     <div className={`we-page ${uiClass}`} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -222,9 +235,9 @@ export function HeroEditor({
                 <div className="he-slide-body">
                   <span className="he-dim">
                     {s.w && s.h ? `${s.w} × ${s.h}` : '…'}
-                    {i === driverIdx && slides.length > 1 && (
-                      <b title="C’est cette image, la plus haute, qui fixe la hauteur du hero">
-                        donne la hauteur
+                    {i === offIdx && (
+                      <b title="Cette image a une forme assez différente des autres : elle s’affichera en entier, avec des bandes floutées sur les côtés ou en haut et en bas.">
+                        bandes visibles
                       </b>
                     )}
                   </span>
@@ -248,19 +261,22 @@ export function HeroEditor({
         <section className="he-col">
           <h2 className="he-h">Aperçu</h2>
           <p className="he-hint">
-            La bande prend la forme de votre image <strong>la plus haute</strong>,
-            et <strong>défile toute seule</strong> : chaque image reste ~5,5&nbsp;s puis
-            fond vers la suivante (12 images au maximum). Le visiteur peut mettre
-            en pause, cliquer une puce ou faire glisser. Sur l’habillage actuel
-            (Éditorial), le titre et les boutons restent posés en bas à gauche —
-            gardez ce coin des images lisible.
+            Chaque image est affichée <strong>en entier</strong>, jamais recadrée :
+            la bande prend la forme <strong>moyenne</strong> de vos images, et celles
+            qui sortent de cette forme sont complétées par une version floutée
+            d’elles-mêmes. Pour une bande parfaitement pleine, gardez toutes vos
+            images au même format (1920 × 700 par exemple).
+            Le slider <strong>défile tout seul</strong> : ~5,5&nbsp;s par image,
+            12 au maximum ; le visiteur peut mettre en pause, cliquer une puce ou
+            faire glisser. Le titre et les boutons sont posés dans un encadré en
+            bas à gauche, qui reste lisible quelle que soit l’image.
           </p>
-          {tooTall && (
+          {mixed && (
             <p className="he-warn">
-              L’image la plus haute est plus carrée que ce qu’un écran peut
-              afficher&nbsp;: la bande s’arrête à 88&nbsp;% de la hauteur d’écran
-              et cette image sera rognée en haut et en bas. Recadrez-la vers
-              1920 × 700 pour l’éviter.
+              Vos images n’ont pas toutes la même forme. Aucune ne sera rognée,
+              mais celle qui est signalée «&nbsp;bandes visibles&nbsp;» s’affichera
+              avec des bandes floutées autour. Recadrez-la au même format que les
+              autres (1920 × 700) pour une bande pleine.
             </p>
           )}
           <div className="he-preview" style={{ aspectRatio: String(bandRatio) }}>

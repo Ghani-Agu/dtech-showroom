@@ -210,7 +210,16 @@ export function EdGamingPage({ data }: { data: EdGamingData }) {
               {/* Duplicated once so the -50% translate loops seamlessly. */}
               <div className="edg-marqrow">
                 {[...data.brands, ...data.brands].map((b, i) => (
-                  <Link className="edg-bchip" key={`${b.slug}-${i}`} href={`/brands/${b.slug}`}>
+                  /* ROUND 27 — aria-label: the only DOM content is an
+                     `aria-hidden` mark plus a bare count, so the accessible
+                     name computed from contents was just a number. It read
+                     "link, 12". Same fix EdBrandChip already carries. */
+                  <Link
+                    className="edg-bchip"
+                    key={`${b.slug}-${i}`}
+                    href={`/brands/${b.slug}`}
+                    aria-label={`${b.name} — ${b.count}`}
+                  >
                     <span className="edg-bmark">
                       <BrandMarkArt slug={b.slug} name={b.name} h={22} maxW={96} />
                     </span>

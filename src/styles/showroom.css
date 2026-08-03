@@ -1798,3 +1798,15 @@ body:has(.editorial-root .ov) .sr-fab {
 .editorial-root .sr-drawer .foot a.sr-btn-wa { color: #06281a; font-size: 14.5px; }
 .editorial-root .sr-drawer .foot a { color: var(--sr-text); font-size: inherit; }
 .editorial-root .sr-drawer .foot .sr-mono { color: var(--ink-2); }
+
+/* ═══════════ ROUND 27 — the fiche is a full-width block now ═══════════
+   `CustomHtml` moved out of the product info column and under the gallery in
+   all three skins (see the note at the call sites). Two things follow:
+   images must not be squashed by the width/height attributes suppliers ship
+   in their markup, and a wide pasted table has to scroll in its own box
+   rather than widen the page. */
+.sr-customhtml :is(img, video) { height: auto; }
+.sr-pdhtml { margin-top: 34px; padding-top: 26px; }
+.brand-root .pdp-html { margin-top: 34px; padding-top: 26px; }
+.sr-pdhtml table, .brand-root .pdp-html table { display: block; max-width: 100%; overflow-x: auto; }
+.sr-pdhtml > :is(p, ul, ol), .brand-root .pdp-html > :is(p, ul, ol) { max-width: 78ch; }

@@ -88,17 +88,27 @@ const HERO_MS = 5600
 
 /**
  * ROUND 23b — the band takes its shape from the SLIDES, not from a constant.
- * `heroAspect` returns the smallest width/height it finds, i.e. the TALLEST
- * slide, so the band is deep enough for every image in the set and none of
- * them is cropped top-to-bottom. Clamped either side: a portrait upload must
- * not turn the homepage into a poster, and an ultra-wide panorama must not
- * squash the band to a letterbox the copy can't stand up in. `.hero-card`
- * also keeps a min-height (the copy block's floor) and a max-height (88vh),
- * which win over this when they have to.
+ *
+ * ROUND 27 — but no longer from the SQUAREST one. `Math.min(...)` picked the
+ * tallest slide on purpose, because the layer was `object-fit: cover` and any
+ * slide taller than the band lost its top and bottom. The layer is `contain`
+ * now, so nothing is ever cropped whatever the band's shape — and keeping the
+ * old rule actively hurt: one 1600 × 1200 upload alongside a set of 1920 × 700
+ * banners dragged the band from 523px to 792px tall (measured at 1440), so the
+ * house-format banners floated in a deep letterbox and the fold moved down
+ * three quarters of a screen.
+ *
+ * The mean is the honest answer once cropping is off the table: an all-1920×700
+ * set still resolves to exactly 1920/700, a mixed set lands between its
+ * members, and whichever slides are squarer than the band simply letterbox on
+ * the blurred backdrop instead of being cut. Clamped either side: a portrait
+ * upload must not turn the homepage into a poster, and an ultra-wide panorama
+ * must not squash the band to a strip the copy can't stand up in. `.hero-card`
+ * also keeps a min-height and a max-height (88vh), which win over this.
  */
 const HERO_AR_FALLBACK = 1920 / 700
-const HERO_AR_MIN = 1.2
-const HERO_AR_MAX = 4
+const HERO_AR_MIN = 1.45
+const HERO_AR_MAX = 3.4
 
 function heroAspect(
   slides: EdHeroSlide[],
@@ -108,7 +118,8 @@ function heroAspect(
     .map((s) => (s.w && s.h ? s.w / s.h : measured[s.src]))
     .filter((r): r is number => typeof r === 'number' && Number.isFinite(r) && r > 0)
   if (found.length === 0) return HERO_AR_FALLBACK
-  return Math.min(HERO_AR_MAX, Math.max(HERO_AR_MIN, Math.min(...found)))
+  const mean = found.reduce((a, r) => a + r, 0) / found.length
+  return Math.min(HERO_AR_MAX, Math.max(HERO_AR_MIN, mean))
 }
 
 /**
@@ -256,17 +267,36 @@ export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
               aria-hidden={n === at ? undefined : true}
             >
               {s.src ? (
-                <Image
-                  src={s.src}
-                  alt={s.alt}
-                  fill
-                  sizes="100vw"
-                  quality={82}
-                  priority={n === 0}
-                  fetchPriority={n === 0 ? 'high' : 'auto'}
-                  onLoad={(e) => note(s.src, e.currentTarget)}
-                  style={{ objectFit: 'cover' }}
-                />
+                <>
+                  {/* ROUND 27 — backdrop. The sharp layer below is `contain`
+                      now (a composed banner must never be cropped), so
+                      wherever the band's real ratio differs from the slide's
+                      there are bars. They are filled with a blurred, dimmed
+                      copy of the same slide rather than a black void.
+                      Requested at ~96px: it is about to be blurred by 38px,
+                      so a full-size fetch would buy nothing but bytes. */}
+                  <Image
+                    src={s.src}
+                    alt=""
+                    aria-hidden
+                    fill
+                    sizes="96px"
+                    quality={75}
+                    priority={n === 0}
+                    className="hero-blur"
+                  />
+                  <Image
+                    src={s.src}
+                    alt={s.alt}
+                    fill
+                    sizes="100vw"
+                    quality={82}
+                    priority={n === 0}
+                    fetchPriority={n === 0 ? 'high' : 'auto'}
+                    onLoad={(e) => note(s.src, e.currentTarget)}
+                    className="hero-fit"
+                  />
+                </>
               ) : (
                 <Slot label={t('hero.ph')} />
               )}

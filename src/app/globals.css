@@ -778,3 +778,35 @@ body[data-home-theme='light'] .sr-root {
 @media (prefers-reduced-motion: reduce) {
   .admin-shell aside.glass-surface { transition: none; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   ROUND 27 — real brand artwork (.bl-plate)
+
+   `BrandMarkArt` / `EdLogo` now render Ghani's official logo files
+   (transparent PNGs in /public/brands) instead of the monochrome
+   simple-icons paths. Full-colour artwork cannot ride `currentColor`
+   on a saturated tile — proofed against the old tiles, ASUS, logitech,
+   GameMax and ink-master were literally invisible — so the mark sits
+   on its own white plate INSIDE the brand-coloured tile. The tile
+   colour is left alone on purpose: it doubles as the brand accent
+   (`--bc`) for the /brands/[slug] hero gradient, hover borders, rules
+   and CTA panel.
+
+   Global, not per-skin: the same two components render in all three
+   storefront skins and in the admin brand pickers.
+   ════════════════════════════════════════════════════════════════ */
+.bl-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .12), 0 0 0 1px rgba(0, 0, 0, .06);
+  transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+}
+.bl-plate img { display: block; }
+/* the tiles animate their SVG child on hover; keep the plate in step */
+.sr-card:hover .bl-plate,
+.brand-root .brandcard:hover .bl-plate,
+.editorial-root .edbi-card:hover .bl-plate,
+.editorial-root .mq-card:hover .bl-plate { transform: scale(1.05); }
+@media (prefers-reduced-motion: reduce) { .bl-plate { transition: none; } }
