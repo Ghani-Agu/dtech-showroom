@@ -21,12 +21,10 @@ import {
   getAllProducts,
   pickFeatured,
 } from '@/server/queries'
-import { getPublishedHome, getHomeHero, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
-import { PublishedPage } from '@/components/admin/editor/PublishedPage'
-import { buildHomeData } from '@/server/template-data'
-import type { PageDoc } from '@/components/admin/editor/types'
+import { getHomeHero, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
 import { BrandHome } from '@/components/brand/BrandHome'
-import { EditorialHome } from '@/components/editorial/EditorialHome'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { buildEditorialData } from '@/server/editorial-data'
 import { buildBrandData } from '@/server/brand-data'
 import { buildPartnerBand } from '@/server/partner-band'
@@ -103,10 +101,9 @@ export default async function HomePage({ params }: LocaleParams) {
   const { locale: raw } = await params
   setRequestLocale(raw)
   const locale = raw as Locale
-  const [design, publishedHome, heroConfig, contentOverrides, productsRaw, categoriesRaw, brandsRaw] =
+  const [design, heroConfig, contentOverrides, productsRaw, categoriesRaw, brandsRaw] =
     await Promise.all([
       getPublishedDesign(),
-      getPublishedHome(),
       getHomeHero(),
       getPublishedContent('home'),
       getAllProducts(locale),
@@ -172,27 +169,30 @@ export default async function HomePage({ params }: LocaleParams) {
   }
 
   // ── Éditorial design (skin #3) — same catalogue, editorial interface. ──
+  /* La peau éditoriale ne rend plus un composant d'accueil figé : elle rend le
+     DOCUMENT de la page « home », et le catalogue n'est plus qu'une donnée que
+     ses sections consomment. `EdSkinPage` fournit lui-même le fournisseur, la
+     barre de navigation, le <main> et le pied de page — d'où la disparition de
+     `EditorialPageShell` ici. */
   if (design === 'editorial') {
+    const edData = buildEditorialData(productsRaw, categoriesRaw, brandsRaw, heroConfig)
+    const [doc, site] = await Promise.all([getEdDoc('home'), getEdSite()])
     return (
       <>
         {orgJsonLd}
-        <EditorialHome
+        <EdSkinPage
           locale={locale}
-          data={buildEditorialData(productsRaw, categoriesRaw, brandsRaw, heroConfig)}
-        />
-      </>
-    )
-  }
-
-  // A published visual-editor design overrides the default homepage — filled
-  // with the real catalog so the rails/grid show live products.
-  if (publishedHome) {
-    return (
-      <>
-        {orgJsonLd}
-        <PublishedPage
-          doc={publishedHome as unknown as PageDoc}
-          data={buildHomeData(productsRaw, categoriesRaw, brandsRaw)}
+          pageKey="home"
+          doc={doc}
+          site={site}
+          data={{ home: edData }}
+          /* Repris tel quel d'EditorialHome : l'en-tête préchargeait les
+             visuels du hero et des cinq premières familles, et le pied de page
+             listait les familles. Ces deux calculs vivaient dans le composant
+             d'accueil ; l'enveloppe étant désormais commune, ils remontent
+             ici et redescendent en props. */
+          previews={[edData.heroImage, ...edData.cats.slice(0, 5).map((c) => c.img)]}
+          catNames={edData.cats.map((c) => ({ id: c.id, name: c.name }))}
         />
       </>
     )

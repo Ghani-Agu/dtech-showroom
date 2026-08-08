@@ -1,0 +1,434 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ÉDITEUR — l'interface.
+
+   Volontairement sobre : gris très clairs, une seule couleur d'accent, aucune
+   ombre décorative. La page éditée est la seule chose colorée à l'écran, et
+   c'est elle qu'on doit juger — un outil bavard ferait douter de ses propres
+   couleurs.
+
+   L'éditeur vit dans `/editor`, dont la mise en page applique `.admin-shell`
+   (sombre). On repeint donc explicitement ici plutôt que d'hériter : deux
+   interfaces sombres imbriquées, c'était illisible.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ede {
+  --e-bg: #f2f3f5;
+  --e-panel: #ffffff;
+  --e-line: #e3e5e9;
+  --e-line-2: #eef0f3;
+  --e-ink: #1b1d21;
+  --e-ink-2: #6a7078;
+  --e-ink-3: #9aa1a9;
+  --e-accent: #0aa2b0;
+  --e-accent-soft: #e6f7f8;
+  --e-danger: #d6455d;
+  --e-radius: 10px;
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--e-bg);
+  color: var(--e-ink);
+  font: 400 13.5px/1.5 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+
+.ede *,
+.ede *::before,
+.ede *::after { box-sizing: border-box; }
+
+.ede button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.ede button:disabled { opacity: .38; cursor: not-allowed; }
+.ede a { color: inherit; text-decoration: none; }
+.ede :focus-visible { outline: 2px solid var(--e-accent); outline-offset: 2px; border-radius: 6px; }
+
+.ede-spin { animation: ede-spin 1s linear infinite; }
+@keyframes ede-spin { to { transform: rotate(360deg); } }
+
+/* ─────────────────────────────── barre du haut ─────────────────────────── */
+
+.ede-top {
+  flex: none;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--e-panel);
+  border-bottom: 1px solid var(--e-line);
+}
+.ede-topl, .ede-topr { display: flex; align-items: center; gap: 8px; }
+.ede-topl { flex: 1; min-width: 0; }
+.ede-topc { display: flex; align-items: center; gap: 10px; }
+.ede-topr { flex: 1; justify-content: flex-end; }
+
+.ede-exit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--e-line); background: #fff;
+  font-weight: 600; font-size: 12.5px;
+  transition: background .15s, border-color .15s;
+}
+.ede-exit:hover { background: var(--e-bg); border-color: #d3d7dd; }
+
+.ede-brand { font-weight: 700; letter-spacing: -.02em; }
+.ede-brand i { color: var(--e-accent); font-style: normal; }
+
+.ede-page {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 11px; border-radius: 8px; background: var(--e-bg);
+  font-weight: 600; font-size: 12.5px;
+  max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ede-page em {
+  font-style: normal; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--e-accent); background: var(--e-accent-soft); padding: 2px 6px; border-radius: 5px;
+}
+
+.ede-state {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; color: var(--e-ink-3);
+}
+.ede-state.is-dirty { color: #b07d17; }
+
+.ede-seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--e-bg); border-radius: 9px; }
+.ede-seg button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-width: 34px; height: 27px; padding: 0 9px; border-radius: 7px;
+  font-size: 11.5px; font-weight: 600; color: var(--e-ink-2);
+  transition: background .15s, color .15s;
+}
+.ede-seg button.is-on { background: #fff; color: var(--e-ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .07); }
+
+.ede-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px; color: var(--e-ink-2);
+  transition: background .15s, color .15s;
+}
+.ede-ico:hover:not(:disabled) { background: var(--e-bg); color: var(--e-ink); }
+
+.ede-publish {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 34px; padding: 0 16px; border-radius: 999px;
+  background: var(--e-accent); color: #fff; font-weight: 700; font-size: 12.5px;
+  transition: filter .15s;
+}
+.ede-publish:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* ───────────────────────────────── corps ──────────────────────────────── */
+
+.ede-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr) 336px;
+}
+
+.ede-left, .ede-right {
+  min-height: 0; overflow: auto; background: var(--e-panel);
+  overscroll-behavior: contain;
+}
+.ede-left { border-right: 1px solid var(--e-line); }
+.ede-right { border-left: 1px solid var(--e-line); }
+
+.ede-lefttabs {
+  position: sticky; top: 0; z-index: 2;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: var(--e-panel); border-bottom: 1px solid var(--e-line);
+}
+.ede-lefttabs button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 42px; font-size: 12px; font-weight: 600; color: var(--e-ink-2);
+  border-bottom: 2px solid transparent;
+}
+.ede-lefttabs button.is-on { color: var(--e-accent); border-bottom-color: var(--e-accent); }
+
+/* ───────────────────────────────── canevas ────────────────────────────── */
+
+.ede-canvas {
+  min-width: 0; min-height: 0; padding: 16px;
+  display: flex; justify-content: center;
+  background-color: var(--e-bg);
+  background-image: radial-gradient(circle, #d8dbe0 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.ede-frame {
+  position: relative;
+  width: 100%; height: 100%;
+  background: #fff; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 18px 44px rgba(20, 24, 30, .10);
+  transition: width .28s cubic-bezier(.16, 1, .3, 1);
+}
+.ede-frame.is-device { border-radius: 18px; }
+.ede-iframe { display: block; width: 100%; height: 100%; border: 0; }
+/* Pendant un glisser depuis la bibliothèque, l'iframe ne doit pas avaler le
+   pointeur : c'est la fenêtre parente qui suit le geste et relaie sa position. */
+.ede-dropcatch { position: absolute; inset: 0; }
+
+/* Tant que l'aperçu charge, on le dit. Sans ce voile on regarde l'ANCIENNE
+   page pendant tout le chargement et on croit que le clic n'a rien fait. */
+.ede-loading {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(2px);
+  font-size: 13px; font-weight: 600; color: var(--e-ink-2);
+}
+.ede-slow {
+  max-width: 380px; padding: 22px; text-align: center;
+  display: flex; flex-direction: column; gap: 10px; align-items: center;
+  background: #fff; border: 1px solid var(--e-line); border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(20, 24, 30, .12);
+}
+.ede-slow b { font-size: 14px; color: var(--e-ink); }
+.ede-slow p { margin: 0; font-weight: 400; font-size: 12.5px; line-height: 1.55; }
+.ede-slowbtns { display: flex; gap: 8px; margin-top: 4px; }
+.ede-slowbtns .edi-act { padding: 0 14px; height: 34px; }
+
+/* ─────────────────────────── liste des sections ───────────────────────── */
+
+.edl { padding: 10px; }
+.edl-hint { margin: 4px 4px 10px; font-size: 11.5px; line-height: 1.5; color: var(--e-ink-3); }
+.edl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.edl-item {
+  display: flex; align-items: center; gap: 2px;
+  padding: 2px 4px 2px 2px; border-radius: 8px;
+  border: 1px solid transparent;
+}
+.edl-item:hover { background: var(--e-bg); }
+.edl-item.is-sel { background: var(--e-accent-soft); border-color: color-mix(in srgb, var(--e-accent) 35%, transparent); }
+.edl-item.is-hidden .edl-name { opacity: .45; text-decoration: line-through; }
+.edl-item.is-over { box-shadow: inset 0 2px 0 var(--e-accent); }
+.edl-grip { color: var(--e-ink-3); cursor: grab; flex: none; }
+
+.edl-name {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+  padding: 7px 4px; text-align: start; font-size: 12.5px; font-weight: 600;
+}
+.edl-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.edl-name svg { color: var(--e-ink-2); flex: none; }
+
+.edl-act {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 6px; color: var(--e-ink-3);
+}
+.edl-act:hover:not(:disabled) { background: #fff; color: var(--e-ink); }
+
+/* ───────────────────────────── bibliothèque ───────────────────────────── */
+
+.edb { padding: 10px; }
+.edb-search {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 10px; height: 34px; margin-bottom: 8px;
+  border: 1px solid var(--e-line); border-radius: 9px; color: var(--e-ink-3);
+}
+.edb-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 12.5px; color: var(--e-ink); }
+
+.edb-group { margin-top: 14px; }
+.edb-group h3 {
+  margin: 0 4px 8px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--e-ink-3);
+}
+.edb-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.edb-grid.is-small { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.edb-card {
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  padding: 11px 10px; text-align: start;
+  border: 1px solid var(--e-line); border-radius: var(--e-radius); background: #fff;
+  transition: border-color .15s, background .15s, transform .15s;
+  touch-action: none;
+}
+.edb-card:hover { border-color: var(--e-accent); background: var(--e-accent-soft); }
+.edb-card.is-drag { border-color: var(--e-accent); transform: scale(.97); opacity: .7; }
+.edb-card svg { color: var(--e-accent); }
+.edb-card b { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.edb-card i {
+  font-style: normal; font-size: 10.5px; line-height: 1.4; color: var(--e-ink-3);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ────────────────────────────────── pages ─────────────────────────────── */
+
+.edp2 { padding: 10px; }
+.edp2-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.edp2-list li { display: flex; align-items: center; gap: 2px; }
+.edp2-list li > button {
+  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; text-align: start;
+}
+.edp2-list li > button:hover { background: var(--e-bg); }
+.edp2-list li > button.is-on { background: var(--e-accent-soft); }
+.edp2-list b { display: block; font-size: 12.5px; font-weight: 600; }
+.edp2-list i {
+  display: block; font-style: normal; font-size: 10.5px; color: var(--e-ink-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px;
+}
+.edp2-dot { width: 7px; height: 7px; border-radius: 50%; background: #d3d7dd; flex: none; }
+.edp2-dot.is-live { background: #21a35a; }
+.edp2-dot.is-draft { background: #e0a92b; }
+.edp2-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; color: var(--e-ink-3);
+}
+.edp2-del:hover { background: #fdecef; color: var(--e-danger); }
+
+.edp2-new {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 10px; border-radius: 9px; border: 1px dashed var(--e-line);
+  font-weight: 600; font-size: 12.5px; color: var(--e-ink-2);
+}
+.edp2-new:hover { border-color: var(--e-accent); color: var(--e-accent); }
+.edp2-new svg:last-child { margin-inline-start: auto; transition: transform .2s; }
+.edp2-new svg.is-open { transform: rotate(180deg); }
+.edp2-form { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+/* ──────────────────────────────── inspecteur ──────────────────────────── */
+
+.edi { display: flex; flex-direction: column; min-height: 100%; }
+.edi-head { padding: 14px 14px 10px; border-bottom: 1px solid var(--e-line-2); }
+.edi-head b { font-size: 14px; }
+.edi-head p { margin: 5px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--e-ink-3); }
+
+.edi-tabs {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; gap: 2px; padding: 8px 10px;
+  background: var(--e-panel); border-bottom: 1px solid var(--e-line);
+}
+.edi-tabs button {
+  flex: 1; height: 30px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; color: var(--e-ink-2);
+}
+.edi-tabs button.is-on { background: var(--e-accent-soft); color: var(--e-accent); }
+
+.edi-body { padding: 12px 14px 40px; display: flex; flex-direction: column; gap: 12px; }
+.edi-note {
+  margin: 0; padding: 9px 11px; border-radius: 8px; background: var(--e-bg);
+  font-size: 11.5px; line-height: 1.5; color: var(--e-ink-2);
+}
+.edi-empty { margin: 0; font-size: 12.5px; color: var(--e-ink-3); }
+.edi-id { margin: 4px 0 0; font: 10.5px ui-monospace, monospace; color: var(--e-ink-3); }
+.edi-vis { display: flex; flex-direction: column; gap: 6px; }
+
+.edi-actions { display: flex; gap: 8px; margin-top: 6px; }
+.edi-act {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 34px; border-radius: 9px; border: 1px solid var(--e-line);
+  font-size: 12.5px; font-weight: 600;
+}
+.edi-act:hover:not(:disabled) { background: var(--e-bg); }
+.edi-act.is-danger { color: var(--e-danger); border-color: #f3d3d9; }
+.edi-act.is-danger:hover:not(:disabled) { background: #fdecef; }
+
+/* ─────────────────────────────── les champs ───────────────────────────── */
+
+.edf-row { display: flex; flex-direction: column; gap: 5px; }
+.edf-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.edf-lab {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 11.5px; font-weight: 600; color: var(--e-ink-2);
+}
+.edf-help { font-style: normal; font-size: 10.5px; line-height: 1.45; color: var(--e-ink-3); }
+.edf-err { font-style: normal; font-size: 11px; color: var(--e-danger); }
+.edf-reset {
+  font-size: 10.5px; font-weight: 600; color: var(--e-accent);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.edf-row.is-custom .edf-lab { color: var(--e-ink); }
+
+.edf-in {
+  width: 100%; min-width: 0; padding: 7px 10px;
+  border: 1px solid var(--e-line); border-radius: 8px; background: #fff;
+  font: inherit; font-size: 12.5px; color: var(--e-ink);
+  transition: border-color .15s, box-shadow .15s;
+}
+.edf-in:focus { outline: 0; border-color: var(--e-accent); box-shadow: 0 0 0 3px var(--e-accent-soft); }
+.edf-area { resize: vertical; line-height: 1.55; }
+.edf-area.is-mono { font: 11.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.edf-switch {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 9px; border-radius: 9px; border: 1px solid var(--e-line);
+  font-size: 12.5px; font-weight: 600; text-align: start;
+}
+.edf-switch i {
+  position: relative; flex: none; width: 30px; height: 18px; border-radius: 999px;
+  background: #d7dbe1; transition: background .18s;
+}
+.edf-switch i::after {
+  content: ''; position: absolute; top: 2px; inset-inline-start: 2px;
+  width: 14px; height: 14px; border-radius: 50%; background: #fff;
+  transition: transform .18s;
+}
+.edf-switch.is-on i { background: var(--e-accent); }
+.edf-switch.is-on i::after { transform: translateX(12px); }
+.ede [dir='rtl'] .edf-switch.is-on i::after { transform: translateX(-12px); }
+
+.edf-color { display: flex; align-items: center; gap: 7px; }
+.edf-color input[type='color'] {
+  flex: none; width: 30px; height: 30px; padding: 0;
+  border: 1px solid var(--e-line); border-radius: 8px; background: none; cursor: pointer;
+}
+.edf-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; color: var(--e-ink-3);
+}
+.edf-clear:hover { background: var(--e-bg); color: var(--e-ink); }
+
+.edf-img { display: flex; flex-direction: column; gap: 7px; }
+.edf-imgprev {
+  width: 100%; max-height: 130px; object-fit: contain;
+  border: 1px solid var(--e-line); border-radius: 9px; background: var(--e-bg);
+}
+.edf-imgbtns { display: flex; gap: 6px; }
+.edf-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px; border: 1px solid var(--e-line);
+  font-size: 11.5px; font-weight: 600;
+}
+.edf-btn:hover { background: var(--e-bg); }
+.edf-spin { animation: ede-spin 1s linear infinite; }
+
+/* listes répétables */
+.edf-list { display: flex; flex-direction: column; gap: 6px; }
+.edf-item { border: 1px solid var(--e-line); border-radius: 9px; overflow: hidden; background: #fff; }
+.edf-itemhead { display: flex; align-items: center; gap: 1px; padding: 3px 4px 3px 2px; }
+.edf-itemhead button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 6px; color: var(--e-ink-3);
+}
+.edf-itemhead button:hover:not(:disabled) { background: var(--e-bg); color: var(--e-ink); }
+.edf-itemname {
+  flex: 1; min-width: 0; width: auto !important; height: auto !important;
+  justify-content: flex-start !important; gap: 8px !important;
+  padding: 6px 6px !important; text-align: start; font-size: 12px; color: var(--e-ink) !important;
+}
+.edf-itemname b { font: 700 10px ui-monospace, monospace; color: var(--e-ink-3); }
+.edf-itemname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.edf-item.is-open { border-color: color-mix(in srgb, var(--e-accent) 45%, transparent); }
+.edf-itembody {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px; border-top: 1px solid var(--e-line-2); background: #fcfdfd;
+}
+
+.edf-add {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 32px; border-radius: 9px; border: 1px dashed var(--e-line);
+  font-size: 12px; font-weight: 600; color: var(--e-ink-2);
+}
+.edf-add:hover { border-color: var(--e-accent); color: var(--e-accent); }
+
+/* ───────────────────────── écrans étroits ──────────────────────── */
+
+@media (max-width: 1280px) {
+  .ede-body { grid-template-columns: 250px minmax(0, 1fr) 300px; }
+}
+/* L'inspecteur ne disparaît jamais : c'est là qu'on écrit. Sur un écran
+   étroit on rétrécit les trois colonnes plutôt que d'en escamoter une. */
+@media (max-width: 1080px) {
+  .ede-body { grid-template-columns: 216px minmax(0, 1fr) 272px; }
+  .ede-canvas { padding: 10px; }
+  .edb-grid { grid-template-columns: minmax(0, 1fr); }
+}

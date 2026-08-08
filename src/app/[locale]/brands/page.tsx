@@ -6,8 +6,8 @@ import { getAllBrands, getAllProducts } from '@/server/queries'
 import { getBrandMark, BrandMarkArt } from '@/components/home/brand-marks'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdBrandsIndex } from '@/components/editorial/EdBrandsIndex'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { BrandBrands } from '@/components/brand/BrandSections'
 import { toBrandBrands } from '@/server/brand-data'
 
@@ -62,17 +62,21 @@ export default async function BrandsPage({ params }: LocaleParams) {
     )
   }
   if (skinDesign === 'editorial') {
-    /* ROUND 19 — EdBrandsIndex replaces EdBrandsPage: brands grouped by the
-       real commercial relationship (own / exclusive / official / carried),
-       each card linking to its own /brands/<slug> page rather than straight
-       into the filtered catalogue. It reads its own strings from ED_TR, so
-       the next-intl translator is no longer threaded in — which also drops
-       the `t('kicker')` call that was rendering the literal "{count} marques"
-       because the {count} argument was never passed. */
+    /* ROUND 19 — les marques sont groupées par relation commerciale réelle
+       (propre / exclusive / officielle / distribuée), chaque carte menant à sa
+       page /brands/<slug> plutôt que droit au catalogue filtré. Les sections
+       lisent leurs libellés dans ED_TR, donc le traducteur next-intl n'est
+       plus passé ici — ce qui supprime au passage l'appel `t('kicker')` qui
+       affichait le littéral « {count} marques », faute d'argument. */
+    const [doc, site] = await Promise.all([getEdDoc('brands'), getEdSite()])
     return (
-      <EditorialPageShell locale={locale}>
-        <EdBrandsIndex brands={toBrandBrands(brands, products)} />
-      </EditorialPageShell>
+      <EdSkinPage
+        locale={locale}
+        pageKey="brands"
+        doc={doc}
+        site={site}
+        data={{ brands: toBrandBrands(brands, products) }}
+      />
     )
   }
 

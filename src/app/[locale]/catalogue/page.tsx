@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { getNavData } from '@/server/nav-data'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdCataloguePage } from '@/components/editorial/EdCataloguePage'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { edT, type EdLang } from '@/components/editorial/editorial-i18n'
 
 /**
@@ -47,9 +47,17 @@ export default async function CataloguePage({ params }: LocaleParams) {
 
   const nav = await getNavData(locale)
 
+  /* La page est décrite par son document ; les familles ne sont qu'une donnée
+     que ses sections lisent (`ctx.data.catalogue`). */
+  const [doc, site] = await Promise.all([getEdDoc('catalogue'), getEdSite()])
+
   return (
-    <EditorialPageShell locale={locale}>
-      <EdCataloguePage cats={nav.cats} productCount={nav.productCount} />
-    </EditorialPageShell>
+    <EdSkinPage
+      locale={locale}
+      pageKey="catalogue"
+      doc={doc}
+      site={site}
+      data={{ catalogue: { cats: nav.cats, productCount: nav.productCount } }}
+    />
   )
 }

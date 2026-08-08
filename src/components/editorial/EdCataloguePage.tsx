@@ -21,9 +21,43 @@ import { groupByFamily } from './ed-families'
 import { FamilyIcon } from './editorial-icons'
 import type { NavCat } from '@/types/nav'
 
-export function EdCataloguePage({
+/* ── Découpage en sections : chaque bloc est exporté séparément pour que
+   l'éditeur web puisse les réordonner ou en masquer un individuellement. ── */
+
+/** ── En-tête ── */
+export function EdCaHead({
   cats,
   productCount,
+}: {
+  cats: NavCat[]
+  productCount: number
+}) {
+  const { t } = useEditorial()
+
+  return (
+    <header className="edc-head rv">
+      <span className="eyebrow">{t('cpage.eyebrow')}</span>
+      <h1 className="h2">{t('cpage.title')}</h1>
+      <p className="lede">{t('cpage.lede')}</p>
+      <div className="edc-meta">
+        <span>
+          <b>{productCount}</b> {t('cpage.refs')}
+        </span>
+        <span>
+          <b>{cats.length}</b> {t('cpage.families')}
+        </span>
+        <Link className="btn btn-k" href="/products">
+          {t('cpage.all')}
+        </Link>
+      </div>
+    </header>
+  )
+}
+
+/* Le rail collant et les sections de famille partagent le même état de
+   scroll-spy : ils restent donc dans un seul et même composant. */
+export function EdCaFamilies({
+  cats,
 }: {
   cats: NavCat[]
   productCount: number
@@ -65,24 +99,7 @@ export function EdCataloguePage({
   }, [active])
 
   return (
-    <div className="edc">
-      <header className="edc-head rv">
-        <span className="eyebrow">{t('cpage.eyebrow')}</span>
-        <h1 className="h2">{t('cpage.title')}</h1>
-        <p className="lede">{t('cpage.lede')}</p>
-        <div className="edc-meta">
-          <span>
-            <b>{productCount}</b> {t('cpage.refs')}
-          </span>
-          <span>
-            <b>{cats.length}</b> {t('cpage.families')}
-          </span>
-          <Link className="btn btn-k" href="/products">
-            {t('cpage.all')}
-          </Link>
-        </div>
-      </header>
-
+    <>
       <div
         className="edc-rail"
         ref={railRef}
@@ -163,6 +180,21 @@ export function EdCataloguePage({
           </div>
         </section>
       ))}
+    </>
+  )
+}
+
+export function EdCataloguePage({
+  cats,
+  productCount,
+}: {
+  cats: NavCat[]
+  productCount: number
+}) {
+  return (
+    <div className="edc">
+      <EdCaHead cats={cats} productCount={productCount} />
+      <EdCaFamilies cats={cats} productCount={productCount} />
     </div>
   )
 }

@@ -4,8 +4,8 @@ import { setRequestLocale } from 'next-intl/server'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { getAllProducts } from '@/server/queries'
 import { buildGamingData } from '@/server/gaming-data'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdGamingPage } from '@/components/editorial/EdGamingPage'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { edT, type EdLang } from '@/components/editorial/editorial-i18n'
 import { alternatesFor, openGraphFor } from '@/lib/seo'
 import { defaultLocale, isValidLocale, type Locale } from '@/i18n/config'
@@ -66,9 +66,15 @@ export default async function GamingPage({ params }: LocaleParams) {
 
   const data = buildGamingData(products)
 
+  const [doc, site] = await Promise.all([getEdDoc('gaming'), getEdSite()])
+
   return (
-    <EditorialPageShell locale={locale}>
-      <EdGamingPage data={data} />
-    </EditorialPageShell>
+    <EdSkinPage
+      locale={locale}
+      pageKey="gaming"
+      doc={doc}
+      site={site}
+      data={{ gaming: data }}
+    />
   )
 }

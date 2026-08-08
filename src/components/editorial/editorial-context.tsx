@@ -14,6 +14,7 @@
 import '@/styles/editorial-design.css'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react'
 import { edT, edTf, type EdLang } from './editorial-i18n'
+import { resolveText, type EdText } from '@/lib/ed-editor/model'
 
 interface EdCtxValue {
   lang: EdLang
@@ -35,9 +36,17 @@ export function useEditorial(): EdCtxValue {
 export function EditorialProvider({
   locale,
   children,
+  text,
 }: {
   locale: string
   children: ReactNode
+  /**
+   * Surcharges de texte publiées depuis l'éditeur, rangées par clé i18n.
+   * Elles passent par `t`/`tf`, donc TOUT le texte de la peau devient
+   * éditable sans qu'une seule section ait à être modifiée — et une clé
+   * jamais touchée garde sa traduction d'origine.
+   */
+  text?: Record<string, EdText>
 }) {
   const lang = (['fr', 'en', 'ar'].includes(locale) ? locale : 'fr') as EdLang
   const dir = lang === 'ar' ? 'rtl' : 'ltr'
@@ -73,11 +82,17 @@ export function EditorialProvider({
     () => ({
       lang,
       dir,
-      t: (k: string) => edT(lang, k),
-      tf: (k: string, vars: Record<string, string | number>) => edTf(lang, k, vars),
+      t: (k: string) => resolveText(k, lang, edT(lang, k), text),
+      tf: (k: string, vars: Record<string, string | number>) => {
+        const raw = resolveText(k, lang, '', text)
+        if (!raw) return edTf(lang, k, vars)
+        return raw.replace(/\{(\w+)\}/g, (m, v: string) =>
+          vars[v] === undefined ? m : String(vars[v]),
+        )
+      },
       rootRef,
     }),
-    [lang, dir]
+    [lang, dir, text]
   )
 
   return (

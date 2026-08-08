@@ -1,89 +1,71 @@
-import type { Metadata } from 'next'
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { WebEditor, type PageEntry } from '@/components/admin/editor/WebEditor'
-import type { PageDoc } from '@/components/admin/editor/types'
-import {
-  CANONICAL_PAGES,
-  customDef,
-  getPageDef,
-  mirrorDoc,
-} from '@/components/admin/editor/site-pages'
-import { DEFAULT_THEME } from '@/components/admin/editor/themes'
-import {
-  getContentDraft,
-  getCustomPages,
-  getSitePageRow,
-  listPageStates,
-} from '@/server/editor-page-data'
-import { auth } from '@/lib/auth'
+import { notFound, redirect } from 'next/navigation'
 
-export const metadata: Metadata = {
-  title: 'Éditeur web · Dtech',
-  robots: { index: false, follow: false },
+import { getSessionUser } from '@/lib/auth-helpers'
+import { hasAccess } from '@/lib/permissions'
+import { getEdCustomPages, getEdDoc, getEdPageStates, getEdSite } from '@/server/ed-doc'
+import { ED_PAGES, getPageDef } from '@/lib/ed-editor/pages'
+import { EdEditor } from '@/components/ed-editor/EdEditor'
+
+/**
+ * /editor — l'éditeur du site.
+ *
+ * `force-dynamic` : la page sert un BROUILLON, par définition changeant. La
+ * mettre en cache, ne serait-ce qu'une seconde, ferait rouvrir l'éditeur sur
+ * un état déjà dépassé.
+ *
+ * La page choisie voyage dans l'URL (`?page=home`) plutôt que dans un état
+ * local : on peut ainsi garder un onglet ouvert sur la fiche produit et un
+ * autre sur l'accueil, et le bouton « précédent » du navigateur fait ce qu'on
+ * attend de lui.
+ */
+export const dynamic = 'force-dynamic'
+
+interface EditorProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function EditorPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>
-}) {
-  const session = await auth.api
-    .getSession({ headers: await headers() })
-    .catch(() => null)
+function first(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? ''
+  return value ?? ''
+}
 
-  if (!session) {
-    redirect('/login?redirect=/editor')
-  }
+export default async function EditorPage({ searchParams }: EditorProps) {
+  /* La mise en page de /editor exige déjà une session, mais une session, c'est
+     aussi un client de la boutique (rôle `customer`). Composer les pages
+     demande la permission « Éditeur web ». */
+  const user = await getSessionUser()
+  if (!user) redirect('/login?redirect=/editor')
+  if (!hasAccess(user, 'editor')) notFound()
 
   const sp = await searchParams
-  const pageKey = sp?.page || 'home'
+  const pageKey = first(sp.page) || 'home'
 
-  const customs = await getCustomPages()
-  const pageDef = getPageDef(pageKey, customs)
-  if (!pageDef) {
-    // Unknown / removed page — fall back to the homepage.
+  const customPages = await getEdCustomPages()
+  const known = getPageDef(pageKey)
+  const isCustom = pageKey.startsWith('custom:')
+  if (!known || (isCustom && !customPages.some((c) => c.key === pageKey))) {
     redirect('/editor?page=home')
   }
 
-  const row = await getSitePageRow(pageKey)
+  const [doc, site, states] = await Promise.all([
+    getEdDoc(pageKey, { draft: true }),
+    getEdSite({ draft: true }),
+    getEdPageStates([...ED_PAGES.map((p) => p.key), ...customPages.map((c) => c.key)]),
+  ])
 
-  // New pages inherit the site's theme (read from the homepage doc) so they
-  // match out of the box.
-  let seedTheme = DEFAULT_THEME
-  const homeRow = pageKey === 'home' ? row : await getSitePageRow('home')
-  const homeDoc = (homeRow?.draft ?? homeRow?.published) as PageDoc | null
-  if (homeDoc?.theme) seedTheme = homeDoc.theme
-
-  const initialDoc = (row?.draft ??
-    row?.published ??
-    mirrorDoc(pageKey, { theme: seedTheme, customs })) as PageDoc
-  const published = !!row?.published
-  const contentDraft = await getContentDraft(pageKey)
-
-  // Build the page navigator list with each page's live/draft state.
-  const defs = [...CANONICAL_PAGES, ...customs.map(customDef)]
-  const states = await listPageStates(defs.map((d) => d.key))
-  const stateByKey = new Map(states.map((s) => [s.key, s] as const))
-  const pages: PageEntry[] = defs.map((def) => {
-    const st = stateByKey.get(def.key)
-    return {
-      def,
-      published: st?.published ?? false,
-      hasDraft: st?.hasDraft ?? false,
-    }
-  })
-
+  /*
+   * Pas de `key` ici, et c'est voulu : l'éditeur pilote lui-même le changement
+   * de page (`loadPage`), qui recharge le document sans repasser par un rendu
+   * serveur. Remonter le composant en plus rejouerait ce travail et pouvait
+   * ramener la page précédente quand le routeur et l'URL divergeaient.
+   */
   return (
-    <WebEditor
-      fullScreen
-      serverEnabled
+    <EdEditor
       pageKey={pageKey}
-      pageDef={pageDef}
-      pages={pages}
-      initialDoc={initialDoc}
-      initiallyPublished={published}
-      contentDraft={contentDraft}
+      doc={doc}
+      site={site}
+      customPages={customPages}
+      states={states}
     />
   )
 }

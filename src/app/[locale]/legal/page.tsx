@@ -1,14 +1,10 @@
 import type { Metadata } from 'next'
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server'
 import { SkinShell } from '@/components/skin/SkinShell'
-import { Container } from '@/components/ui/Container'
-import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
-import { Heading } from '@/components/ui/Heading'
-import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
-import { getPublishedPage, getPublishedContent } from '@/server/editor-page-data'
-import { PublishedPage } from '@/components/admin/editor/PublishedPage'
-import { EditProvider, Editable } from '@/components/site-edit/edit-context'
-import type { PageDoc } from '@/components/admin/editor/types'
+import { EdLegalBody } from '@/components/editorial/EdLegalBody'
+import { getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 
 /**
  * ISR, not `force-dynamic`.
@@ -47,63 +43,29 @@ export default async function LegalPage({ params }: LocaleParams) {
   const { locale: routeLocale } = await params
   setRequestLocale(routeLocale)
   const locale = await getLocale()
-  const tmpl = await getPublishedPage('page:legal')
-  if (tmpl)
-    return (
-      <SkinShell locale={locale}>
-        <PublishedPage doc={tmpl as unknown as PageDoc} />
-      </SkinShell>
-    )
-
-  const t = await getTranslations('legal')
-  const tNav = await getTranslations('navigation')
+  const design = await getPublishedDesign()
   const content = await getPublishedContent('page:legal')
 
-  const sections = [
-    { id: 'mentions', title: t('mentionsTitle'), body: t('mentionsBody') },
-    { id: 'cgv', title: t('cgvTitle'), body: t('cgvBody') },
-    { id: 'privacy', title: t('privacyTitle'), body: t('privacyBody') },
-  ]
+  /* Le balisage vit dans EdLegalBody : l'aperçu de l'éditeur monte EXACTEMENT
+     le même composant (voir src/server/ed-page-body.tsx), donc la page réglée
+     dans l'éditeur et la page servie au visiteur ne peuvent plus diverger. */
+  const body = <EdLegalBody content={content} />
 
-  return (
-    <SkinShell locale={locale}>
-    <EditProvider initial={content}>
-      <section className="py-16 md:py-24">
-        <Container>
-          <div className="space-y-16">
-            <Breadcrumbs
-              items={[
-                { label: tNav('home'), href: '/' },
-                { label: t('pageTitle') },
-              ]}
-            />
+  /* En peau éditoriale seulement, la page passe par son document : l'auteur
+     peut poser des sections autour du texte légal, qui reste injecté tel quel.
+     Les deux autres peaux gardent `SkinShell` — rien ne change pour elles. */
+  if (design === 'editorial') {
+    const [doc, site] = await Promise.all([getEdDoc('legal'), getEdSite()])
+    return (
+      <EdSkinPage
+        locale={locale}
+        pageKey="legal"
+        doc={doc}
+        site={site}
+        slots={{ body }}
+      />
+    )
+  }
 
-            <div className="max-w-3xl space-y-6">
-              <EyebrowLabel>
-                <Editable id="legal.eyebrow" label="Sur-titre">{t('pageTitle').toUpperCase()}</Editable>
-              </EyebrowLabel>
-              <Heading as="h1" size="hero" accentChar=".">
-                <Editable id="legal.heading" label="Titre">{t('heading')}</Editable>
-              </Heading>
-              <p className="font-mono text-sm uppercase tracking-wider text-text-muted">
-                <Editable id="legal.updated" label="Mise à jour">{t('updated')}</Editable>
-              </p>
-            </div>
-
-            <div className="max-w-3xl space-y-12 font-body text-lg leading-relaxed text-text-secondary">
-              {sections.map((s) => (
-                <div key={s.id} id={s.id} className="scroll-mt-24 space-y-3">
-                  <Heading as="h2" size="md">
-                    <Editable id={`legal.${s.id}.title`} label="Titre de section">{s.title}</Editable>
-                  </Heading>
-                  <Editable as="p" id={`legal.${s.id}.body`} label="Texte de section">{s.body}</Editable>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Container>
-      </section>
-    </EditProvider>
-    </SkinShell>
-  )
+  return <SkinShell locale={locale}>{body}</SkinShell>
 }

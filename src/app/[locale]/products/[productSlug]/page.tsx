@@ -17,13 +17,11 @@ import {
   getProductBySlug,
   getProductsByCategory,
 } from '@/server/queries'
-import { getPublishedPage, getPublishedDesign } from '@/server/editor-page-data'
-import { PublishedPage } from '@/components/admin/editor/PublishedPage'
-import { buildProductData } from '@/server/template-data'
-import type { PageDoc } from '@/components/admin/editor/types'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
 import { BrandProductDetail } from '@/components/brand/BrandProductDetail'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { EditorialProductDetail } from '@/components/editorial/EditorialProductDetail'
 import { toBrandProducts } from '@/server/brand-data'
 import { TrackProductView } from '@/components/analytics/TrackView'
@@ -183,49 +181,40 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   // Éditorial design (skin #3) — editorial product page, same data.
+  /* La fiche est rendue côté serveur et injectée telle quelle (`slots.body`) :
+     l'auteur règle le MODÈLE « fiche produit » une fois, et il s'applique à
+     toutes les fiches. Les mêmes données partent aussi en `data.product`, pour
+     les sections du registre qui les lisent directement. */
   if (design === 'editorial') {
     const similarRaw = (
       await getProductsByCategory(product.category.slug, locale)
     ).filter((p) => p.slug !== product.slug)
-    return (
-      <EditorialPageShell locale={locale}>
-        {jsonLd}
-        <EditorialProductDetail
-          product={{
-            slug: product.slug,
-            name: product.name,
-            brandName: product.brand.name,
-            brandSlug: product.brand.slug,
-            catName: product.category.name,
-            catSlug: product.category.slug,
-            tagline: product.tagline ?? '',
-            description: product.description ?? '',
-            customHtml: product.customHtml
-              ? prepareCustomHtml(product.customHtml)
-              : '',
-            image: imgOr(product.cardImagePath),
-            specs: product.specs,
-            images: (product.photoCarouselPaths ?? []).map(imgOr),
-          }}
-          similar={toBrandProducts(similarRaw)}
-        />
-      </EditorialPageShell>
-    )
-  }
-
-  // A published "Modèle · Produit" overrides the default layout, filled with
-  // this product's live data.
-  const tmpl = await getPublishedPage('tmpl:product')
-  if (tmpl) {
-    const relatedRaw = (
-      await getProductsByCategory(product.category.slug, locale)
-    ).filter((rp) => rp.slug !== product.slug)
+    const detail = {
+      slug: product.slug,
+      name: product.name,
+      brandName: product.brand.name,
+      brandSlug: product.brand.slug,
+      catName: product.category.name,
+      catSlug: product.category.slug,
+      tagline: product.tagline ?? '',
+      description: product.description ?? '',
+      customHtml: product.customHtml ? prepareCustomHtml(product.customHtml) : '',
+      image: imgOr(product.cardImagePath),
+      specs: product.specs,
+      images: (product.photoCarouselPaths ?? []).map(imgOr),
+    }
+    const similar = toBrandProducts(similarRaw)
+    const [doc, site] = await Promise.all([getEdDoc('product'), getEdSite()])
     return (
       <>
         {jsonLd}
-        <PublishedPage
-          doc={tmpl as unknown as PageDoc}
-          data={buildProductData(product, relatedRaw.slice(0, 12))}
+        <EdSkinPage
+          locale={locale}
+          pageKey="product"
+          doc={doc}
+          site={site}
+          data={{ product: { product: detail, similar } }}
+          slots={{ body: <EditorialProductDetail product={detail} similar={similar} /> }}
         />
       </>
     )

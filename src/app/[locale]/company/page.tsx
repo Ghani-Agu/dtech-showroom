@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { getAllBrands, getAllCategories, getAllProducts } from '@/server/queries'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdCompanyPage, type EdCompanyData } from '@/components/editorial/EdCompanyPage'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
+import { type EdCompanyData } from '@/components/editorial/EdCompanyPage'
 import { ED_OWN_BRANDS } from '@/components/editorial/editorial-types'
 import { edT, type EdLang } from '@/components/editorial/editorial-i18n'
 import { imgOr } from '@/lib/img'
@@ -134,8 +135,13 @@ export default async function CompanyPage({ params }: LocaleParams) {
       .sort((a, b) => b.count - a.count),
   }
 
+  const [doc, site] = await Promise.all([getEdDoc('company'), getEdSite()])
+
+  /* Le JSON-LD sort de l'enveloppe : `EdSkinPage` rend lui-même l'en-tête, le
+     <main> et le pied de page, et un <script> n'a de toute façon rien à faire
+     dans le corps de la page. Le balisage émis, lui, est inchangé. */
   return (
-    <EditorialPageShell locale={locale}>
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -153,7 +159,13 @@ export default async function CompanyPage({ params }: LocaleParams) {
           ]),
         }}
       />
-      <EdCompanyPage data={data} />
-    </EditorialPageShell>
+      <EdSkinPage
+        locale={locale}
+        pageKey="company"
+        doc={doc}
+        site={site}
+        data={{ company: data }}
+      />
+    </>
   )
 }

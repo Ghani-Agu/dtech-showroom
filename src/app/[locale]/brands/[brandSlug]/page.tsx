@@ -4,8 +4,9 @@ import { setRequestLocale } from 'next-intl/server'
 import { permanentRedirect } from '@/i18n/routing'
 import { getBrandBySlug, getProductsByBrand, getAllBrands, getAllProducts } from '@/server/queries'
 import { getPublishedDesign } from '@/server/editor-page-data'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdBrandPage, type EdBrandPageData } from '@/components/editorial/EdBrandPage'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
+import { type EdBrandPageData } from '@/components/editorial/EdBrandPage'
 import { edT, edTf, type EdLang } from '@/components/editorial/editorial-i18n'
 import { brandStatus } from '@/components/editorial/ed-brand-facts'
 import { imgOr } from '@/lib/img'
@@ -207,10 +208,21 @@ export default async function BrandPage({ params, searchParams }: Props) {
     </>
   )
 
+  /* Le MODÈLE « page marque » est réglé une fois dans l'éditeur et s'applique
+     à toutes les marques : la page ne rend plus un composant figé mais le
+     document `brand`, nourri des données de CETTE marque. */
+  const [doc, site] = await Promise.all([getEdDoc('brand'), getEdSite()])
+
   return (
-    <EditorialPageShell locale={locale}>
+    <>
       {jsonLd}
-      <EdBrandPage data={data} />
-    </EditorialPageShell>
+      <EdSkinPage
+        locale={locale}
+        pageKey="brand"
+        doc={doc}
+        site={site}
+        data={{ brand: data }}
+      />
+    </>
   )
 }

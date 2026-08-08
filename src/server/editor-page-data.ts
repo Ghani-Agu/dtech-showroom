@@ -5,10 +5,6 @@ import { db } from '@/db/client'
 import { withDb } from '@/db/health'
 import { sitePages, type SitePageRow } from '@/db/schema'
 import {
-  customKeyForPath,
-  type CustomPageMeta,
-} from '@/components/admin/editor/site-pages'
-import {
   sanitizeHeroConfig,
   type HeroConfig,
 } from '@/components/home/hero-config'
@@ -19,8 +15,6 @@ const HOME = 'home'
 
 /** Reserved row that stores which storefront design is active. */
 export const DESIGN_KEY = 'site:design'
-/** Reserved row that stores the list of user-created custom pages. */
-export const MANIFEST_KEY = '__pages__'
 
 /** Full row (draft + published) — used by the editor to seed its state. */
 export async function getSitePageRow(
@@ -53,64 +47,6 @@ function getSitePageRowCached(key: string): Promise<SitePageRow | null> {
   })
 }
 
-/** The published document a given page key should render, or null. */
-export async function getPublishedPage(
-  key: string
-): Promise<Record<string, unknown> | null> {
-  const row = await getSitePageRowCached(key)
-  const published = row?.published
-  if (published && typeof published === 'object') {
-    return published as Record<string, unknown>
-  }
-  return null
-}
-
-/** Back-compat helper — the homepage published doc, or null. */
-export async function getPublishedHome(): Promise<Record<
-  string,
-  unknown
-> | null> {
-  return getPublishedPage(HOME)
-}
-
-/** The list of custom pages from the manifest row. */
-export async function getCustomPages(): Promise<CustomPageMeta[]> {
-  const row = await getSitePageRowCached(MANIFEST_KEY)
-  const data = row?.draft as { pages?: CustomPageMeta[] } | null
-  return Array.isArray(data?.pages) ? (data.pages as CustomPageMeta[]) : []
-}
-
-/**
- * Published custom-page doc for a request path (e.g. '/promo'), or null.
- * Used by the catch-all route so any published custom page renders live.
- */
-export async function getPublishedCustomByPath(
-  path: string
-): Promise<Record<string, unknown> | null> {
-  return getPublishedPage(customKeyForPath(path))
-}
-
-/** Per-key publish/draft state — used by the editor page navigator. */
-export interface PageState {
-  key: string
-  hasDraft: boolean
-  published: boolean
-}
-
-export async function listPageStates(keys: string[]): Promise<PageState[]> {
-  const out: PageState[] = []
-  for (const key of keys) {
-    const row = await getSitePageRow(key)
-    out.push({
-      key,
-      hasDraft: !!row?.draft,
-      published: !!row?.published,
-    })
-  }
-  return out
-}
-
-
 const HERO_KEY = 'home-hero'
 
 /** Published homepage hero config, or null (homepage uses default slider). */
@@ -120,37 +56,19 @@ export async function getHomeHero(): Promise<HeroConfig | null> {
   return sanitizeHeroConfig(row.published)
 }
 
-/** Draft-or-published hero config for the editor (draft wins). */
-export async function getHomeHeroForEditor(): Promise<HeroConfig | null> {
-  const row = await getSitePageRow(HERO_KEY)
-  const src = row?.draft ?? row?.published
-  return src ? sanitizeHeroConfig(src) : null
-}
-
-
+/**
+ * Contenu publié d'une page, réduit à ce que les peaux lisent encore.
+ *
+ * L'ancien éditeur stockait ici tout un document (textes réécrits, retouches
+ * de style, ordre et masquage des sections, blocs personnalisés). Ces champs
+ * n'ont plus de moteur pour les appliquer — les enveloppes de
+ * `site-edit/edit-context` sont inertes — et sont donc ignorés à la lecture.
+ * Seul `theme` survit : il pilote encore le thème du site.
+ */
 function coerceContent(src: unknown): EditData {
-  const o = (src ?? {}) as { overrides?: unknown; styles?: unknown }
-  const sec = (o as { sections?: { order?: unknown; hidden?: unknown } }).sections
+  const o = (src ?? {}) as { theme?: unknown }
   return {
-    overrides: (o.overrides && typeof o.overrides === 'object') ? (o.overrides as Record<string, string>) : {},
-    styles: (o.styles && typeof o.styles === 'object') ? (o.styles as EditData['styles']) : {},
-    sections: {
-      order: Array.isArray(sec?.order) ? (sec!.order as string[]) : [],
-      hidden: Array.isArray(sec?.hidden) ? (sec!.hidden as string[]) : [],
-    },
-    sectionBg: ((o as { sectionBg?: unknown }).sectionBg && typeof (o as { sectionBg?: unknown }).sectionBg === 'object')
-      ? ((o as { sectionBg: Record<string, string> }).sectionBg)
-      : {},
-    sectionStyles: ((o as { sectionStyles?: unknown }).sectionStyles && typeof (o as { sectionStyles?: unknown }).sectionStyles === 'object')
-      ? ((o as { sectionStyles: EditData['sectionStyles'] }).sectionStyles)
-      : {},
-    customSections: Array.isArray((o as { customSections?: unknown }).customSections)
-      ? ((o as { customSections: EditData['customSections'] }).customSections)
-      : [],
-    sectionBlocks: ((o as { sectionBlocks?: unknown }).sectionBlocks && typeof (o as { sectionBlocks?: unknown }).sectionBlocks === 'object')
-      ? ((o as { sectionBlocks: EditData['sectionBlocks'] }).sectionBlocks)
-      : {},
-    theme: typeof (o as { theme?: unknown }).theme === 'string' ? ((o as { theme: string }).theme) : undefined,
+    theme: typeof o.theme === 'string' ? o.theme : undefined,
   }
 }
 
@@ -234,10 +152,4 @@ export async function getDraftDesign(): Promise<DesignId> {
   } catch {
     return coerceDesign(undefined)
   }
-}
-
-/** Draft content for the editor (draft wins, else published, else empty). */
-export async function getContentDraft(pageKey: string): Promise<EditData> {
-  const row = await getSitePageRow(`content:${pageKey}`)
-  return coerceContent(row?.draft ?? row?.published)
 }

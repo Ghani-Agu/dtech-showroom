@@ -8,7 +8,8 @@ import { type Locale } from '@/i18n/config'
 import { getAllProducts, getAllCategories, getAllBrands } from '@/server/queries'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { EdProductsBrowser } from '@/components/editorial/EdProductsBrowser'
 import { type EdLang } from '@/components/editorial/editorial-i18n'
 import {
@@ -227,15 +228,26 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   /* ROUND 19 D — the editorial skin gets its OWN catalogue surface.
      Same engine (server-rendered, URL-as-state, crawlable facets, one page of
      cards on the wire); different presentation — brand marks instead of text
-     chips, categories grouped into the 7 families, sticky toolbar. */
+     chips, categories grouped into the 7 families, sticky toolbar.
+
+     Le moteur tourne ENTIÈREMENT côté serveur : l'éditeur le reçoit déjà rendu
+     (`slots.body`) et peut l'entourer, le styler ou le masquer, mais pas
+     prétendre en réordonner l'intérieur. */
   if (design === 'editorial') {
     const edLang: EdLang = locale === 'en' || locale === 'ar' ? locale : 'fr'
+    const [doc, site] = await Promise.all([getEdDoc('products'), getEdSite()])
     return (
-      <EditorialPageShell locale={locale}>
+      <>
         {seoHead}
-        <EdProductsBrowser lang={edLang} query={query} result={result} />
+        <EdSkinPage
+          locale={locale}
+          pageKey="products"
+          doc={doc}
+          site={site}
+          slots={{ body: <EdProductsBrowser lang={edLang} query={query} result={result} /> }}
+        />
         {tracker}
-      </EditorialPageShell>
+      </>
     )
   }
 

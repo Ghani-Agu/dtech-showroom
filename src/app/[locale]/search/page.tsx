@@ -10,7 +10,8 @@ import { searchProducts } from '@/server/queries'
 import { Suspense } from 'react'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { EdGridPage } from '@/components/editorial/EditorialCollections'
 import { BrandGridPage } from '@/components/brand/BrandCollections'
 import { toBrandProducts } from '@/server/brand-data'
@@ -57,15 +58,34 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     )
   }
   if (skinDesign === 'editorial') {
-        return (
-      <EditorialPageShell locale={locale}>
-        <EdGridPage
-          eyebrow={t('pageTitle')}
-          title={query ? `« ${query} »` : t('pageTitle')}
-          products={toBrandProducts(rawResults)}
-          emptyLabel={query ? t('noResults') : t('placeholder')}
-        />
-      </EditorialPageShell>
+    /* `data.grid` est rempli EN PLUS du fragment : la section « Grille de
+       produits » du registre lit `ctx.data.grid`, donc un auteur qui remplace
+       le bloc verrouillé par cette section-là obtient les mêmes résultats. */
+    const grid = {
+      products: toBrandProducts(rawResults),
+      eyebrow: t('pageTitle'),
+      title: query ? `« ${query} »` : t('pageTitle'),
+      empty: query ? t('noResults') : t('placeholder'),
+    }
+    const [doc, site] = await Promise.all([getEdDoc('search'), getEdSite()])
+    return (
+      <EdSkinPage
+        locale={locale}
+        pageKey="search"
+        doc={doc}
+        site={site}
+        data={{ grid }}
+        slots={{
+          body: (
+            <EdGridPage
+              eyebrow={grid.eyebrow}
+              title={grid.title}
+              products={grid.products}
+              emptyLabel={grid.empty}
+            />
+          ),
+        }}
+      />
     )
   }
 

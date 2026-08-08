@@ -23,7 +23,7 @@ import { useCart, WHATSAPP_NUMBER } from '@/lib/cart'
 import type { BrandProduct, BrandCategory, BrandBrandItem } from '@/components/brand/brand-types'
 import type { BrandInquiryProduct } from '@/components/brand/BrandInquiry'
 
-function PageHead({ eyebrow, title, sub }: { eyebrow?: string; title: string; sub?: string }) {
+export function PageHead({ eyebrow, title, sub }: { eyebrow?: string; title: string; sub?: string }) {
   return (
     <header className="ed-pagehead wrap">
       <div className="rv" data-revealed style={{ display: 'grid', gap: 14 }}>

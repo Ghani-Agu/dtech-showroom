@@ -8,7 +8,6 @@ import {
   BarChart3,
   ExternalLink,
   FolderKanban,
-  Images,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -104,19 +103,15 @@ const PRIMARY_NAV: NavItem[] = [
     icon: Megaphone,
     color: 'var(--c-amber)',
   },
+  // Une seule porte d'entrée vers l'éditeur : l'ancien constructeur par blocs
+  // et ses annexes (thèmes, guide, slider hero) sont partis avec lui.
   {
     href: '/editor',
-    label: 'Éditeur web',
-    desc: 'Composer les pages',
+    label: 'Éditeur du site',
+    desc: 'Composer les pages de la boutique',
     icon: Paintbrush,
     color: 'var(--c-emerald)',
-  },
-  {
-    href: '/editor/hero',
-    label: 'Slider Hero',
-    desc: 'Images du slider d’accueil',
-    icon: Images,
-    color: 'var(--c-mint)',
+    newTab: true,
   },
   {
     href: '/admin/apparence',
@@ -136,11 +131,9 @@ const NAV_SECTION: Record<string, string> = {
   '/admin/subscribers': 'newsletter',
   '/admin/campaigns': 'newsletter',
   '/admin/apparence': 'editor',
-  // Editor surfaces map to the "editor" permission key (defaults to allowed
-  // when no list is passed — see filter logic below).
+  // L'éditeur est rattaché à la clé de permission "editor" (autorisée par
+  // défaut quand aucune liste n'est fournie — voir le filtre plus bas).
   '/editor': 'editor',
-  '/editor/themes': 'editor',
-  '/editor/guide': 'editor',
 }
 
 export interface AdminSidebarProps {
@@ -166,9 +159,6 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
 
   function isActive(href: string): boolean {
     if (href === '/admin') return pathname === '/admin'
-    // /editor must NOT match when the user is on /editor/themes or
-    // /editor/guide — those have their own sidebar entries.
-    if (href === '/editor') return pathname === '/editor'
     return pathname === href || pathname.startsWith(href + '/')
   }
 
@@ -252,9 +242,9 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
         </Link>
       </div>
 
-      {/* Primary nav — split into two groups so the editor cluster
-          stands on its own and "Éditeur web" reads as a section, not
-          just another admin row. */}
+      {/* Nav principale — une seule liste : l'ancien groupe « Éditeur »
+          n'avait de sens que tant que le constructeur avait plusieurs
+          annexes (thèmes, guide, slider). Il n'en reste qu'une entrée. */}
       {(() => {
         const visible = PRIMARY_NAV.filter(
           (item) =>
@@ -262,8 +252,6 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
             !NAV_SECTION[item.href] ||
             allowed.includes(NAV_SECTION[item.href] as string)
         )
-        const adminItems = visible.filter((i) => !i.href.startsWith('/editor'))
-        const editorItems = visible.filter((i) => i.href.startsWith('/editor'))
         return (
           <nav aria-label="Principal" className="flex-1 px-3">
             <p
@@ -273,41 +261,10 @@ export function AdminSidebar({ className, allowed }: AdminSidebarProps) {
               Administration
             </p>
             <ul className="space-y-1.5">
-              {adminItems.map((item) => (
+              {visible.map((item) => (
                 <SidebarLink key={item.href} item={item} active={isActive(item.href)} />
               ))}
             </ul>
-            {editorItems.length > 0 && (
-              <>
-                <div
-                  className="mx-3 my-3 h-px"
-                  style={{
-                    background:
-                      'linear-gradient(90deg, transparent, var(--admin-glass-border-strong) 30%, var(--admin-glass-border-strong) 70%, transparent)',
-                  }}
-                />
-                <p
-                  className="flex items-center gap-2 px-3 pb-2 font-mono text-[9.5px] uppercase"
-                  style={{ color: 'var(--c-emerald-text)', letterSpacing: '2.5px' }}
-                >
-                  <span
-                    aria-hidden
-                    className="inline-block size-1.5 rounded-full"
-                    style={{
-                      background: 'var(--c-emerald)',
-                      boxShadow: '0 0 8px var(--c-emerald)',
-                      animation: 'admin-pulse-dot 2.4s ease-in-out infinite',
-                    }}
-                  />
-                  Éditeur
-                </p>
-                <ul className="space-y-1.5">
-                  {editorItems.map((item) => (
-                    <SidebarLink key={item.href} item={item} active={isActive(item.href)} />
-                  ))}
-                </ul>
-              </>
-            )}
           </nav>
         )
       })()}

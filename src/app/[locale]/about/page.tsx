@@ -4,14 +4,12 @@ import { Container } from '@/components/ui/Container'
 import { EyebrowLabel } from '@/components/ui/EyebrowLabel'
 import { Heading } from '@/components/ui/Heading'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
-import { getPublishedPage, getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
+import { getPublishedContent, getPublishedDesign } from '@/server/editor-page-data'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdAbout } from '@/components/editorial/EditorialCollections'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { BrandAbout } from '@/components/brand/BrandSections'
-import { PublishedPage } from '@/components/admin/editor/PublishedPage'
 import { EditProvider, Editable } from '@/components/site-edit/edit-context'
-import type { PageDoc } from '@/components/admin/editor/types'
 
 /**
  * ISR, not `force-dynamic`.
@@ -61,15 +59,11 @@ export default async function AboutPage({ params }: LocaleParams) {
   }
   if (skinDesign === 'editorial') {
     const locale = await getLocale()
-        return (
-      <EditorialPageShell locale={locale}>
-        <EdAbout />
-      </EditorialPageShell>
-    )
+    /* Aucune donnée : le chapeau, le bloc « pourquoi » et le bloc contact de
+       la composition par défaut sont autonomes. */
+    const [doc, site] = await Promise.all([getEdDoc('about'), getEdSite()])
+    return <EdSkinPage locale={locale} pageKey="about" doc={doc} site={site} />
   }
-
-  const tmpl = await getPublishedPage('page:about')
-  if (tmpl) return <PublishedPage doc={tmpl as unknown as PageDoc} />
 
   const t = await getTranslations('about')
   const tNav = await getTranslations('navigation')

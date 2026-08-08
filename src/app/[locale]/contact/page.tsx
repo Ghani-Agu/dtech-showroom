@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { getPublishedDesign } from '@/server/editor-page-data'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
-import { EdContactPage } from '@/components/editorial/EdContactPage'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { edT, type EdLang } from '@/components/editorial/editorial-i18n'
 
 /**
@@ -40,9 +40,9 @@ export default async function ContactPage({ params }: LocaleParams) {
   // The other two skins keep their contact block inside /about.
   if (design !== 'editorial') redirect(`/${locale}/about#contact`)
 
-  return (
-    <EditorialPageShell locale={locale}>
-      <EdContactPage />
-    </EditorialPageShell>
-  )
+  /* Aucune donnée : les sections de contact (canaux, adresse, carte,
+     formulaire) sont autonomes, le document suffit. */
+  const [doc, site] = await Promise.all([getEdDoc('contact'), getEdSite()])
+
+  return <EdSkinPage locale={locale} pageKey="contact" doc={doc} site={site} />
 }

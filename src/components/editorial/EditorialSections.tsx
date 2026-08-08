@@ -138,7 +138,20 @@ function heroAspect(
  *     or the tab is in the background, like `useAnimGate` does for the bento;
  *   · no scroll listener is added.
  */
-export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
+export function EdHero({
+  slides,
+  overlay = false,
+}: {
+  slides: EdHeroSlide[]
+  /**
+   * ROUND 28 — le pavé de texte posé SUR l'image est devenu une section à
+   * part entière (`EdIntro`, juste sous le hero), à la demande de Ghani : une
+   * bannière composée dans un logiciel de dessin porte déjà son message, et le
+   * texte par-dessus le masquait. Le réglage reste, pour qui veut l'ancien
+   * hero plein écran.
+   */
+  overlay?: boolean
+}) {
   const { t, dir } = useEditorial()
   const shots = slides.length > 0 ? slides : [{ src: '', alt: '' }]
   const many = shots.length > 1
@@ -305,27 +318,29 @@ export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
         </div>
         {/* ROUND 23 — the two darkening layers (.hero-scrim / .hero-scrim2)
             were removed on request: the 1920×700 banner is shown unmodified. */}
-        <div className="hero-in hero-anim">
-          <div className="hero-mark gmark">
-            D-tech<span>.</span>
+        {overlay ? (
+          <div className="hero-in hero-anim">
+            <div className="hero-mark gmark">
+              D-tech<span>.</span>
+            </div>
+            <h1>
+              {t('hero.title1')}
+              <br />
+              {t('hero.title2')}
+            </h1>
+            <p>{t('hero.lede')}</p>
+            <div className="hero-tag">{t('hero.tag')}</div>
+            <div className="hero-btns">
+              <a className="btn btn-w" href="#catalogue">
+                {t('hero.cta1')}
+              </a>
+              <a className="btn btn-g" href={WA} target="_blank" rel="noopener noreferrer">
+                <WaIcon s={17} />
+                {t('hero.cta2')}
+              </a>
+            </div>
           </div>
-          <h1>
-            {t('hero.title1')}
-            <br />
-            {t('hero.title2')}
-          </h1>
-          <p>{t('hero.lede')}</p>
-          <div className="hero-tag">{t('hero.tag')}</div>
-          <div className="hero-btns">
-            <a className="btn btn-w" href="#catalogue">
-              {t('hero.cta1')}
-            </a>
-            <a className="btn btn-g" href={WA} target="_blank" rel="noopener noreferrer">
-              <WaIcon s={17} />
-              {t('hero.cta2')}
-            </a>
-          </div>
-        </div>
+        ) : null}
         {many && (
           <div className="hero-rail">
             <button
@@ -373,6 +388,51 @@ export function EdHero({ slides }: { slides: EdHeroSlide[] }) {
         )}
       </div>
     </header>
+  )
+}
+
+
+/* ─────────── introduction (design EdHero, sorti du bandeau) ─────────── */
+
+/**
+ * ROUND 28 — l'accroche de la page d'accueil, en section.
+ *
+ * Elle affiche EXACTEMENT les mêmes clés que l'ancien pavé posé sur l'image
+ * (`hero.title1`, `hero.title2`, `hero.lede`, `hero.tag`, `hero.cta1`,
+ * `hero.cta2`) : rien n'est à ressaisir, et l'éditeur retrouve les mêmes
+ * champs. Ce qui change, c'est le fond — clair, donc les boutons passent en
+ * variantes `btn-k` / `btn-wa` au lieu des variantes claires réservées au
+ * hero sombre.
+ */
+export function EdIntro() {
+  const { t } = useEditorial()
+  return (
+    <section className="sec ed-intro" id="intro">
+      <div className="wrap rv">
+        {/* Pas de `gmark` ici : ce dégradé animé passe par une étape BLANCHE,
+            pensée pour le bandeau sombre. Sur ce fond clair, le « D » devenait
+            invisible. Encre pleine, point turquoise. */}
+        <div className="ed-intro-mark">
+          D-tech<span>.</span>
+        </div>
+        <h1 className="ed-intro-h1">
+          {t('hero.title1')}
+          <br />
+          {t('hero.title2')}
+        </h1>
+        <p className="lede ed-intro-lede">{t('hero.lede')}</p>
+        <div className="ed-intro-tag micro">{t('hero.tag')}</div>
+        <div className="ed-intro-btns">
+          <a className="btn btn-k" href="#catalogue">
+            {t('hero.cta1')}
+          </a>
+          <a className="btn btn-wa" href={WA} target="_blank" rel="noopener noreferrer">
+            <WaIcon s={17} />
+            {t('hero.cta2')}
+          </a>
+        </div>
+      </div>
+    </section>
   )
 }
 

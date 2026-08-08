@@ -28,21 +28,31 @@ const GROUPS: { status: EdBrandStatus; key: string }[] = [
   { status: 'distributed', key: 'dist' },
 ]
 
-export function EdBrandsIndex({ brands }: { brands: BrandBrandItem[] }) {
+/* Chaque bloc est exporté à part pour que l'éditeur web puisse les réordonner
+   ou en masquer un individuellement ; chacun recalcule ce dont il a besoin. */
+
+/** ── En-tête de page ── */
+export function EdBiHead({ brands }: { brands: BrandBrandItem[] }) {
   const { t, tf } = useEditorial()
   const refs = brands.reduce((a, b) => a + b.count, 0)
 
   return (
-    <div className="edbi">
-      <header className="ed-pagehead wrap">
-        <div className="rv" data-revealed style={{ display: 'grid', gap: 14 }}>
-          <span className="eyebrow">{t('bi.eyebrow')}</span>
-          <h1 className="h2">{t('bi.title')}</h1>
-          <p className="lede">{tf('bi.lede', { count: brands.length, refs })}</p>
-        </div>
-      </header>
+    <header className="ed-pagehead wrap">
+      <div className="rv" data-revealed style={{ display: 'grid', gap: 14 }}>
+        <span className="eyebrow">{t('bi.eyebrow')}</span>
+        <h1 className="h2">{t('bi.title')}</h1>
+        <p className="lede">{tf('bi.lede', { count: brands.length, refs })}</p>
+      </div>
+    </header>
+  )
+}
 
-      <div className="wrap edbi-body">
+/** ── Les quatre groupes de statut ── */
+export function EdBiGroups({ brands }: { brands: BrandBrandItem[] }) {
+  const { t } = useEditorial()
+
+  return (
+    <div className="wrap edbi-body">
         {GROUPS.map(({ status, key }) => {
           const list = brands.filter((b) => brandStatus(b.id) === status)
           if (!list.length) return null
@@ -95,7 +105,15 @@ export function EdBrandsIndex({ brands }: { brands: BrandBrandItem[] }) {
             </section>
           )
         })}
-      </div>
+    </div>
+  )
+}
+
+export function EdBrandsIndex({ brands }: { brands: BrandBrandItem[] }) {
+  return (
+    <div className="edbi">
+      <EdBiHead brands={brands} />
+      <EdBiGroups brands={brands} />
     </div>
   )
 }

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
-import { getPublishedCustomByPath } from '@/server/editor-page-data'
-import { PublishedPage } from '@/components/admin/editor/PublishedPage'
-import { SkinShell } from '@/components/skin/SkinShell'
-import type { PageDoc } from '@/components/admin/editor/types'
+import { getPublishedDesign } from '@/server/editor-page-data'
+import { getEdCustomPages, getEdDoc, getEdSite } from '@/server/ed-doc'
+import { normalizePath, type EdCustomPage } from '@/lib/ed-editor/pages'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 
 /**
  * ISR, not `force-dynamic`.
@@ -33,32 +33,54 @@ interface CustomPageProps {
 }
 
 /**
- * Catch-all for editor-managed CUSTOM pages. Explicit routes (products,
- * categories, about, …) take precedence; anything else is matched here and
- * renders its published block document, or 404s if none exists.
+ * Le chemin demandé, passé par la MÊME normalisation que celle appliquée à la
+ * création de la page. Sans elle, `/Promo/` et `/promo` ne se ressembleraient
+ * pas et une page parfaitement publiée renverrait un 404.
+ */
+function pathFromSlug(slug: string[] | undefined): string {
+  return normalizePath('/' + (slug ?? []).join('/'))
+}
+
+/** La page personnalisée servie à ce chemin, ou `null`. */
+async function matchCustomPage(
+  slug: string[] | undefined
+): Promise<EdCustomPage | null> {
+  const path = pathFromSlug(slug)
+  const pages = await getEdCustomPages()
+  return pages.find((p) => p.path === path) ?? null
+}
+
+/**
+ * Attrape-tout des pages PERSONNALISÉES créées dans l'éditeur. Les routes
+ * explicites (products, categories, about…) sont prioritaires ; tout le reste
+ * arrive ici, et ne rend une page que si le manifeste la connaît.
  */
 export async function generateMetadata({
   params,
 }: CustomPageProps): Promise<Metadata> {
   const { locale, slug } = await params
   setRequestLocale(locale)
-  const path = '/' + (slug ?? []).join('/')
-  const doc = (await getPublishedCustomByPath(path)) as
-    | (PageDoc & Record<string, unknown>)
-    | null
-  if (!doc) return {}
-  return { title: typeof doc.name === 'string' ? doc.name : undefined }
+  const page = await matchCustomPage(slug)
+  if (!page) return {}
+  return { title: page.title }
 }
 
 export default async function CustomPage({ params }: CustomPageProps) {
   const { locale, slug } = await params
   setRequestLocale(locale)
-  const path = '/' + (slug ?? []).join('/')
-  const doc = await getPublishedCustomByPath(path)
-  if (!doc) notFound()
-  return (
-    <SkinShell locale={locale}>
-      <PublishedPage doc={doc as unknown as PageDoc} />
-    </SkinShell>
-  )
+
+  const [design, page] = await Promise.all([getPublishedDesign(), matchCustomPage(slug)])
+
+  /**
+   * Chemin inconnu → 404, évidemment. Mais AUSSI quand la peau en ligne n'est
+   * pas l'éditoriale : les pages personnalisées sont une fonction de cette
+   * peau-là, et leurs sections n'ont de sens que dans son enveloppe. Servir un
+   * document éditorial sous le chrome classique donnerait une page à moitié
+   * peinte — un 404 honnête vaut mieux.
+   */
+  if (!page || design !== 'editorial') notFound()
+
+  const [doc, site] = await Promise.all([getEdDoc(page.key), getEdSite()])
+
+  return <EdSkinPage locale={locale} pageKey={page.key} doc={doc} site={site} />
 }

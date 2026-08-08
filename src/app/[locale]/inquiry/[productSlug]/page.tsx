@@ -12,7 +12,8 @@ import { getProductBySlug } from '@/server/queries'
 import { imgOr } from '@/lib/img'
 import { getPublishedDesign } from '@/server/editor-page-data'
 import { BrandPageShell } from '@/components/brand/BrandPageShell'
-import { EditorialPageShell } from '@/components/editorial/EditorialPageShell'
+import { getEdDoc, getEdSite } from '@/server/ed-doc'
+import { EdSkinPage } from '@/components/editorial/ed-skin-page'
 import { EdInquiry } from '@/components/editorial/EditorialCollections'
 import { BrandInquiry } from '@/components/brand/BrandInquiry'
 
@@ -64,20 +65,31 @@ export default async function InquiryPage({ params }: InquiryPageProps) {
     )
   }
   if (skinDesign === 'editorial') {
-        return (
-      <EditorialPageShell locale={locale}>
-        <EdInquiry
-          product={{
-            slug: product.slug,
-            name: product.name,
-            brandName: product.brand.name,
-            brandSlug: product.brand.slug,
-            catName: product.category.name,
-            image: imgOr(product.cardImagePath),
-            spec: product.cardSpec ?? '',
-          }}
-        />
-      </EditorialPageShell>
+    /* Le formulaire est rendu côté serveur et injecté tel quel : l'auteur
+       règle le MODÈLE « demande de devis », pas l'intérieur du formulaire. */
+    const [doc, site] = await Promise.all([getEdDoc('inquiry'), getEdSite()])
+    return (
+      <EdSkinPage
+        locale={locale}
+        pageKey="inquiry"
+        doc={doc}
+        site={site}
+        slots={{
+          body: (
+            <EdInquiry
+              product={{
+                slug: product.slug,
+                name: product.name,
+                brandName: product.brand.name,
+                brandSlug: product.brand.slug,
+                catName: product.category.name,
+                image: imgOr(product.cardImagePath),
+                spec: product.cardSpec ?? '',
+              }}
+            />
+          ),
+        }}
+      />
     )
   }
 
